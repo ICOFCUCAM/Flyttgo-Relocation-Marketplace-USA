@@ -22,6 +22,10 @@ export type Page =
   /* Marketplace repositioning surfaces (Phase 12). */
   | 'marketplace' | 'how-it-works' | 'providers' | 'cities'
   | 'enterprise-relocation' | 'compliance' | 'partners'
+  /* Global Logistics & Relocation Marketplace surfaces. */
+  | 'universities'
+  | 'market-us' | 'market-canada' | 'market-germany'
+  | 'market-france' | 'market-uk' | 'market-norway'
   /* Fallback for URLs that don't match any known route. */
   | 'not-found';
 

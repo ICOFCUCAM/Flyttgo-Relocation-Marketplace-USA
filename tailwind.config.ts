@@ -43,8 +43,9 @@ export default {
         },
       },
       fontFamily: {
-        mono: ["JetBrains Mono", "monospace"],
-        sans: ["Inter", "sans-serif"],
+        mono:  ["JetBrains Mono", "ui-monospace", "monospace"],
+        sans:  ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        serif: ["IBM Plex Serif", "ui-serif", "Georgia", "serif"],
       },
       borderRadius: {
         lg: "calc(var(--radius) + 2px)",

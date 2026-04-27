@@ -1,81 +1,106 @@
 import React from 'react';
 import { useApp } from '../lib/store';
+import { SectionIndex } from '../components/global/CountryPage';
 
-const PROVIDER_TYPES = [
-  { title: 'Licensed moving carriers',     desc: 'USDOT/MC-registered interstate and intrastate carriers. Authority status auto-verified against FMCSA data.', icon: 'truck' },
-  { title: 'Independent labor crews',      desc: 'Vetted hourly moving labor crews for loading, unloading, and in-home moves. Bring-your-own-truck friendly.', icon: 'users' },
-  { title: 'Packing service providers',    desc: 'Independent packing crews, materials, and crating specialists for residential and commercial relocations.', icon: 'package' },
-  { title: 'Self-storage operators',       desc: 'Storage facility partners integrated into multi-stage move plans for staged or interstate timelines.', icon: 'box' },
-  { title: 'Truck rental partners',        desc: 'National and regional truck rental partners surfaced alongside labor and crew bookings.', icon: 'rental' },
-  { title: 'Insurance providers',          desc: 'Valuation and third-party transit insurance options disclosed at the time of booking.', icon: 'shield' },
-];
-
-const ONBOARDING = [
-  { step: '1', title: 'Apply',                desc: 'Complete the provider application with your business identity, authority numbers, insurance, and service categories.' },
-  { step: '2', title: 'Verification',         desc: 'FMCSA authority validation for carriers. Identity, insurance and references for crews and other categories.' },
-  { step: '3', title: 'Profile activation',   desc: 'Set service area, capacity, calendar, and pricing. The matching engine starts surfacing your profile to qualified leads.' },
-  { step: '4', title: 'Operate & get paid',   desc: 'Accept matched relocations, complete the work, confirm in-app, and receive escrow payout per platform terms.' },
+const CATEGORIES = [
+  { title: 'Licensed moving carrier', body: 'USDOT/MC, GüKG, GVOL, registre des transporteurs, yrkestransportløyve — country-specific operator licensing.' },
+  { title: 'Moving labor provider', body: 'Loading, unloading, and in-home labor crews matched against the customer brief.' },
+  { title: 'Packing services provider', body: 'Independent packing crews and materials suppliers integrated into coordinated relocations.' },
+  { title: 'Storage facility partner', body: 'Self-storage, bonded warehouses, and staging facilities for staged or international moves.' },
+  { title: 'Vehicle rental partner', body: 'Truck and van rental partners reserved alongside labor and carrier coordination.' },
+  { title: 'Freight forwarding partner', body: 'Cross-border freight, customs documentation coordination, and consolidation.' },
+  { title: 'International relocation coordinator', body: 'End-to-end origin-country and arrival-country relocation orchestration.' },
+  { title: 'University relocation partner', body: 'Student move-in / move-out, residence hall windows, and semester mobility.' },
+  { title: 'Corporate relocation vendor', body: 'Talent mobility, project relocation, and consolidated procurement workflows.' },
 ];
 
 export default function ProvidersPage() {
   const { setPage } = useApp();
-  return (
-    <div className="min-h-screen bg-white">
 
-      <section className="bg-gradient-to-br from-[#0B2E59] to-[#1a4a8a] text-white py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 text-xs font-medium px-4 py-2 rounded-full mb-6">
-            For Providers
-          </div>
-          <h1 className="text-4xl sm:text-5xl font-extrabold mb-5 leading-tight">Operate on the marketplace</h1>
-          <p className="text-white/75 text-lg max-w-3xl">
-            FlyttGo Relocation Marketplace USA welcomes USDOT-licensed carriers, independent
-            moving crews, packers, storage operators, truck rental networks, and insurance
-            providers across the United States.
+  return (
+    <main className="min-h-screen bg-white text-slate-900">
+      <section className="border-b border-slate-200 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-6 py-20">
+          <SectionIndex id="GLRM.01" label="Providers" />
+          <h1 className="font-serif text-5xl lg:text-6xl leading-[1.05] tracking-tight">
+            Join the global marketplace
+          </h1>
+          <p className="mt-6 text-lg leading-relaxed text-slate-700 max-w-3xl">
+            FlyttGo Global Logistics &amp; Relocation Marketplace operates as a
+            digital coordination platform connecting customers with independent
+            licensed relocation providers across multiple jurisdictions worldwide.
+            Service providers are responsible for compliance with their national
+            licensing, taxation, insurance, and regulatory requirements.
           </p>
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <h2 className="text-3xl font-extrabold text-[#0B2E59] mb-10 text-center">Provider categories</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {PROVIDER_TYPES.map(p => (
-            <div key={p.title} className="bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-xl hover:border-emerald-200 transition">
-              <div className="text-xs uppercase tracking-wider text-emerald-600 font-bold mb-2">{p.icon}</div>
-              <h3 className="font-bold text-[#0B2E59] mb-2">{p.title}</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">{p.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="bg-gray-50 py-20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-extrabold text-[#0B2E59] mb-10 text-center">Onboarding pipeline</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {ONBOARDING.map(o => (
-              <div key={o.step} className="bg-white rounded-2xl p-6 border border-gray-100">
-                <div className="w-10 h-10 bg-emerald-600 text-white rounded-xl flex items-center justify-center font-bold mb-4">{o.step}</div>
-                <h3 className="font-bold text-[#0B2E59] mb-2">{o.title}</h3>
-                <p className="text-sm text-gray-600 leading-relaxed">{o.desc}</p>
-              </div>
+      <section className="border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-6 py-20">
+          <SectionIndex id="GLRM.02" label="Provider categories" />
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px bg-slate-200">
+            {CATEGORIES.map(c => (
+              <article key={c.title} className="bg-white p-6 flex flex-col gap-3 min-h-[180px]">
+                <h3 className="font-serif text-xl text-slate-900">{c.title}</h3>
+                <p className="text-sm leading-relaxed text-slate-600">{c.body}</p>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="bg-[#0B2E59] text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl sm:text-3xl font-extrabold mb-4">Apply to become a verified provider</h2>
-          <p className="text-white/75 max-w-xl mx-auto mb-6">
-            Carriers, crews, and operators with active authority and insurance are encouraged to apply.
-          </p>
-          <button onClick={() => setPage('driver-onboarding')} className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 rounded-xl font-bold transition">
-            Open the application
-          </button>
+      <section className="border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-6 py-20">
+          <SectionIndex id="GLRM.03" label="How providers join" />
+          <ol className="space-y-px bg-slate-200">
+            {[
+              { n: '01', t: 'Submit registration', b: 'Country, category, operator licence reference, contact and tax details.' },
+              { n: '02', t: 'Surface licensing', b: 'Provider declarations are surfaced to customers — FMCSA/USDOT, GüKG, GVOL, French registre, Norwegian løyve.' },
+              { n: '03', t: 'Activate categories', b: 'Activate the marketplace categories the provider operates in: labor, carrier, packing, storage, vehicle rental, freight forwarding.' },
+              { n: '04', t: 'Receive coordinated work', b: 'Matching, dispatch, and consolidated payouts under the FlyttGo coordination layer.' },
+            ].map(s => (
+              <li key={s.n} className="bg-white grid md:grid-cols-12 gap-6 p-8 items-start">
+                <div className="md:col-span-2 font-mono text-2xl font-semibold text-slate-900">{s.n}</div>
+                <h3 className="md:col-span-3 font-serif text-2xl text-slate-900">{s.t}</h3>
+                <p className="md:col-span-7 text-slate-600 leading-relaxed">{s.b}</p>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 
-    </div>
+      <section className="bg-slate-900 text-slate-100">
+        <div className="max-w-7xl mx-auto px-6 py-20">
+          <SectionIndex id="GLRM.04" label="Country-level compliance responsibility" />
+          <div className="grid md:grid-cols-2 gap-10">
+            <h2 className="font-serif text-3xl lg:text-4xl leading-tight text-white">
+              Providers comply. The marketplace coordinates.
+            </h2>
+            <p className="text-slate-300 leading-relaxed">
+              Each provider is responsible for compliance with the licensing,
+              taxation, insurance, and regulatory requirements of every
+              jurisdiction in which it operates. The FlyttGo coordination layer
+              records the operator licence references and surfaces them to
+              customers — it does not perform the regulated relocation services
+              itself.
+            </p>
+          </div>
+          <div className="mt-12 flex flex-wrap gap-4">
+            <button
+              onClick={() => setPage('driver-onboarding')}
+              className="px-6 py-3 bg-emerald-500 text-slate-900 font-mono text-xs uppercase tracking-[0.18em] hover:bg-emerald-400 transition"
+            >
+              Apply as a provider
+            </button>
+            <button
+              onClick={() => setPage('compliance')}
+              className="px-6 py-3 border border-slate-300 text-slate-100 font-mono text-xs uppercase tracking-[0.18em] hover:bg-slate-800 transition"
+            >
+              Compliance frame
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }

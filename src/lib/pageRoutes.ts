@@ -73,6 +73,15 @@ const PAGE_TO_PATH: Record<Page, string> = {
   'compliance':              '/compliance',
   'partners':                '/partners',
 
+  /* Global Logistics & Relocation Marketplace surfaces. */
+  'universities':            '/universities',
+  'market-us':               '/us',
+  'market-canada':           '/canada',
+  'market-germany':          '/germany',
+  'market-france':           '/france',
+  'market-uk':               '/uk',
+  'market-norway':           '/norway',
+
   /* Fallback for unknown routes. No real path — pathToPage() returns
    * this id for anything it can't match. setPage('not-found') still
    * updates history.pushState to whatever URL triggered the fallback. */
@@ -99,49 +108,56 @@ export interface PageMeta {
 }
 
 const PAGE_TITLES: Record<Page, string> = {
-  'home':                    'FlyttGo Relocation Marketplace USA',
-  'marketplace':             'Marketplace · FlyttGo USA',
-  'how-it-works':            'How the Marketplace Works · FlyttGo USA',
-  'providers':               'For Providers · FlyttGo USA',
-  'cities':                  'Cities & Geographic Rollout · FlyttGo USA',
-  'enterprise-relocation':   'Enterprise Relocation Coordination · FlyttGo USA',
-  'compliance':              'Compliance & Carrier Verification · FlyttGo USA',
-  'partners':                'Partners & Ecosystem · FlyttGo USA',
-  'booking':                 'Book a Move · FlyttGo',
-  'payment':                 'Secure Payment · FlyttGo',
-  'tracking':                'Track Your Delivery · FlyttGo',
-  'services':                'Services · FlyttGo',
-  'van-guide':               'Van Size Guide · FlyttGo',
-  'checklist':               'Moving Checklist · FlyttGo',
-  'subscriptions':           'Driver Subscription Plans · FlyttGo',
-  'driver-onboarding':       'Become a Driver · FlyttGo',
-  'customer-dashboard':      'Dashboard · FlyttGo',
-  'my-bookings':             'My Bookings · FlyttGo',
-  'driver-portal':           'Driver Portal · FlyttGo',
-  'admin':                   'Admin · FlyttGo',
-  'profile':                 'Profile · FlyttGo',
-  'corporate':               'FlyttGo USA for Business',
-  'corporate-dashboard':     'Corporate Dashboard · FlyttGo',
-  'bulk-booking':            'Bulk Booking · FlyttGo',
-  'recurring-deliveries':    'Recurring Deliveries · FlyttGo',
-  'company-dashboard-info':  'Corporate Dashboard Tour · FlyttGo',
-  'invoice-billing':         'Invoice & Billing · FlyttGo',
-  'corporate-api-access':    'API Access · FlyttGo',
-  'terms':                   'Terms of Service · FlyttGo',
-  'privacy':                 'Privacy Policy · FlyttGo',
-  'liability':               'Liability · FlyttGo',
-  'driver-terms':            'Driver Terms · FlyttGo',
-  'about':                   'About FlyttGo',
-  'contact':                 'Contact FlyttGo',
-  'faq':                     'FAQ · FlyttGo',
-  'help':                    'Help Center · FlyttGo',
-  'safety':                  'Safety & Insurance · FlyttGo',
-  'careers':                 'Careers · FlyttGo',
-  'press':                   'Press & Media · FlyttGo',
-  'sustainability':          'Sustainability · FlyttGo',
-  'auth-callback':           'Signing you in… · FlyttGo',
-  'driver-application-status': 'Driver Application Status · FlyttGo',
-  'not-found':               'Page Not Found · FlyttGo',
+  'home':                    'FlyttGo Global Logistics & Relocation Marketplace',
+  'marketplace':              'Marketplace · FlyttGo Global Logistics & Relocation Marketplace',
+  'how-it-works':             'How It Works · FlyttGo Global Logistics & Relocation Marketplace',
+  'providers':                'For Providers · FlyttGo Global Logistics & Relocation Marketplace',
+  'cities':                   'Markets & Geographic Deployment · FlyttGo Global',
+  'enterprise-relocation':    'Enterprise Relocation · FlyttGo Global',
+  'compliance':               'Compliance & Jurisdictional Awareness · FlyttGo Global',
+  'partners':                 'Partners & Ecosystem · FlyttGo Global',
+  'universities':             'University Relocation · FlyttGo Global',
+  'market-us':                'United States Moves & Logistics · FlyttGo Global',
+  'market-canada':            'Canada Moves & Logistics · FlyttGo Global',
+  'market-germany':           'Germany Moves & Logistics · FlyttGo Global',
+  'market-france':            'France Moves & Logistics · FlyttGo Global',
+  'market-uk':                'United Kingdom Moves & Logistics · FlyttGo Global',
+  'market-norway':            'Norway Moves & Logistics · FlyttGo Global',
+  'booking':                  'Book a Move · FlyttGo Global',
+  'payment':                  'Secure Payment · FlyttGo Global',
+  'tracking':                 'Track Your Coordination · FlyttGo Global',
+  'services':                 'Services · FlyttGo Global',
+  'van-guide':                'Vehicle Size Guide · FlyttGo Global',
+  'checklist':                'Relocation Checklist · FlyttGo Global',
+  'subscriptions':            'Provider Subscription Plans · FlyttGo Global',
+  'driver-onboarding':        'Provider Onboarding · FlyttGo Global',
+  'customer-dashboard':       'Dashboard · FlyttGo Global',
+  'my-bookings':              'My Coordination · FlyttGo Global',
+  'driver-portal':            'Provider Portal · FlyttGo Global',
+  'admin':                    'Admin · FlyttGo Global',
+  'profile':                  'Profile · FlyttGo Global',
+  'corporate':                'For Enterprise · FlyttGo Global',
+  'corporate-dashboard':      'Enterprise Dashboard · FlyttGo Global',
+  'bulk-booking':             'Bulk Coordination · FlyttGo Global',
+  'recurring-deliveries':     'Recurring Coordination · FlyttGo Global',
+  'company-dashboard-info':   'Enterprise Dashboard Tour · FlyttGo Global',
+  'invoice-billing':          'Invoice & Billing · FlyttGo Global',
+  'corporate-api-access':     'API Access · FlyttGo Global',
+  'terms':                    'Terms of Service · FlyttGo Global',
+  'privacy':                  'Privacy Policy · FlyttGo Global',
+  'liability':                'Liability · FlyttGo Global',
+  'driver-terms':             'Provider Terms · FlyttGo Global',
+  'about':                    'About · FlyttGo Global',
+  'contact':                  'Contact · FlyttGo Global',
+  'faq':                      'FAQ · FlyttGo Global',
+  'help':                     'Help Center · FlyttGo Global',
+  'safety':                   'Safety & Insurance · FlyttGo Global',
+  'careers':                  'Careers · FlyttGo Global',
+  'press':                    'Press & Media · FlyttGo Global',
+  'sustainability':           'Sustainability · FlyttGo Global',
+  'auth-callback':            'Signing you in… · FlyttGo Global',
+  'driver-application-status':'Provider Application Status · FlyttGo Global',
+  'not-found':                'Page Not Found · FlyttGo Global',
 };
 
 /**
@@ -151,21 +167,35 @@ const PAGE_TITLES: Record<Page, string> = {
  */
 const PAGE_DESCRIPTIONS: Record<Page, string> = {
   'home':
-    "Relocation coordination marketplace connecting customers with licensed movers, relocation crews, storage providers, and packing services across the United States. Operated by Wankong LLC, Delaware.",
+    "FlyttGo Global Logistics & Relocation Marketplace — worldwide digital coordination infrastructure connecting customers with licensed relocation providers, logistics partners, workforce support, storage, and mobility services across multiple jurisdictions.",
   'marketplace':
-    "Browse the FlyttGo USA marketplace — labor-only crews, USDOT-licensed carriers, packing services, storage, truck rental, and insurance options across Phase 1 launch cities.",
+    "Browse the FlyttGo global marketplace — moving labor, licensed carrier matching, packing, storage, vehicle rental, and insurance selection across the United States, Canada, Germany, France, the United Kingdom, and Norway.",
   'how-it-works':
-    "How the FlyttGo USA relocation marketplace works — describe your move, compare verified providers, book under escrow, and document the full coordination trail.",
+    "Enter relocation details, match with independent licensed providers, compare service options, select partners, and coordinate your move — all on FlyttGo's global coordination layer.",
   'providers':
-    "Become a verified provider on FlyttGo USA — labor crews, licensed carriers, storage partners, packers, and truck rental operators. Onboarding, compliance, and dispatch.",
+    "Join FlyttGo as a licensed moving carrier, labor provider, packing crew, storage facility, vehicle rental partner, freight forwarder, international relocation coordinator, or enterprise vendor. Country-level compliance is the provider's responsibility.",
   'cities':
-    "FlyttGo USA geographic rollout — Phase 1 cities (Austin, Atlanta, Dallas, Phoenix, Charlotte) and the published expansion timeline through 2030.",
+    "FlyttGo geographic deployment — country-level marketplace nodes across the United States, Canada, Germany, France, the United Kingdom, and Norway, with intercontinental corridors planned through 2030.",
   'enterprise-relocation':
-    "Enterprise relocation coordination workflows for HR, mobility, and university housing teams. Centralized procurement, audit-ready records, and consolidated invoicing.",
+    "Enterprise, government, and project-based relocation coordination — centralized procurement, audit trails, and consolidated invoicing for corporate mobility, public-sector workforce moves, and university housing teams.",
   'compliance':
-    "How FlyttGo USA handles compliance — FMCSA-aware carrier verification, USDOT transparency, insurance disclosure. FlyttGo is not a motor carrier.",
+    "FlyttGo operates as a digital coordination marketplace — not as a transportation carrier. Service providers handle FMCSA, EU, UK, and other national licensing, taxation, and insurance compliance. GDPR-aligned data handling.",
   'partners':
-    "Partners and ecosystem integrations — Payvera payments, Workverge workforce coordination, insurance providers, storage networks, and accounting connectors.",
+    "Ecosystem partners — payment rails, workforce coordination, insurance carriers, storage networks, freight forwarders, and accounting connectors integrated with the FlyttGo global marketplace.",
+  'universities':
+    "Student relocation corridors, housing move coordination, international arrival support, and semester mobility workflows for universities and student housing offices worldwide.",
+  'market-us':
+    "United States moves & logistics — FMCSA-aware carrier matching, USDOT transparency, moving labor crews, storage integration, packing, and enterprise relocation across the US marketplace.",
+  'market-canada':
+    "Canada moves & logistics — interprovincial carrier matching, moving labor, packing, storage, and corporate relocation coordination across the Canadian marketplace.",
+  'market-germany':
+    "Germany moves & logistics — Umzugsfirma carrier matching, moving labor, packing, storage, and Konzernumzug enterprise coordination across the German marketplace.",
+  'market-france':
+    "France moves & logistics — déménageur carrier matching, moving labor, packing, storage, and corporate déménagement coordination across the French marketplace.",
+  'market-uk':
+    "United Kingdom moves & logistics — Goods Vehicle Operator Licence carrier matching, moving labor, packing, storage, and enterprise relocation across the UK marketplace.",
+  'market-norway':
+    "Norway moves & logistics — flytteselskap carrier matching, moving labor, packing, storage, and corporate flytting coordination across the Norwegian marketplace.",
   'booking':
     'Book your next move in under 3 minutes. Get an instant quote, pick a verified driver, and track your delivery live — all with escrow payment built in.',
   'payment':
@@ -193,7 +223,7 @@ const PAGE_DESCRIPTIONS: Record<Page, string> = {
   'profile':
     'Manage your FlyttGo profile, notification settings and language preferences.',
   'corporate':
-    'FlyttGo USA for businesses — bulk booking, recurring deliveries, consolidated invoicing and API access for US companies at every scale.',
+    'FlyttGo for enterprises and institutions worldwide — bulk booking, recurring deliveries, consolidated invoicing and API access for US companies at every scale.',
   'corporate-dashboard':
     'The FlyttGo corporate dashboard — track delivery volume, spending and performance across your whole organisation.',
   'bulk-booking':
@@ -207,15 +237,15 @@ const PAGE_DESCRIPTIONS: Record<Page, string> = {
   'corporate-api-access':
     'The FlyttGo REST API — create bookings, track deliveries and reconcile invoices straight from your ERP, WMS or e-commerce platform.',
   'terms':
-    'FlyttGo USA\u2019s Terms of Service — the rules that govern using the FlyttGo marketplace as a customer or business.',
+    'FlyttGo Global\u2019s Terms of Service — the rules that govern using the FlyttGo marketplace as a customer or business.',
   'privacy':
     "FlyttGo\u2019s Privacy Policy. How we collect, use and protect your data under US and EU privacy law (GDPR).",
   'liability':
-    'FlyttGo USA\u2019s liability terms — goods in transit cover, claim process, driver responsibilities and dispute resolution.',
+    'FlyttGo Global\u2019s liability terms — goods in transit cover, claim process, driver responsibilities and dispute resolution.',
   'driver-terms':
     'The FlyttGo Driver Agreement — commission, commitments, conduct and the rules for accepting jobs on the FlyttGo platform.',
   'about':
-    'FlyttGo USA is the USA\u2019s #1 moving marketplace. Verified drivers, escrow payment, real-time tracking — built in New York, run by Americans.',
+    'FlyttGo Global is the USA\u2019s #1 moving marketplace. Verified drivers, escrow payment, real-time tracking — built in New York, run by Americans.',
   'contact':
     'Get in touch with FlyttGo — phone, email, WhatsApp, office address and a contact form. Support available 7 days a week, 08:00\u201322:00.',
   'faq':
@@ -278,7 +308,7 @@ export function applyPageMeta(page: Page): void {
   upsertMeta('property', 'og:url',          url);
   upsertMeta('property', 'og:image',        image);
   upsertMeta('property', 'og:type',         'website');
-  upsertMeta('property', 'og:site_name',    'FlyttGo USA');
+  upsertMeta('property', 'og:site_name',    'FlyttGo Global Logistics & Relocation Marketplace');
 
   upsertMeta('name',     'twitter:card',        'summary_large_image');
   upsertMeta('name',     'twitter:title',        meta.title);
@@ -323,5 +353,5 @@ export function pathToPage(path: string): Page {
 
 /** Page id → browser tab title. */
 export function pageTitle(page: Page): string {
-  return PAGE_TITLES[page] ?? 'FlyttGo USA';
+  return PAGE_TITLES[page] ?? 'FlyttGo Global';
 }

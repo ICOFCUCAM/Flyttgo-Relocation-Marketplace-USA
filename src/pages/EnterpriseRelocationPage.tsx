@@ -1,81 +1,105 @@
 import React from 'react';
 import { useApp } from '../lib/store';
+import { SectionIndex } from '../components/global/CountryPage';
 
-const PROGRAMS = [
-  { title: 'Corporate mobility programs', desc: 'Talent relocation packages, lump-sum coordination, exception workflows, and HRIS-friendly audit logs.' },
-  { title: 'Multi-site operations',       desc: 'Coordinate office moves, equipment relocations, and warehouse staging across distributed US sites.' },
-  { title: 'University & student housing',desc: 'Move-in / move-out logistics, group rates, and dedicated coordinators for residence life teams.' },
-  { title: 'Government & institutional',  desc: 'Procurement-aligned coordination with documented carrier compliance for grant-funded relocations.' },
-];
-
-const CAPABILITIES = [
-  { title: 'Centralized procurement',     desc: 'Single contract covers an unlimited number of relocations across all FlyttGo markets — with budget guardrails per cost center.' },
-  { title: 'Audit-ready records',         desc: 'Immutable booking history, carrier authority snapshots, and downloadable coordination receipts for every relocation.' },
-  { title: 'Consolidated invoicing',      desc: 'Monthly invoices grouped by department or project code. Net 30 / Net 60 payment terms available.' },
-  { title: 'Approval workflows',          desc: 'Multi-step approval chains, spend caps, and policy enforcement before any provider is dispatched.' },
-  { title: 'API & SSO',                   desc: 'REST API and SAML/OIDC SSO for HRIS, ERP, and procurement system integration.' },
-  { title: 'Dedicated coordination team', desc: 'A named FlyttGo coordinator on retainer for high-volume programs.' },
+const WORKFLOWS = [
+  {
+    title: 'Corporate employee relocation',
+    body: 'Talent moves, lump-sum coordination, multi-country mobility packages, exception handling, and HRIS-friendly audit logs.',
+  },
+  {
+    title: 'Government workforce mobility',
+    body: 'Federal, state, and municipal workforce moves with bonded providers, audit-ready records, and consolidated procurement billing.',
+  },
+  {
+    title: 'University relocation coordination',
+    body: 'Student housing offices and registrars: international arrival corridors, semester mobility, and residence-hall move-in / move-out windows.',
+  },
+  {
+    title: 'Project-based relocation support',
+    body: 'Engineering, construction, energy, and entertainment projects — staged crew relocation, equipment storage, and cross-border coordination.',
+  },
 ];
 
 export default function EnterpriseRelocationPage() {
   const { setPage } = useApp();
+
   return (
-    <div className="min-h-screen bg-white">
-
-      <section className="bg-gradient-to-br from-[#0B2E59] to-[#1a4a8a] text-white py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 text-xs font-medium px-4 py-2 rounded-full mb-6">
-            Enterprise Relocation Coordination
-          </div>
-          <h1 className="text-4xl sm:text-5xl font-extrabold mb-5 leading-tight">Relocation infrastructure for institutional buyers</h1>
-          <p className="text-white/75 text-lg max-w-3xl">
-            FlyttGo Relocation Marketplace USA serves corporate mobility programs, university
-            housing offices, and institutional procurement teams that move people, teams, and
-            equipment at scale across the United States.
+    <main className="min-h-screen bg-white text-slate-900">
+      <section className="border-b border-slate-200 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-6 py-20">
+          <SectionIndex id="GLRM.01" label="Enterprise relocation" />
+          <h1 className="font-serif text-5xl lg:text-6xl leading-[1.05] tracking-tight">
+            Procurement-grade relocation coordination
+          </h1>
+          <p className="mt-6 text-lg leading-relaxed text-slate-700 max-w-3xl">
+            Enterprise, government, university, and project-based relocation
+            workflows — coordinated across the United States, Canada, Germany,
+            France, the United Kingdom, and Norway through one shared
+            platform and one consolidated invoicing surface.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <button onClick={() => setPage('contact')} className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 rounded-xl font-bold transition">Talk to enterprise</button>
-            <button onClick={() => setPage('compliance')} className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-semibold transition">Compliance posture</button>
+        </div>
+      </section>
+
+      <section className="border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-6 py-20">
+          <SectionIndex id="GLRM.02" label="Workflow categories" />
+          <div className="grid md:grid-cols-2 gap-px bg-slate-200">
+            {WORKFLOWS.map(w => (
+              <article
+                key={w.title}
+                className="bg-white p-8 flex flex-col gap-3 min-h-[200px]"
+              >
+                <h3 className="font-serif text-2xl text-slate-900">{w.title}</h3>
+                <p className="text-slate-600 leading-relaxed">{w.body}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <h2 className="text-3xl font-extrabold text-[#0B2E59] mb-10 text-center">Programs we serve</h2>
-        <div className="grid sm:grid-cols-2 gap-5">
-          {PROGRAMS.map(p => (
-            <div key={p.title} className="bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-xl hover:border-emerald-200 transition">
-              <h3 className="font-bold text-[#0B2E59] mb-2">{p.title}</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">{p.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="bg-gray-50 py-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-extrabold text-[#0B2E59] mb-10 text-center">Enterprise capabilities</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {CAPABILITIES.map(c => (
-              <div key={c.title} className="bg-white rounded-2xl p-6 border border-gray-100">
-                <h3 className="font-bold text-[#0B2E59] mb-2">{c.title}</h3>
-                <p className="text-sm text-gray-600 leading-relaxed">{c.desc}</p>
+      <section className="bg-slate-900 text-slate-100 border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-6 py-20">
+          <SectionIndex id="GLRM.03" label="Operating layer" />
+          <div className="grid md:grid-cols-3 gap-10">
+            {[
+              { title: 'Centralised procurement', body: 'One contract, multi-country provider matching, vendor approval lists, and per-cost-center billing.' },
+              { title: 'Audit-ready records', body: 'Procurement, jurisdiction, licence references, insurance disclosures, and signatures retained per coordinated relocation.' },
+              { title: 'Consolidated invoicing', body: 'Monthly invoicing across markets and providers, with multi-currency reconciliation and ERP-friendly exports.' },
+            ].map(b => (
+              <div key={b.title}>
+                <h3 className="font-serif text-2xl text-white mb-3">{b.title}</h3>
+                <p className="text-slate-300 leading-relaxed">{b.body}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="bg-[#0B2E59] text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl sm:text-3xl font-extrabold mb-4">Ready to centralize your relocation procurement?</h2>
-          <p className="text-white/75 max-w-xl mx-auto mb-6">
-            Our enterprise team will scope your program and tailor the coordination workflow.
-          </p>
-          <button onClick={() => setPage('contact')} className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 rounded-xl font-bold transition">Contact enterprise</button>
+      <section>
+        <div className="max-w-7xl mx-auto px-6 py-20">
+          <SectionIndex id="GLRM.04" label="Get in touch" />
+          <div className="grid md:grid-cols-2 gap-10 items-end">
+            <h2 className="font-serif text-3xl lg:text-4xl leading-tight">
+              For HR, mobility, procurement, and public-sector teams.
+            </h2>
+            <div className="flex flex-wrap gap-4">
+              <button
+                onClick={() => setPage('contact')}
+                className="px-6 py-3 bg-slate-900 text-white font-mono text-xs uppercase tracking-[0.18em] hover:bg-slate-700 transition"
+              >
+                Talk to FlyttGo
+              </button>
+              <button
+                onClick={() => setPage('how-it-works')}
+                className="px-6 py-3 border border-slate-900 text-slate-900 font-mono text-xs uppercase tracking-[0.18em] hover:bg-slate-50 transition"
+              >
+                How it works
+              </button>
+            </div>
+          </div>
         </div>
       </section>
-
-    </div>
+    </main>
   );
 }

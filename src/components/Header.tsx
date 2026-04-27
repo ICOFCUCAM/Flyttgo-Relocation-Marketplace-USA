@@ -34,6 +34,7 @@ export default function Header() {
   const [mobileOpen,    setMobileOpen]    = useState(false);
   const [toolsOpen,     setToolsOpen]     = useState(false);
   const [companiesOpen, setCompaniesOpen] = useState(false);
+  const [marketsOpen,   setMarketsOpen]   = useState(false);
   const [langOpen,      setLangOpen]      = useState(false);
   const [userMenuOpen,  setUserMenuOpen]  = useState(false);
   const [notifOpen,     setNotifOpen]     = useState(false);
@@ -106,14 +107,16 @@ export default function Header() {
   function closeAll() {
     setToolsOpen(false);
     setCompaniesOpen(false); setUserMenuOpen(false);
+    setMarketsOpen(false);
     setNotifOpen(false);
   }
 
-  function toggle(which: 'tools' | 'companies' | 'user' | 'notif') {
-    setToolsOpen(which === 'tools'        ? (s) => !s : false);
-    setCompaniesOpen(which === 'companies'? (s) => !s : false);
-    setUserMenuOpen(which === 'user'      ? (s) => !s : false);
-    setNotifOpen(which === 'notif'        ? (s) => !s : false);
+  function toggle(which: 'tools' | 'companies' | 'user' | 'notif' | 'markets') {
+    setToolsOpen(which === 'tools'         ? (s) => !s : false);
+    setCompaniesOpen(which === 'companies' ? (s) => !s : false);
+    setMarketsOpen(which === 'markets'     ? (s) => !s : false);
+    setUserMenuOpen(which === 'user'       ? (s) => !s : false);
+    setNotifOpen(which === 'notif'         ? (s) => !s : false);
   }
 
   function handleNav(page: Page) { setPage(page); setMobileOpen(false); closeAll(); }
@@ -266,19 +269,52 @@ export default function Header() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2-1 2 1 2-1 2 1 2-1zm0 0l2 1 2-1 2 1V6a1 1 0 00-1-1h-4"/>
                 </svg>
               </div>
-              <span className="text-xl font-bold text-gray-900">Flytt<span className="text-emerald-600">Go</span></span>
+              <div className="flex flex-col leading-none">
+                <span className="text-xl font-bold text-gray-900 font-serif tracking-tight">Flytt<span className="text-emerald-600">Go</span></span>
+                <span className="hidden sm:inline text-[9px] uppercase tracking-[0.18em] text-gray-500 font-mono mt-0.5">Global Logistics &amp; Relocation Marketplace</span>
+              </div>
             </button>
 
-            {/* Desktop nav — marketplace-first architecture */}
+            {/* Desktop nav — global marketplace architecture */}
             <nav className="hidden lg:flex items-center gap-0.5">
               {navBtn('Home',                  'home')}
-              {navBtn('Marketplace',           'marketplace')}
-              {navBtn('How It Works',          'how-it-works')}
+              <div className="relative">
+                <button
+                  onClick={() => toggle('markets')}
+                  className={`flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    marketsOpen ? 'text-emerald-600 bg-emerald-50' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                >
+                  Markets{chevron(marketsOpen)}
+                </button>
+                {marketsOpen && (
+                  <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 p-2">
+                    {([
+                      { label: 'United States Moves & Logistics', page: 'market-us' as Page,      iso: 'US' },
+                      { label: 'Canada Moves & Logistics',         page: 'market-canada' as Page,  iso: 'CA' },
+                      { label: 'Germany Moves & Logistics',        page: 'market-germany' as Page, iso: 'DE' },
+                      { label: 'France Moves & Logistics',         page: 'market-france' as Page,  iso: 'FR' },
+                      { label: 'United Kingdom Moves & Logistics', page: 'market-uk' as Page,      iso: 'GB' },
+                      { label: 'Norway Moves & Logistics',         page: 'market-norway' as Page,  iso: 'NO' },
+                    ]).map((m) => (
+                      <button
+                        key={m.page}
+                        onClick={() => handleNav(m.page)}
+                        className="w-full flex items-baseline gap-3 px-3 py-2 rounded-lg text-left hover:bg-emerald-50 hover:text-emerald-700 transition"
+                      >
+                        <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-gray-400 w-6">{m.iso}</span>
+                        <span className="text-sm text-gray-700">{m.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               {navBtn('Providers',             'providers')}
-              {navBtn('Cities',                'cities')}
-              {navBtn('Enterprise',            'enterprise-relocation')}
-              {navBtn('Compliance',            'compliance')}
+              {navBtn('How It Works',          'how-it-works')}
+              {navBtn('Enterprise Relocation', 'enterprise-relocation')}
+              {navBtn('Universities',          'universities')}
               {navBtn('Partners',              'partners')}
+              {navBtn('Compliance',            'compliance')}
               {navBtn('About',                 'about')}
               {navBtn('Contact',               'contact')}
             </nav>
@@ -421,22 +457,43 @@ export default function Header() {
 
         {/* MOBILE MENU — slide down with dim backdrop */}
         <div
-          className={`lg:hidden border-t border-gray-100 bg-white overflow-hidden transition-[max-height,opacity] duration-300 ease-out ${
-            mobileOpen ? 'max-h-[28rem] opacity-100' : 'max-h-0 opacity-0'
+          className={`lg:hidden border-t border-gray-100 bg-white overflow-y-auto transition-[max-height,opacity] duration-300 ease-out ${
+            mobileOpen ? 'max-h-[42rem] opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
           <div className="max-w-7xl mx-auto px-4 pt-3 pb-4 space-y-1">
             {([
-              ['Home',          'home'],
-              ['Marketplace',   'marketplace'],
-              ['How It Works',  'how-it-works'],
-              ['Providers',     'providers'],
-              ['Cities',        'cities'],
-              ['Enterprise',    'enterprise-relocation'],
-              ['Compliance',    'compliance'],
-              ['Partners',      'partners'],
-              ['About',         'about'],
-              ['Contact',       'contact'],
+              ['Home',                  'home'],
+            ] as [string, Page][]).map(([label, page]) => (
+              <button key={page} onClick={() => handleNav(page)}
+                className={`block w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg ${currentPage === page ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700 hover:bg-gray-50'}`}>
+                {label}
+              </button>
+            ))}
+            <p className="px-4 pt-3 text-[10px] uppercase tracking-[0.18em] text-gray-400 font-mono">Markets</p>
+            {([
+              ['United States Moves & Logistics', 'market-us'],
+              ['Canada Moves & Logistics',         'market-canada'],
+              ['Germany Moves & Logistics',        'market-germany'],
+              ['France Moves & Logistics',         'market-france'],
+              ['United Kingdom Moves & Logistics', 'market-uk'],
+              ['Norway Moves & Logistics',         'market-norway'],
+            ] as [string, Page][]).map(([label, page]) => (
+              <button key={page} onClick={() => handleNav(page)}
+                className={`block w-full text-left px-4 py-2 text-sm rounded-lg ${currentPage === page ? 'bg-emerald-50 text-emerald-700' : 'text-gray-600 hover:bg-gray-50'}`}>
+                {label}
+              </button>
+            ))}
+            <p className="px-4 pt-3 text-[10px] uppercase tracking-[0.18em] text-gray-400 font-mono">Platform</p>
+            {([
+              ['Providers',             'providers'],
+              ['How It Works',          'how-it-works'],
+              ['Enterprise Relocation', 'enterprise-relocation'],
+              ['Universities',          'universities'],
+              ['Partners',              'partners'],
+              ['Compliance',            'compliance'],
+              ['About',                 'about'],
+              ['Contact',               'contact'],
             ] as [string, Page][]).map(([label, page]) => (
               <button key={page} onClick={() => handleNav(page)}
                 className={`block w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg ${currentPage === page ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700 hover:bg-gray-50'}`}>

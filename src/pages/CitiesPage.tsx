@@ -1,77 +1,94 @@
 import React from 'react';
 import { useApp } from '../lib/store';
-import { CITIES, ROLLOUT_PHASES } from '../lib/constants';
+import type { Page } from '../lib/store';
+import { SectionIndex } from '../components/global/CountryPage';
+
+const COUNTRIES: { iso: string; name: string; phase: string; route: Page }[] = [
+  { iso: 'US', name: 'United States',  phase: 'Phase 1 — Live',              route: 'market-us' },
+  { iso: 'CA', name: 'Canada',         phase: 'Phase 2 — Activating',        route: 'market-canada' },
+  { iso: 'DE', name: 'Germany',        phase: 'Phase 3 — European corridor', route: 'market-germany' },
+  { iso: 'FR', name: 'France',         phase: 'Phase 3 — European corridor', route: 'market-france' },
+  { iso: 'GB', name: 'United Kingdom', phase: 'Phase 3 — European corridor', route: 'market-uk' },
+  { iso: 'NO', name: 'Norway',         phase: 'Phase 3 — Home market',       route: 'market-norway' },
+];
+
+const ROLLOUT = [
+  { phase: 'Phase 1', timeline: '2026',     scope: 'United States marketplace rollout', cities: ['Austin','Atlanta','Dallas','Phoenix','Charlotte'] },
+  { phase: 'Phase 2', timeline: '2026 H2',  scope: 'Canada integration', cities: ['Toronto','Montreal','Vancouver','Calgary'] },
+  { phase: 'Phase 3', timeline: '2027 H1',  scope: 'European relocation corridors', cities: ['Oslo','London','Berlin','Paris','Munich','Manchester','Lyon','Bergen'] },
+  { phase: 'Phase 4', timeline: '2027 H2+', scope: 'Intercontinental corridors', cities: ['Africa → Europe','Europe → United States','Africa → United States'] },
+];
 
 export default function CitiesPage() {
   const { setPage } = useApp();
-  return (
-    <div className="min-h-screen bg-white">
 
-      <section className="bg-gradient-to-br from-[#0B2E59] to-[#1a4a8a] text-white py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 text-xs font-medium px-4 py-2 rounded-full mb-6">
-            Geographic Rollout · United States
-          </div>
-          <h1 className="text-4xl sm:text-5xl font-extrabold mb-5 leading-tight">United States rollout plan</h1>
-          <p className="text-white/75 text-lg max-w-3xl">
-            FlyttGo Relocation Marketplace USA is rolling out across the United States in
-            published phases. Each market activates only when verified provider density,
-            compliance coverage, and demand validation thresholds are met.
+  return (
+    <main className="min-h-screen bg-white text-slate-900">
+      <section className="border-b border-slate-200 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-6 py-20">
+          <SectionIndex id="GLRM.01" label="Geographic deployment" />
+          <h1 className="font-serif text-5xl lg:text-6xl leading-[1.05] tracking-tight">
+            Markets &amp; deployment nodes
+          </h1>
+          <p className="mt-6 text-lg leading-relaxed text-slate-700 max-w-3xl">
+            FlyttGo Global Logistics &amp; Relocation Marketplace operates country-level
+            deployment nodes across the United States, Canada, Germany, France, the
+            United Kingdom, and Norway, with intercontinental corridors planned
+            through 2030.
           </p>
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <h2 className="text-3xl font-extrabold text-[#0B2E59] mb-3 text-center">Phase 1 launch cities</h2>
-        <p className="text-gray-500 text-center max-w-2xl mx-auto mb-10">Live now in five Sun Belt and Southeast markets.</p>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          {CITIES.map(c => (
-            <div key={c.slug} className="bg-white rounded-2xl p-5 border border-gray-100 text-center hover:shadow-xl transition">
-              <div className="text-xs uppercase tracking-wider text-gray-400">{c.state}</div>
-              <div className="text-xl font-extrabold text-[#0B2E59] mt-1">{c.name}</div>
-              <div className="text-xs text-gray-500 mt-2">{c.drivers} verified providers</div>
-              <div className="text-xs text-gray-500">{c.bookings} coordinated relocations</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="bg-gray-50 py-20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-extrabold text-[#0B2E59] mb-3 text-center">Expansion timeline</h2>
-          <p className="text-gray-500 text-center max-w-2xl mx-auto mb-10">Published rollout plan through 2027 and beyond.</p>
-          <div className="space-y-4">
-            {ROLLOUT_PHASES.map(p => (
-              <div key={p.phase} className="bg-white rounded-2xl p-6 border border-gray-100 flex flex-col md:flex-row md:items-center md:gap-6">
-                <div className="md:w-32 mb-3 md:mb-0">
-                  <div className="text-xs uppercase tracking-wider text-emerald-600 font-bold">Phase {p.phase}</div>
-                  <div className="text-sm font-semibold text-[#0B2E59]">{p.label}</div>
-                  <div className="text-xs text-gray-500">{p.timeline}</div>
-                </div>
-                <div className="flex-1 flex flex-wrap gap-2">
-                  {p.cities.map(c => (
-                    <span key={c} className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-700">{c}</span>
-                  ))}
-                </div>
-              </div>
+      <section className="border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-6 py-20">
+          <SectionIndex id="GLRM.02" label="Country deployment nodes" />
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px bg-slate-200">
+            {COUNTRIES.map(c => (
+              <button
+                key={c.iso}
+                onClick={() => setPage(c.route)}
+                className="bg-white text-left p-6 flex flex-col gap-3 min-h-[160px] hover:bg-slate-50 transition group"
+              >
+                <p className="font-mono text-xs uppercase tracking-[0.18em] text-emerald-700">
+                  {c.iso} · Deployment node
+                </p>
+                <h3 className="font-serif text-2xl text-slate-900 group-hover:text-emerald-700 transition">
+                  {c.name}
+                </h3>
+                <p className="font-mono text-xs uppercase tracking-[0.16em] text-slate-500 mt-auto">
+                  {c.phase}
+                </p>
+              </button>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="bg-[#0B2E59] text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl sm:text-3xl font-extrabold mb-4">Want FlyttGo in your city?</h2>
-          <p className="text-white/75 max-w-xl mx-auto mb-6">
-            Enterprise partners can fast-track market activation by committing relocation
-            volume in a target metro.
-          </p>
-          <button onClick={() => setPage('enterprise-relocation')} className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 rounded-xl font-bold transition">
-            Talk to enterprise
-          </button>
+      <section className="bg-slate-900 text-slate-100">
+        <div className="max-w-7xl mx-auto px-6 py-20">
+          <SectionIndex id="GLRM.03" label="Global rollout timeline" />
+          <ol className="space-y-px bg-slate-700">
+            {ROLLOUT.map(p => (
+              <li key={p.phase} className="bg-slate-900 grid md:grid-cols-12 gap-6 p-8 items-start">
+                <div className="md:col-span-2 font-mono text-xs uppercase tracking-[0.18em] text-emerald-400">
+                  {p.timeline}
+                </div>
+                <h3 className="md:col-span-3 font-serif text-2xl text-white">{p.phase}</h3>
+                <div className="md:col-span-7">
+                  <p className="text-slate-300 leading-relaxed">{p.scope}</p>
+                  <ul className="mt-3 grid grid-cols-2 gap-y-1 font-mono text-xs text-slate-400">
+                    {p.cities.map(city => (
+                      <li key={city} className="flex items-baseline gap-2">
+                        <span className="h-1 w-1 bg-slate-500" aria-hidden />{city}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
-
-    </div>
+    </main>
   );
 }

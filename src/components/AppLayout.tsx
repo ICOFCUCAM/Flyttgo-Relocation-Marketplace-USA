@@ -47,6 +47,14 @@ const CitiesPage         = lazy(() => import('../pages/CitiesPage'));
 const EnterpriseRelocationPage = lazy(() => import('../pages/EnterpriseRelocationPage'));
 const CompliancePage     = lazy(() => import('../pages/CompliancePage'));
 const PartnersPage       = lazy(() => import('../pages/PartnersPage'));
+/* Global Logistics & Relocation Marketplace surfaces. */
+const UniversitiesPage   = lazy(() => import('../pages/UniversitiesPage'));
+const MarketUSPage       = lazy(() => import('../pages/markets/USPage'));
+const MarketCanadaPage   = lazy(() => import('../pages/markets/CanadaPage'));
+const MarketGermanyPage  = lazy(() => import('../pages/markets/GermanyPage'));
+const MarketFrancePage   = lazy(() => import('../pages/markets/FrancePage'));
+const MarketUKPage       = lazy(() => import('../pages/markets/UKPage'));
+const MarketNorwayPage   = lazy(() => import('../pages/markets/NorwayPage'));
 const Footer             = lazy(() => import('./Footer'));
 
 function Loading() {
@@ -120,6 +128,13 @@ export default function AppLayout() {
       case 'enterprise-relocation':  return <EnterpriseRelocationPage />;
       case 'compliance':             return <CompliancePage />;
       case 'partners':               return <PartnersPage />;
+      case 'universities':           return <UniversitiesPage />;
+      case 'market-us':              return <MarketUSPage />;
+      case 'market-canada':          return <MarketCanadaPage />;
+      case 'market-germany':         return <MarketGermanyPage />;
+      case 'market-france':          return <MarketFrancePage />;
+      case 'market-uk':              return <MarketUKPage />;
+      case 'market-norway':          return <MarketNorwayPage />;
       case 'not-found':              return <NotFoundPage />;
       default:                       return <NotFoundPage />;
     }
