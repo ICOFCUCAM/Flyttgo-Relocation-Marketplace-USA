@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../lib/store';
 import { useAuth } from '../lib/auth';
-import { HERO_SLIDES, VAN_TYPES, CITIES, TESTIMONIALS, HOW_IT_WORKS, SUBSCRIPTION_PLANS, calculateCommission } from '../lib/constants';
+import { HERO_SLIDES, VAN_TYPES, CITIES, TESTIMONIALS, HOW_IT_WORKS, SUBSCRIPTION_PLANS, PARTICIPANTS, calculateCommission } from '../lib/constants';
 import NorwayAddressAutocomplete, { USAddress } from './NorwayAddressAutocomplete';
 import { getRouteDistance } from '../lib/routing';
 
@@ -660,6 +660,54 @@ function DriverCTA() {
   );
 }
 
+/* ── PARTICIPANTS STRIP ──
+ * Repositions FlyttGo as a multi-sided coordination platform serving both
+ * demand- and supply-side participants across the US relocation ecosystem. */
+function ParticipantsStrip() {
+  return (
+    <section className="bg-white py-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 text-xs font-semibold px-4 py-1.5 rounded-full mb-3">Marketplace Participants</div>
+          <h2 className="text-3xl font-extrabold text-[#0B2E59]">Built for everyone in a US relocation</h2>
+          <p className="text-gray-500 max-w-2xl mx-auto mt-2">From households moving locally to corporate mobility programs and university housing offices.</p>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {PARTICIPANTS.map(p => (
+            <div key={p.id} className="bg-gray-50 border border-gray-100 rounded-xl p-4">
+              <div className="text-xs uppercase tracking-wider text-emerald-600 font-bold mb-1">{p.icon}</div>
+              <div className="text-sm font-semibold text-[#0B2E59]">{p.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── COMPLIANCE DISCLOSURE STRIP ──
+ * Persistent, on-homepage marketplace classification statement. */
+function ComplianceStrip() {
+  const { setPage } = useApp();
+  return (
+    <section className="bg-[#0B2E59] text-white py-14">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-[1fr_auto] gap-6 items-center">
+        <div>
+          <div className="text-emerald-300 text-xs font-bold uppercase tracking-wider mb-2">Marketplace Classification</div>
+          <h2 className="text-2xl sm:text-3xl font-extrabold mb-3">FlyttGo is not a motor carrier.</h2>
+          <p className="text-white/75 text-sm leading-relaxed max-w-2xl">
+            FlyttGo Relocation Marketplace USA is a digital coordination platform operated by
+            Wankong LLC (Delaware). The platform connects customers with independent licensed
+            moving providers, labor crews, packing services, and storage operators. Transportation
+            is performed by the providers under their own authority — not by FlyttGo.
+          </p>
+        </div>
+        <button onClick={() => setPage('compliance')} className="px-5 py-3 bg-emerald-500 hover:bg-emerald-600 rounded-xl font-bold text-sm transition whitespace-nowrap">Compliance details</button>
+      </div>
+    </section>
+  );
+}
+
 /* ── HOME PAGE ── */
 export default function HomePage() {
   return (
@@ -667,6 +715,7 @@ export default function HomePage() {
       <HeroSlider />
       <BookingWidget />
       <TrustBar />
+      <ParticipantsStrip />
       <StatsSection />
       <ServicesSection />
       <HowItWorks />
@@ -676,6 +725,7 @@ export default function HomePage() {
       <TestimonialsSection />
       <SubscriptionTeaser />
       <CorporateCTA />
+      <ComplianceStrip />
       <DriverCTA />
     </div>
   );

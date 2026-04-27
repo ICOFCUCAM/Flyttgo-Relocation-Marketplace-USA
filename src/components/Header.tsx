@@ -269,53 +269,18 @@ export default function Header() {
               <span className="text-xl font-bold text-gray-900">Flytt<span className="text-emerald-600">Go</span></span>
             </button>
 
-            {/* Desktop nav */}
+            {/* Desktop nav — marketplace-first architecture */}
             <nav className="hidden lg:flex items-center gap-0.5">
-              {navBtn(t('header.home'), 'home')}
-              {navBtn(t('header.services'), 'services')}
-
-              {/* Moving Tools */}
-              {dropdown(toolsOpen, t('header.movingTools'), 'tools', (
-                <div className="w-64 py-2">
-                  {MOVING_TOOLS.map((tool) => (
-                    <button key={tool.label} onClick={() => handleNav(tool.page)}
-                      className="w-full text-left px-4 py-3 hover:bg-emerald-50 transition group">
-                      <div className="text-sm font-semibold text-gray-800 group-hover:text-emerald-700">{tool.label}</div>
-                      <div className="text-xs text-gray-500 mt-0.5">{tool.desc}</div>
-                    </button>
-                  ))}
-                </div>
-              ))}
-
-              <button onClick={() => handleNav('driver-onboarding')} className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition">{t('header.becomeDriver')}</button>
-
-              {/* Companies */}
-              {dropdown(companiesOpen, t('header.companies'), 'companies', (
-                <div className="w-80 py-3">
-                  <div className="px-4 pb-2 border-b border-gray-100 mb-2">
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t('header.corporate')}</p>
-                  </div>
-                  {CORPORATE_LINKS.map((link) => (
-                    <button key={link.label} onClick={() => handleNav(link.page)}
-                      className="w-full text-left px-4 py-3 hover:bg-emerald-50 transition group">
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-emerald-600 transition">
-                          <svg className="w-4 h-4 text-emerald-600 group-hover:text-white transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"/>
-                          </svg>
-                        </div>
-                        <div>
-                          <div className="text-sm font-semibold text-gray-800 group-hover:text-emerald-700">{link.label}</div>
-                          <div className="text-xs text-gray-500 mt-0.5">{link.desc}</div>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                  <div className="px-4 pt-2 border-t border-gray-100 mt-2">
-                    <button onClick={() => handleNav('corporate')} className="w-full py-2.5 bg-[#1A365D] text-white rounded-xl text-sm font-semibold hover:bg-[#2D4A7A] transition">{t('header.createCorp')}</button>
-                  </div>
-                </div>
-              ), true)}
+              {navBtn('Home',                  'home')}
+              {navBtn('Marketplace',           'marketplace')}
+              {navBtn('How It Works',          'how-it-works')}
+              {navBtn('Providers',             'providers')}
+              {navBtn('Cities',                'cities')}
+              {navBtn('Enterprise',            'enterprise-relocation')}
+              {navBtn('Compliance',            'compliance')}
+              {navBtn('Partners',              'partners')}
+              {navBtn('About',                 'about')}
+              {navBtn('Contact',               'contact')}
             </nav>
 
             {/* Right side */}
@@ -462,11 +427,16 @@ export default function Header() {
         >
           <div className="max-w-7xl mx-auto px-4 pt-3 pb-4 space-y-1">
             {([
-              [t('header.home'),         'home'],
-              [t('header.services'),     'services'],
-              [t('header.becomeDriver'), 'driver-onboarding'],
-              [t('header.companies'),    'corporate'],
-              ['Moving Checklist',       'checklist'],
+              ['Home',          'home'],
+              ['Marketplace',   'marketplace'],
+              ['How It Works',  'how-it-works'],
+              ['Providers',     'providers'],
+              ['Cities',        'cities'],
+              ['Enterprise',    'enterprise-relocation'],
+              ['Compliance',    'compliance'],
+              ['Partners',      'partners'],
+              ['About',         'about'],
+              ['Contact',       'contact'],
             ] as [string, Page][]).map(([label, page]) => (
               <button key={page} onClick={() => handleNav(page)}
                 className={`block w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg ${currentPage === page ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700 hover:bg-gray-50'}`}>

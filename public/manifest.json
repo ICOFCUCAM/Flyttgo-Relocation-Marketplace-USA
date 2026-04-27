@@ -1,7 +1,7 @@
 {
-  "name": "FlyttGo USA — Moving & Logistics Marketplace",
+  "name": "FlyttGo Relocation Marketplace USA",
   "short_name": "FlyttGo USA",
-  "description": "Book professional movers and cargo transport across the USA. Verified drivers, real-time tracking, secure escrow payment.",
+  "description": "Relocation coordination marketplace connecting customers with licensed movers, relocation crews, storage providers, and packing services across the United States. Operated by Wankong LLC, Delaware.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

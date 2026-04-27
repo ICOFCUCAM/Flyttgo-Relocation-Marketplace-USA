@@ -64,10 +64,13 @@ export default function TermsPage() {
           <section id="overview" className="mb-10">
             <h2 className="text-xl font-bold text-[#0B2E59] mb-4">1. Platform Overview & Legal Status</h2>
             <p className="text-gray-700 leading-relaxed mb-4">
-              These Terms and Conditions ("Terms") constitute a legally binding agreement between you ("User," "Customer," or "Driver") and FlyttGo Inc. ("FlyttGo," "we," "us," or "our"), a company registered in the USA. By accessing or using the FlyttGo platform, website, or mobile application (collectively, the "Platform"), you agree to be bound by these Terms in their entirety.
+              These Terms and Conditions ("Terms") constitute a legally binding agreement between you ("User," "Customer," or "Provider") and Wankong LLC, a Delaware limited liability company operating the FlyttGo Relocation Marketplace USA platform ("FlyttGo," "we," "us," or "our"). By accessing or using the FlyttGo platform, website, or mobile application (collectively, the "Platform"), you agree to be bound by these Terms in their entirety.
             </p>
             <p className="text-gray-700 leading-relaxed mb-4">
-              FlyttGo operates as a technology-enabled digital marketplace. The Platform facilitates connections between customers seeking transport and moving services ("Customers") and independent transport providers operating under registered companies ("Drivers" or "Transport Providers"). FlyttGo is not a transport company and does not provide any transport, moving, or logistics services directly.
+              <strong>FlyttGo Relocation Marketplace USA is a digital coordination platform that connects customers with independent licensed relocation service providers.</strong> FlyttGo does not operate as a moving carrier, freight broker, or freight forwarder. FlyttGo does not own vehicles, employ drivers or movers, and does not provide any transportation, moving, packing, storage, or logistics service directly. Transportation services are performed by independent providers under their own operating authority (including, where applicable, USDOT and MC numbers issued by the FMCSA).
+            </p>
+            <p className="text-gray-700 leading-relaxed mb-4">
+              The Platform facilitates connections between customers seeking relocation coordination services ("Customers") and independent providers operating under registered businesses ("Providers"), including licensed motor carriers, independent labor crews, packing service providers, self-storage operators, truck rental partners, and insurance providers.
             </p>
             <p className="text-gray-700 leading-relaxed">
               If you do not agree with any part of these Terms, you must immediately cease use of the Platform. Continued use constitutes full acceptance of these Terms.
@@ -79,11 +82,12 @@ export default function TermsPage() {
             <div className="bg-red-50 border-l-4 border-red-500 px-5 py-4 rounded-r-xl mb-5">
               <p className="font-bold text-red-800 mb-2">CRITICAL: READ THIS SECTION CAREFULLY</p>
               <ul className="space-y-2 text-red-700 text-sm">
-                <li>• <strong>FlyttGo IS NOT a transport company.</strong> FlyttGo does not employ drivers, own vehicles, or provide logistics services.</li>
-                <li>• <strong>FlyttGo bears ZERO liability</strong> for the loss, damage, theft, delay, or non-delivery of any goods transported through services booked via the Platform.</li>
-                <li>• <strong>ALL liability for goods in transit rests exclusively</strong> with the Transport Provider (driver's registered company).</li>
-                <li>• FlyttGo provides <strong>NO insurance coverage</strong> of any kind for transported goods or third-party liability.</li>
-                <li>• Any claim arising from a transport booking must be directed exclusively to the Transport Provider's registered company and their insurer.</li>
+                <li>• <strong>FlyttGo IS NOT a motor carrier, freight broker, or freight forwarder.</strong> FlyttGo does not employ movers, own vehicles, or provide transportation, packing, storage, or logistics services.</li>
+                <li>• <strong>FlyttGo bears NO liability</strong> for the loss, damage, theft, delay, or non-delivery of any goods transported by Providers booked via the Platform.</li>
+                <li>• <strong>All liability for goods in transit and for the performance of any service rests with the Provider</strong> (the licensed motor carrier or other independent business performing the work).</li>
+                <li>• FlyttGo provides <strong>no goods-in-transit or liability insurance</strong> for customer cargo. Insurance is provided by the Provider or by separately purchased third-party coverage disclosed at booking.</li>
+                <li>• Any claim arising from a booking must be directed exclusively to the Provider's registered business and its insurer.</li>
+                <li>• FlyttGo verifications (including FMCSA-aware authority checks) are <strong>not warranties, endorsements, or guarantees</strong> of Provider performance or insurance adequacy.</li>
               </ul>
             </div>
             <p className="text-gray-700 leading-relaxed mb-4">
@@ -129,7 +133,7 @@ export default function TermsPage() {
             </ul>
             <h3 className="font-bold text-gray-800 mb-2 text-base">4.3 Transport Providers (Drivers)</h3>
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
-              <li>Operate exclusively under a validly registered company (AS, ENK, or equivalent) with a current US organization number;</li>
+              <li>Operate exclusively under a validly registered company (LLC, S-Corp, sole proprietorship, or equivalent US business form) with a current US business registration (EIN or equivalent) and, where applicable, a USDOT/MC number;</li>
               <li>Maintain valid, comprehensive insurance covering goods in transit and public liability at all times;</li>
               <li>Comply with all US road transport laws and regulations;</li>
               <li>Not subcontract jobs without prior Customer consent;</li>
@@ -190,7 +194,7 @@ export default function TermsPage() {
               </p>
             </div>
             <p className="text-gray-700 leading-relaxed mb-4">
-              Where FlyttGo's liability cannot be wholly excluded under applicable law (including the US Consumer Protection Act), FlyttGo's total aggregate liability to any user shall not exceed the platform commission paid by the Transport Provider in respect of the specific transaction giving rise to the claim, or USD 500, whichever is lower.
+              Where FlyttGo's liability cannot be wholly excluded under applicable law (including the applicable US consumer protection law), FlyttGo's total aggregate liability to any user shall not exceed the platform commission paid by the Transport Provider in respect of the specific transaction giving rise to the claim, or USD 500, whichever is lower.
             </p>
             <p className="text-gray-700 leading-relaxed mb-4">
               FlyttGo is not liable for: service failures caused by force majeure; Transport Provider non-performance, negligence, or misconduct; damage to goods during transit; incorrect addresses or information provided by users; delays due to traffic, weather, or circumstances beyond a Transport Provider's reasonable control; or any loss arising from reliance on reviews or ratings displayed on the Platform.
@@ -232,7 +236,7 @@ export default function TermsPage() {
           <section id="intellectual" className="mb-10">
             <h2 className="text-xl font-bold text-[#0B2E59] mb-4">10. Intellectual Property</h2>
             <p className="text-gray-700 leading-relaxed mb-4">
-              All content on the Platform, including but not limited to software, design, logos, trademarks, text, and graphics, is the exclusive property of FlyttGo Inc. or its licensors and is protected by US and international intellectual property law. No user is granted any licence to use FlyttGo's intellectual property without express written consent.
+              All content on the Platform, including but not limited to software, design, logos, trademarks, text, and graphics, is the exclusive property of Wankong LLC or its licensors and is protected by US and international intellectual property law. No user is granted any licence to use FlyttGo's intellectual property without express written consent.
             </p>
             <p className="text-gray-700 leading-relaxed">
               By submitting reviews, photos, or other content to the Platform, users grant FlyttGo a non-exclusive, royalty-free, worldwide licence to use, reproduce, and display such content for platform operation and marketing purposes.
@@ -256,7 +260,7 @@ export default function TermsPage() {
           <section id="contact" className="mb-10">
             <h2 className="text-xl font-bold text-[#0B2E59] mb-4">13. Contact Information</h2>
             <div className="bg-gray-50 rounded-xl p-5">
-              <p className="font-bold text-gray-800 mb-2">FlyttGo Inc.</p>
+              <p className="font-bold text-gray-800 mb-2">Wankong LLC, operator of FlyttGo Relocation Marketplace USA,</p>
               <p className="text-gray-600 text-sm">New York, NY</p>
               <p className="text-gray-600 text-sm">Legal & Compliance: legal@flyttgo.com</p>
               <p className="text-gray-600 text-sm">Customer Support: support@flyttgo.com</p>

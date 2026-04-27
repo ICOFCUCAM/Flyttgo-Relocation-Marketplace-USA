@@ -52,13 +52,13 @@ export const en = {
     insuranceLine1:  'Goods-in-transit cover',
     insuranceLine2:  'up to $50,000 per booking',
     supportHours:    'Mon–Sun · 08:00–22:00',
-    rights:          '© 2026 FlyttGo Inc.. All rights reserved.',
+    rights:          '© 2026 Wankong LLC. FlyttGo Relocation Marketplace USA. All rights reserved.',
     privacy:         'Privacy Policy',
     terms:           'Terms of Service',
     liability:       'Liability',
     cookies:         'Cookie Policy',
     chatWithUs:      'Chat with us',
-    norwayMarketplace: "America's #1 moving platform. Smart moving and transport services connecting you with verified drivers.",
+    norwayMarketplace: "Relocation coordination marketplace connecting customers with licensed movers, relocation crews, storage providers, and packing services across the United States. Operated by Wankong LLC, Delaware.",
     newsletterTitle: 'Stay in the loop',
     newsletterDesc:  'Monthly moving tips, seasonal discounts, and new-city launches.',
     newsletterPlaceholder: 'your.email@example.com',
@@ -66,7 +66,7 @@ export const en = {
     subscribed:      "You're subscribed. Thanks!",
     appStoreCta:     'Coming soon on iOS and Android',
     paymentsAccepted:'We accept',
-    builtIn:         'Designed in New York 🇺🇸',
+    builtIn:         'Operated by Wankong LLC, Delaware 🇺🇸',
   },
 
   /* ─── Auth modal ─── */
@@ -113,12 +113,12 @@ export const en = {
   /* ─── Home page ─── */
   home: {
     /* Hero */
-    heroBadge:    "America's #1 Moving Platform",
+    heroBadge:    'Relocation Marketplace · United States',
     vanSizeGuide: 'Van Size Guide',
 
     /* Booking widget */
     quoteTitle:   'Get an Instant Moving Quote',
-    quoteSubtitle:'USA-wide · free estimate · no commitment',
+    quoteSubtitle:'United States · free estimate · operated by Wankong LLC, Delaware',
     insured:      'Insured',
     twoHrMin:     '2hr min',
     mvaIncl:      'Tax incl.',
@@ -163,7 +163,7 @@ export const en = {
 
     /* Driver CTA */
     driverCtaTitle:    'Become a FlyttGo Driver',
-    driverCtaSubtitle: 'Earn money on your own schedule. Join thousands of drivers across the USA.',
+    driverCtaSubtitle: 'Apply to operate as a verified provider on the FlyttGo Relocation Marketplace USA — labor crews, licensed carriers, packers, and storage operators welcome.',
     driverFeature1:    'Flexible working hours',
     driverFeature2:    'Earn up to $3,000/month',
     driverFeature3:    'Weekly payouts via Stripe',
@@ -473,7 +473,7 @@ export const en = {
 
   /* ─── Services page ─── */
   services: {
-    heroBadge:   "America's #1 Moving Marketplace · 25,000+ Jobs Completed",
+    heroBadge:   'Marketplace Services · United States',
     heroTitle1:  'Every Moving Service',
     heroTitle2:  'Across the USA',
     heroSubtitle:'Book verified, insured transport providers for any move. Transparent pricing, real-time tracking, and secure escrow payment.',
@@ -501,7 +501,7 @@ export const en = {
 
   /* ─── About Us ─── */
   about: {
-    heroBadge:    'Built in America for Americans',
+    heroBadge:    'Operated by Wankong LLC, Delaware',
     heroTitle1:   'Moving, but',
     heroTitle2:   'finally',
     heroTitle3:   'done right.',

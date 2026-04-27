@@ -251,8 +251,9 @@ export default function Footer() {
           <div>
             <div className="text-gray-400 font-semibold uppercase tracking-wide mb-1">{t('footer.companyLabel')}</div>
             <div className="leading-relaxed">
-              FlyttGo Inc.<br/>
-              Delaware C-Corp · <span className="font-mono">{/* TODO: real Delaware file # */}File #0000000</span>
+              FlyttGo Relocation Marketplace USA<br/>
+              Operated by Wankong LLC<br/>
+              Delaware, United States · <span className="font-mono">{/* TODO: real Delaware file # */}File #0000000</span>
             </div>
           </div>
           <div>

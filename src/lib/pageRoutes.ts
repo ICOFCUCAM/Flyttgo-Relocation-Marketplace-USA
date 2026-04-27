@@ -64,6 +64,15 @@ const PAGE_TO_PATH: Record<Page, string> = {
   'press':                   '/press',
   'sustainability':          '/sustainability',
 
+  /* Marketplace repositioning surfaces (Phase 12). */
+  'marketplace':             '/marketplace',
+  'how-it-works':            '/how-it-works',
+  'providers':               '/providers',
+  'cities':                  '/cities',
+  'enterprise-relocation':   '/enterprise-relocation',
+  'compliance':              '/compliance',
+  'partners':                '/partners',
+
   /* Fallback for unknown routes. No real path — pathToPage() returns
    * this id for anything it can't match. setPage('not-found') still
    * updates history.pushState to whatever URL triggered the fallback. */
@@ -90,7 +99,14 @@ export interface PageMeta {
 }
 
 const PAGE_TITLES: Record<Page, string> = {
-  'home':                    'FlyttGo — the USA\u2019s #1 Moving Marketplace',
+  'home':                    'FlyttGo Relocation Marketplace USA',
+  'marketplace':             'Marketplace · FlyttGo USA',
+  'how-it-works':            'How the Marketplace Works · FlyttGo USA',
+  'providers':               'For Providers · FlyttGo USA',
+  'cities':                  'Cities & Geographic Rollout · FlyttGo USA',
+  'enterprise-relocation':   'Enterprise Relocation Coordination · FlyttGo USA',
+  'compliance':              'Compliance & Carrier Verification · FlyttGo USA',
+  'partners':                'Partners & Ecosystem · FlyttGo USA',
   'booking':                 'Book a Move · FlyttGo',
   'payment':                 'Secure Payment · FlyttGo',
   'tracking':                'Track Your Delivery · FlyttGo',
@@ -104,7 +120,7 @@ const PAGE_TITLES: Record<Page, string> = {
   'driver-portal':           'Driver Portal · FlyttGo',
   'admin':                   'Admin · FlyttGo',
   'profile':                 'Profile · FlyttGo',
-  'corporate':               'FlyttGo for Business',
+  'corporate':               'FlyttGo USA for Business',
   'corporate-dashboard':     'Corporate Dashboard · FlyttGo',
   'bulk-booking':            'Bulk Booking · FlyttGo',
   'recurring-deliveries':    'Recurring Deliveries · FlyttGo',
@@ -135,7 +151,21 @@ const PAGE_TITLES: Record<Page, string> = {
  */
 const PAGE_DESCRIPTIONS: Record<Page, string> = {
   'home':
-    "Book verified, insured movers and cargo drivers across the USA. Real-time tracking, transparent pricing, escrow payment. New York, Los Angeles, Chicago and more.",
+    "Relocation coordination marketplace connecting customers with licensed movers, relocation crews, storage providers, and packing services across the United States. Operated by Wankong LLC, Delaware.",
+  'marketplace':
+    "Browse the FlyttGo USA marketplace — labor-only crews, USDOT-licensed carriers, packing services, storage, truck rental, and insurance options across Phase 1 launch cities.",
+  'how-it-works':
+    "How the FlyttGo USA relocation marketplace works — describe your move, compare verified providers, book under escrow, and document the full coordination trail.",
+  'providers':
+    "Become a verified provider on FlyttGo USA — labor crews, licensed carriers, storage partners, packers, and truck rental operators. Onboarding, compliance, and dispatch.",
+  'cities':
+    "FlyttGo USA geographic rollout — Phase 1 cities (Austin, Atlanta, Dallas, Phoenix, Charlotte) and the published expansion timeline through 2030.",
+  'enterprise-relocation':
+    "Enterprise relocation coordination workflows for HR, mobility, and university housing teams. Centralized procurement, audit-ready records, and consolidated invoicing.",
+  'compliance':
+    "How FlyttGo USA handles compliance — FMCSA-aware carrier verification, USDOT transparency, insurance disclosure. FlyttGo is not a motor carrier.",
+  'partners':
+    "Partners and ecosystem integrations — Payvera payments, Workverge workforce coordination, insurance providers, storage networks, and accounting connectors.",
   'booking':
     'Book your next move in under 3 minutes. Get an instant quote, pick a verified driver, and track your delivery live — all with escrow payment built in.',
   'payment':
@@ -163,7 +193,7 @@ const PAGE_DESCRIPTIONS: Record<Page, string> = {
   'profile':
     'Manage your FlyttGo profile, notification settings and language preferences.',
   'corporate':
-    'FlyttGo for businesses — bulk booking, recurring deliveries, consolidated invoicing and API access for US companies at every scale.',
+    'FlyttGo USA for businesses — bulk booking, recurring deliveries, consolidated invoicing and API access for US companies at every scale.',
   'corporate-dashboard':
     'The FlyttGo corporate dashboard — track delivery volume, spending and performance across your whole organisation.',
   'bulk-booking':
@@ -177,15 +207,15 @@ const PAGE_DESCRIPTIONS: Record<Page, string> = {
   'corporate-api-access':
     'The FlyttGo REST API — create bookings, track deliveries and reconcile invoices straight from your ERP, WMS or e-commerce platform.',
   'terms':
-    'FlyttGo\u2019s Terms of Service — the rules that govern using the FlyttGo marketplace as a customer or business.',
+    'FlyttGo USA\u2019s Terms of Service — the rules that govern using the FlyttGo marketplace as a customer or business.',
   'privacy':
     "FlyttGo\u2019s Privacy Policy. How we collect, use and protect your data under US and EU privacy law (GDPR).",
   'liability':
-    'FlyttGo\u2019s liability terms — goods in transit cover, claim process, driver responsibilities and dispute resolution.',
+    'FlyttGo USA\u2019s liability terms — goods in transit cover, claim process, driver responsibilities and dispute resolution.',
   'driver-terms':
     'The FlyttGo Driver Agreement — commission, commitments, conduct and the rules for accepting jobs on the FlyttGo platform.',
   'about':
-    'FlyttGo is the USA\u2019s #1 moving marketplace. Verified drivers, escrow payment, real-time tracking — built in New York, run by Americans.',
+    'FlyttGo USA is the USA\u2019s #1 moving marketplace. Verified drivers, escrow payment, real-time tracking — built in New York, run by Americans.',
   'contact':
     'Get in touch with FlyttGo — phone, email, WhatsApp, office address and a contact form. Support available 7 days a week, 08:00\u201322:00.',
   'faq':
@@ -248,7 +278,7 @@ export function applyPageMeta(page: Page): void {
   upsertMeta('property', 'og:url',          url);
   upsertMeta('property', 'og:image',        image);
   upsertMeta('property', 'og:type',         'website');
-  upsertMeta('property', 'og:site_name',    'FlyttGo');
+  upsertMeta('property', 'og:site_name',    'FlyttGo USA');
 
   upsertMeta('name',     'twitter:card',        'summary_large_image');
   upsertMeta('name',     'twitter:title',        meta.title);
@@ -293,5 +323,5 @@ export function pathToPage(path: string): Page {
 
 /** Page id → browser tab title. */
 export function pageTitle(page: Page): string {
-  return PAGE_TITLES[page] ?? 'FlyttGo';
+  return PAGE_TITLES[page] ?? 'FlyttGo USA';
 }

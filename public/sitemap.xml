@@ -12,6 +12,16 @@
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
+
+  <!-- Marketplace repositioning surfaces -->
+  <url><loc>https://flyttgo.us/marketplace</loc><changefreq>weekly</changefreq><priority>0.95</priority></url>
+  <url><loc>https://flyttgo.us/how-it-works</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://flyttgo.us/providers</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://flyttgo.us/cities</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://flyttgo.us/enterprise-relocation</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://flyttgo.us/compliance</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://flyttgo.us/partners</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
+
   <url>
     <loc>https://flyttgo.us/services</loc>
     <changefreq>monthly</changefreq>

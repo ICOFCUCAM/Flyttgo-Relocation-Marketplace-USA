@@ -19,6 +19,9 @@ export type Page =
   | 'auth-callback'
   /* Driver onboarding status (pending / approved / rejected). */
   | 'driver-application-status'
+  /* Marketplace repositioning surfaces (Phase 12). */
+  | 'marketplace' | 'how-it-works' | 'providers' | 'cities'
+  | 'enterprise-relocation' | 'compliance' | 'partners'
   /* Fallback for URLs that don't match any known route. */
   | 'not-found';
 

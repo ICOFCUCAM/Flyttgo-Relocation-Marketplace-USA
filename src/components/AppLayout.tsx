@@ -39,6 +39,14 @@ const PaymentPage        = lazy(() => import('../pages/PaymentPage'));
 const AuthCallbackPage   = lazy(() => import('../pages/auth/callback'));
 const DriverApplicationStatusPage = lazy(() => import('../pages/DriverApplicationStatusPage'));
 const NotFoundPage       = lazy(() => import('../pages/NotFoundPage'));
+/* Marketplace repositioning surfaces (Phase 12). */
+const MarketplacePage    = lazy(() => import('../pages/MarketplacePage'));
+const HowItWorksPage     = lazy(() => import('../pages/HowItWorksPage'));
+const ProvidersPage      = lazy(() => import('../pages/ProvidersPage'));
+const CitiesPage         = lazy(() => import('../pages/CitiesPage'));
+const EnterpriseRelocationPage = lazy(() => import('../pages/EnterpriseRelocationPage'));
+const CompliancePage     = lazy(() => import('../pages/CompliancePage'));
+const PartnersPage       = lazy(() => import('../pages/PartnersPage'));
 const Footer             = lazy(() => import('./Footer'));
 
 function Loading() {
@@ -105,6 +113,13 @@ export default function AppLayout() {
       case 'payment':                return <PaymentPage />;
       case 'auth-callback':          return <AuthCallbackPage />;
       case 'driver-application-status': return <DriverApplicationStatusPage />;
+      case 'marketplace':            return <MarketplacePage />;
+      case 'how-it-works':           return <HowItWorksPage />;
+      case 'providers':              return <ProvidersPage />;
+      case 'cities':                 return <CitiesPage />;
+      case 'enterprise-relocation':  return <EnterpriseRelocationPage />;
+      case 'compliance':             return <CompliancePage />;
+      case 'partners':               return <PartnersPage />;
       case 'not-found':              return <NotFoundPage />;
       default:                       return <NotFoundPage />;
     }

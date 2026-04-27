@@ -23,13 +23,13 @@ export const IMAGES = {
 };
 
 export const HERO_SLIDES = [
-  { key: 'Smart',    image: IMAGES.hero.truck,     title: 'Smart Moving & Transport Services',        subtitle: 'Book professional movers and cargo transport in seconds. Real-time tracking, transparent pricing, and verified drivers across the USA.', cta: 'Book a Van' },
-  { key: 'Student',  image: IMAGES.hero.students,  title: 'Student Moving Made Simple',               subtitle: 'Affordable moving solutions for students and small apartments. Fast, reliable, and budget-friendly.', cta: 'Get Price Estimate' },
-  { key: 'Business', image: IMAGES.hero.office,    title: 'Business Logistics & Office Moving',       subtitle: 'Professional moving services for offices and commercial logistics. Trusted by businesses across America.', cta: 'Schedule Delivery' },
-  { key: 'Smart',    image: IMAGES.hero.truck1,    title: 'Smart Moving & Transport Services',        subtitle: 'Book professional movers and cargo transport in seconds. Real-time tracking, transparent pricing, and verified drivers across the USA.', cta: 'Book a Van' },
-  { key: 'Student',  image: IMAGES.hero.students1, title: 'Student Moving Made Simple',               subtitle: 'Affordable moving solutions for students and small apartments. Fast, reliable, and budget-friendly.', cta: 'Get Price Estimate' },
-  { key: 'Smart',    image: IMAGES.hero.truck2,    title: 'Smart Moving & Transport Services',        subtitle: 'Book professional movers and cargo transport in seconds. Real-time tracking, transparent pricing, and verified drivers across the USA.', cta: 'Book a Van' },
-  { key: 'Business', image: IMAGES.hero.office,    title: 'Business Logistics & Office Moving',       subtitle: 'Professional moving services for offices and commercial logistics. Trusted by businesses across America.', cta: 'Schedule Delivery' },
+  { key: 'Marketplace', image: IMAGES.hero.truck,     title: 'Relocation Marketplace Infrastructure for the United States', subtitle: 'FlyttGo connects households, businesses, and institutions with licensed moving carriers, relocation crews, storage providers, packing services, truck rental partners, and insurance options — coordinated through a single digital platform.', cta: 'Browse the Marketplace' },
+  { key: 'Coordination', image: IMAGES.hero.students,  title: 'One Platform. Every Relocation Provider.',                    subtitle: 'Find labor-only crews, licensed interstate carriers, storage integrations, and packing teams in one coordination layer — with transparent pricing and FMCSA-aware verification.', cta: 'See How It Works' },
+  { key: 'Enterprise',  image: IMAGES.hero.office,    title: 'Enterprise Relocation Coordination',                          subtitle: 'Workflow tools for corporate mobility programs, university housing offices, and multi-site operators. Centralized procurement, audit-ready records, consolidated billing.', cta: 'Enterprise Programs' },
+  { key: 'Marketplace', image: IMAGES.hero.truck1,    title: 'Relocation Marketplace Infrastructure for the United States', subtitle: 'FlyttGo connects households, businesses, and institutions with licensed moving carriers, relocation crews, storage providers, packing services, truck rental partners, and insurance options — coordinated through a single digital platform.', cta: 'Browse the Marketplace' },
+  { key: 'Coordination', image: IMAGES.hero.students1, title: 'One Platform. Every Relocation Provider.',                    subtitle: 'Find labor-only crews, licensed interstate carriers, storage integrations, and packing teams in one coordination layer — with transparent pricing and FMCSA-aware verification.', cta: 'See How It Works' },
+  { key: 'Marketplace', image: IMAGES.hero.truck2,    title: 'Relocation Marketplace Infrastructure for the United States', subtitle: 'FlyttGo connects households, businesses, and institutions with licensed moving carriers, relocation crews, storage providers, packing services, truck rental partners, and insurance options — coordinated through a single digital platform.', cta: 'Browse the Marketplace' },
+  { key: 'Enterprise',  image: IMAGES.hero.office,    title: 'Enterprise Relocation Coordination',                          subtitle: 'Workflow tools for corporate mobility programs, university housing offices, and multi-site operators. Centralized procurement, audit-ready records, consolidated billing.', cta: 'Enterprise Programs' },
 ];
 
 export const VAN_TYPES = [
@@ -47,36 +47,64 @@ export const SUBSCRIPTION_PLANS = [
   { id: 'unlimited', name: 'Unlimited', price: 249, period: '/month', jobVisibility: 'All jobs',         commission: { all: 0 },                                      dispatchPriority: 'Highest',   priorityLevel: 5, features: ['Access to all jobs','Highest dispatch priority','0% commission on ALL jobs','VIP support','Priority job matching','Earnings maximized'],                                                          popular: false, color: 'amber' },
 ];
 
+/* Phase 1 launch cities — initial US rollout footprint.
+ * Provider counts represent verified marketplace participants; bookings reflect
+ * cumulative coordinated relocations.
+ */
 export const CITIES = [
-  { name: 'New York',    slug: 'new-york',    image: IMAGES.cities.newyork,    drivers: 300, bookings: '12,000+' },
-  { name: 'Los Angeles', slug: 'los-angeles', image: IMAGES.cities.losangeles, drivers: 220, bookings: '8,500+' },
-  { name: 'Chicago',     slug: 'chicago',     image: IMAGES.cities.chicago,    drivers: 150, bookings: '5,200+' },
-  { name: 'Houston',     slug: 'houston',     image: IMAGES.cities.newyork,    drivers: 110, bookings: '3,800+' },
-  { name: 'Phoenix',     slug: 'phoenix',     image: IMAGES.cities.losangeles, drivers: 80,  bookings: '2,400+' },
-  { name: 'Philadelphia',slug: 'philadelphia',image: IMAGES.cities.chicago,    drivers: 70,  bookings: '2,100+' },
+  { name: 'Austin',    slug: 'austin',    state: 'TX', image: IMAGES.cities.newyork,    drivers: 180, bookings: '4,200+', phase: 1 },
+  { name: 'Atlanta',   slug: 'atlanta',   state: 'GA', image: IMAGES.cities.chicago,    drivers: 210, bookings: '5,100+', phase: 1 },
+  { name: 'Dallas',    slug: 'dallas',    state: 'TX', image: IMAGES.cities.losangeles, drivers: 240, bookings: '6,800+', phase: 1 },
+  { name: 'Phoenix',   slug: 'phoenix',   state: 'AZ', image: IMAGES.cities.newyork,    drivers: 160, bookings: '3,900+', phase: 1 },
+  { name: 'Charlotte', slug: 'charlotte', state: 'NC', image: IMAGES.cities.chicago,    drivers: 140, bookings: '3,200+', phase: 1 },
 ];
 
+/* Marketplace coordination categories.
+ * FlyttGo does not perform any of these services directly — it coordinates
+ * matching between customers and licensed independent providers.
+ */
 export const SERVICES = [
-  { name: 'Moving Services',     icon: 'truck',      description: 'Full house and apartment moving with professional movers and vehicles.' },
-  { name: 'Furniture Transport', icon: 'sofa',       description: 'Safe transport of individual furniture items across the USA.' },
-  { name: 'Office Relocation',   icon: 'building',   description: 'Professional office moving with minimal business disruption.' },
-  { name: 'Student Moving',      icon: 'graduation', description: 'Affordable moving solutions designed for students.' },
-  { name: 'Same-Day Delivery',   icon: 'clock',      description: 'Urgent deliveries completed within the same day.' },
-  { name: 'Storage Transport',   icon: 'box',        description: 'Moving items to and from storage units efficiently.' },
+  { name: 'Labor-Only Move Support',       icon: 'truck',      description: 'Match with vetted moving labor crews for loading, unloading, and in-home moves. Bring your own vehicle or rental.' },
+  { name: 'Licensed Carrier Matching',     icon: 'sofa',       description: 'FMCSA-aware matching with USDOT-registered interstate and intrastate motor carriers for full-service relocations.' },
+  { name: 'Truck Rental Coordination',     icon: 'building',   description: 'Connect with truck rental partners and reserve the right vehicle alongside your labor or carrier booking.' },
+  { name: 'Packing Services',              icon: 'box',        description: 'Coordinate packing crews, materials, and crating from independent packing service providers.' },
+  { name: 'Temporary Storage Integration', icon: 'graduation', description: 'Self-storage and warehouse partners integrated into the move plan for staged or interstate timelines.' },
+  { name: 'Insurance Options Selection',   icon: 'clock',      description: 'Compare valuation coverage and third-party transit insurance options at the time of booking.' },
+  { name: 'Corporate Relocation Workflows',icon: 'building',   description: 'Procurement, approvals, audit logs, and consolidated invoicing for HR, mobility, and operations teams.' },
+  { name: 'University Relocation Support', icon: 'graduation', description: 'Move-in and move-out coordination for universities, student housing offices, and Greek organizations.' },
 ];
 
 export const TESTIMONIALS = [
-  { name: 'Emily Johnson',  city: 'New York',    rating: 5, text: 'FlyttGo made our apartment move incredibly smooth. The driver was professional and on time. Highly recommend!' },
-  { name: 'Michael Chen',   city: 'Los Angeles', rating: 5, text: 'Used FlyttGo for office relocation. Excellent service, transparent pricing, and careful handling of equipment.' },
-  { name: 'Jessica Martinez',city: 'Chicago',    rating: 5, text: 'As a student, FlyttGo was perfect. Affordable, fast, and the driver helped carry boxes up 3 flights of stairs.' },
-  { name: 'David Wilson',   city: 'Houston',     rating: 4, text: 'Great platform for furniture delivery. Real-time tracking was very helpful. Will use again!' },
+  { name: 'Emily Johnson',  city: 'Austin',    rating: 5, text: 'FlyttGo matched us with a vetted labor crew in under 30 minutes. Transparent pricing and the audit trail made expense reporting trivial.' },
+  { name: 'Michael Chen',   city: 'Dallas',    rating: 5, text: 'We coordinate dozens of corporate relocations a quarter through FlyttGo. The provider variety and consolidated billing are unmatched.' },
+  { name: 'Jessica Martinez',city: 'Atlanta',   rating: 5, text: 'University housing used the platform for 1,200 student move-ins. The compliance disclosures kept procurement happy.' },
+  { name: 'David Wilson',   city: 'Phoenix',   rating: 4, text: 'Great marketplace for finding licensed interstate carriers with USDOT verification. Made our cross-state move stress-free.' },
 ];
 
 export const HOW_IT_WORKS = [
-  { step: 1, title: 'Enter Your Details',      description: 'Tell us where you are moving from and to, what items you need transported, and when.' },
-  { step: 2, title: 'Get Instant Price',       description: 'Our smart pricing engine calculates a fair price based on distance, items, and services needed.' },
-  { step: 3, title: 'Book & Pay Securely',     description: 'Confirm your booking and pay securely. Funds are held in escrow until delivery is complete.' },
-  { step: 4, title: 'Track Your Delivery',     description: 'Follow your driver in real-time from pickup to delivery with live GPS tracking.' },
+  { step: 1, title: 'Describe Your Relocation',     description: 'Origin, destination, scope, and timeline. The marketplace generates a coordinated plan across labor, carrier, storage, and packing categories.' },
+  { step: 2, title: 'Compare Verified Providers',   description: 'See licensed carriers with USDOT/MC numbers, vetted labor crews, and rated independent providers — with transparent line-item pricing.' },
+  { step: 3, title: 'Book & Coordinate Securely',   description: 'Funds are held in escrow until the provider confirms completion. Insurance options are disclosed before booking.' },
+  { step: 4, title: 'Track & Document',             description: 'Real-time coordination, status updates, and an audit-ready record retained for procurement, insurance, and tax purposes.' },
+];
+
+/* Geographic rollout plan — published expansion timeline for the platform. */
+export const ROLLOUT_PHASES = [
+  { phase: 1, label: 'Live now',     timeline: '2026',      cities: ['Austin','Atlanta','Dallas','Phoenix','Charlotte'] },
+  { phase: 2, label: 'In activation', timeline: '2026 H2',  cities: ['Nashville','Tampa','Denver','Raleigh','Salt Lake City'] },
+  { phase: 3, label: 'Planned',       timeline: '2027 H1',  cities: ['Houston','Orlando','Indianapolis','Columbus','Kansas City'] },
+  { phase: 4, label: 'Expansion',     timeline: '2027 H2+', cities: ['Northeast corridor','West Coast metros','Mountain West','Pacific Northwest'] },
+];
+
+/* Marketplace participant categories. */
+export const PARTICIPANTS = [
+  { id: 'household_local',     label: 'Households relocating locally',  icon: 'home' },
+  { id: 'household_interstate',label: 'Interstate movers',              icon: 'route' },
+  { id: 'licensed_carrier',    label: 'Licensed moving carriers',        icon: 'truck' },
+  { id: 'crew',                label: 'Independent relocation crews',    icon: 'users' },
+  { id: 'storage',             label: 'Self-storage providers',          icon: 'box' },
+  { id: 'university',          label: 'Universities & student housing',  icon: 'graduation' },
+  { id: 'corporate',           label: 'Corporate relocation programs',   icon: 'building' },
 ];
 
 export const PRICING = {
