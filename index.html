@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#059669" />
+
+    <title>FlyttGo USA — Moving &amp; Logistics Marketplace</title>
+    <meta name="description" content="Book professional movers and cargo transport across the USA. Verified drivers, real-time tracking, secure escrow payment. Available in New York, Los Angeles, Chicago and more." />
+    <meta name="keywords" content="movers USA, moving company, NYC movers, Los Angeles movers, Chicago movers, cargo transport USA, relocation marketplace" />
+    <link rel="canonical" href="https://flyttgo.us/" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+
+    <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Leaflet (used by DeliveryMap for real-time delivery tracking).
+         Loaded via CDN so Leaflet itself doesn't bloat the JS bundle;
+         the component reads `L` from the global scope. -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin="" defer></script>
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="FlyttGo USA" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:url" content="https://flyttgo.us/" />
+    <meta property="og:title" content="FlyttGo USA — Moving &amp; Logistics Marketplace" />
+    <meta property="og:description" content="Book professional movers and cargo transport across the USA. Verified drivers, real-time tracking, secure escrow payment." />
+    <meta property="og:image" content="https://flyttgo.us/og.svg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="FlyttGo USA — America's Moving &amp; Logistics Marketplace" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="FlyttGo USA — Moving &amp; Logistics Marketplace" />
+    <meta name="twitter:description" content="Book professional movers and cargo transport across the USA. Verified drivers, real-time tracking, secure escrow payment." />
+    <meta name="twitter:image" content="https://flyttgo.us/og.svg" />
+    <meta name="twitter:image:alt" content="FlyttGo USA — America's Moving &amp; Logistics Marketplace" />
+
+    <!-- JSON-LD: LocalBusiness -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "MovingCompany",
+      "@id": "https://flyttgo.us/#organization",
+      "name": "FlyttGo USA",
+      "alternateName": "FlyttGo Inc.",
+      "description": "America's marketplace for professional moving and cargo transport services. Verified drivers, real-time tracking, secure escrow payment.",
+      "url": "https://flyttgo.us/",
+      "logo": "https://flyttgo.us/apple-touch-icon.svg",
+      "image": "https://flyttgo.us/og.svg",
+      "telephone": "+1-XXX-XXX-XXXX",
+      "email": "support@flyttgo.us",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "TODO — set US business address",
+        "addressLocality": "New York",
+        "postalCode": "10001",
+        "addressRegion": "NY",
+        "addressCountry": "US"
+      },
+      "areaServed": [
+        { "@type": "City", "name": "New York" },
+        { "@type": "City", "name": "Los Angeles" },
+        { "@type": "City", "name": "Chicago" },
+        { "@type": "City", "name": "Houston" },
+        { "@type": "City", "name": "Phoenix" },
+        { "@type": "City", "name": "Philadelphia" }
+      ],
+      "priceRange": "85-249 USD",
+      "currenciesAccepted": "USD",
+      "paymentAccepted": "Credit Card, Stripe",
+      "openingHoursSpecification": {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+        "opens": "00:00",
+        "closes": "23:59"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "reviewCount": "25000",
+        "bestRating": "5",
+        "worstRating": "1"
+      },
+      "sameAs": []
+    }
+    </script>
+
+    <!-- JSON-LD: WebSite + SearchAction -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "@id": "https://flyttgo.us/#website",
+      "url": "https://flyttgo.us/",
+      "name": "FlyttGo USA",
+      "publisher": { "@id": "https://flyttgo.us/#organization" },
+      "inLanguage": ["en-US"]
+    }
+    </script>
+
+    <!-- JSON-LD: Service catalog -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "serviceType": "Moving and cargo transport",
+      "provider": { "@id": "https://flyttgo.us/#organization" },
+      "areaServed": { "@type": "Country", "name": "United States" },
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "FlyttGo USA services",
+        "itemListElement": [
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Furniture Moving" }, "priceCurrency": "USD", "price": "85" },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "House Moving"     }, "priceCurrency": "USD", "price": "115" },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Appliance Delivery"}, "priceCurrency": "USD", "price": "65" },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Cargo Transport"  }, "priceCurrency": "USD", "price": "75" },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Store Delivery"   }, "priceCurrency": "USD", "price": "55" },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Business Logistics"}, "priceCurrency": "USD", "price": "150" }
+        ]
+      }
+    }
+    </script>
+
+    <!-- Scroll precision fix for sticky header offset -->
+    <style>
+      html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 120px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
