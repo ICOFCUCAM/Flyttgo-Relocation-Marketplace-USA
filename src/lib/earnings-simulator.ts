@@ -30,8 +30,7 @@ import {
   COUNTRY_BASELINES, CITY_MULTIPLIERS, CREW_MULTIPLIERS,
   SERVICE_ADJUSTMENTS, COMMISSION_DEFAULT, TIMING_FACTORS,
 } from './pricing-engine';
-import type { BookingCountry } from './store';
-import type { Currency } from './pricing-engine';
+import type { Currency, PricingCountry } from './pricing-engine';
 
 /** Industry standard for converting weekly → monthly. 52 weeks ÷ 12. */
 export const WEEKS_PER_MONTH = 4.345;
@@ -53,7 +52,7 @@ export const CORRIDOR_MULTIPLIERS: Record<RelocationCorridor, number> = {
 };
 
 export interface EarningsInput {
-  country:       BookingCountry;
+  country:       PricingCountry;
   /** Optional canonical city name; falls back to country baseline. */
   city?:         string;
   crewSize:      2 | 3 | 4 | 5;

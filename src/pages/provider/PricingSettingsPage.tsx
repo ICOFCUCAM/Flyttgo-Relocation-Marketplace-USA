@@ -13,7 +13,8 @@ import {
 import {
   calculateQuote, COUNTRY_BASELINES, COMMISSION_DEFAULT,
 } from '../../lib/pricing-engine';
-import type { BookingCountry } from '../../lib/store';
+import type { PricingCountry } from '../../lib/pricing-engine';
+import { COUNTRY_PROFILES } from '../../lib/country-profiles';
 import { Section, Eyebrow, Pill } from '../../components/ds';
 import EarningsSimulator from '../../components/global/EarningsSimulator';
 import { track } from '../../lib/analytics';
@@ -46,7 +47,7 @@ export default function PricingSettingsPage() {
   const [loadError,   setLoadError]   = useState<string | null>(null);
 
   /* Sample-quote inputs that drive the live preview panel. */
-  const [previewCountry, setPreviewCountry] = useState<BookingCountry>('us');
+  const [previewCountry, setPreviewCountry] = useState<PricingCountry>('us');
   const [previewWeekend, setPreviewWeekend] = useState(true);
 
   useEffect(() => {
@@ -64,7 +65,13 @@ export default function PricingSettingsPage() {
     if (!row) return null;
     return calculateQuote({
       country:        previewCountry,
-      city:           previewCountry === 'us' ? 'Dallas' : undefined,
+      /* Pick a representative metropolitan city per country so the
+       * preview never reads as country-baseline-only. */
+      city:           ({
+        us: 'Dallas',     ca: 'Toronto',  gb: 'London',
+        de: 'Berlin',     fr: 'Paris',    no: 'Oslo',
+        ng: 'Lagos',      ke: 'Nairobi',  ae: 'Dubai',
+      } as const)[previewCountry],
       crewSize:       row.available_crew_sizes[0] ?? 2,
       serviceType:    row.truck_available ? 'movers-truck' : 'labor-only',
       estimatedHours: 4,
@@ -377,15 +384,12 @@ export default function PricingSettingsPage() {
                 <p className="text-[10px] font-bold uppercase tracking-wider text-white/50 mb-1.5">Country</p>
                 <select
                   value={previewCountry}
-                  onChange={e => setPreviewCountry(e.target.value as BookingCountry)}
+                  onChange={e => setPreviewCountry(e.target.value as PricingCountry)}
                   className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm text-white"
                 >
-                  <option value="us">🇺🇸 United States</option>
-                  <option value="ca">🇨🇦 Canada</option>
-                  <option value="gb">🇬🇧 United Kingdom</option>
-                  <option value="de">🇩🇪 Germany</option>
-                  <option value="fr">🇫🇷 France</option>
-                  <option value="no">🇳🇴 Norway</option>
+                  {COUNTRY_PROFILES.map(p => (
+                    <option key={p.code} value={p.code}>{p.flag} {p.name}</option>
+                  ))}
                 </select>
               </div>
               <label className="flex items-center gap-2 text-xs text-white/80">
