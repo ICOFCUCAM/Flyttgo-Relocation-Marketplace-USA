@@ -1,10 +1,17 @@
 import React, { useState, useEffect, lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
-import { PackageSearch } from "lucide-react";
+import { PackageSearch, Bookmark, MapPin, Calendar, X } from "lucide-react";
 import { supabase, supabaseFunctionUrl } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
 import { useApp } from "../lib/store";
 import { EmptyState } from "./ds";
+import {
+  useSavedQuotesStore,
+  removeSavedQuote,
+  relativeTimeFromMs,
+  type SavedQuote,
+} from "../lib/saved-quotes-store";
+import { formatCurrency } from "../lib/constants";
 
 /* Lazy-load Leaflet so the map bundle (~150 KB) is only fetched on
  * pages that actually have an in-transit booking to track. */
@@ -126,6 +133,27 @@ export default function MyBookings() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-5xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-6">{t('myBookings.title')}</h1>
+
+        {/* Saved-quote panel — only renders when the customer has at
+         * least one saved brief. Persisted to localStorage by the
+         * BookingShortcut "Save this quote" button. */}
+        <SavedQuotesPanel
+          onResume={(q) => {
+            setBookingData({
+              country:        q.country,
+              pickupAddress:  q.pickupAddress,
+              dropoffAddress: q.dropoffAddress,
+              moveDate:       q.moveDate ?? '',
+              paymentMethod:  q.paymentMethod,
+              depositAmount:  q.depositAmount,
+              cashDueAmount:  q.cashDueAmount,
+              distanceKm:      q.distanceKm ?? null,
+              durationMinutes: q.durationMinutes ?? null,
+              step: 2,
+            });
+            setPage('booking');
+          }}
+        />
         <div className="flex flex-wrap gap-2 mb-6">
           {["all","pending","driver_assigned","in_transit","completed","cancelled"].map(f => (
             <button key={f} onClick={() => setFilter(f)} className={`px-4 py-2 rounded text-sm ${filter === f ? "bg-emerald-600 text-white" : "bg-white border"}`}>{f.replace(/_/g, " ")}</button>
@@ -239,5 +267,91 @@ export default function MyBookings() {
         })}
       </div>
     </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────
+ * Saved-quote panel
+ *
+ * Renders the customer's bookmarked briefs (pickup / drop-off / total)
+ * in a compact card grid above the main bookings list. Each card has
+ * "Resume" (continues the booking flow with the brief pre-loaded) and
+ * "Remove" (deletes the saved entry).
+ *
+ * Self-suppresses when the store is empty so the layout stays clean
+ * for first-time visitors.
+ * ───────────────────────────────────────────────────────────────── */
+function SavedQuotesPanel({ onResume }: { onResume: (q: SavedQuote) => void }) {
+  const quotes = useSavedQuotesStore();
+  if (quotes.length === 0) return null;
+
+  return (
+    <section className="mb-8">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Bookmark size={16} className="text-amber-600" />
+          <h2 className="text-lg font-bold text-slate-900">Saved quotes</h2>
+          <span className="text-xs text-slate-500">({quotes.length})</span>
+        </div>
+      </div>
+      <div className="grid sm:grid-cols-2 gap-3">
+        {quotes.map(q => (
+          <article
+            key={q.id}
+            className="relative bg-white border border-slate-200 hover:border-amber-300 hover:shadow-medium rounded-2xl p-4 transition-base ease-marketplace"
+          >
+            <button
+              onClick={() => removeSavedQuote(q.id)}
+              aria-label="Remove saved quote"
+              className="absolute right-2 top-2 p-1 rounded-md text-slate-400 hover:text-danger-600 hover:bg-slate-100 transition"
+            >
+              <X size={14} />
+            </button>
+
+            <div className="flex items-baseline gap-2 mb-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600">
+                {q.country.toUpperCase()}
+              </span>
+              <span className="text-[10px] text-slate-400">·</span>
+              <span className="text-[10px] text-slate-400">{relativeTimeFromMs(q.savedAt)}</span>
+            </div>
+
+            <div className="text-sm space-y-1 mb-3">
+              <p className="flex items-start gap-1.5 text-slate-700">
+                <MapPin size={12} className="text-emerald-500 mt-0.5 flex-shrink-0" />
+                <span className="truncate">{q.pickupAddress}</span>
+              </p>
+              <p className="flex items-start gap-1.5 text-slate-700">
+                <MapPin size={12} className="text-rose-500 mt-0.5 flex-shrink-0" />
+                <span className="truncate">{q.dropoffAddress}</span>
+              </p>
+              {q.moveDate && (
+                <p className="flex items-center gap-1.5 text-slate-500 text-xs">
+                  <Calendar size={11} />
+                  {q.moveDate}
+                </p>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+              <span className="text-sm">
+                <strong className="text-slate-900">
+                  {formatCurrency(q.indicativeTotal, q.country)}
+                </strong>
+                {q.distanceKm != null && (
+                  <span className="text-xs text-slate-500 ml-1.5">· {Math.round(q.distanceKm)} km</span>
+                )}
+              </span>
+              <button
+                onClick={() => onResume(q)}
+                className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-900 rounded-lg text-xs font-bold transition-base ease-marketplace"
+              >
+                Resume →
+              </button>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }
