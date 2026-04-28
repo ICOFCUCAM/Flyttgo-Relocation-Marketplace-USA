@@ -6,6 +6,8 @@ import LiveBookingTicker from './global/LiveBookingTicker';
 import PressStrip from './global/PressStrip';
 import WhyFlyttGo from './global/WhyFlyttGo';
 import HomeFAQ from './global/HomeFAQ';
+import SmartMatchingSection from './global/SmartMatchingSection';
+import CarbonOffset from './global/CarbonOffset';
 
 /* ────────────────────────────────────────────────────────────
  *  COUNTRY SHOPFRONT METADATA
@@ -312,8 +314,14 @@ export default function HomePage() {
       {/* ─── PRESS STRIP ───────────────────────────────────── */}
       <PressStrip />
 
+      {/* ─── SMART MATCHING (2030 AI angle) ────────────────── */}
+      <SmartMatchingSection />
+
       {/* ─── WHY FLYTTGO ───────────────────────────────────── */}
       <WhyFlyttGo />
+
+      {/* ─── CARBON OFFSET ─────────────────────────────────── */}
+      <CarbonOffset />
 
       {/* ─── REVIEWS ──────────────────────────────────────── */}
       <section className="bg-white py-16 sm:py-20">
