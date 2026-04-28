@@ -105,6 +105,9 @@ const PAGE_TO_PATH: Record<Page, string> = {
   /* Provider-facing pricing settings. */
   'provider-pricing-settings': '/driver/pricing',
 
+  /* Public preview of country-specific onboarding requirements. */
+  'provider-requirements':   '/providers/requirements',
+
   /* Fallback for unknown routes. No real path — pathToPage() returns
    * this id for anything it can't match. setPage('not-found') still
    * updates history.pushState to whatever URL triggered the fallback. */
@@ -153,6 +156,7 @@ const PAGE_TITLES: Record<Page, string> = {
   'service-category':         'Service category · FlyttGo Global',
   'pricing':                  'US relocation pricing · transparent rates · FlyttGo',
   'provider-pricing-settings': 'Pricing settings · FlyttGo Provider Dashboard',
+  'provider-requirements':    'Provider onboarding requirements · FlyttGo',
   'booking':                  'Book a Move · FlyttGo Global',
   'payment':                  'Secure Payment · FlyttGo Global',
   'tracking':                 'Track Your Coordination · FlyttGo Global',
@@ -240,6 +244,8 @@ const PAGE_DESCRIPTIONS: Record<Page, string> = {
     "Transparent US relocation pricing — labor-only $60–$120/hr, movers + truck $120–$250/hr, packing $40–$90/hr, corporate $150–$300/hr. See what drives the price and how FlyttGo's marketplace compares to national rates.",
   'provider-pricing-settings':
     "FlyttGo provider pricing settings — set service radius, crew sizes, truck and packing availability, hourly base, and weekend multiplier overrides. Live preview of customer total + provider payout.",
+  'provider-requirements':
+    "Country-specific provider onboarding requirements for FlyttGo — see exactly what documents and registrations you need before you apply. Adapts to your country, category, and vehicle availability.",
   'booking':
     'Book your next move in under 3 minutes. Get an instant quote, pick a verified driver, and track your delivery live — all with escrow payment built in.',
   'payment':

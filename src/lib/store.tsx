@@ -44,6 +44,8 @@ export type Page =
   | 'pricing'
   /* Provider-facing pricing settings (driver portal). */
   | 'provider-pricing-settings'
+  /* Public preview of country-specific onboarding requirements. */
+  | 'provider-requirements'
   /* Fallback for URLs that don't match any known route. */
   | 'not-found';
 
