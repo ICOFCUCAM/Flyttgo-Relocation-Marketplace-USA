@@ -19,9 +19,15 @@ import type { PricingCountry } from "../lib/pricing-engine";
 /* Lazy-loaded Leaflet map — ~150 KB bundle is only paid when the
  * admin actually opens the Fleet Map tab. */
 const FleetMap = lazy(() => import("./FleetMap"));
+/* Mission Control — only loaded when the admin opens the Live Ops
+ * tab so the four aggregator RPCs aren't fired on every admin page
+ * view. */
+const LiveOpsControlCenter = lazy(() => import("./LiveOpsControlCenter"));
+import LiveOpsStrip from "./global/LiveOpsStrip";
 
 type AdminTab =
   | "overview"
+  | "live-ops"
   | "fleet-map"
   | "drivers"
   | "bookings"
@@ -195,6 +201,7 @@ export default function AdminDashboard() {
   const REQUIRED_DOCS = ["driver_license", "insurance", "vehicle_registration", "profile_photo"];
   const tabs: AdminTab[] = [
     "overview",
+    "live-ops",
     "fleet-map",
     "drivers",
     "bookings",
@@ -668,7 +675,23 @@ export default function AdminDashboard() {
         ))}
       </aside>
 
-      <main className="flex-1 p-6 overflow-auto">
+      <main className="flex-1 overflow-auto">
+        {/* Persistent live-ops ribbon — sits above every tab so the
+         * operator always sees the platform's pulse. Self-hides
+         * when there's nothing to surface. */}
+        <LiveOpsStrip />
+
+        <div className="p-6">
+
+        {tab === "live-ops" && (
+          <Suspense fallback={
+            <div className="bg-gray-100 rounded-xl h-[400px] animate-pulse flex items-center justify-center text-gray-400 text-sm">
+              Loading Mission Control…
+            </div>
+          }>
+            <LiveOpsControlCenter />
+          </Suspense>
+        )}
 
         {tab === "overview" && (
           <div>
@@ -1179,6 +1202,7 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
+        </div>
       </main>
 
       {/* Document Viewer Panel */}

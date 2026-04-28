@@ -6,6 +6,7 @@ import { AnimatedNumber } from './ds';
 import { track } from '../lib/analytics';
 import LiveBookingTicker from './global/LiveBookingTicker';
 import PressStrip from './global/PressStrip';
+import DeploymentReadinessStrip from './global/DeploymentReadinessStrip';
 import WhyFlyttGo from './global/WhyFlyttGo';
 import HomeFAQ from './global/HomeFAQ';
 import SmartMatchingSection from './global/SmartMatchingSection';
@@ -314,6 +315,13 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ─── DEPLOYMENT READINESS STRIP ────────────────────────
+          Public-facing institutional credibility — shows operational
+          / partner / pilot status per country, sourced from the
+          same deployment_regions table the admin Mission Control
+          uses, so messaging stays in sync automatically. */}
+      <DeploymentReadinessStrip />
 
       {/* ─── PRESS STRIP ───────────────────────────────────── */}
       <PressStrip />
