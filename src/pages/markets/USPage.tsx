@@ -4,7 +4,7 @@ import CountryPage from '../../components/global/CountryPage';
 export default function USPage() {
   return (
     <CountryPage
-      iso2="US"
+      iso2="us" flag="🇺🇸"
       name="United States"
       localLabel="United States deployment node"
       positioning="The US marketplace coordinates labor-only crews, USDOT-licensed interstate carriers, packing services, storage networks, vehicle rental partners, and insurance options across all fifty states. FlyttGo is the coordination layer; the relocation itself is performed by independent licensed providers."

@@ -4,7 +4,7 @@ import CountryPage from '../../components/global/CountryPage';
 export default function GermanyPage() {
   return (
     <CountryPage
-      iso2="DE"
+      iso2="de" flag="🇩🇪"
       name="Germany"
       localLabel="Deutschland-Knoten"
       positioning="Der deutsche Marktplatz koordiniert lizenzierte Umzugsfirmen, Umzugshelfer, Verpackungsdienste, Lagerpartner und Unternehmensumzüge. FlyttGo betreibt die Koordinationsebene; die Dienstleistungen werden von unabhängigen, lizenzierten deutschen Anbietern erbracht."

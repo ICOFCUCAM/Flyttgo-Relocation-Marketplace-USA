@@ -19,18 +19,22 @@ interface StructuredAddress {
   house_number: string;
   postcode: string;
   city: string;
-  country: 'the USA';
+  country: string;
   lat: number | null;
   lng: number | null;
   formatted: string;
 }
 
-const emptyAddress = (): StructuredAddress => ({
+const COUNTRY_LABEL: Record<string, string> = {
+  us: 'USA', ca: 'Canada', de: 'Germany', fr: 'France', gb: 'United Kingdom', no: 'Norway',
+};
+
+const emptyAddress = (countryLabel = 'USA'): StructuredAddress => ({
   street_name: '',
   house_number: '',
   postcode: '',
   city: '',
-  country: 'the USA',
+  country: countryLabel,
   lat: null,
   lng: null,
   formatted: '',
@@ -52,6 +56,12 @@ function safeNum(v: any): number {
 export default function BookingFlow() {
   const { profile, user } = useAuth();
   const { bookingData, setBookingData, setPage, setShowAuthModal, setAuthMode } = useApp();
+
+  /* National marketplace scope. Country pages set this on bookingData
+   * before navigating to /book so the address autocomplete and the
+   * resulting structured addresses are scoped correctly. */
+  const country = bookingData.country ?? 'us';
+  const countryLabel = COUNTRY_LABEL[country] ?? 'USA';
   const { t } = useTranslation();
 
   const [step, setStep] = useState(1);
@@ -553,6 +563,7 @@ export default function BookingFlow() {
                   value={pickupAddress.formatted}
                   placeholder={t('booking.addrPickupPlaceholder')}
                   required
+                  countryCode={country}
                   error={addressErrors.pickup}
                   onSelect={(addr: USAddress) => {
                     setPickupAddress({
@@ -560,7 +571,7 @@ export default function BookingFlow() {
                       house_number: addr.house_number,
                       postcode: addr.postcode,
                       city: addr.city,
-                      country: 'the USA',
+                      country: countryLabel,
                       lat: addr.lat,
                       lng: addr.lng,
                       formatted: addr.formatted,
@@ -588,6 +599,7 @@ export default function BookingFlow() {
                   id="dropoff-address"
                   label={t('booking.addrDropoffLabel')}
                   value={dropoffAddress.formatted}
+                  countryCode={country}
                   placeholder="e.g. Aker Brygge 1, New York"
                   required
                   error={addressErrors.dropoff}
@@ -597,7 +609,7 @@ export default function BookingFlow() {
                       house_number: addr.house_number,
                       postcode: addr.postcode,
                       city: addr.city,
-                      country: 'the USA',
+                      country: countryLabel,
                       lat: addr.lat,
                       lng: addr.lng,
                       formatted: addr.formatted,

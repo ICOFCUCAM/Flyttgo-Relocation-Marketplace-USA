@@ -48,12 +48,14 @@ interface AppState {
  * BookingData so BookingFlow can pre-fill its address fields without
  * the customer having to re-enter anything.
  */
+export type BookingCountry = 'us' | 'ca' | 'de' | 'fr' | 'gb' | 'no';
+
 export interface USAddressData {
   street_name: string;
   house_number: string;
   postcode: string;
   city: string;
-  country: 'the USA';
+  country: string;
   lat: number | null;
   lng: number | null;
   formatted: string;
@@ -61,6 +63,11 @@ export interface USAddressData {
 
 export interface BookingData {
   step: number;
+  /** Country the booking is being made in. Drives which national
+   *  marketplace (and which address autocomplete scope) the booking
+   *  flow operates against. Set by the country page hero before
+   *  navigating to /book. */
+  country: BookingCountry;
   pickupAddress: string; pickupLat?: number | null; pickupLng?: number | null;
   pickupPostcode?: string; pickupCity?: string;
   pickupAddressData?: USAddressData;
@@ -76,7 +83,8 @@ export interface BookingData {
 }
 
 const defaultBooking: BookingData = {
-  step: 1, pickupAddress: '', pickupLat: null, pickupLng: null,
+  step: 1, country: 'us',
+  pickupAddress: '', pickupLat: null, pickupLng: null,
   pickupPostcode: '', pickupCity: '', dropoffAddress: '', dropoffLat: null,
   dropoffLng: null, dropoffPostcode: '', dropoffCity: '', distanceKm: null,
   durationMinutes: null, moveType: '', propertyType: '', bedrooms: '',

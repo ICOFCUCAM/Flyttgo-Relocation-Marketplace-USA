@@ -4,7 +4,7 @@ import CountryPage from '../../components/global/CountryPage';
 export default function UKPage() {
   return (
     <CountryPage
-      iso2="GB"
+      iso2="gb" flag="🇬🇧"
       name="United Kingdom"
       localLabel="UK deployment node"
       positioning="The UK marketplace coordinates Goods Vehicle Operator Licence holders, moving labor crews, packing services, storage networks, and enterprise relocation across England, Scotland, Wales, and Northern Ireland. FlyttGo provides the coordination layer; relocations are performed by independent licensed UK providers."

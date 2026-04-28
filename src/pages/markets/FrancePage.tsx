@@ -4,7 +4,7 @@ import CountryPage from '../../components/global/CountryPage';
 export default function FrancePage() {
   return (
     <CountryPage
-      iso2="FR"
+      iso2="fr" flag="🇫🇷"
       name="France"
       localLabel="Nœud de déploiement France"
       positioning="La place de marché française coordonne des déménageurs licenciés, des équipes de manutention, des services d'emballage, des partenaires de stockage et des déménagements d'entreprise. FlyttGo fournit la couche de coordination ; les déménagements sont assurés par des prestataires français indépendants et licenciés."

@@ -4,7 +4,7 @@ import CountryPage from '../../components/global/CountryPage';
 export default function NorwayPage() {
   return (
     <CountryPage
-      iso2="NO"
+      iso2="no" flag="🇳🇴"
       name="Norway"
       localLabel="Norge-distribusjonsnode"
       positioning="Den norske markedsplassen koordinerer flytteselskap med løyve, flyttehjelp, pakketjenester, lagerpartnere og bedriftsflytting. FlyttGo leverer koordineringslaget; selve flyttingen utføres av uavhengige, autoriserte norske leverandører."

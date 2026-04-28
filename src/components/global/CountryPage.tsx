@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useApp } from '../../lib/store';
-import type { Page } from '../../lib/store';
+import type { Page, BookingCountry } from '../../lib/store';
+import { applyCountryLanguage } from '../../lib/i18n';
+import BookingShortcut from './BookingShortcut';
 
 /**
- * Section-index label in the FlyttGo Global editorial design system.
- * Renders as a JetBrains Mono code label so every section reads as
- * a numbered platform surface (GLRM.01, GLRM.02, …) rather than a
- * conventional marketing landing block.
+ * Section-index label kept around so any non-country surface that
+ * imports it from this module (HowItWorks, Universities, etc.) keeps
+ * working. New country pages don't render section indices any more —
+ * the surface is a marketplace shopfront, not an editorial doc.
  */
 export function SectionIndex({ id, label }: { id: string; label: string }) {
   return (
@@ -33,12 +35,14 @@ interface CountrySpecBlock {
 }
 
 export interface CountryPageProps {
-  /** ISO-3166-1 alpha-2 (used for the deployment node id). */
-  iso2: string;
+  /** ISO-3166-1 alpha-2 (drives address autocomplete + i18n locale). */
+  iso2: BookingCountry;
   /** Country name displayed in headers (e.g. "United States"). */
   name: string;
-  /** Native-language adjective for the deployment node label. */
+  /** Native-language tagline shown right under the H1. */
   localLabel: string;
+  /** Country flag (emoji). Lightweight — no extra dependency. */
+  flag: string;
   /** One-sentence positioning statement for the country. */
   positioning: string;
   /** Local rollout phase — pulled into the rollout strip. */
@@ -53,190 +57,223 @@ export interface CountryPageProps {
   operator: string;
   /** Localised market specs — country code, currency, jurisdiction etc. */
   specs: CountrySpecBlock[];
-  /** Optional list of representative cities/regions for the deployment map. */
+  /** Optional list of representative cities/regions. */
   regions?: string[];
 }
 
 /**
- * Country deployment surface.
+ * Country deployment surface, marketplace-shopfront edition.
  *
- * Renders an editorial "regional deployment page" in the spirit of
- * AWS regional pages and Stripe country availability surfaces — the
- * country isn't a marketing site, it's a documented marketplace
- * deployment node with its own compliance, service availability,
- * provider categories, and operator disclosure.
+ * The hero leads with a localised buy-now message and a country-scoped
+ * BookingShortcut form. Below the hero we still keep the regional
+ * deployment, service availability, provider categories, compliance
+ * frame, and operator disclosure — but they read as supporting
+ * context, not the main attraction.
  */
 export default function CountryPage(props: CountryPageProps) {
   const { setPage } = useApp();
   const go = (p: Page) => setPage(p);
 
+  /* Switch the active i18n language when the customer enters this
+   * country surface — Norwegian for /norway, German for /germany,
+   * French for /france, English everywhere else. The change persists
+   * to localStorage so the booking flow they continue into stays in
+   * the same language. */
+  useEffect(() => {
+    applyCountryLanguage(props.iso2);
+  }, [props.iso2]);
+
   return (
     <main className="min-h-screen bg-white text-slate-900">
-      {/* GLRM.01 — Deployment masthead */}
-      <section className="border-b border-slate-200 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-6 py-20">
-          <SectionIndex id="GLRM.01" label="Regional deployment" />
-          <div className="grid lg:grid-cols-12 gap-10 items-end">
-            <div className="lg:col-span-8">
-              <p className="font-mono text-xs uppercase tracking-[0.18em] text-emerald-700 mb-4">
-                {props.iso2} · {props.localLabel}
-              </p>
-              <h1 className="font-serif text-5xl lg:text-6xl leading-[1.05] tracking-tight text-slate-900">
+      {/* ─── HERO — country shopfront with booking shortcut ───────── */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#0d1420] via-[#1a2332] to-[#0d1420] text-white">
+        <div className="absolute inset-0 opacity-10">
+          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id={`grid-${props.iso2}`} width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="0.5" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill={`url(#grid-${props.iso2})`} />
+          </svg>
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
+          <div className="grid lg:grid-cols-12 gap-10 items-center">
+            <div className="lg:col-span-6">
+              <button
+                onClick={() => go('home')}
+                className="inline-flex items-center gap-2 text-emerald-300 hover:text-emerald-200 text-sm font-semibold mb-6 transition"
+              >
+                <span aria-hidden>←</span> All countries
+              </button>
+              <div className="inline-flex items-center gap-3 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 mb-6">
+                <span className="text-2xl leading-none" aria-hidden>{props.flag}</span>
+                <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-emerald-300">
+                  {props.iso2.toUpperCase()} · {props.localLabel}
+                </span>
+              </div>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.05] tracking-tight mb-5">
                 {props.name} Moves &amp; Logistics
               </h1>
-              <p className="mt-6 text-lg leading-relaxed text-slate-700 max-w-3xl">
+              <p className="text-lg text-slate-300 leading-relaxed max-w-xl mb-8">
                 {props.positioning}
               </p>
+              <div className="flex flex-wrap items-center gap-5 text-sm text-slate-400">
+                <span className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                  Licensed providers · {props.iso2.toUpperCase()}-scoped addresses
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                  Escrow on every booking
+                </span>
+              </div>
             </div>
-            <div className="lg:col-span-4">
-              <dl className="border-l border-slate-300 pl-6 space-y-4 font-mono text-sm">
-                {props.specs.map(s => (
-                  <div key={s.label} className="flex flex-col">
-                    <dt className="text-xs uppercase tracking-[0.16em] text-slate-500">
-                      {s.label}
-                    </dt>
-                    <dd className="text-slate-900">{s.value}</dd>
-                  </div>
-                ))}
-              </dl>
+
+            <div className="lg:col-span-6">
+              <BookingShortcut country={props.iso2} />
             </div>
           </div>
         </div>
       </section>
 
-      {/* GLRM.02 — Rollout phase */}
-      <section className="border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-6 py-20">
-          <SectionIndex id="GLRM.02" label="Market rollout" />
-          <div className="grid md:grid-cols-2 gap-10">
-            <h2 className="font-serif text-3xl lg:text-4xl leading-tight text-slate-900">
-              Geographic deployment cadence
+      {/* ─── SERVICE AVAILABILITY ───────────────────────────────── */}
+      <section className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
+          <div className="max-w-3xl mb-10">
+            <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-emerald-700 mb-3">
+              Service availability
+            </p>
+            <h2 className="font-serif text-3xl lg:text-4xl tracking-tight text-slate-900">
+              Coordination categories live in {props.name}
             </h2>
-            <div className="space-y-4 text-slate-700 leading-relaxed">
-              <p>{props.rolloutPhase}</p>
-              {props.regions && props.regions.length > 0 && (
-                <ul className="grid grid-cols-2 gap-y-2 font-mono text-sm text-slate-800 mt-6">
-                  {props.regions.map(r => (
-                    <li key={r} className="flex items-baseline gap-2">
-                      <span className="h-1 w-1 bg-slate-400" aria-hidden />
-                      {r}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
           </div>
-        </div>
-      </section>
-
-      {/* GLRM.03 — Compliance positioning */}
-      <section className="border-b border-slate-200 bg-slate-900 text-slate-100">
-        <div className="max-w-7xl mx-auto px-6 py-20">
-          <SectionIndex id="GLRM.03" label="Compliance frame" />
-          <div className="grid md:grid-cols-2 gap-10">
-            <h2 className="font-serif text-3xl lg:text-4xl leading-tight text-white">
-              Jurisdictional awareness
-            </h2>
-            <div className="space-y-4 leading-relaxed text-slate-300">
-              <p>{props.compliance}</p>
-              <p className="font-mono text-xs uppercase tracking-[0.18em] text-slate-400">
-                FlyttGo coordinates · Providers comply
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* GLRM.04 — Service availability */}
-      <section className="border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-6 py-20">
-          <SectionIndex id="GLRM.04" label="Service availability" />
-          <h2 className="font-serif text-3xl lg:text-4xl leading-tight text-slate-900 mb-10">
-            Coordination categories live in {props.name}
-          </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px bg-slate-200">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {props.services.map(s => (
               <article
                 key={s.title}
-                className="bg-white p-6 flex flex-col gap-3 min-h-[180px]"
+                className="bg-slate-50 border border-slate-200 rounded-xl p-5 hover:bg-white hover:shadow-lg hover:border-emerald-300 transition"
               >
-                <h3 className="font-serif text-xl text-slate-900">{s.title}</h3>
-                <p className="text-sm leading-relaxed text-slate-600">
-                  {s.description}
-                </p>
+                <h3 className="font-serif text-lg text-slate-900 mb-2">{s.title}</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">{s.description}</p>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      {/* GLRM.05 — Provider categories */}
-      <section className="border-b border-slate-200 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-6 py-20">
-          <SectionIndex id="GLRM.05" label="Provider categories" />
-          <div className="grid md:grid-cols-2 gap-10">
-            <h2 className="font-serif text-3xl lg:text-4xl leading-tight text-slate-900">
-              Local marketplace participants
-            </h2>
-            <ul className="space-y-3 font-mono text-sm">
-              {props.providers.map(p => (
-                <li
-                  key={p.label}
-                  className="flex items-baseline gap-3 border-b border-slate-200 pb-3"
-                >
-                  <span className="text-slate-500">→</span>
-                  <span className="text-slate-900">{p.label}</span>
-                </li>
-              ))}
-            </ul>
+      {/* ─── REGIONS + ROLLOUT ──────────────────────────────────── */}
+      <section className="bg-slate-50 border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
+          <div className="grid lg:grid-cols-2 gap-10">
+            <div>
+              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-emerald-700 mb-3">
+                Geographic deployment
+              </p>
+              <h2 className="font-serif text-3xl lg:text-4xl tracking-tight text-slate-900 mb-4">
+                Where the {props.name} marketplace is live
+              </h2>
+              <p className="text-slate-600 leading-relaxed">{props.rolloutPhase}</p>
+            </div>
+            {props.regions && props.regions.length > 0 && (
+              <div className="bg-white border border-slate-200 rounded-2xl p-6">
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-500 mb-4">
+                  Active &amp; activating regions
+                </p>
+                <ul className="grid grid-cols-2 gap-y-2 font-mono text-sm text-slate-800">
+                  {props.regions.map(r => (
+                    <li key={r} className="flex items-baseline gap-2">
+                      <span className="h-1 w-1 bg-emerald-500" aria-hidden />
+                      {r}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       </section>
 
-      {/* GLRM.06 — Operator disclosure */}
-      <section>
-        <div className="max-w-7xl mx-auto px-6 py-20">
-          <SectionIndex id="GLRM.06" label="Operator disclosure" />
-          <div className="grid md:grid-cols-2 gap-10 items-end">
-            <div>
-              <h2 className="font-serif text-3xl lg:text-4xl leading-tight text-slate-900">
-                Marketplace operator for {props.name}
+      {/* ─── COMPLIANCE FRAME ───────────────────────────────────── */}
+      <section className="bg-[#0d1420] text-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
+          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-emerald-400 mb-3">
+            Jurisdictional awareness
+          </p>
+          <h2 className="font-serif text-3xl lg:text-4xl tracking-tight text-white mb-6 max-w-3xl">
+            FlyttGo coordinates · {props.name} providers comply
+          </h2>
+          <p className="text-slate-300 leading-relaxed max-w-3xl">{props.compliance}</p>
+        </div>
+      </section>
+
+      {/* ─── PROVIDERS + OPERATOR + SPECS ────────────────────────── */}
+      <section className="bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
+          <div className="grid lg:grid-cols-3 gap-10">
+            <div className="lg:col-span-2">
+              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-emerald-700 mb-3">
+                Provider categories live in {props.iso2.toUpperCase()}
+              </p>
+              <h2 className="font-serif text-3xl lg:text-4xl tracking-tight text-slate-900 mb-6">
+                Marketplace participants
               </h2>
-              <p className="mt-4 text-slate-600 leading-relaxed">
-                FlyttGo Global Logistics &amp; Relocation Marketplace operates as a
-                digital coordination platform connecting customers with independent
-                licensed relocation providers across multiple jurisdictions worldwide.
-                Service providers are responsible for compliance with their national
-                licensing, taxation, insurance, and regulatory requirements.
-              </p>
+              <ul className="space-y-2">
+                {props.providers.map(p => (
+                  <li
+                    key={p.label}
+                    className="flex items-baseline gap-3 border-b border-slate-200 pb-2 font-mono text-sm"
+                  >
+                    <span className="text-emerald-600">→</span>
+                    <span className="text-slate-900">{p.label}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <div className="font-mono text-sm border-l border-slate-300 pl-6">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-500 mb-2">
-                Operating entity
-              </p>
-              <p className="text-slate-900">{props.operator}</p>
+
+            <div className="space-y-6">
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5">
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-500 mb-2">
+                  Marketplace operator
+                </p>
+                <p className="font-serif text-lg text-slate-900">{props.operator}</p>
+              </div>
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5">
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-500 mb-3">
+                  Market specs
+                </p>
+                <dl className="space-y-2 font-mono text-sm">
+                  {props.specs.map(s => (
+                    <div key={s.label} className="flex items-baseline justify-between gap-3 border-b border-slate-200 pb-2 last:border-0 last:pb-0">
+                      <dt className="text-slate-500 text-xs uppercase tracking-[0.14em]">{s.label}</dt>
+                      <dd className="text-slate-900 text-right">{s.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div className="flex flex-wrap gap-4 mt-12">
-            <button
-              onClick={() => go('how-it-works')}
-              className="px-6 py-3 bg-slate-900 text-white font-mono text-xs uppercase tracking-[0.18em] hover:bg-slate-700 transition"
-            >
-              How it works
-            </button>
-            <button
-              onClick={() => go('providers')}
-              className="px-6 py-3 border border-slate-900 text-slate-900 font-mono text-xs uppercase tracking-[0.18em] hover:bg-slate-50 transition"
-            >
-              For providers
-            </button>
-            <button
-              onClick={() => go('compliance')}
-              className="px-6 py-3 border border-slate-300 text-slate-700 font-mono text-xs uppercase tracking-[0.18em] hover:bg-slate-50 transition"
-            >
-              Compliance frame
-            </button>
+      {/* ─── BOTTOM CTA — repeat the booking shortcut ───────────── */}
+      <section className="bg-emerald-600 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
+          <div className="grid lg:grid-cols-2 gap-10 items-center">
+            <div>
+              <h2 className="font-serif text-3xl lg:text-5xl tracking-tight mb-4">
+                Ready to move in {props.name}?
+              </h2>
+              <p className="text-emerald-50 leading-relaxed max-w-md">
+                Pick your pickup and drop-off — your quote is ready in under a
+                minute. All providers are licensed and accountable in{' '}
+                {props.name}.
+              </p>
+            </div>
+            <div>
+              <BookingShortcut country={props.iso2} compact />
+            </div>
           </div>
         </div>
       </section>
