@@ -7,11 +7,16 @@ import {
   approveRelocationRequest, rejectRelocationRequest,
   dispatchRelocationRequest,
   createOrgInvite, listOrgInvites, revokeOrgInvite,
+  listOrgInvoices, listOrgContracts, listMyOrgMemberships,
   type OrganizationRow, type RelocationRequestRow,
   type OrganizationInviteRow, type OrganizationRole,
+  type OrganizationInvoiceRow, type OrganizationContractRow,
+  type OrganizationMemberRow,
 } from '../lib/organizations-store';
 
-type DashTab = 'overview' | 'shipments' | 'recurring' | 'invoices' | 'drivers' | 'analytics' | 'api' | 'team' | 'documents' | 'support' | 'relocations' | 'members';
+type DashTab = 'overview' | 'shipments' | 'recurring' | 'invoices' | 'drivers' | 'analytics' | 'api' | 'team' | 'documents' | 'support' | 'relocations' | 'members' | 'contracts' | 'compliance' | 'regions';
+
+type RelocationStatusFilter = 'active' | 'scheduled' | 'completed' | 'all';
 
 function StatCard({ icon, label, value, sub, color = 'emerald' }: { icon: string; label: string; value: string; sub?: string; color?: string }) {
   const colors: Record<string, string> = { emerald: 'bg-emerald-50 text-emerald-600', blue: 'bg-blue-50 text-blue-600', purple: 'bg-purple-50 text-purple-600', orange: 'bg-orange-50 text-orange-600' };
@@ -43,10 +48,13 @@ const STATUS_COLORS: Record<string, string> = {
 const NAV_ITEMS: { id: DashTab; icon: string; label: string }[] = [
   { id: 'overview',    icon: '📊', label: 'Overview' },
   { id: 'relocations', icon: '🏢', label: 'Relocations' },
+  { id: 'regions',     icon: '🌍', label: 'Deployment regions' },
+  { id: 'contracts',   icon: '📜', label: 'Contracts' },
+  { id: 'invoices',    icon: '💳', label: 'Invoices' },
+  { id: 'compliance',  icon: '🛡️', label: 'Compliance' },
   { id: 'members',     icon: '👥', label: 'Members' },
   { id: 'shipments',   icon: '🚚', label: 'Shipments' },
   { id: 'recurring',   icon: '🔁', label: 'Recurring' },
-  { id: 'invoices',    icon: '💳', label: 'Invoices' },
   { id: 'drivers',     icon: '👤', label: 'Drivers' },
   { id: 'analytics',   icon: '📈', label: 'Analytics' },
   { id: 'api',         icon: '🔗', label: 'API & Webhooks' },
@@ -69,33 +77,68 @@ export default function CorporateDashboard() {
   const [activeOrgId, setActiveOrgId] = useState<string | null>(null);
   const [requests, setRequests] = useState<RelocationRequestRow[]>([]);
   const [invites, setInvites] = useState<OrganizationInviteRow[]>([]);
+  const [invoices, setInvoices] = useState<OrganizationInvoiceRow[]>([]);
+  const [contracts, setContracts] = useState<OrganizationContractRow[]>([]);
+  const [memberships, setMemberships] = useState<OrganizationMemberRow[]>([]);
+  const [relocStatusFilter, setRelocStatusFilter] = useState<RelocationStatusFilter>('active');
   const [busy, setBusy] = useState(false);
 
-  /* Lazy-load orgs whenever the user lands on a real-data tab. */
+  /* Tabs that read real org data — list here so the loader stays
+   * in sync with the nav. */
+  const REAL_DATA_TABS: DashTab[] = [
+    'relocations', 'members', 'invoices', 'contracts', 'compliance', 'regions',
+  ];
+
+  /* Lazy-load orgs the first time the user opens a real-data tab. */
   useEffect(() => {
     if (!user?.id) return;
-    if (tab !== 'relocations' && tab !== 'members') return;
+    if (!REAL_DATA_TABS.includes(tab)) return;
     if (orgs.length > 0) return;
-    listMyOrganizations(user.id)
-      .then(rows => {
-        setOrgs(rows);
-        if (rows.length > 0 && !activeOrgId) setActiveOrgId(rows[0].id);
+    Promise.all([
+      listMyOrganizations(user.id),
+      listMyOrgMemberships(user.id),
+    ])
+      .then(([os, ms]) => {
+        setOrgs(os);
+        setMemberships(ms);
+        if (os.length > 0 && !activeOrgId) setActiveOrgId(os[0].id);
       })
       .catch(err => toast.error('Failed to load organizations', { description: err.message }));
-  }, [tab, user?.id, orgs.length, activeOrgId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, user?.id, orgs.length]);
 
+  /* Per-tab data fetcher. */
   useEffect(() => {
     if (!activeOrgId) return;
-    if (tab === 'relocations') {
-      listRelocationRequests(activeOrgId)
-        .then(setRequests)
-        .catch(err => toast.error('Failed to load requests', { description: err.message }));
+    if (tab === 'relocations' || tab === 'regions') {
+      listRelocationRequests(activeOrgId).then(setRequests).catch(err =>
+        toast.error('Failed to load requests', { description: err.message }));
     } else if (tab === 'members') {
-      listOrgInvites(activeOrgId)
-        .then(setInvites)
-        .catch(err => toast.error('Failed to load invites', { description: err.message }));
+      listOrgInvites(activeOrgId).then(setInvites).catch(err =>
+        toast.error('Failed to load invites', { description: err.message }));
+    } else if (tab === 'invoices') {
+      listOrgInvoices(activeOrgId).then(setInvoices).catch(err =>
+        toast.error('Failed to load invoices', { description: err.message }));
+    } else if (tab === 'contracts') {
+      listOrgContracts(activeOrgId).then(setContracts).catch(err =>
+        toast.error('Failed to load contracts', { description: err.message }));
+    } else if (tab === 'compliance') {
+      /* Compliance pulls from already-loaded sources + requests. */
+      listRelocationRequests(activeOrgId).then(setRequests).catch(() => {});
     }
   }, [tab, activeOrgId]);
+
+  /* Filtered relocation list based on the status sub-tabs. */
+  const filteredRequests = (() => {
+    if (relocStatusFilter === 'all') return requests;
+    if (relocStatusFilter === 'active') {
+      return requests.filter(r => ['submitted','approved','dispatched'].includes(r.status));
+    }
+    if (relocStatusFilter === 'scheduled') {
+      return requests.filter(r => r.status === 'approved' || r.status === 'dispatched');
+    }
+    return requests.filter(r => r.status === 'completed');
+  })();
 
   async function handleApprove(req: RelocationRequestRow) {
     if (!user?.id) return;
@@ -305,14 +348,39 @@ export default function CorporateDashboard() {
                   </select>
                 )}
               </div>
+
+              {/* Status sub-tabs covering the spec's "active /
+                  scheduled / completed" dashboard views. */}
+              <div className="flex items-center gap-1.5 mb-4 flex-wrap">
+                {([
+                  { id: 'active'    as const, label: 'Active',    count: requests.filter(r => ['submitted','approved','dispatched'].includes(r.status)).length },
+                  { id: 'scheduled' as const, label: 'Scheduled', count: requests.filter(r => r.status === 'approved' || r.status === 'dispatched').length },
+                  { id: 'completed' as const, label: 'Completed', count: requests.filter(r => r.status === 'completed').length },
+                  { id: 'all'       as const, label: 'All',       count: requests.length },
+                ]).map(opt => (
+                  <button
+                    key={opt.id}
+                    onClick={() => setRelocStatusFilter(opt.id)}
+                    aria-pressed={relocStatusFilter === opt.id}
+                    className={`text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border transition ${
+                      relocStatusFilter === opt.id
+                        ? 'bg-emerald-600 text-white border-emerald-600'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                    }`}
+                  >
+                    {opt.label} <span className="opacity-60">({opt.count})</span>
+                  </button>
+                ))}
+              </div>
+
               {orgs.length === 0 ? (
                 <div className="bg-white rounded-2xl p-6 border border-gray-100 text-sm text-gray-500">
                   You're not yet a member of an organization. Reach out to
                   partnerships@flyttgo.com to onboard your team.
                 </div>
-              ) : requests.length === 0 ? (
+              ) : filteredRequests.length === 0 ? (
                 <div className="bg-white rounded-2xl p-6 border border-gray-100 text-sm text-gray-500">
-                  No relocation requests yet for {orgs.find(o => o.id === activeOrgId)?.name}.
+                  No {relocStatusFilter === 'all' ? '' : relocStatusFilter + ' '}requests for {orgs.find(o => o.id === activeOrgId)?.name}.
                 </div>
               ) : (
                 <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
@@ -322,12 +390,13 @@ export default function CorporateDashboard() {
                         <th className="p-3 text-left">Filed</th>
                         <th className="p-3 text-left">Segment · country</th>
                         <th className="p-3 text-left">Brief</th>
+                        <th className="p-3 text-left">Provider</th>
                         <th className="p-3 text-left">Status</th>
                         <th className="p-3 text-left">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {requests.map(r => (
+                      {filteredRequests.map(r => (
                         <tr key={r.id} className="border-t align-top">
                           <td className="p-3 text-xs text-gray-500 whitespace-nowrap">
                             {new Date(r.created_at).toLocaleDateString()}
@@ -338,6 +407,13 @@ export default function CorporateDashboard() {
                           </td>
                           <td className="p-3 text-xs text-gray-600 max-w-xs truncate">
                             {(r.brief?.summary as string) ?? (r.brief?.inventoryNote as string) ?? '—'}
+                          </td>
+                          <td className="p-3 text-xs">
+                            {r.dispatched_booking_id ? (
+                              <span className="font-mono text-emerald-700">
+                                {r.dispatched_booking_id.slice(0, 8)}…
+                              </span>
+                            ) : <span className="text-gray-400">unassigned</span>}
                           </td>
                           <td className="p-3">
                             <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md ${
@@ -533,40 +609,326 @@ export default function CorporateDashboard() {
           {/* ── INVOICES ── */}
           {tab === 'invoices' && (
             <div className="space-y-4">
-              <div className="grid sm:grid-cols-3 gap-4">
-                <StatCard icon="💰" label="Outstanding Balance" value="89,200 USD" color="orange"/>
-                <StatCard icon="✅" label="Paid This Year" value="412,800 USD" color="emerald"/>
-                <StatCard icon="📄" label="Total Invoices" value="18" sub="Since Jan 2026" color="blue"/>
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <h1 className="text-xl font-bold text-gray-900">Invoice history</h1>
+                {orgs.length > 1 && (
+                  <select
+                    value={activeOrgId ?? ''}
+                    onChange={e => setActiveOrgId(e.target.value)}
+                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white"
+                  >
+                    {orgs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+                  </select>
+                )}
               </div>
-              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-100">
-                    <tr>{['Invoice','Period','Deliveries','Amount','Status',''].map(h => <th key={h} className="text-left py-3 px-4 font-semibold text-gray-600 text-xs uppercase tracking-wide">{h}</th>)}</tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {[
-                      { id: 'INV-2026-04', period: 'Apr 2026', count: 47, amount: '89,200 USD', status: 'Due 01 May' },
-                      { id: 'INV-2026-03', period: 'Mar 2026', count: 52, amount: '97,400 USD', status: 'Paid' },
-                      { id: 'INV-2026-02', period: 'Feb 2026', count: 38, amount: '74,600 USD', status: 'Paid' },
-                      { id: 'INV-2026-01', period: 'Jan 2026', count: 41, amount: '81,200 USD', status: 'Paid' },
-                    ].map(inv => (
-                      <tr key={inv.id} className="hover:bg-gray-50">
-                        <td className="py-3.5 px-4 font-mono text-xs">{inv.id}</td>
-                        <td className="py-3.5 px-4">{inv.period}</td>
-                        <td className="py-3.5 px-4">{inv.count} deliveries</td>
-                        <td className="py-3.5 px-4 font-medium">{inv.amount}</td>
-                        <td className="py-3.5 px-4">
-                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${inv.status === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}`}>{inv.status}</span>
-                        </td>
-                        <td className="py-3.5 px-4 flex gap-3">
-                          <button className="text-xs text-emerald-600 hover:underline">PDF</button>
-                          <button className="text-xs text-gray-400 hover:underline">CSV</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              {invoices.length === 0 ? (
+                <div className="bg-white rounded-2xl p-6 border border-gray-100 text-sm text-gray-500">
+                  No invoices yet for this period. Monthly invoices are
+                  generated by the platform's billing job on the 1st of
+                  every month.
+                </div>
+              ) : (
+                <>
+                  <div className="grid sm:grid-cols-3 gap-4">
+                    <StatCard icon="💰" label="Outstanding"
+                      value={`${invoices.filter(i => i.status === 'issued' || i.status === 'overdue')
+                                .reduce((s, i) => s + Number(i.total_amount), 0)
+                                .toLocaleString('en-US')} ${invoices[0]?.currency ?? ''}`}
+                      color="orange"/>
+                    <StatCard icon="✅" label="Paid this year"
+                      value={`${invoices.filter(i => i.status === 'paid')
+                                .reduce((s, i) => s + Number(i.total_amount), 0)
+                                .toLocaleString('en-US')} ${invoices[0]?.currency ?? ''}`}
+                      color="emerald"/>
+                    <StatCard icon="📄" label="Total invoices"
+                      value={String(invoices.length)} color="blue"/>
+                  </div>
+                  <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 border-b border-gray-100">
+                        <tr>{['Period','Departments','Amount','Status','Due','Ref'].map(h => (
+                          <th key={h} className="text-left py-3 px-4 font-semibold text-gray-600 text-xs uppercase tracking-wide">{h}</th>
+                        ))}</tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {invoices.map(inv => {
+                          const deptCount = Object.keys(inv.department_breakdown ?? {}).length;
+                          return (
+                            <tr key={inv.id} className="hover:bg-gray-50">
+                              <td className="py-3.5 px-4">
+                                {new Date(inv.period_start).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                              </td>
+                              <td className="py-3.5 px-4 text-xs text-gray-500">
+                                {deptCount === 0 ? '—' : `${deptCount} dept${deptCount === 1 ? '' : 's'}`}
+                              </td>
+                              <td className="py-3.5 px-4 font-medium">
+                                {Number(inv.total_amount).toLocaleString('en-US')} {inv.currency}
+                              </td>
+                              <td className="py-3.5 px-4">
+                                <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                                  inv.status === 'paid'    ? 'bg-emerald-100 text-emerald-700' :
+                                  inv.status === 'issued'  ? 'bg-blue-100 text-blue-700' :
+                                  inv.status === 'overdue' ? 'bg-rose-100 text-rose-700' :
+                                  inv.status === 'disputed'? 'bg-amber-100 text-amber-700' :
+                                                              'bg-gray-100 text-gray-600'
+                                }`}>{inv.status}</span>
+                              </td>
+                              <td className="py-3.5 px-4 text-xs text-gray-500">
+                                {inv.due_at ? new Date(inv.due_at).toLocaleDateString() : '—'}
+                              </td>
+                              <td className="py-3.5 px-4 font-mono text-xs text-gray-500">
+                                {inv.external_ref ?? inv.id.slice(0, 8) + '…'}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ── CONTRACTS ── */}
+          {tab === 'contracts' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <h1 className="text-xl font-bold text-gray-900">Contract history</h1>
+                {orgs.length > 1 && (
+                  <select
+                    value={activeOrgId ?? ''}
+                    onChange={e => setActiveOrgId(e.target.value)}
+                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white"
+                  >
+                    {orgs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+                  </select>
+                )}
               </div>
+              {contracts.length === 0 ? (
+                <div className="bg-white rounded-2xl p-6 border border-gray-100 text-sm text-gray-500">
+                  No framework agreements on file yet. Contracts are admin-
+                  managed — reach out to partnerships@flyttgo.com to set up
+                  pre-negotiated discount % or hourly caps.
+                </div>
+              ) : (
+                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 border-b border-gray-100">
+                      <tr>{['Name','Pricing','Min provider tier','Validity'].map(h => (
+                        <th key={h} className="text-left py-3 px-4 font-semibold text-gray-600 text-xs uppercase tracking-wide">{h}</th>
+                      ))}</tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {contracts.map(c => (
+                        <tr key={c.id} className="hover:bg-gray-50">
+                          <td className="py-3.5 px-4 font-bold">{c.name}</td>
+                          <td className="py-3.5 px-4 text-xs">
+                            {c.discount_pct != null
+                              ? `${Math.round(Number(c.discount_pct) * 100)}% off public rate`
+                              : c.hourly_cap_usd != null
+                              ? `$${c.hourly_cap_usd}/hr cap`
+                              : '—'}
+                          </td>
+                          <td className="py-3.5 px-4 text-xs uppercase tracking-wider">
+                            {c.min_provider_tier
+                              ? c.min_provider_tier === 'elite' ? 'Certified Infrastructure Partner' : c.min_provider_tier.replace('_', ' ')
+                              : 'any'}
+                          </td>
+                          <td className="py-3.5 px-4 text-xs text-gray-500">
+                            {c.starts_at ? new Date(c.starts_at).toLocaleDateString() : '—'}
+                            {' → '}
+                            {c.expires_at ? new Date(c.expires_at).toLocaleDateString() : 'open'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── COMPLIANCE STATUS ── */}
+          {tab === 'compliance' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <h1 className="text-xl font-bold text-gray-900">Compliance status</h1>
+                {orgs.length > 1 && (
+                  <select
+                    value={activeOrgId ?? ''}
+                    onChange={e => setActiveOrgId(e.target.value)}
+                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white"
+                  >
+                    {orgs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+                  </select>
+                )}
+              </div>
+              {(() => {
+                const org = orgs.find(o => o.id === activeOrgId);
+                if (!org) {
+                  return (
+                    <div className="bg-white rounded-2xl p-6 border border-gray-100 text-sm text-gray-500">
+                      Pick an organization to see its compliance posture.
+                    </div>
+                  );
+                }
+                const myMembership = memberships.find(m => m.organization_id === org.id);
+                const dispatchedRequestsCount = requests.filter(r => r.dispatched_booking_id != null).length;
+                return (
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="bg-white rounded-2xl p-5 border border-gray-100">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">
+                        Organization status
+                      </p>
+                      <ul className="space-y-2 text-sm">
+                        <li className="flex items-center justify-between">
+                          <span>Procurement verified</span>
+                          <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                            org.procurement_verified ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                          }`}>
+                            {org.procurement_verified ? 'Verified' : 'Pending'}
+                          </span>
+                        </li>
+                        <li className="flex items-center justify-between">
+                          <span>Tax registration</span>
+                          <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                            org.tax_registration ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                          }`}>
+                            {org.tax_registration ? 'On file' : 'Missing'}
+                          </span>
+                        </li>
+                        <li className="flex items-center justify-between">
+                          <span>Billing model</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md">
+                            {org.billing_model}
+                          </span>
+                        </li>
+                        <li className="flex items-center justify-between">
+                          <span>Country</span>
+                          <span className="text-[10px] font-mono text-gray-500">{org.country_code.toUpperCase()}</span>
+                        </li>
+                        <li className="flex items-center justify-between">
+                          <span>Sector</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md">{org.sector}</span>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div className="bg-white rounded-2xl p-5 border border-gray-100">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">
+                        Your access
+                      </p>
+                      <ul className="space-y-2 text-sm">
+                        <li className="flex items-center justify-between">
+                          <span>Role</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700 px-2 py-0.5 rounded-md">
+                            {myMembership?.role ?? 'unknown'}
+                          </span>
+                        </li>
+                        <li className="flex items-center justify-between">
+                          <span>Joined</span>
+                          <span className="text-[10px] text-gray-500">
+                            {myMembership?.joined_at
+                              ? new Date(myMembership.joined_at).toLocaleDateString()
+                              : '—'}
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div className="bg-white rounded-2xl p-5 border border-gray-100 sm:col-span-2">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">
+                        Provider compliance · linked to your bookings
+                      </p>
+                      <ul className="space-y-2 text-sm">
+                        <li className="flex items-center justify-between">
+                          <span>Dispatched bookings</span>
+                          <span className="font-mono text-gray-700">{dispatchedRequestsCount}</span>
+                        </li>
+                        <li className="flex items-center justify-between">
+                          <span>Routing posture</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-md">
+                            CIP first · Gold Pro · Gold
+                          </span>
+                        </li>
+                        <li className="text-xs text-gray-500 leading-relaxed pt-2 border-t border-gray-100">
+                          Every dispatched provider was filtered through
+                          <code className="font-mono bg-gray-100 px-1 rounded">find_eligible_providers_for_segment</code>
+                          and ranked by
+                          <code className="font-mono bg-gray-100 px-1 rounded">tier_position DESC, rank_score DESC</code>.
+                          Suspended providers are excluded automatically.
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
+          {/* ── DEPLOYMENT REGIONS ── */}
+          {tab === 'regions' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <h1 className="text-xl font-bold text-gray-900">Deployment regions</h1>
+                {orgs.length > 1 && (
+                  <select
+                    value={activeOrgId ?? ''}
+                    onChange={e => setActiveOrgId(e.target.value)}
+                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white"
+                  >
+                    {orgs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+                  </select>
+                )}
+              </div>
+              {requests.length === 0 ? (
+                <div className="bg-white rounded-2xl p-6 border border-gray-100 text-sm text-gray-500">
+                  No relocations yet — once requests start dispatching the
+                  countries + cities you operate in will appear here.
+                </div>
+              ) : (
+                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 border-b border-gray-100">
+                      <tr>{['Country','Active','Scheduled','Completed','Cities'].map(h => (
+                        <th key={h} className="text-left py-3 px-4 font-semibold text-gray-600 text-xs uppercase tracking-wide">{h}</th>
+                      ))}</tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {(() => {
+                        /* Group requests by country; collect distinct cities per country. */
+                        const grouped = new Map<string, {
+                          active: number; scheduled: number; completed: number; cities: Set<string>;
+                        }>();
+                        for (const r of requests) {
+                          const k = r.country.toUpperCase();
+                          const row = grouped.get(k) ?? { active: 0, scheduled: 0, completed: 0, cities: new Set<string>() };
+                          if (['submitted','approved','dispatched'].includes(r.status)) row.active += 1;
+                          if (r.status === 'approved' || r.status === 'dispatched')      row.scheduled += 1;
+                          if (r.status === 'completed')                                  row.completed += 1;
+                          if (r.city) row.cities.add(r.city);
+                          grouped.set(k, row);
+                        }
+                        return Array.from(grouped.entries())
+                          .sort((a, b) => b[1].active - a[1].active)
+                          .map(([country, stats]) => (
+                            <tr key={country} className="hover:bg-gray-50">
+                              <td className="py-3.5 px-4 font-bold uppercase">{country}</td>
+                              <td className="py-3.5 px-4">{stats.active}</td>
+                              <td className="py-3.5 px-4">{stats.scheduled}</td>
+                              <td className="py-3.5 px-4">{stats.completed}</td>
+                              <td className="py-3.5 px-4 text-xs text-gray-500">
+                                {stats.cities.size === 0 ? '—' : Array.from(stats.cities).slice(0, 6).join(' · ')}
+                                {stats.cities.size > 6 && <span className="text-gray-400"> +{stats.cities.size - 6}</span>}
+                              </td>
+                            </tr>
+                          ));
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
 
