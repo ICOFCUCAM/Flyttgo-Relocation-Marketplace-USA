@@ -57,6 +57,9 @@ const MarketUKPage       = lazy(() => import('../pages/markets/UKPage'));
 const MarketNorwayPage   = lazy(() => import('../pages/markets/NorwayPage'));
 const Footer             = lazy(() => import('./Footer'));
 const LiveBookingTicker  = lazy(() => import('./global/LiveBookingTicker'));
+const FloatingChat       = lazy(() => import('./global/FloatingChat'));
+const ExitIntentModal    = lazy(() => import('./global/ExitIntentModal'));
+const MobileBottomNav    = lazy(() => import('./global/MobileBottomNav'));
 
 function Loading() {
   return (
@@ -163,6 +166,24 @@ export default function AppLayout() {
           <LiveBookingTicker />
         </Suspense>
       )}
+      {/* Floating support widget — present on every page except auth-callback */}
+      {currentPage !== 'auth-callback' && (
+        <Suspense fallback={null}>
+          <FloatingChat />
+        </Suspense>
+      )}
+      {/* Exit-intent newsletter capture — only on customer-discovery pages.
+          Touch devices skip this client-side. */}
+      {showTicker && (
+        <Suspense fallback={null}>
+          <ExitIntentModal />
+        </Suspense>
+      )}
+      {/* Mobile bottom navigation — visible <lg, hidden on certain
+          full-screen surfaces (booking flow / payment / auth-callback). */}
+      <Suspense fallback={null}>
+        <MobileBottomNav />
+      </Suspense>
     </div>
   );
 }

@@ -277,7 +277,7 @@ export default function Header() {
 
             {/* Right side */}
             <div className="flex items-center gap-2">
-              <button onClick={() => handleNav('booking')} className="hidden sm:flex items-center gap-1.5 px-5 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 transition shadow-sm">{t('header.bookNow')}</button>
+              <button onClick={() => handleNav('booking')} className="hidden sm:flex items-center gap-1.5 px-5 py-2 bg-amber-500 text-slate-900 rounded-lg text-sm font-bold hover:bg-amber-600 transition shadow-sm shadow-amber-500/25">{t('header.bookNow')}</button>
 
               {/* Notifications bell — signed-in only. Subscribes to
                * the notifications table over Supabase Realtime; flips
@@ -473,7 +473,7 @@ export default function Header() {
                 </button>
               </>
             )}
-            <button onClick={() => handleNav('booking')} className="block w-full py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-semibold text-center mt-1">{t('header.bookNow')}</button>
+            <button onClick={() => handleNav('booking')} className="block w-full py-2.5 bg-amber-500 text-slate-900 rounded-lg text-sm font-bold text-center mt-1 hover:bg-amber-600 transition shadow-sm shadow-amber-500/25">{t('header.bookNow')}</button>
           </div>
         </div>
       </div>
