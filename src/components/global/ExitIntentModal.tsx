@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { X, Mail, Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
 import { track } from '../../lib/analytics';
 
 const STORAGE_KEY = 'flyttgo_exit_intent_seen';
@@ -64,7 +65,10 @@ export default function ExitIntentModal() {
      * the conversion path stays consistent during pre-launch. */
     setSubmitted(true);
     track('exit_intent_email_captured');
-    setTimeout(() => setOpen(false), 2000);
+    toast.success("You're on the list", {
+      description: 'Your £25 discount code lands in your inbox in a moment.',
+    });
+    setTimeout(() => setOpen(false), 1400);
   }
 
   if (!open) return null;
