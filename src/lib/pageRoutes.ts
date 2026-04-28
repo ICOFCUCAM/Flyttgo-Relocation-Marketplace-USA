@@ -99,6 +99,9 @@ const PAGE_TO_PATH: Record<Page, string> = {
    * URL via history.pushState. */
   'service-category':        '/services',
 
+  /* US pricing transparency. */
+  'pricing':                 '/pricing',
+
   /* Fallback for unknown routes. No real path — pathToPage() returns
    * this id for anything it can't match. setPage('not-found') still
    * updates history.pushState to whatever URL triggered the fallback. */
@@ -145,6 +148,7 @@ const PAGE_TITLES: Record<Page, string> = {
   'providers-directory':      'Browse verified providers · FlyttGo Global',
   'compare':                  'Compare providers side by side · FlyttGo Global',
   'service-category':         'Service category · FlyttGo Global',
+  'pricing':                  'US relocation pricing · transparent rates · FlyttGo',
   'booking':                  'Book a Move · FlyttGo Global',
   'payment':                  'Secure Payment · FlyttGo Global',
   'tracking':                 'Track Your Coordination · FlyttGo Global',
@@ -228,6 +232,8 @@ const PAGE_DESCRIPTIONS: Record<Page, string> = {
     "Compare your shortlisted FlyttGo providers side by side — rating, reviews, starting price, services, fleet, verifications, and availability — in a single table.",
   'service-category':
     "FlyttGo service category — see the providers offering this service across our six markets, with verified credentials, ratings, and instant quotes.",
+  'pricing':
+    "Transparent US relocation pricing — labor-only $60–$120/hr, movers + truck $120–$250/hr, packing $40–$90/hr, corporate $150–$300/hr. See what drives the price and how FlyttGo's marketplace compares to national rates.",
   'booking':
     'Book your next move in under 3 minutes. Get an instant quote, pick a verified driver, and track your delivery live — all with escrow payment built in.',
   'payment':

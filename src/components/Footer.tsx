@@ -20,6 +20,7 @@ const PLATFORM: LinkItem[] = [
   { label: 'Providers',             page: 'providers' },
   { label: 'Browse providers',      page: 'providers-directory' },
   { label: 'Compare providers',     page: 'compare' },
+  { label: 'Pricing',               page: 'pricing' },
   { label: 'How It Works',          page: 'how-it-works' },
   { label: 'Enterprise Relocation', page: 'enterprise-relocation' },
   { label: 'Universities',          page: 'universities' },

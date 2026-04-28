@@ -23,6 +23,9 @@ export interface ServiceCategory {
   howItWorks:  { title: string; body: string }[];
   /** Two FAQ entries specific to this service. */
   faq:         { q: string; a: string }[];
+  /** Pricing tier slug from us-pricing.ts. Used by ServiceCategoryPage
+   *  to render the typical-rate card in the hero. */
+  pricingTier?: string;
 }
 
 export const SERVICE_CATEGORIES: ServiceCategory[] = [
@@ -41,6 +44,7 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
       { q: 'How long does an interstate move take?', a: 'Typically 1–3 days transit per 1,000 km. The exact ETA is computed at quote time from the OSRM road-network distance.' },
       { q: 'Are my goods insured in transit?',       a: 'Every long-distance carrier on FlyttGo holds goods-in-transit insurance with a per-booking limit of $50k or local equivalent. You can purchase additional valuation cover at checkout.' },
     ],
+    pricingTier: 'long-distance',
   },
   {
     slug:    'local',
@@ -57,6 +61,7 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
       { q: 'Can I book same-day?',       a: 'Yes — most local providers accept same-day bookings up until 14:00. Outside-hours bookings carry a small surcharge shown upfront.' },
       { q: 'How is the price calculated?', a: 'Hourly rate × time used, plus a one-off call-out fee. The widget shows the per-country base + per-km coefficient transparently.' },
     ],
+    pricingTier: 'local',
   },
   {
     slug:    'packing',
@@ -73,6 +78,7 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
       { q: 'Can I just buy packing materials?', a: 'Yes — most providers will deliver flat-pack boxes and materials without a packing crew. Add it as an extra service in the booking flow.' },
       { q: 'Are valuables / artwork crated?',  a: 'Provider-dependent. Filter the directory for "Crating" to see crews with that capability listed in their service grid.' },
     ],
+    pricingTier: 'packing',
   },
   {
     slug:    'storage',
@@ -105,6 +111,7 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
       { q: 'Do you handle IT decommissioning?', a: 'Yes — many office providers also handle WEEE-compliant disposal and certificate-of-destruction for end-of-life hardware.' },
       { q: 'Can you provide a single invoice for HR + IT + Finance?', a: 'Yes. The corporate dashboard splits a single booking into tagged cost centres so each department gets the slice they need.' },
     ],
+    pricingTier: 'corporate',
   },
   {
     slug:    'labor-only',
@@ -121,6 +128,7 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
       { q: 'Will the crew also drive my rental?', a: 'Provider-dependent. Filter the directory for "Driver included" — most labor-only crews are loaders only, not drivers.' },
       { q: 'Do they bring blankets + dollies?',   a: 'Yes — every labor-only crew comes equipped with moving blankets, straps, and at least one wheeled dolly.' },
     ],
+    pricingTier: 'labor-only',
   },
 ];
 
