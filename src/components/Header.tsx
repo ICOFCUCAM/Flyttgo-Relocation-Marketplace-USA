@@ -226,8 +226,8 @@ export default function Header() {
                 </svg>
               </div>
               <div className="flex flex-col leading-none">
-                <span className="text-xl font-bold text-gray-900 font-serif tracking-tight">Flytt<span className="text-emerald-600">Go</span></span>
-                <span className="hidden sm:inline text-[9px] uppercase tracking-[0.18em] text-gray-500 font-mono mt-0.5">Global Logistics &amp; Relocation Marketplace</span>
+                <span className="text-xl font-extrabold text-gray-900 tracking-tight">Flytt<span className="text-amber-500">Go</span></span>
+                <span className="hidden sm:inline text-[10px] uppercase tracking-wider text-gray-500 mt-0.5 font-semibold">Global moving marketplace</span>
               </div>
             </button>
 

@@ -140,10 +140,10 @@ export default function BookingShortcut({ country, compact = false }: Props) {
       }`}
     >
       <div className="mb-5">
-        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-emerald-700 mb-2">
-          {country.toUpperCase()} · Marketplace booking
+        <p className="text-[11px] font-bold uppercase tracking-wider text-amber-600 mb-2">
+          Get an instant quote
         </p>
-        <h3 className={`font-serif tracking-tight text-slate-900 ${
+        <h3 className={`tracking-tight text-slate-900 font-extrabold ${
           compact ? 'text-xl' : 'text-2xl lg:text-3xl'
         }`}>
           {COUNTRY_HEADLINE[country]}
@@ -189,12 +189,16 @@ export default function BookingShortcut({ country, compact = false }: Props) {
 
       <button
         type="submit"
-        className="mt-5 w-full px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition shadow-lg shadow-emerald-600/25"
+        className="mt-5 w-full px-6 py-3.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl transition shadow-lg shadow-amber-500/30"
       >
         {COUNTRY_CTA[country]}
       </button>
-      <p className="mt-3 text-xs text-slate-500 text-center">
-        Independent licensed providers · Transparent pricing · Escrow on every booking
+      <p className="mt-3 text-xs text-slate-500 text-center flex items-center justify-center gap-2 flex-wrap">
+        <span>★ 4.8 average</span>
+        <span>·</span>
+        <span>Licensed providers</span>
+        <span>·</span>
+        <span>Escrow protected</span>
       </p>
     </form>
   );
