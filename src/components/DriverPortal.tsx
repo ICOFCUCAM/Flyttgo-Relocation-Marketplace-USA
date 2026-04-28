@@ -1,4 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
+import { DollarSign } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../lib/auth';
 import { useApp } from '../lib/store';
@@ -591,6 +592,15 @@ export default function DriverPortal() {
           {(['overview', 'jobs', 'earnings', 'wallet', 'subscription'] as const).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 rounded capitalize text-sm font-medium ${activeTab === tab ? 'bg-black text-white' : 'bg-gray-200 text-gray-700'}`}>{t(`driverPortal.${tab}`)}</button>
           ))}
+          {/* Pricing settings — separate page rather than in-tab so the
+              live preview panel has room to breathe. */}
+          <button
+            onClick={() => setPage('provider-pricing-settings')}
+            className="px-4 py-2 rounded text-sm font-medium bg-amber-100 text-amber-800 hover:bg-amber-200 transition inline-flex items-center gap-1.5"
+          >
+            <DollarSign size={14} />
+            Pricing
+          </button>
         </div>
 
         {activeTab === 'overview' && (

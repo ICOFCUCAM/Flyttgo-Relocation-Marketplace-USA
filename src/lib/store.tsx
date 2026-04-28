@@ -42,6 +42,8 @@ export type Page =
   | 'service-category'
   /* US pricing transparency landing page. */
   | 'pricing'
+  /* Provider-facing pricing settings (driver portal). */
+  | 'provider-pricing-settings'
   /* Fallback for URLs that don't match any known route. */
   | 'not-found';
 
