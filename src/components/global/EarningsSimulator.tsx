@@ -8,7 +8,8 @@ import {
   type EarningsInput, type RelocationCorridor,
 } from '../../lib/earnings-simulator';
 import { CITY_MULTIPLIERS } from '../../lib/pricing-engine';
-import type { BookingCountry } from '../../lib/store';
+import type { PricingCountry } from '../../lib/pricing-engine';
+import { COUNTRY_PROFILES, findCountryProfile } from '../../lib/country-profiles';
 import { useApp } from '../../lib/store';
 import { track } from '../../lib/analytics';
 
@@ -31,14 +32,13 @@ import { track } from '../../lib/analytics';
  * provider dashboard (where vertical space is at a premium).
  * ───────────────────────────────────────────────────────────────── */
 
-const COUNTRIES: { code: BookingCountry; flag: string; label: string }[] = [
-  { code: 'us', flag: '🇺🇸', label: 'United States' },
-  { code: 'ca', flag: '🇨🇦', label: 'Canada' },
-  { code: 'gb', flag: '🇬🇧', label: 'United Kingdom' },
-  { code: 'de', flag: '🇩🇪', label: 'Germany' },
-  { code: 'fr', flag: '🇫🇷', label: 'France' },
-  { code: 'no', flag: '🇳🇴', label: 'Norway' },
-];
+/* Country list pulled from the canonical country-profiles module so
+ * adding a new market in one place ripples through every UI. */
+const COUNTRIES = COUNTRY_PROFILES.map(p => ({
+  code:  p.code,
+  flag:  p.flag,
+  label: p.name,
+}));
 
 const CORRIDORS: { value: RelocationCorridor; label: string; detail: string }[] = [
   { value: 'local',         label: 'Local',         detail: 'intra-city only' },
@@ -59,7 +59,7 @@ interface Props {
 export default function EarningsSimulator({ compact = false, initial }: Props) {
   const { setPage } = useApp();
 
-  const [country,         setCountry]         = useState<BookingCountry>(initial?.country ?? 'us');
+  const [country,         setCountry]         = useState<PricingCountry>(initial?.country ?? 'us');
   const [city,            setCity]            = useState(initial?.city ?? 'Dallas');
   const [crewSize,        setCrewSize]        = useState<2 | 3 | 4 | 5>(initial?.crewSize ?? 2);
   const [truck,           setTruck]           = useState(initial?.truckAvailable   ?? true);
@@ -285,10 +285,25 @@ export default function EarningsSimulator({ compact = false, initial }: Props) {
           </div>
 
           <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-200/80 mb-1">Hourly</p>
-          <p className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-4">
+          <p className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-1">
             {breakdown.symbol}{breakdown.providerHourly.toFixed(0)}
             <span className="text-emerald-200/70 text-base font-normal ml-1">/hr</span>
           </p>
+          {/* Country context strip — currency · tax mode · service
+              model so prospects understand why the number differs
+              across markets. */}
+          {(() => {
+            const profile = findCountryProfile(country);
+            return (
+              <p className="text-[10px] text-emerald-100/70 mb-4 inline-flex items-center gap-1.5 flex-wrap">
+                <span>{profile.currency}</span>
+                <span aria-hidden>·</span>
+                <span>{profile.taxMode === 'vat-included' ? 'VAT included' : profile.taxMode === 'sales-tax-added' ? 'Sales tax at checkout' : 'Net quote'}</span>
+                <span aria-hidden>·</span>
+                <span className="capitalize">{profile.serviceModel.replace(/-/g, ' ')}</span>
+              </p>
+            );
+          })()}
 
           <div className="space-y-3 mb-5">
             <Stat label="Weekly"  value={breakdown.weeklyIncome}  symbol={breakdown.symbol} />

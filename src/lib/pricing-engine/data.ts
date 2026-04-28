@@ -10,9 +10,8 @@
  * salary + relocation studies.
  * ───────────────────────────────────────────────────────────────── */
 
-import type { BookingCountry } from '../store';
 import type {
-  ServiceType, InsuranceTier, Currency, QuoteInput,
+  ServiceType, InsuranceTier, Currency, QuoteInput, PricingCountry,
 } from './types';
 
 /* ── Layer 1 — Country pricing baseline ────────────────────────── */
@@ -27,13 +26,19 @@ export interface CountryBaseline {
   perKm:      number;
 }
 
-export const COUNTRY_BASELINES: Record<BookingCountry, CountryBaseline> = {
-  us: { baseHourly: 75, currency: 'USD', symbol: '$', perKm: 1.4 },
-  ca: { baseHourly: 70, currency: 'CAD', symbol: 'C$', perKm: 1.5 },
-  gb: { baseHourly: 55, currency: 'GBP', symbol: '£', perKm: 1.2 },
-  de: { baseHourly: 60, currency: 'EUR', symbol: '€', perKm: 1.3 },
-  fr: { baseHourly: 55, currency: 'EUR', symbol: '€', perKm: 1.3 },
-  no: { baseHourly: 600, currency: 'NOK', symbol: 'kr', perKm: 12 },
+export const COUNTRY_BASELINES: Record<PricingCountry, CountryBaseline> = {
+  us: { baseHourly: 75,    currency: 'USD', symbol: '$',   perKm: 1.4 },
+  ca: { baseHourly: 70,    currency: 'CAD', symbol: 'C$',  perKm: 1.5 },
+  gb: { baseHourly: 55,    currency: 'GBP', symbol: '£',   perKm: 1.2 },
+  de: { baseHourly: 60,    currency: 'EUR', symbol: '€',   perKm: 1.3 },
+  fr: { baseHourly: 55,    currency: 'EUR', symbol: '€',   perKm: 1.3 },
+  no: { baseHourly: 600,   currency: 'NOK', symbol: 'kr',  perKm: 12 },
+  /* Africa / Middle East — local-currency baselines reflecting median
+   * mover hourly rates; per-km costs scaled to local fuel + road
+   * conditions. */
+  ng: { baseHourly: 8_500, currency: 'NGN', symbol: '₦',   perKm: 350 },   // Nigeria · ~$5–6/hr equiv
+  ke: { baseHourly: 1_400, currency: 'KES', symbol: 'KSh', perKm: 60 },    // Kenya   · ~$10/hr equiv
+  ae: { baseHourly: 110,   currency: 'AED', symbol: 'AED', perKm: 5 },     // UAE     · ~$30/hr equiv
 };
 
 /* ── Layer 2 — City multipliers ────────────────────────────────── */
@@ -42,7 +47,7 @@ export const COUNTRY_BASELINES: Record<BookingCountry, CountryBaseline> = {
  * city slug. Lookup is case-insensitive and tolerant of "City, ST"
  * suffixes (we strip after the first comma). Cities not listed
  * fall through to multiplier 1.0 (= country baseline). */
-export const CITY_MULTIPLIERS: Record<BookingCountry, Record<string, number>> = {
+export const CITY_MULTIPLIERS: Record<PricingCountry, Record<string, number>> = {
   us: {
     'new york':     1.6,
     'manhattan':    1.65,
@@ -110,6 +115,34 @@ export const CITY_MULTIPLIERS: Record<BookingCountry, Record<string, number>> = 
     'stavanger': 1.05,
     'drammen':   0.95,
     'tromsø':    1.1,
+  },
+  /* Nigeria — Lagos (Lekki / Ikoyi / Victoria Island) commands
+   * the highest premium against the country baseline; Abuja
+   * federal-capital pricing follows. */
+  ng: {
+    'lagos':     1.4,
+    'abuja':     1.2,
+    'port harcourt': 1.05,
+    'ibadan':    0.9,
+    'kano':      0.85,
+  },
+  /* Kenya — Nairobi metro (Kilimani / Westlands / Karen) tops the
+   * scale; Mombasa coastal moves carry their own logistics premium. */
+  ke: {
+    'nairobi':   1.4,
+    'mombasa':   1.15,
+    'kisumu':    0.95,
+    'nakuru':    0.9,
+    'eldoret':   0.85,
+  },
+  /* UAE — Dubai + Abu Dhabi dominate the relocation market;
+   * Sharjah + Ajman trail at lower multipliers. */
+  ae: {
+    'dubai':     1.3,
+    'abu dhabi': 1.25,
+    'sharjah':   1.05,
+    'ajman':     0.95,
+    'al ain':    0.95,
   },
 };
 

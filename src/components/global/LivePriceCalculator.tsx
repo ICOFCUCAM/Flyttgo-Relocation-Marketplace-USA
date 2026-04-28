@@ -6,9 +6,9 @@ import {
 } from 'lucide-react';
 import {
   calculateQuote, COUNTRY_BASELINES, CITY_MULTIPLIERS,
-  type QuoteInput, type ServiceType, type InsuranceTier,
+  type QuoteInput, type ServiceType, type InsuranceTier, type PricingCountry,
 } from '../../lib/pricing-engine';
-import type { BookingCountry } from '../../lib/store';
+import { COUNTRY_PROFILES } from '../../lib/country-profiles';
 import { track } from '../../lib/analytics';
 
 /* ─────────────────────────────────────────────────────────────────
@@ -36,14 +36,11 @@ type State = Required<Pick<QuoteInput,
   peakSeason:  boolean;
 };
 
-const COUNTRIES: { code: BookingCountry; flag: string; label: string }[] = [
-  { code: 'us', flag: '🇺🇸', label: 'United States' },
-  { code: 'ca', flag: '🇨🇦', label: 'Canada' },
-  { code: 'gb', flag: '🇬🇧', label: 'United Kingdom' },
-  { code: 'de', flag: '🇩🇪', label: 'Germany' },
-  { code: 'fr', flag: '🇫🇷', label: 'France' },
-  { code: 'no', flag: '🇳🇴', label: 'Norway' },
-];
+const COUNTRIES = COUNTRY_PROFILES.map(p => ({
+  code:  p.code,
+  flag:  p.flag,
+  label: p.name,
+}));
 
 const SERVICE_TYPES: { value: ServiceType; label: string; icon: LucideIcon }[] = [
   { value: 'labor-only',   label: 'Labor-only',   icon: Users    },

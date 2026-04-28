@@ -36,6 +36,28 @@
 
 import type { BookingCountry } from '../store';
 
+/* ─────────────────────────────────────────────────────────────────
+ * PricingCountry — superset of BookingCountry that the engine
+ * supports. Booking surfaces (BookingShortcut, country shopfronts)
+ * stay scoped to BookingCountry's six launch markets; the engine
+ * itself, the live calculator, and the earnings simulator widen to
+ * the full marketplace footprint so prospects in expansion markets
+ * (Nigeria, Kenya, UAE) see realistic rates before we activate
+ * dedicated country shopfronts.
+ *
+ * Adding a new country:
+ *   1. Add the ISO-2 code below.
+ *   2. Seed COUNTRY_BASELINES + CITY_MULTIPLIERS in ./data.ts.
+ *   3. Add the country profile (currency, tax mode, service model)
+ *      to lib/country-profiles.ts.
+ *   4. Add the corresponding seed rows to docs/install-country-profiles.sql.
+ * ───────────────────────────────────────────────────────────────── */
+export type PricingCountry =
+  | BookingCountry           // 'us' | 'ca' | 'gb' | 'de' | 'fr' | 'no'
+  | 'ng'                     // Nigeria
+  | 'ke'                     // Kenya
+  | 'ae';                    // United Arab Emirates
+
 export type ServiceType =
   | 'labor-only'
   | 'movers-truck'
@@ -45,7 +67,7 @@ export type ServiceType =
 
 export type InsuranceTier = 'basic' | 'full' | 'premium';
 
-export type Currency = 'USD' | 'CAD' | 'EUR' | 'GBP' | 'NOK';
+export type Currency = 'USD' | 'CAD' | 'EUR' | 'GBP' | 'NOK' | 'NGN' | 'KES' | 'AED';
 
 export interface ComplexityInput {
   stairsFlights?:  number;   // 0+ flights, 0.05 each
@@ -62,7 +84,7 @@ export interface TimingInput {
 }
 
 export interface QuoteInput {
-  country:        BookingCountry;
+  country:        PricingCountry;
   /** Optional canonical city name. Falls back to country baseline if
    *  no city multiplier is registered. Case-insensitive lookup. */
   city?:          string;

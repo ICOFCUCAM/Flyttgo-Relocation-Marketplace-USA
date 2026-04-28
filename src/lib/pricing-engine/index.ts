@@ -18,6 +18,6 @@ export {
 }                              from './data';
 export type {
   QuoteInput, QuoteBreakdown, QuoteStep,
-  ServiceType, InsuranceTier, Currency,
+  ServiceType, InsuranceTier, Currency, PricingCountry,
   ComplexityInput, TimingInput,
 } from './types';
