@@ -32,8 +32,6 @@ export default function Header() {
   const { setPage, currentPage, setShowAuthModal, setAuthMode } = useApp();
   const { t, i18n: i18nInstance } = useTranslation();
   const [mobileOpen,    setMobileOpen]    = useState(false);
-  const [toolsOpen,     setToolsOpen]     = useState(false);
-  const [companiesOpen, setCompaniesOpen] = useState(false);
   const [marketsOpen,   setMarketsOpen]   = useState(false);
   const [langOpen,      setLangOpen]      = useState(false);
   const [userMenuOpen,  setUserMenuOpen]  = useState(false);
@@ -47,23 +45,6 @@ export default function Header() {
    * click detection has to check both nodes. */
   const langBtnRef = useRef<HTMLButtonElement>(null);
   const langPopRef = useRef<HTMLDivElement>(null);
-
-  /* Moving tools + corporate dropdown items — rebuilt on every render
-   * so t() picks up the active language. Cheap — it's just 9 objects. */
-  const MOVING_TOOLS = [
-    { label: t('home.toolCalcTitle', 'Van Size Calculator'),  desc: t('header.toolCalcDesc', 'Find the right van for your move'), page: 'van-guide' as Page },
-    { label: t('home.toolCheckTitle', 'Moving Checklist'),     desc: t('header.toolCheckDesc', 'Step-by-step packing guide'),       page: 'checklist' as Page },
-    { label: t('header.subPlans', 'Subscription Plans'),       desc: t('header.subPlansDesc', 'Save with a driver subscription'),   page: 'subscriptions' as Page },
-  ];
-
-  const CORPORATE_LINKS = [
-    { label: t('home.corpBulk', 'Bulk Booking Management'),       desc: t('home.corpBulkDesc', 'Multi-location deliveries at scale'),    page: 'bulk-booking' as Page },
-    { label: t('home.corpRecurring', 'Recurring Deliveries'),      desc: t('home.corpRecurringDesc', 'Daily, weekly or monthly scheduling'), page: 'recurring-deliveries' as Page },
-    { label: t('home.corpAnalytics', 'Company Dashboard Info'),    desc: t('home.corpAnalyticsDesc', 'Track spending & delivery performance'), page: 'company-dashboard-info' as Page },
-    { label: t('home.corpInvoice', 'Invoice & Billing'),           desc: t('home.corpInvoiceDesc', 'Consolidated monthly invoices'),         page: 'invoice-billing' as Page },
-    { label: t('home.corpApi', 'Corporate API Access'),            desc: t('home.corpApiDesc', 'Integrate FlyttGo into your systems'),       page: 'corporate-api-access' as Page },
-    { label: t('home.corpAnalytics', 'Corporate Dashboard'),       desc: t('header.corpDashDesc', 'Enterprise logistics command center'),    page: 'corporate-dashboard' as Page },
-  ];
 
   /* Real-time notifications for the bell icon. Returns an empty list
    * silently if the notifications table / RLS / publication aren't
@@ -105,15 +86,12 @@ export default function Header() {
   }, []);
 
   function closeAll() {
-    setToolsOpen(false);
-    setCompaniesOpen(false); setUserMenuOpen(false);
+    setUserMenuOpen(false);
     setMarketsOpen(false);
     setNotifOpen(false);
   }
 
-  function toggle(which: 'tools' | 'companies' | 'user' | 'notif' | 'markets') {
-    setToolsOpen(which === 'tools'         ? (s) => !s : false);
-    setCompaniesOpen(which === 'companies' ? (s) => !s : false);
+  function toggle(which: 'user' | 'notif' | 'markets') {
     setMarketsOpen(which === 'markets'     ? (s) => !s : false);
     setUserMenuOpen(which === 'user'       ? (s) => !s : false);
     setNotifOpen(which === 'notif'         ? (s) => !s : false);
@@ -158,28 +136,6 @@ export default function Header() {
         currentPage === page ? 'text-emerald-600 bg-emerald-50' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
       }`}
     >{label}</button>
-  );
-
-  const dropdown = (
-    open: boolean,
-    label: string,
-    which: 'tools' | 'companies' | 'user',
-    children: React.ReactNode,
-    alignRight = false
-  ) => (
-    <div className="relative">
-      <button
-        onClick={() => toggle(which)}
-        className={`flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium transition ${
-          open ? 'text-emerald-600 bg-emerald-50' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-        }`}
-      >{label}{chevron(open)}</button>
-      {open && (
-        <div className={`absolute top-full ${alignRight ? 'right-0' : 'left-0'} mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 z-50`}>
-          {children}
-        </div>
-      )}
-    </div>
   );
 
   return (

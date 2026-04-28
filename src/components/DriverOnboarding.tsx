@@ -11,6 +11,27 @@ const VEHICLE_TYPES = [
   { id: 'luton_van', label: 'Luton Van (18–20 m³)', examples: 'Luton Box Truck with Tail Lift' },
 ];
 
+/**
+ * Phase 6 — Provider onboarding categories.
+ *
+ * Every applicant declares which marketplace category they operate in.
+ * Vehicle and document collection still happens in steps 2/3 because
+ * licensed carriers and labor providers need to surface that data, but
+ * the category choice is what the marketplace records as the
+ * application's primary classification.
+ */
+const PROVIDER_CATEGORIES = [
+  { id: 'licensed_moving_carrier',         label: 'Licensed moving carrier',          desc: 'USDOT/MC, GüKG, GVOL, registre des transporteurs, yrkestransportløyve, or equivalent national operator licence.' },
+  { id: 'moving_labor_provider',           label: 'Moving labor provider',            desc: 'Independent labor crews for loading, unloading, and in-home moves.' },
+  { id: 'packing_services_provider',       label: 'Packing services provider',        desc: 'Packing crews, materials, and crating from independent providers.' },
+  { id: 'storage_facility_partner',        label: 'Storage facility partner',         desc: 'Self-storage, bonded warehouse, or staged-storage operator.' },
+  { id: 'vehicle_rental_partner',          label: 'Vehicle rental partner',           desc: 'Truck and van rental operators integrated alongside coordinated relocations.' },
+  { id: 'freight_forwarding_partner',      label: 'Freight forwarding partner',       desc: 'Cross-border freight, customs documentation coordination, and consolidation.' },
+  { id: 'international_relocation_coordinator', label: 'International relocation coordinator', desc: 'End-to-end origin- and arrival-country relocation orchestration.' },
+  { id: 'university_relocation_partner',   label: 'University relocation partner',    desc: 'Student move-in / move-out, residence hall windows, semester mobility.' },
+  { id: 'corporate_relocation_vendor',     label: 'Corporate relocation vendor',      desc: 'Talent mobility, project relocation, consolidated procurement workflows.' },
+];
+
 /* ── Documents collected in step 3 ──────────────────────────────────
  * Each key is the canonical document_type value we write to
  * driver_documents. The admin dashboard approval flow already reads
@@ -53,11 +74,13 @@ export default function DriverOnboarding() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
 
-  // Step 1 — Personal
+  // Step 1 — Personal + provider category (Phase 6)
   const [firstName, setFirstName] = useState(profile?.first_name || '');
   const [lastName, setLastName] = useState(profile?.last_name || '');
   const [phone, setPhone] = useState(profile?.phone || '');
   const [city, setCity] = useState('');
+  const [country, setCountry] = useState<'US' | 'CA' | 'DE' | 'FR' | 'GB' | 'NO' | ''>('');
+  const [providerCategory, setProviderCategory] = useState('');
 
   // Step 2 — Vehicle
   const [vehicleType, setVehicleType] = useState('');
@@ -141,6 +164,15 @@ export default function DriverOnboarding() {
        *    vehicle_registration, cargo_capacity, city, zone, status.
        *    UI collects make + model separately; we concatenate them
        *    into the single `vehicle_model` column. */
+      /* Provider category and country are appended to existing columns so we
+       * don't depend on a schema migration. The admin dashboard reads
+       * `zone` (country) and `vehicle_model` (with the category prefix)
+       * to surface the marketplace classification per applicant. */
+      const categoryLabel = PROVIDER_CATEGORIES.find(c => c.id === providerCategory)?.label ?? '';
+      const vehicleField  = [categoryLabel, `${vehicleMake} ${vehicleModel}`.trim()]
+        .filter(Boolean)
+        .join(' · ');
+
       const { error: appError } = await supabase
         .from('driver_applications')
         .insert({
@@ -150,8 +182,9 @@ export default function DriverOnboarding() {
           last_name: lastName,
           phone,
           city,
+          zone: country || null,
           vehicle_type: vehicleType,
-          vehicle_model: `${vehicleMake} ${vehicleModel}`.trim(),
+          vehicle_model: vehicleField,
           vehicle_year: vehicleYear ? parseInt(vehicleYear, 10) : null,
           vehicle_registration: licensePlate,
           status: 'pending',
@@ -230,7 +263,14 @@ export default function DriverOnboarding() {
       <div className="bg-gradient-to-r from-[#1A365D] to-[#2D4A7A] text-white py-10">
         <div className="max-w-3xl mx-auto px-4 text-center">
           <h1 className="text-3xl font-bold mb-2">{t('driverOnboarding.heroTitle')}</h1>
-          <p className="text-white/70">{t('driverOnboarding.heroSubtitle')}</p>
+          <p className="text-white/70 mb-5">{t('driverOnboarding.heroSubtitle')}</p>
+          <p className="text-white/70 text-sm leading-relaxed bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-left">
+            FlyttGo Global Logistics &amp; Relocation Marketplace operates as a
+            digital coordination platform connecting customers with independent
+            licensed relocation providers across multiple jurisdictions worldwide.
+            Service providers are responsible for compliance with their national
+            licensing, taxation, insurance, and regulatory requirements.
+          </p>
         </div>
       </div>
 
@@ -288,24 +328,68 @@ export default function DriverOnboarding() {
                   <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+1 XXX XX XXX"
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm" />
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Country of operation</label>
+                    <select value={country} onChange={e => setCountry(e.target.value as typeof country)}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm bg-white">
+                      <option value="">Select country</option>
+                      <option value="US">United States</option>
+                      <option value="CA">Canada</option>
+                      <option value="DE">Germany</option>
+                      <option value="FR">France</option>
+                      <option value="GB">United Kingdom</option>
+                      <option value="NO">Norway</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('driverOnboarding.cityLabel')}</label>
+                    <input value={city} onChange={e => setCity(e.target.value)} placeholder="City / metro"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm" />
+                  </div>
+                </div>
+
+                {/* Provider category selector — Phase 6 */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('driverOnboarding.cityLabel')}</label>
-                  <select value={city} onChange={e => setCity(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm bg-white">
-                    <option value="">{t('driverOnboarding.citySelect')}</option>
-                    {['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix', 'Philadelphia', 'Kristiansand', 'Tromsø'].map(c => (
-                      <option key={c} value={c}>{c}</option>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Provider category</label>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Select the marketplace category your business operates in. You can activate
+                    additional categories from the provider portal after the application is approved.
+                  </p>
+                  <div className="grid sm:grid-cols-2 gap-2">
+                    {PROVIDER_CATEGORIES.map(c => (
+                      <label
+                        key={c.id}
+                        className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition ${
+                          providerCategory === c.id
+                            ? 'border-emerald-500 bg-emerald-50'
+                            : 'border-gray-200 hover:border-emerald-300'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="providerCategory"
+                          value={c.id}
+                          checked={providerCategory === c.id}
+                          onChange={() => setProviderCategory(c.id)}
+                          className="mt-1 accent-emerald-600"
+                        />
+                        <span>
+                          <span className="block text-sm font-semibold text-gray-900">{c.label}</span>
+                          <span className="block text-xs text-gray-500 leading-relaxed mt-0.5">{c.desc}</span>
+                        </span>
+                      </label>
                     ))}
-                  </select>
+                  </div>
                 </div>
               </div>
               <button
                 onClick={() => {
-                  if (firstName && lastName && phone && city) {
+                  if (firstName && lastName && phone && city && country && providerCategory) {
                     setError('');
                     setStep(2);
                   } else {
-                    setError(t('driverOnboarding.errFillAll'));
+                    setError('Please complete every field, including country and provider category.');
                   }
                 }}
                 className="w-full mt-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition"
@@ -464,7 +548,9 @@ export default function DriverOnboarding() {
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div><span className="text-gray-500">Name:</span> <span className="font-medium">{firstName} {lastName}</span></div>
                     <div><span className="text-gray-500">Phone:</span> <span className="font-medium">{phone}</span></div>
+                    <div><span className="text-gray-500">Country:</span> <span className="font-medium">{country || '—'}</span></div>
                     <div><span className="text-gray-500">City:</span> <span className="font-medium">{city}</span></div>
+                    <div className="col-span-2"><span className="text-gray-500">Provider category:</span> <span className="font-medium">{PROVIDER_CATEGORIES.find(c => c.id === providerCategory)?.label || '—'}</span></div>
                   </div>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-4">

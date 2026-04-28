@@ -34,7 +34,7 @@ export default function NotFoundPage() {
     { label: 'Services',          desc: 'Full house, office, furniture, same-day and more', page: 'services',  icon: '📦' },
     { label: 'Track Your Move',   desc: 'Live map + ETA for your active delivery',         page: 'tracking',  icon: '📍' },
     { label: 'Become a Driver',   desc: 'Earn on your own schedule',                        page: 'driver-onboarding', icon: '👤' },
-    { label: 'FlyttGo for Business', desc: 'Bulk booking, recurring deliveries, API',      page: 'corporate', icon: '🏢' },
+    { label: 'FlyttGo for Enterprise', desc: 'Bulk coordination, recurring deliveries, API', page: 'corporate', icon: '🏢' },
     { label: 'Help Center',       desc: 'FAQ, safety, claims, contact',                    page: 'help',      icon: '❓' },
   ];
 
