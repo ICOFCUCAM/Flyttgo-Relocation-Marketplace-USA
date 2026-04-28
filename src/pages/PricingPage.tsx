@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../lib/store';
 import { Section, Eyebrow, Pill } from '../components/ds';
+import LivePriceCalculator from '../components/global/LivePriceCalculator';
 import {
   US_PRICING_TIERS, formatPricingRange, MARKETPLACE_COMMISSION,
   STRATEGIC_POSITIONING, type PricingTier,
@@ -57,6 +58,21 @@ export default function PricingPage() {
           tier has the same answer to the same question: what's included,
           what drives the price, and how the platform takes its cut.
         </p>
+      </Section>
+
+      {/* LIVE CALCULATOR — 9-layer pricing engine. */}
+      <Section tone="canvas" size="default">
+        <Eyebrow tone="brand" className="mb-1">Live calculator</Eyebrow>
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900 mb-2">
+          Try the engine. Watch every layer of the price.
+        </h2>
+        <p className="text-slate-600 max-w-2xl mb-6">
+          Same engine the booking widget runs against. Country baseline ×
+          city multiplier × crew × service × complexity × timing + distance
+          + insurance − marketplace fee. Move any input — the ledger
+          updates in real time.
+        </p>
+        <LivePriceCalculator />
       </Section>
 
       {/* TIER ANCHOR NAV */}

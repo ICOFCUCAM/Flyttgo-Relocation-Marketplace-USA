@@ -512,6 +512,20 @@ export default function BookingShortcut({ country, compact = false }: Props) {
               </div>
             </div>
           )}
+          {/* How is this calculated? — opens the live engine on /pricing.
+              Country baseline × city × crew × service × complexity ×
+              timing + distance + insurance − marketplace fee. */}
+          <button
+            type="button"
+            onClick={() => {
+              track('booking_shortcut_pricing_explainer_clicked', { country });
+              setPage('pricing');
+            }}
+            className="w-full px-4 py-2 bg-white border-t border-slate-200 text-[11px] text-slate-500 hover:text-amber-700 hover:bg-amber-50 transition flex items-center justify-center gap-1.5 font-bold"
+          >
+            <Info size={11} />
+            How is this calculated? See the 9-layer engine →
+          </button>
         </div>
       )}
 
