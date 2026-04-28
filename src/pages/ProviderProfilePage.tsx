@@ -8,6 +8,7 @@ import type { Page } from '../lib/store';
 import { findProvider, PROVIDERS, type ProviderRecord } from '../lib/providers-catalogue';
 import { Section, Eyebrow, Pill, EmptyState } from '../components/ds';
 import AddToCompareButton from '../components/global/AddToCompareButton';
+import AvailabilityBadge from '../components/global/AvailabilityBadge';
 import { recordRecentlyViewed } from '../lib/recently-viewed-store';
 import { track } from '../lib/analytics';
 
@@ -148,8 +149,18 @@ export default function ProviderProfilePage() {
           {/* Side card — book + compare + verifications */}
           <aside className="lg:col-span-4 bg-white rounded-2xl shadow-elevated text-ink-900 overflow-hidden">
             <div className="bg-amber-50 px-5 py-4 border-b border-amber-200">
-              <p className="text-xs uppercase tracking-wider text-amber-700 font-bold">Booking from</p>
-              <p className="text-3xl font-extrabold text-ink-900 mt-1">{provider.fromPrice}</p>
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-amber-700 font-bold">Booking from</p>
+                  <p className="text-3xl font-extrabold text-ink-900 mt-1">{provider.fromPrice}</p>
+                </div>
+                {provider.availability && (
+                  <AvailabilityBadge
+                    availability={provider.availability}
+                    slotsLeft={provider.slotsLeft}
+                  />
+                )}
+              </div>
               <p className="text-xs text-slate-500 mt-1">Indicative · final price computed in the booking flow.</p>
             </div>
             <div className="p-5 space-y-3">

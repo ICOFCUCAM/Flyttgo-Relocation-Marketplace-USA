@@ -1,6 +1,7 @@
 import React from 'react';
 import { Star, Truck, ShieldCheck, Award, ArrowRight } from 'lucide-react';
 import AddToCompareButton from './AddToCompareButton';
+import AvailabilityBadge from './AvailabilityBadge';
 import { useApp } from '../../lib/store';
 import { PROVIDERS } from '../../lib/providers-catalogue';
 import { track } from '../../lib/analytics';
@@ -73,11 +74,19 @@ export default function TopProviders() {
                 )}
               </div>
 
-              <div className="flex items-center gap-2 mb-3 text-sm">
+              <div className="flex items-center gap-2 mb-3 text-sm flex-wrap">
                 <Star size={15} className="fill-amber-400 text-amber-400" />
                 <strong className="text-slate-900">{p.rating.toFixed(2)}</strong>
                 <span className="text-slate-500">·</span>
                 <span className="text-slate-500">{p.reviews.toLocaleString()} reviews</span>
+                {p.availability && (
+                  <AvailabilityBadge
+                    availability={p.availability}
+                    slotsLeft={p.slotsLeft}
+                    size="sm"
+                    className="ml-auto"
+                  />
+                )}
               </div>
 
               <div className="flex items-center justify-between mb-3">

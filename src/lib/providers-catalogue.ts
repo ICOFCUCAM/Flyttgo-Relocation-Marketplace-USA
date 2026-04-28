@@ -39,6 +39,19 @@ export interface ProviderRecord {
   coverage:    string;
   /** Years operating. */
   yearsActive: number;
+  /** Live availability indicator surfaced on cards + profile.
+   *
+   *   - 'available_now' : free slot in the next 24 h
+   *   - 'books_fast'    : usually books out within 48 h of publish
+   *   - 'slots_left'    : limited capacity this week (carries `slotsLeft`)
+   *   - 'busy'          : fully booked, joining waitlist
+   *
+   * In production this is computed by an edge function from the
+   * provider's accepted-jobs feed against their declared capacity.
+   * For now we curate per record so the UX is wired end-to-end. */
+  availability?: 'available_now' | 'books_fast' | 'slots_left' | 'busy';
+  /** Optional integer slot count, used when availability='slots_left'. */
+  slotsLeft?:    number;
 }
 
 export const PROVIDERS: ProviderRecord[] = [
@@ -73,6 +86,7 @@ export const PROVIDERS: ProviderRecord[] = [
     ],
     coverage:    'Five boroughs · NJ · CT · PA · MA',
     yearsActive: 12,
+    availability: 'books_fast',
   },
   {
     slug:      'london-lift-and-shift',
@@ -104,6 +118,8 @@ export const PROVIDERS: ProviderRecord[] = [
     ],
     coverage:    'All London zones · M25 corridor',
     yearsActive: 5,
+    availability: 'slots_left',
+    slotsLeft:    3,
   },
   {
     slug:      'oslo-flyttebyra',
@@ -134,6 +150,7 @@ export const PROVIDERS: ProviderRecord[] = [
     ],
     coverage:    'Oslo, Akershus, Bergen, Stavanger, Trondheim',
     yearsActive: 8,
+    availability: 'available_now',
   },
   {
     slug:      'berlin-umzugsprofis',
@@ -164,6 +181,7 @@ export const PROVIDERS: ProviderRecord[] = [
     ],
     coverage:    'Berlin · Brandenburg · München · Hamburg · Köln',
     yearsActive: 9,
+    availability: 'books_fast',
   },
   {
     slug:      'demenageurs-ile-de-france',
@@ -194,6 +212,8 @@ export const PROVIDERS: ProviderRecord[] = [
     ],
     coverage:    'Île-de-France · Lyon · Marseille · Bordeaux',
     yearsActive: 10,
+    availability: 'slots_left',
+    slotsLeft:    2,
   },
   {
     slug:      'maple-move-co',
@@ -223,6 +243,7 @@ export const PROVIDERS: ProviderRecord[] = [
     ],
     coverage:    'Ontario · Québec · Maritimes',
     yearsActive: 7,
+    availability: 'available_now',
   },
 ];
 

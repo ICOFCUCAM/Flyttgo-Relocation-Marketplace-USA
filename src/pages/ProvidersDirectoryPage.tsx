@@ -8,6 +8,7 @@ import { PROVIDERS, type ProviderRecord } from '../lib/providers-catalogue';
 import type { BookingCountry } from '../lib/store';
 import { Section, Eyebrow, Pill, EmptyState } from '../components/ds';
 import AddToCompareButton from '../components/global/AddToCompareButton';
+import AvailabilityBadge from '../components/global/AvailabilityBadge';
 import RecentlyViewedRail from '../components/global/RecentlyViewedRail';
 import { track } from '../lib/analytics';
 
@@ -361,11 +362,19 @@ function ProviderCard({ provider: p, onOpen }: { provider: ProviderRecord; onOpe
         {p.about}
       </p>
 
-      <div className="flex items-center gap-2 mb-3 text-sm">
+      <div className="flex items-center gap-2 mb-3 text-sm flex-wrap">
         <Star size={14} className="fill-amber-400 text-amber-400" />
         <strong>{p.rating.toFixed(2)}</strong>
         <span className="text-slate-500">·</span>
         <span className="text-slate-500">{p.reviews.toLocaleString()} reviews</span>
+        {p.availability && (
+          <AvailabilityBadge
+            availability={p.availability}
+            slotsLeft={p.slotsLeft}
+            size="sm"
+            className="ml-auto"
+          />
+        )}
       </div>
 
       <div className="flex items-center justify-between mb-3">
