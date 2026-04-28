@@ -26,6 +26,8 @@ export type Page =
   | 'universities'
   | 'market-us' | 'market-canada' | 'market-germany'
   | 'market-france' | 'market-uk' | 'market-norway'
+  /* Referral program surface. */
+  | 'refer'
   /* Fallback for URLs that don't match any known route. */
   | 'not-found';
 

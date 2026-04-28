@@ -29,6 +29,7 @@ const COMPANY: LinkItem[] = [
   { label: 'Careers',               page: 'careers' },
   { label: 'Press',                 page: 'press' },
   { label: 'Sustainability',        page: 'sustainability' },
+  { label: 'Refer & earn £25',      page: 'refer' },
 ];
 
 const LEGAL: LinkItem[] = [
