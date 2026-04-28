@@ -30,6 +30,15 @@ const PLATFORM: LinkItem[] = [
   { label: 'Compliance',            page: 'compliance' },
 ];
 
+const INSTITUTIONAL: LinkItem[] = [
+  { label: 'Enterprise Relocation',  page: 'enterprise-relocation' },
+  { label: 'Corporate Workforce',    page: 'corporate' },
+  { label: 'University Mobility',    page: 'universities' },
+  { label: 'Government Programs',    page: 'government-programs' },
+  { label: 'NGO Deployment',         page: 'ngo-deployment' },
+  { label: 'Pilot Programs',         page: 'pilot-deployment-programs' },
+];
+
 const COMPANY: LinkItem[] = [
   { label: 'About',                 page: 'about' },
   { label: 'Contact',               page: 'contact' },
@@ -136,9 +145,10 @@ export default function Footer() {
       </div>
 
       {/* ── Sitemap ───────────────────────────────────────────── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-2 sm:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
         <FooterColumn title="Markets" items={MARKETS} onNav={go} />
         <FooterColumn title="Platform" items={PLATFORM} onNav={go} />
+        <FooterColumn title="Institutional" items={INSTITUTIONAL} onNav={go} />
         <FooterColumn title="Company" items={COMPANY} onNav={go} />
         <FooterColumn title="Legal" items={LEGAL} onNav={go} />
       </div>
