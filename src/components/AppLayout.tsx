@@ -60,6 +60,7 @@ const ProviderProfilePage = lazy(() => import('../pages/ProviderProfilePage'));
 const ProvidersDirectoryPage = lazy(() => import('../pages/ProvidersDirectoryPage'));
 const ComparePage = lazy(() => import('../pages/ComparePage'));
 const ServiceCategoryPage = lazy(() => import('../pages/ServiceCategoryPage'));
+const PricingPage = lazy(() => import('../pages/PricingPage'));
 const Footer             = lazy(() => import('./Footer'));
 const LiveBookingTicker  = lazy(() => import('./global/LiveBookingTicker'));
 const FloatingChat       = lazy(() => import('./global/FloatingChat'));
@@ -157,7 +158,7 @@ export default function AppLayout() {
    * show it on customer-discovery surfaces (home, country pages,
    * marketplace, how-it-works). Suppressed on dashboards, auth, and
    * payment surfaces where it would distract. */
-  const showTicker = ['home','marketplace','how-it-works','providers','cities','enterprise-relocation','partners','about','universities','market-us','market-canada','market-germany','market-france','market-uk','market-norway','refer','provider-profile','providers-directory','compare','service-category'].includes(currentPage);
+  const showTicker = ['home','marketplace','how-it-works','providers','cities','enterprise-relocation','partners','about','universities','market-us','market-canada','market-germany','market-france','market-uk','market-norway','refer','provider-profile','providers-directory','compare','service-category','pricing'].includes(currentPage);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -215,6 +216,7 @@ export default function AppLayout() {
       case 'providers-directory':    return <ProvidersDirectoryPage />;
       case 'compare':                return <ComparePage />;
       case 'service-category':       return <ServiceCategoryPage />;
+      case 'pricing':                return <PricingPage />;
       case 'not-found':              return <NotFoundPage />;
       default:                       return <NotFoundPage />;
     }

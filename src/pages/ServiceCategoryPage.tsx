@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../lib/store';
 import { findServiceCategory, SERVICE_CATEGORIES, type ServiceCategory } from '../lib/service-categories';
+import { findPricingTier, formatPricingRange } from '../lib/us-pricing';
 import { PROVIDERS, type ProviderRecord } from '../lib/providers-catalogue';
 import { Section, Eyebrow, Pill, EmptyState } from '../components/ds';
 import AvailabilityBadge from '../components/global/AvailabilityBadge';
@@ -115,6 +116,89 @@ export default function ServiceCategoryPage() {
         <p className="text-amber-200 text-lg font-semibold mb-2">{category.tagline}</p>
         <p className="text-white/75 max-w-2xl leading-relaxed">{category.intro}</p>
       </Section>
+
+      {/* TYPICAL US RATES — Wave US-pricing.
+          Renders only when the category links to a us-pricing tier
+          (storage doesn't have one yet, so the card self-suppresses). */}
+      {(() => {
+        const tier = findPricingTier(category.pricingTier);
+        if (!tier) return null;
+        return (
+          <Section tone="warm" size="default">
+            <Eyebrow tone="brand" className="mb-1">Typical US rates · 2026</Eyebrow>
+            <h2 className="text-2xl font-extrabold text-ink-900 mb-1">{tier.name}</h2>
+            <p className="text-slate-600 mb-6">{tier.tagline}</p>
+
+            <div className="grid sm:grid-cols-2 gap-4 mb-6">
+              <article className="bg-white rounded-2xl border border-slate-200 p-5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                  National market range
+                </p>
+                <p className="text-2xl font-extrabold text-ink-900">
+                  {formatPricingRange(tier.marketRange)}
+                </p>
+                <p className="text-xs text-slate-500 mt-2">
+                  Based on BLS, MoveBuddha, HireAHelper, MovingHelp.
+                </p>
+              </article>
+              <article className="bg-brand-50 rounded-2xl border border-brand-400/40 p-5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-brand-700 mb-1">
+                  On FlyttGo
+                </p>
+                <p className="text-2xl font-extrabold text-ink-900">
+                  {formatPricingRange(tier.flyttgoRange)}
+                </p>
+                <p className="text-xs text-slate-600 mt-2">
+                  Curated marketplace pricing. Final rate is provider-set
+                  and shown before you confirm.
+                </p>
+              </article>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="bg-white rounded-2xl border border-slate-200 p-5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                  What's included
+                </p>
+                <ul className="space-y-1.5">
+                  {tier.includes.map(s => (
+                    <li key={s} className="text-sm text-slate-700 flex items-start gap-2">
+                      <CheckCircle2 size={14} className="text-emerald-600 flex-shrink-0 mt-0.5" />
+                      {s}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="bg-white rounded-2xl border border-slate-200 p-5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                  Cost drivers
+                </p>
+                <ul className="space-y-1.5">
+                  {tier.drivers.map(s => (
+                    <li key={s} className="text-sm text-slate-700 flex items-start gap-2">
+                      <ArrowRight size={14} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                      {s}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {tier.note && (
+              <p className="mt-4 text-xs text-slate-500 italic max-w-3xl">{tier.note}</p>
+            )}
+
+            <div className="mt-5">
+              <button
+                onClick={() => setPage('pricing')}
+                className="text-sm font-bold text-brand-700 hover:text-brand-600 inline-flex items-center gap-1"
+              >
+                See full pricing transparency <ArrowRight size={14} />
+              </button>
+            </div>
+          </Section>
+        );
+      })()}
 
       {/* HOW IT WORKS */}
       <Section tone="soft" size="default">

@@ -40,6 +40,8 @@ export type Page =
    * rather than a `?slug=` query param so the page reads as a real
    * SEO target. pathToPage prefix-matches /services/. */
   | 'service-category'
+  /* US pricing transparency landing page. */
+  | 'pricing'
   /* Fallback for URLs that don't match any known route. */
   | 'not-found';
 
