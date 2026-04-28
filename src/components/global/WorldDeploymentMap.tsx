@@ -247,7 +247,7 @@ export default function WorldDeploymentMap() {
                   fontSize="11" fontWeight="700"
                   fill="#92400E"
                 >
-                  ★ Oslo HQ
+                  ★ Oslo · Operational HQ
                 </text>
                 <text
                   x={x + 14} y={y + 4}
@@ -256,7 +256,7 @@ export default function WorldDeploymentMap() {
                   fill="#92400E"
                   opacity="0.75"
                 >
-                  Global coordination
+                  Wankong LLC · Delaware, USA
                 </text>
               </g>
             );
@@ -294,7 +294,7 @@ export default function WorldDeploymentMap() {
               <span className="font-bold text-sm">{hovered.display_name}</span>
             </div>
             <p className="text-[10px] uppercase tracking-[0.14em] text-emerald-300 font-bold mb-1">
-              {hovered.is_headquarters ? 'Headquarters' : STATUS_LABEL[hovered.status]}
+              {hovered.is_headquarters ? 'Operational HQ · Incorporated in Delaware, USA' : STATUS_LABEL[hovered.status]}
             </p>
             {hovered.blurb && <p className="text-[11px] text-white/80 leading-snug mb-1">{hovered.blurb}</p>}
             {hovered.upcoming_rollout && (
@@ -306,23 +306,26 @@ export default function WorldDeploymentMap() {
         )}
       </div>
 
-      {/* ── Status strip beneath the map ───────────────────── */}
+      {/* ── Status strip beneath the map ─────────────────────
+       * Dual-HQ structure: legal entity (Wankong LLC, Delaware,
+       * USA) sits next to the operational coordination HQ in Oslo.
+       * Common pattern for global infrastructure platforms. */}
       <div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
         <Strip
-          label="Headquartered in Oslo"
-          value="Global coordination"
+          label="Incorporated"
+          value="Delaware, United States"
+        />
+        <Strip
+          label="Operational HQ"
+          value="Oslo · Global coordination"
         />
         <Strip
           label="Operational"
-          value={`${operational.length + (hq ? 1 : 0)} markets across North America, Europe, MENA`}
+          value={`${operational.length + (hq ? 1 : 0)} markets across N. America, Europe, MENA`}
         />
         <Strip
-          label="Expanding"
-          value={`${expanding.length} markets across Europe, South Asia, Africa`}
-        />
-        <Strip
-          label="Enterprise deployment"
-          value="Available globally"
+          label="Expanding & enterprise"
+          value={`${expanding.length} expansion markets · enterprise deployment globally`}
         />
       </div>
     </div>

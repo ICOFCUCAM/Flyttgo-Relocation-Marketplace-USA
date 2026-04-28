@@ -36,9 +36,9 @@ INSERT INTO public.deployment_regions
 
   -- HQ
   ('no', 'Norway',          '🇳🇴', 'operational', 'Europe',
-   'Global coordination headquarters · full marketplace',
+   'Operational HQ · global coordination · Wankong LLC (Delaware, USA)',
    10,  59.91, 10.75, true,
-   'Headquarters · Global coordination · Enterprise deployment desk'),
+   'Operational HQ · Global coordination · Incorporated in Delaware, USA'),
 
   -- Operational
   ('us', 'United States',   '🇺🇸', 'operational', 'North America',
