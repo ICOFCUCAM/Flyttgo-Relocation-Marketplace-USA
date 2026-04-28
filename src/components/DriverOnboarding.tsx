@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import { ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../lib/auth';
 import { useApp } from '../lib/store';
 import { supabase } from '../lib/supabase';
+import {
+  ONBOARDING_RULES, findOnboardingRules, applyConditions,
+  COMPLIANCE_DISCLOSURE,
+  type OnboardingCountryCode,
+} from '../lib/onboarding-rules';
 
 const VEHICLE_TYPES = [
   { id: 'small_van', label: 'Small Van (3–4 m³)', examples: 'Ford Transit Connect, VW Caddy' },
@@ -79,8 +85,16 @@ export default function DriverOnboarding() {
   const [lastName, setLastName] = useState(profile?.last_name || '');
   const [phone, setPhone] = useState(profile?.phone || '');
   const [city, setCity] = useState('');
-  const [country, setCountry] = useState<'US' | 'CA' | 'DE' | 'FR' | 'GB' | 'NO' | ''>('');
+  const [country, setCountry] = useState<'US' | 'CA' | 'DE' | 'FR' | 'GB' | 'NO' | 'NG' | 'KE' | 'AE' | 'IN' | ''>('');
   const [providerCategory, setProviderCategory] = useState('');
+  /* Country-specific compliance answers — keyed by the rule's
+   * field slug (e.g. 'usdot-number', 'siret', 'gewerbeanmeldung').
+   * Persisted as JSON appended to vehicle_model so we don't need a
+   * schema migration; the admin dashboard renders the full string. */
+  const [complianceAnswers, setComplianceAnswers] = useState<Record<string, string>>({});
+  /* Vehicle-operation toggle drives the rules engine's conditional
+   * gating (USDOT, GVOL, etc. only surface when this is true). */
+  const [operatesVehicles, setOperatesVehicles] = useState(true);
 
   // Step 2 — Vehicle
   const [vehicleType, setVehicleType] = useState('');
@@ -102,6 +116,33 @@ export default function DriverOnboarding() {
 
   function setDocFile(key: DocumentType, file: File | null) {
     setDocFiles(prev => ({ ...prev, [key]: file }));
+  }
+
+  /* Resolve the country-specific compliance fields the customer
+   * actually needs to fill in. Country code from the picker is the
+   * uppercase ISO-2 the form has used historically; the rules engine
+   * keys on lowercase, so we lowercase before lookup. */
+  const countrySpecificFields = useMemo(() => {
+    if (!country) return [];
+    const lower = country.toLowerCase() as OnboardingCountryCode;
+    const rules = findOnboardingRules(lower);
+    if (!rules) return [];
+    /* Heavy-transport gates the GVOL / commercial-licence fields when
+     * the applicant declared they operate vehicles AND picked a
+     * carrier-style category. */
+    const heavy = operatesVehicles &&
+      ['licensed_moving_carrier','vehicle_rental_partner','freight_forwarding_partner'].includes(providerCategory);
+    /* Interstate is US-only and only when the carrier flag is set. */
+    const interstate = country === 'US' && providerCategory === 'licensed_moving_carrier' && operatesVehicles;
+    return applyConditions(rules.countryFields, {
+      vehicleOperation:    operatesVehicles,
+      heavyTransportOnly:  heavy,
+      interstateOnly:      interstate,
+    });
+  }, [country, providerCategory, operatesVehicles]);
+
+  function setComplianceField(slug: string, value: string) {
+    setComplianceAnswers(prev => ({ ...prev, [slug]: value }));
   }
 
   /* Upload every selected file to the driver-documents bucket under
@@ -169,7 +210,15 @@ export default function DriverOnboarding() {
        * `zone` (country) and `vehicle_model` (with the category prefix)
        * to surface the marketplace classification per applicant. */
       const categoryLabel = PROVIDER_CATEGORIES.find(c => c.id === providerCategory)?.label ?? '';
-      const vehicleField  = [categoryLabel, `${vehicleMake} ${vehicleModel}`.trim()]
+      /* Country-specific compliance answers serialized as a tiny
+       * JSON suffix so the admin dashboard sees them inline. We
+       * only emit the suffix when at least one answer is non-empty. */
+      const compliancePayload = Object.entries(complianceAnswers)
+        .filter(([, v]) => v && v.trim() !== '');
+      const complianceSuffix  = compliancePayload.length > 0
+        ? `· compliance=${JSON.stringify(Object.fromEntries(compliancePayload))}`
+        : '';
+      const vehicleField  = [categoryLabel, `${vehicleMake} ${vehicleModel}`.trim(), complianceSuffix]
         .filter(Boolean)
         .join(' · ');
 
@@ -274,6 +323,21 @@ export default function DriverOnboarding() {
         </div>
       </div>
 
+      {/* Compliance disclosure — pinned above the step indicator so
+          the platform's coordination-layer posture is unambiguous
+          before anyone fills in the first field. */}
+      <div className="max-w-3xl mx-auto px-4 pt-6">
+        <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-2xl p-4">
+          <ShieldCheck size={18} className="text-amber-600 flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-slate-700 leading-relaxed">
+            <strong className="text-slate-900 block mb-0.5">
+              Coordination layer · not a moving company
+            </strong>
+            {COMPLIANCE_DISCLOSURE}
+          </p>
+        </div>
+      </div>
+
       {/* Progress */}
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-10">
@@ -334,12 +398,16 @@ export default function DriverOnboarding() {
                     <select value={country} onChange={e => setCountry(e.target.value as typeof country)}
                       className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm bg-white">
                       <option value="">Select country</option>
-                      <option value="US">United States</option>
-                      <option value="CA">Canada</option>
-                      <option value="DE">Germany</option>
-                      <option value="FR">France</option>
-                      <option value="GB">United Kingdom</option>
-                      <option value="NO">Norway</option>
+                      <option value="US">🇺🇸 United States</option>
+                      <option value="CA">🇨🇦 Canada</option>
+                      <option value="GB">🇬🇧 United Kingdom</option>
+                      <option value="DE">🇩🇪 Germany</option>
+                      <option value="FR">🇫🇷 France</option>
+                      <option value="NO">🇳🇴 Norway</option>
+                      <option value="AE">🇦🇪 United Arab Emirates</option>
+                      <option value="NG">🇳🇬 Nigeria</option>
+                      <option value="KE">🇰🇪 Kenya</option>
+                      <option value="IN">🇮🇳 India</option>
                     </select>
                   </div>
                   <div>
@@ -382,10 +450,101 @@ export default function DriverOnboarding() {
                     ))}
                   </div>
                 </div>
+
+                {/* Operates vehicles toggle — drives which compliance
+                    fields the country-specific block surfaces. */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Do you operate vehicles?
+                  </label>
+                  <p className="text-xs text-gray-500 mb-2">
+                    Drives which licensing fields apply (e.g. USDOT for US carriers, GVOL for UK heavy transport).
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setOperatesVehicles(true)}
+                      aria-pressed={operatesVehicles}
+                      className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold border transition ${
+                        operatesVehicles
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                          : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'
+                      }`}
+                    >
+                      Yes — I operate vehicles
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setOperatesVehicles(false)}
+                      aria-pressed={!operatesVehicles}
+                      className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold border transition ${
+                        !operatesVehicles
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                          : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'
+                      }`}
+                    >
+                      No — labor only
+                    </button>
+                  </div>
+                </div>
+
+                {/* Country-specific compliance fields — surfaced
+                    dynamically from ONBOARDING_RULES based on the
+                    selected country + category + vehicle answer. */}
+                {country && countrySpecificFields.length > 0 && (
+                  <div className="bg-amber-50/40 border border-amber-200 rounded-xl p-4">
+                    <p className="text-xs font-bold uppercase tracking-wider text-amber-700 mb-1">
+                      {country} compliance
+                    </p>
+                    <p className="text-xs text-gray-600 mb-4 leading-relaxed">
+                      Enter what you have today — fields marked optional can be added later.
+                    </p>
+                    <div className="space-y-3">
+                      {countrySpecificFields.map(f => {
+                        const reqLabel = f.requirement === 'required'    ? 'Required' :
+                                         f.requirement === 'conditional' ? 'Required for you' :
+                                                                            'Optional';
+                        const reqTone  = f.requirement === 'required'    ? 'bg-rose-100 text-rose-700' :
+                                         f.requirement === 'conditional' ? 'bg-amber-100 text-amber-700' :
+                                                                            'bg-gray-100 text-gray-600';
+                        return (
+                          <div key={f.slug}>
+                            <div className="flex items-baseline justify-between gap-2 mb-1">
+                              <label htmlFor={`compliance-${f.slug}`} className="text-sm font-medium text-gray-700">{f.label}</label>
+                              <span className={`text-[10px] font-bold uppercase tracking-wider rounded-md px-1.5 py-0.5 flex-shrink-0 ${reqTone}`}>
+                                {reqLabel}
+                              </span>
+                            </div>
+                            <input
+                              id={`compliance-${f.slug}`}
+                              value={complianceAnswers[f.slug] ?? ''}
+                              onChange={e => setComplianceField(f.slug, e.target.value)}
+                              placeholder={f.helpText ?? ''}
+                              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm bg-white"
+                            />
+                            {f.helpText && (
+                              <p className="text-[11px] text-gray-500 mt-1">{f.helpText}</p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
               <button
                 onClick={() => {
                   if (firstName && lastName && phone && city && country && providerCategory) {
+                    /* Block step transition when a hard-required country
+                     * field is empty — conditional-required + optional
+                     * fields can still be skipped. */
+                    const missing = countrySpecificFields.find(
+                      f => f.requirement === 'required' && !(complianceAnswers[f.slug] ?? '').trim(),
+                    );
+                    if (missing) {
+                      setError(`${country} requires "${missing.label}" before you can continue.`);
+                      return;
+                    }
                     setError('');
                     setStep(2);
                   } else {
