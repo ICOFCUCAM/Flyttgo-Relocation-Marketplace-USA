@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Search, Globe2, Layers, Users, ShieldCheck, Sparkles, ArrowRight,
   Truck, MessageCircle, GitCompare, Bookmark, MapPin, Clock,
+  SlidersHorizontal,
   type LucideIcon,
 } from 'lucide-react';
 import { useApp, type Page } from '../../lib/store';
@@ -114,6 +115,7 @@ export default function CommandPalette({ open, onClose }: Props) {
       { id: 'p-home',         label: 'Home',                       hint: 'Country picker',         icon: Globe2,       group: 'Pages', perform: go('home') },
       { id: 'p-howit',        label: 'How it works',               hint: '5-step coordination',     icon: Sparkles,     group: 'Pages', perform: go('how-it-works') },
       { id: 'p-providers',    label: 'For providers',              hint: 'Apply to operate',        icon: Users,        group: 'Pages', perform: go('providers') },
+      { id: 'p-directory',    label: 'Browse providers',           hint: 'Search + filter directory', icon: SlidersHorizontal, group: 'Pages', keywords: ['directory', 'find', 'movers', 'search'], perform: go('providers-directory') },
       { id: 'p-compliance',   label: 'Compliance',                 hint: 'FMCSA / GVOL / GüKG / …', icon: ShieldCheck,  group: 'Pages', perform: go('compliance') },
       { id: 'p-enterprise',   label: 'Enterprise relocation',      hint: 'Workforce mobility',      icon: Layers,       group: 'Pages', perform: go('enterprise-relocation') },
       { id: 'p-universities', label: 'Universities',               hint: 'Student housing',         icon: Layers,       group: 'Pages', perform: go('universities') },

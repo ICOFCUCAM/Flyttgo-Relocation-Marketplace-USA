@@ -30,6 +30,8 @@ export type Page =
   | 'refer'
   /* Provider profile (slug carried via ?slug= query param). */
   | 'provider-profile'
+  /* Provider directory (search + filter). */
+  | 'providers-directory'
   /* Fallback for URLs that don't match any known route. */
   | 'not-found';
 

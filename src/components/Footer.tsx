@@ -16,6 +16,7 @@ const MARKETS: LinkItem[] = [
 const PLATFORM: LinkItem[] = [
   { label: 'Marketplace',           page: 'marketplace' },
   { label: 'Providers',             page: 'providers' },
+  { label: 'Browse providers',      page: 'providers-directory' },
   { label: 'How It Works',          page: 'how-it-works' },
   { label: 'Enterprise Relocation', page: 'enterprise-relocation' },
   { label: 'Universities',          page: 'universities' },
