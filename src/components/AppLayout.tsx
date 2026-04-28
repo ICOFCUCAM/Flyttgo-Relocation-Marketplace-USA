@@ -63,6 +63,7 @@ const ServiceCategoryPage = lazy(() => import('../pages/ServiceCategoryPage'));
 const PricingPage = lazy(() => import('../pages/PricingPage'));
 const ProviderPricingSettingsPage = lazy(() => import('../pages/provider/PricingSettingsPage'));
 const ProviderRequirementsPage = lazy(() => import('../pages/ProviderRequirementsPage'));
+const RequestQuotePage = lazy(() => import('../pages/RequestQuotePage'));
 const Footer             = lazy(() => import('./Footer'));
 const LiveBookingTicker  = lazy(() => import('./global/LiveBookingTicker'));
 const FloatingChat       = lazy(() => import('./global/FloatingChat'));
@@ -221,6 +222,7 @@ export default function AppLayout() {
       case 'pricing':                return <PricingPage />;
       case 'provider-pricing-settings': return <ProviderPricingSettingsPage />;
       case 'provider-requirements':  return <ProviderRequirementsPage />;
+      case 'request-quote':          return <RequestQuotePage />;
       case 'not-found':              return <NotFoundPage />;
       default:                       return <NotFoundPage />;
     }

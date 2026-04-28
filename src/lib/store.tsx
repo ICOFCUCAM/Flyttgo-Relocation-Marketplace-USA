@@ -46,6 +46,9 @@ export type Page =
   | 'provider-pricing-settings'
   /* Public preview of country-specific onboarding requirements. */
   | 'provider-requirements'
+  /* Customer quote-approval workflow (long-distance / international /
+   * complex labor briefs). Companion to the instant-booking flow. */
+  | 'request-quote'
   /* Fallback for URLs that don't match any known route. */
   | 'not-found';
 

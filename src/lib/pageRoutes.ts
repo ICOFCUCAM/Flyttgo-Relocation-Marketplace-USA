@@ -108,6 +108,9 @@ const PAGE_TO_PATH: Record<Page, string> = {
   /* Public preview of country-specific onboarding requirements. */
   'provider-requirements':   '/providers/requirements',
 
+  /* Customer quote-approval workflow. */
+  'request-quote':           '/request-quote',
+
   /* Fallback for unknown routes. No real path — pathToPage() returns
    * this id for anything it can't match. setPage('not-found') still
    * updates history.pushState to whatever URL triggered the fallback. */
@@ -157,6 +160,7 @@ const PAGE_TITLES: Record<Page, string> = {
   'pricing':                  'US relocation pricing · transparent rates · FlyttGo',
   'provider-pricing-settings': 'Pricing settings · FlyttGo Provider Dashboard',
   'provider-requirements':    'Provider onboarding requirements · FlyttGo',
+  'request-quote':            'Request quotes from verified providers · FlyttGo',
   'booking':                  'Book a Move · FlyttGo Global',
   'payment':                  'Secure Payment · FlyttGo Global',
   'tracking':                 'Track Your Coordination · FlyttGo Global',
@@ -246,6 +250,8 @@ const PAGE_DESCRIPTIONS: Record<Page, string> = {
     "FlyttGo provider pricing settings — set service radius, crew sizes, truck and packing availability, hourly base, and weekend multiplier overrides. Live preview of customer total + provider payout.",
   'provider-requirements':
     "Country-specific provider onboarding requirements for FlyttGo — see exactly what documents and registrations you need before you apply. Adapts to your country, category, and vehicle availability.",
+  'request-quote':
+    "Request competing quotes from verified FlyttGo providers — for long-distance, international, corporate, or complex labor briefs. Providers respond within 4–24 hours; you pick the winner. Escrow protected.",
   'booking':
     'Book your next move in under 3 minutes. Get an instant quote, pick a verified driver, and track your delivery live — all with escrow payment built in.',
   'payment':
