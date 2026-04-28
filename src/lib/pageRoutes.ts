@@ -114,6 +114,11 @@ const PAGE_TO_PATH: Record<Page, string> = {
   /* Customer dispute filing + inbox. */
   'dispute':                 '/dispute',
 
+  /* Institutional gateway pages. */
+  'government-programs':         '/government-programs',
+  'ngo-deployment':              '/ngo-deployment',
+  'pilot-deployment-programs':   '/pilot-deployment-programs',
+
   /* Fallback for unknown routes. No real path — pathToPage() returns
    * this id for anything it can't match. setPage('not-found') still
    * updates history.pushState to whatever URL triggered the fallback. */
@@ -165,6 +170,9 @@ const PAGE_TITLES: Record<Page, string> = {
   'provider-requirements':    'Provider onboarding requirements · FlyttGo',
   'request-quote':            'Request quotes from verified providers · FlyttGo',
   'dispute':                  'File a dispute · FlyttGo',
+  'government-programs':      'Government & ministry relocation programs · FlyttGo',
+  'ngo-deployment':           'NGO deployment logistics · FlyttGo',
+  'pilot-deployment-programs':'Pilot deployment programs · FlyttGo',
   'booking':                  'Book a Move · FlyttGo Global',
   'payment':                  'Secure Payment · FlyttGo Global',
   'tracking':                 'Track Your Coordination · FlyttGo Global',
@@ -258,6 +266,12 @@ const PAGE_DESCRIPTIONS: Record<Page, string> = {
     "Request competing quotes from verified FlyttGo providers — for long-distance, international, corporate, or complex labor briefs. Providers respond within 4–24 hours; you pick the winner. Escrow protected.",
   'dispute':
     "File a FlyttGo booking dispute. Standardized categories (delay · price mismatch · damage claim · missing items · service incomplete · …), country-aware resolution paths, escrow held during review, 7-day SLA.",
+  'government-programs':
+    "FlyttGo government & ministry relocation programs — procurement-compatible, audit-ready settlement, vendor compliance gated to Certified Infrastructure Partners. Multi-region deployment routing across our nine markets.",
+  'ngo-deployment':
+    "NGO and humanitarian deployment logistics on FlyttGo — refugee mobility, staff relocation, field-mission cargo with framework agreements + donor-grade audit trails.",
+  'pilot-deployment-programs':
+    "FlyttGo pilot deployment programs — five archetypes (municipal / university / transit-authority / marketplace-rollout / identity-integrated) for ministries and authorities exploring institutional procurement before long-form rollout.",
   'booking':
     'Book your next move in under 3 minutes. Get an instant quote, pick a verified driver, and track your delivery live — all with escrow payment built in.',
   'payment':

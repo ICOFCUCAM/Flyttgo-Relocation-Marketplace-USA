@@ -51,6 +51,12 @@ export type Page =
   | 'request-quote'
   /* Customer dispute filing + inbox. */
   | 'dispute'
+  /* Institutional gateway pages — corporate / government / NGO /
+   * pilot frameworks. Companion to the existing /enterprise-relocation
+   * + /universities + /corporate marketing surfaces. */
+  | 'government-programs'
+  | 'ngo-deployment'
+  | 'pilot-deployment-programs'
   /* Fallback for URLs that don't match any known route. */
   | 'not-found';
 

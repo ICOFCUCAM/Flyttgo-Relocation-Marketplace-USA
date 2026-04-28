@@ -65,6 +65,9 @@ const ProviderPricingSettingsPage = lazy(() => import('../pages/provider/Pricing
 const ProviderRequirementsPage = lazy(() => import('../pages/ProviderRequirementsPage'));
 const RequestQuotePage = lazy(() => import('../pages/RequestQuotePage'));
 const DisputePage = lazy(() => import('../pages/DisputePage'));
+const GovernmentProgramsPage = lazy(() => import('../pages/GovernmentProgramsPage'));
+const NGODeploymentPage = lazy(() => import('../pages/NGODeploymentPage'));
+const PilotDeploymentProgramsPage = lazy(() => import('../pages/PilotDeploymentProgramsPage'));
 const Footer             = lazy(() => import('./Footer'));
 const LiveBookingTicker  = lazy(() => import('./global/LiveBookingTicker'));
 const FloatingChat       = lazy(() => import('./global/FloatingChat'));
@@ -162,7 +165,7 @@ export default function AppLayout() {
    * show it on customer-discovery surfaces (home, country pages,
    * marketplace, how-it-works). Suppressed on dashboards, auth, and
    * payment surfaces where it would distract. */
-  const showTicker = ['home','marketplace','how-it-works','providers','cities','enterprise-relocation','partners','about','universities','market-us','market-canada','market-germany','market-france','market-uk','market-norway','refer','provider-profile','providers-directory','compare','service-category','pricing','provider-requirements'].includes(currentPage);
+  const showTicker = ['home','marketplace','how-it-works','providers','cities','enterprise-relocation','partners','about','universities','market-us','market-canada','market-germany','market-france','market-uk','market-norway','refer','provider-profile','providers-directory','compare','service-category','pricing','provider-requirements','government-programs','ngo-deployment','pilot-deployment-programs'].includes(currentPage);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -225,6 +228,9 @@ export default function AppLayout() {
       case 'provider-requirements':  return <ProviderRequirementsPage />;
       case 'request-quote':          return <RequestQuotePage />;
       case 'dispute':                return <DisputePage />;
+      case 'government-programs':       return <GovernmentProgramsPage />;
+      case 'ngo-deployment':            return <NGODeploymentPage />;
+      case 'pilot-deployment-programs': return <PilotDeploymentProgramsPage />;
       case 'not-found':              return <NotFoundPage />;
       default:                       return <NotFoundPage />;
     }
