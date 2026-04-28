@@ -13,6 +13,7 @@ import { getRouteDistance, haversineKm, RouteResult } from '../../lib/routing';
 import { track } from '../../lib/analytics';
 import { saveQuote } from '../../lib/saved-quotes-store';
 import { applyPromo, type PromoCode } from '../../lib/promo-codes';
+import { matchProviders } from '../../lib/matching-engine-store';
 
 const COUNTRY_LABEL: Record<BookingCountry, string> = {
   us: 'USA',
@@ -249,12 +250,30 @@ export default function BookingShortcut({ country, compact = false }: Props) {
    * the only difference is the paymentMethod stored on bookingData,
    * which the payment step then routes through Stripe accordingly.
    */
-  function submit(method: PaymentMethod) {
+  async function submit(method: PaymentMethod) {
     if (!pickup || !dropoff) {
       setSubmitError('Please pick a pickup and a drop-off address.');
       return;
     }
     setSubmitError(null);
+
+    /* Smart Matching Engine — fire-and-forget recommendation that
+     * the booking flow / dispatch can use as a hint. We don't block
+     * the submit on the match; if the matcher is slow or returns
+     * nothing, the booking flow's own dispatch trigger picks up. */
+    let suggestedProvider: { user_id: string; match_score: number } | null = null;
+    try {
+      const matches = await matchProviders({
+        country,
+        pickupLat:    pickup.lat ?? undefined,
+        pickupLng:    pickup.lng ?? undefined,
+        needsTruck:   true,         // BookingShortcut implies a vehicle move
+      }, 'instant');
+      const top = matches[0];
+      if (top) suggestedProvider = { user_id: top.user_id, match_score: top.match_score };
+    } catch {
+      /* Matcher errors are non-fatal — booking proceeds without a hint. */
+    }
 
     const finalSplit = indicative != null
       ? splitPayment(indicative, country, method)
@@ -300,6 +319,8 @@ export default function BookingShortcut({ country, compact = false }: Props) {
       durationMinutes: route?.durationMinutes ?? null,
       promoCode:       promoApplied?.code,
       promoDiscountPct: promoApplied?.pct,
+      suggestedProviderUserId: suggestedProvider?.user_id,
+      suggestedMatchScore:     suggestedProvider?.match_score,
       step: 2,
     });
 
@@ -349,7 +370,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
 
   return (
     <form
-      onSubmit={(e) => { e.preventDefault(); submit('card_full'); }}
+      onSubmit={(e) => { e.preventDefault(); void submit('card_full'); }}
       className={`bg-white text-slate-900 rounded-2xl shadow-2xl border border-slate-200 ${
         compact ? 'p-5' : 'p-6 lg:p-8'
       }`}
@@ -618,7 +639,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
         {policy.cashEnabled && (
           <button
             type="button"
-            onClick={() => submit('card_deposit_cash')}
+            onClick={() => void submit('card_deposit_cash')}
             className="px-4 py-3.5 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl transition"
             title={split ? `${formatCurrency(split.deposit, country)} now · ${formatCurrency(split.cashDue, country)} cash on delivery` : undefined}
           >

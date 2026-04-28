@@ -144,6 +144,11 @@ export interface BookingData {
   /** Discount fraction (0–1) resolved for the promo code. The booking
    *  flow + payment step use this to gross-down the final total. */
   promoDiscountPct?: number;
+  /** Provider the Smart Matching Engine recommended at quote-widget
+   *  submit time. The booking flow / dispatch trigger can use this
+   *  as a hint for who to route to first. */
+  suggestedProviderUserId?: string;
+  suggestedMatchScore?:     number;
 }
 
 const defaultBooking: BookingData = {
