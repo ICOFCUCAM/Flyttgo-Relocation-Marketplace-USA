@@ -2,6 +2,13 @@
 import React, { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
+import { toast } from "sonner";
+import {
+  adminListDisputes, adminResolveDispute, adminReleasePayout,
+  adminRequestEvidence, adminEscalateDispute, adminSetProviderSuspension,
+} from "../lib/admin-disputes-store";
+import type { DisputeRow } from "../lib/disputes-store";
+import { DISPUTE_CATEGORIES, type ResolutionPath } from "../lib/dispute-rules";
 
 /* Lazy-loaded Leaflet map — ~150 KB bundle is only paid when the
  * admin actually opens the Fleet Map tab. */
@@ -98,6 +105,23 @@ export default function AdminDashboard() {
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
   const [manualRefundPercent, setManualRefundPercent] = useState<number>(0);
+  /* Real disputes from the disputes table — backed by RPCs in
+   * docs/install-dispute-completion.sql. */
+  const [disputes, setDisputes] = useState<DisputeRow[]>([]);
+  const [disputesLoading, setDisputesLoading] = useState(false);
+
+  async function refreshDisputes() {
+    setDisputesLoading(true);
+    try {
+      setDisputes(await adminListDisputes());
+    } catch (err) {
+      toast.error("Failed to load disputes", {
+        description: err instanceof Error ? err.message : "Try again in a moment.",
+      });
+    } finally {
+      setDisputesLoading(false);
+    }
+  }
   const [selectedApplication, setSelectedApplication] = useState<any | null>(null);
   const [appDocuments, setAppDocuments] = useState<any[]>([]);
   const [applicationDocStatus, setApplicationDocStatus] = useState<Record<string, string[]>>({});
@@ -150,6 +174,14 @@ export default function AdminDashboard() {
   /* ── Manual booking dispatch modal state ──────────────────── */
   const [dispatchBooking, setDispatchBooking] = useState<any | null>(null);
   const [dispatchDriverId, setDispatchDriverId] = useState<string>("");
+
+  /* Refresh real-disputes list when the tab opens. */
+  useEffect(() => {
+    if (tab === 'disputes' && profile?.role === 'admin') {
+      void refreshDisputes();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, profile?.role]);
 
   useEffect(() => {
     if (loading || !profile || profile.role !== "admin") return;
@@ -886,20 +918,50 @@ export default function AdminDashboard() {
 
         {tab === "disputes" && (
           <div>
-            <h1 className="text-xl font-bold mb-4">Disputes</h1>
-            <table className="w-full bg-white rounded shadow">
-              <thead className="bg-gray-100"><tr><th className="p-3 text-left">Route</th><th className="p-3 text-left">Status</th><th className="p-3 text-left">Price</th><th className="p-3 text-left">Actions</th></tr></thead>
-              <tbody>
-                {bookings.map((b: any) => (
-                  <tr key={b.id} className="border-t">
-                    <td className="p-3">{b.pickup_address} → {b.dropoff_address}</td>
-                    <td className="p-3">{b.status}</td>
-                    <td className="p-3">{safeNumber(b.price_estimate).toFixed(0)} USD</td>
-                    <td className="p-3"><button onClick={() => { setSelectedBooking(b); setManualRefundPercent(0); setTab("disputes"); }} className="bg-blue-600 text-white px-2 py-1 text-xs rounded">Open Dispute</button></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-xl font-bold">Disputes</h1>
+              <div className="flex items-center gap-3 text-xs text-gray-500">
+                <span>{disputes.length} open + closed cases</span>
+                <button
+                  onClick={() => void refreshDisputes()}
+                  className="text-blue-600 hover:text-blue-800 underline"
+                >Refresh</button>
+              </div>
+            </div>
+
+            {disputesLoading && disputes.length === 0 ? (
+              <div className="bg-white rounded shadow p-6 text-sm text-gray-500">
+                Loading disputes…
+              </div>
+            ) : disputes.length === 0 ? (
+              <div className="bg-white rounded shadow p-6 text-sm text-gray-500">
+                No disputes filed yet. Customer-side filing happens at /dispute.
+              </div>
+            ) : (
+              <div className="bg-white rounded shadow overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-100 text-xs uppercase tracking-wider text-gray-600">
+                    <tr>
+                      <th className="p-3 text-left">Filed</th>
+                      <th className="p-3 text-left">Country · category</th>
+                      <th className="p-3 text-left">Booking</th>
+                      <th className="p-3 text-left">Status</th>
+                      <th className="p-3 text-left">Suggested</th>
+                      <th className="p-3 text-left">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {disputes.map(d => (
+                      <DisputeRow
+                        key={d.id}
+                        dispute={d}
+                        onChanged={refreshDisputes}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
@@ -1058,5 +1120,143 @@ export default function AdminDashboard() {
         </div>
       )}
     </div>
+  );
+}
+
+/* ── DisputeRow — admin queue row with action buttons ────────────── */
+
+function DisputeRow({ dispute: d, onChanged }: { dispute: DisputeRow; onChanged: () => void }) {
+  const cat = DISPUTE_CATEGORIES.find(c => c.slug === d.category_slug);
+  const [busy, setBusy] = useState(false);
+
+  async function run<T>(label: string, fn: () => Promise<T>): Promise<void> {
+    setBusy(true);
+    try {
+      await fn();
+      toast.success(label);
+      onChanged();
+    } catch (err) {
+      toast.error(label + ' failed', {
+        description: err instanceof Error ? err.message : 'Try again in a moment.',
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function promptResolve(path: ResolutionPath) {
+    const rationale = prompt(`Rationale for ${path.replace(/_/g, ' ')}?`) ?? '';
+    if (!rationale.trim()) return;
+    let amount: number | null = null;
+    let pct:    number | null = null;
+    if (path === 'partial_refund' || path === 'service_credit') {
+      const raw = prompt('Refund / credit amount in booking currency (e.g. 60.00)?') ?? '';
+      const n   = Number(raw);
+      if (!Number.isFinite(n) || n <= 0) return;
+      amount = n;
+    }
+    if (path === 'full_refund') {
+      const raw = prompt('Full refund amount (booking total)?') ?? '';
+      const n   = Number(raw);
+      if (!Number.isFinite(n) || n <= 0) return;
+      amount = n;
+      pct    = 1.0;
+    }
+    void run('Resolved', () => adminResolveDispute(d.id, path, amount, pct, rationale));
+  }
+
+  function promptRelease() {
+    const r = prompt('Rationale for releasing payout (no refund)?') ?? '';
+    if (!r.trim()) return;
+    void run('Payout released', () => adminReleasePayout(d.id, r));
+  }
+
+  function promptEvidence() {
+    const r = prompt('Note explaining what evidence is needed?') ?? '';
+    if (!r.trim()) return;
+    void run('Evidence requested', () => adminRequestEvidence(d.id, r));
+  }
+
+  function promptEscalate() {
+    const r = prompt('Reason for escalation?') ?? '';
+    if (!r.trim()) return;
+    void run('Escalated', () => adminEscalateDispute(d.id, r));
+  }
+
+  function promptSuspend() {
+    if (!d.provider_user_id) {
+      toast.error('No provider linked to this dispute');
+      return;
+    }
+    const r = prompt('Reason for suspending the provider?') ?? '';
+    if (!r.trim()) return;
+    void run('Provider suspended', () => adminSetProviderSuspension(d.provider_user_id!, true, r));
+  }
+
+  const statusTone =
+    d.status === 'open'             ? 'bg-amber-100 text-amber-700' :
+    d.status === 'under_review'     ? 'bg-blue-100 text-blue-700' :
+    d.status === 'resolved'         ? 'bg-emerald-100 text-emerald-700' :
+    d.status === 'closed_no_action' ? 'bg-gray-100 text-gray-500' :
+                                      'bg-rose-100 text-rose-700';
+
+  return (
+    <tr className="border-t align-top">
+      <td className="p-3 text-xs text-gray-500 whitespace-nowrap">
+        {new Date(d.filed_at).toLocaleDateString()}
+      </td>
+      <td className="p-3">
+        <div className="font-bold">{cat?.label ?? d.category_slug}</div>
+        <div className="text-xs text-gray-500 uppercase">{d.country}</div>
+      </td>
+      <td className="p-3 text-xs font-mono text-gray-500 truncate max-w-[10rem]">
+        {d.booking_id.slice(0, 8)}…
+      </td>
+      <td className="p-3">
+        <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md ${statusTone}`}>
+          {d.status.replace(/_/g, ' ')}
+        </span>
+      </td>
+      <td className="p-3 text-xs">
+        {d.suggested_path ? (
+          <div className="capitalize">
+            {d.suggested_path.replace(/_/g, ' ')}
+            {d.suggested_pct != null && <span className="text-gray-400"> · {Math.round(d.suggested_pct * 100)}%</span>}
+          </div>
+        ) : <span className="text-gray-400">—</span>}
+      </td>
+      <td className="p-3">
+        {d.status === 'resolved' || d.status === 'closed_no_action' ? (
+          <span className="text-xs text-gray-400">Closed</span>
+        ) : (
+          <div className="flex flex-wrap gap-1">
+            <button disabled={busy} onClick={promptRelease}
+              className="text-[10px] font-bold uppercase tracking-wider bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded disabled:opacity-50">
+              Release
+            </button>
+            <button disabled={busy} onClick={() => promptResolve('partial_refund')}
+              className="text-[10px] font-bold uppercase tracking-wider bg-amber-600 hover:bg-amber-700 text-white px-2 py-1 rounded disabled:opacity-50">
+              Partial refund
+            </button>
+            <button disabled={busy} onClick={() => promptResolve('full_refund')}
+              className="text-[10px] font-bold uppercase tracking-wider bg-rose-600 hover:bg-rose-700 text-white px-2 py-1 rounded disabled:opacity-50">
+              Full refund
+            </button>
+            <button disabled={busy} onClick={promptEvidence}
+              className="text-[10px] font-bold uppercase tracking-wider bg-gray-700 hover:bg-gray-800 text-white px-2 py-1 rounded disabled:opacity-50">
+              Request evidence
+            </button>
+            <button disabled={busy} onClick={promptEscalate}
+              className="text-[10px] font-bold uppercase tracking-wider bg-purple-600 hover:bg-purple-700 text-white px-2 py-1 rounded disabled:opacity-50">
+              Escalate
+            </button>
+            <button disabled={busy} onClick={promptSuspend}
+              className="text-[10px] font-bold uppercase tracking-wider bg-rose-800 hover:bg-rose-900 text-white px-2 py-1 rounded disabled:opacity-50">
+              Suspend provider
+            </button>
+          </div>
+        )}
+      </td>
+    </tr>
   );
 }
