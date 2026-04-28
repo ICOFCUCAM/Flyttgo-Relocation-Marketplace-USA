@@ -271,3 +271,210 @@ export const GLOBAL_PROVIDER_CATEGORIES = [
   'University relocation partner',
   'Corporate relocation vendor',
 ];
+
+/* ──────────────────────────────────────────────────────────────────────
+ * COUNTRY PAYMENT POLICY
+ *
+ * Per-country payment configuration. Each country sets its own:
+ *   - currency / currencySymbol  → formatting on the booking widget
+ *   - cashEnabled                → whether the "Pay with cash" option
+ *                                  is offered at all (some markets we
+ *                                  may want to launch card-only first)
+ *   - depositPct                 → portion charged online up front via
+ *                                  Stripe (or local card processor) when
+ *                                  the customer picks the cash option
+ *   - cashOnDeliveryPct          → portion paid in cash to the driver
+ *                                  on completion (always 100 - depositPct)
+ *   - minDeposit                 → currency-relative floor; protects
+ *                                  short low-value bookings from a deposit
+ *                                  too small to cover Stripe's fee
+ *
+ * Default policy across all six markets: 30% online deposit,
+ * 70% cash on delivery, mirroring the VanMan-UK pattern.
+ * Tweak per country from the dashboard once we have real data.
+ * ──────────────────────────────────────────────────────────────────── */
+
+import type { BookingCountry } from './store';
+
+export interface CountryPaymentPolicy {
+  currency:           string;
+  currencySymbol:     string;
+  cashEnabled:        boolean;
+  depositPct:         number;   // 0-100
+  cashOnDeliveryPct:  number;   // 0-100  (depositPct + this === 100)
+  minDeposit:         number;   // floor amount in the local currency
+}
+
+export const COUNTRY_PAYMENT: Record<BookingCountry, CountryPaymentPolicy> = {
+  us: { currency: 'USD', currencySymbol: '$',  cashEnabled: true,  depositPct: 30, cashOnDeliveryPct: 70, minDeposit:   50 },
+  ca: { currency: 'CAD', currencySymbol: 'C$', cashEnabled: true,  depositPct: 30, cashOnDeliveryPct: 70, minDeposit:   60 },
+  gb: { currency: 'GBP', currencySymbol: '£',  cashEnabled: true,  depositPct: 30, cashOnDeliveryPct: 70, minDeposit:   40 },
+  de: { currency: 'EUR', currencySymbol: '€',  cashEnabled: true,  depositPct: 30, cashOnDeliveryPct: 70, minDeposit:   45 },
+  fr: { currency: 'EUR', currencySymbol: '€',  cashEnabled: true,  depositPct: 30, cashOnDeliveryPct: 70, minDeposit:   45 },
+  /* Norway: cash flagged off by default (high-trust card market;
+   * many Norwegian movers prefer Vipps). Flip to true if commercially
+   * required. */
+  no: { currency: 'NOK', currencySymbol: 'kr', cashEnabled: false, depositPct: 30, cashOnDeliveryPct: 70, minDeposit: 500 },
+};
+
+/**
+ * Format an amount in the country's currency. Uses Intl.NumberFormat
+ * so 1234.56 reads as "$1,234.56" in en-US, "1.234,56 €" in de-DE,
+ * "1 234,56 kr" in nb-NO, etc. Falls back to a manual symbol prefix
+ * if Intl isn't available.
+ */
+export function formatCurrency(amount: number, country: BookingCountry): string {
+  const policy = COUNTRY_PAYMENT[country];
+  const locale =
+    country === 'de' ? 'de-DE' :
+    country === 'fr' ? 'fr-FR' :
+    country === 'no' ? 'nb-NO' :
+    country === 'gb' ? 'en-GB' :
+    country === 'ca' ? 'en-CA' :
+                       'en-US';
+  try {
+    return new Intl.NumberFormat(locale, {
+      style:    'currency',
+      currency: policy.currency,
+      maximumFractionDigits: amount % 1 === 0 ? 0 : 2,
+    }).format(amount);
+  } catch {
+    return `${policy.currencySymbol}${Math.round(amount).toLocaleString()}`;
+  }
+}
+
+/**
+ * Split a total price into the deposit + cash-on-delivery amounts
+ * for the customer's selected payment method. Card-only callers get
+ * the full amount as deposit and 0 as cash. Cash callers get the
+ * country's deposit %, floored at COUNTRY_PAYMENT.minDeposit.
+ */
+export type PaymentMethod = 'card_full' | 'card_deposit_cash';
+
+export function splitPayment(
+  total:    number,
+  country:  BookingCountry,
+  method:   PaymentMethod,
+): { deposit: number; cashDue: number } {
+  if (method === 'card_full') return { deposit: total, cashDue: 0 };
+  const policy   = COUNTRY_PAYMENT[country];
+  const rawDep   = (total * policy.depositPct) / 100;
+  const deposit  = Math.max(rawDep, policy.minDeposit);
+  const cashDue  = Math.max(0, total - deposit);
+  return {
+    deposit: Math.round(deposit * 100) / 100,
+    cashDue: Math.round(cashDue * 100) / 100,
+  };
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+ * REFUND POLICY
+ *
+ * Refunds on a cash-method booking depend on:
+ *   - When the cancellation lands relative to the move (grace period).
+ *     Inside the grace window → full refund of the deposit.
+ *     Outside it → deposit forfeited; a portion of it goes to the
+ *     driver as no-show compensation, scaled by their plan.
+ *   - The driver's subscription plan. Higher tiers earn a higher
+ *     share of the forfeited deposit so the cash-on-delivery model
+ *     is viable for them (otherwise drivers carry the no-show risk).
+ *
+ * Only the cash payment method changes its behaviour here; full-card
+ * bookings refund 100% inside the grace window and 0% outside (the
+ * customer was already billed up front).
+ * ──────────────────────────────────────────────────────────────────── */
+
+export interface PlanRefundPolicy {
+  /** Hours before the move when the deposit is still fully refundable. */
+  cancellationGraceHours: number;
+  /** Share of a forfeited deposit that flows to the driver (0-100). */
+  noShowDriverSharePct:   number;
+}
+
+/* Plan-id → refund policy. Indexed by SUBSCRIPTION_PLANS.id so admin
+ * can raise a driver's plan and instantly change their no-show
+ * compensation profile without a code change. */
+export const PLAN_REFUND_POLICY: Record<string, PlanRefundPolicy> = {
+  /* Free plan: drivers are not on the hook for no-shows because
+   * they pay no platform commission to begin with — the platform
+   * keeps the entire forfeited deposit. */
+  free:      { cancellationGraceHours: 24, noShowDriverSharePct:   0 },
+  basic:     { cancellationGraceHours: 24, noShowDriverSharePct:  25 },
+  pro_mini:  { cancellationGraceHours: 24, noShowDriverSharePct:  50 },
+  pro:       { cancellationGraceHours: 24, noShowDriverSharePct:  60 },
+  /* Unlimited plan: drivers pay a flat monthly subscription instead
+   * of per-job commission, so they take the largest share of the
+   * forfeited deposit when a customer no-shows. */
+  unlimited: { cancellationGraceHours: 12, noShowDriverSharePct:  75 },
+};
+
+/**
+ * Compute the refund the customer receives, plus the driver's no-show
+ * compensation, for a cash-method booking.
+ *
+ *   subtotal           — full booking price (deposit + cashDue)
+ *   hoursBeforeMove    — gap between cancel-time and the move start;
+ *                        negative values are treated as "already moved"
+ *                        (no refund)
+ *   driverPlanId       — value of SUBSCRIPTION_PLANS[i].id
+ *   paymentMethod      — 'card_full' or 'card_deposit_cash'
+ *
+ * Returns customerRefund + driverCompensation + platformRetention.
+ * The three numbers always sum to the deposit amount.
+ */
+export function calculateRefund(args: {
+  subtotal:        number;
+  country:         BookingCountry;
+  hoursBeforeMove: number;
+  driverPlanId:    string;
+  paymentMethod:   PaymentMethod;
+}): {
+  depositCharged:      number;
+  cashDue:             number;
+  customerRefund:      number;
+  driverCompensation:  number;
+  platformRetention:   number;
+  insideGraceWindow:   boolean;
+} {
+  const policy = PLAN_REFUND_POLICY[args.driverPlanId] ?? PLAN_REFUND_POLICY.basic;
+  const insideGraceWindow = args.hoursBeforeMove >= policy.cancellationGraceHours;
+
+  const split = splitPayment(args.subtotal, args.country, args.paymentMethod);
+
+  /* Card-only: customer pre-paid the whole amount. Full refund inside
+   * the grace window, zero outside. */
+  if (args.paymentMethod === 'card_full') {
+    return {
+      depositCharged:     split.deposit,
+      cashDue:            0,
+      customerRefund:     insideGraceWindow ? split.deposit : 0,
+      driverCompensation: 0,
+      platformRetention:  insideGraceWindow ? 0 : split.deposit,
+      insideGraceWindow,
+    };
+  }
+
+  /* Cash-method (30/70). */
+  if (insideGraceWindow) {
+    return {
+      depositCharged:     split.deposit,
+      cashDue:            split.cashDue,
+      customerRefund:     split.deposit,
+      driverCompensation: 0,
+      platformRetention:  0,
+      insideGraceWindow,
+    };
+  }
+
+  /* Outside grace: customer forfeits the deposit. Driver gets their
+   * plan-based share, platform keeps the rest. */
+  const driverShare = (split.deposit * policy.noShowDriverSharePct) / 100;
+  return {
+    depositCharged:     split.deposit,
+    cashDue:            split.cashDue,
+    customerRefund:     0,
+    driverCompensation: Math.round(driverShare * 100) / 100,
+    platformRetention:  Math.round((split.deposit - driverShare) * 100) / 100,
+    insideGraceWindow,
+  };
+}

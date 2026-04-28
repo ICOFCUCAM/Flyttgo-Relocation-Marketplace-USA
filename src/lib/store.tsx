@@ -50,6 +50,18 @@ interface AppState {
  */
 export type BookingCountry = 'us' | 'ca' | 'de' | 'fr' | 'gb' | 'no';
 
+/**
+ * Payment method the customer has selected on the booking widget.
+ *   - 'card_full'         : pay 100% online up front
+ *   - 'card_deposit_cash' : pay the country's deposit % online,
+ *                           remainder in cash to the driver on completion
+ *
+ * Cash availability is country-scoped — see COUNTRY_PAYMENT.cashEnabled
+ * in lib/constants.ts. The widget hides the cash option in markets
+ * where it isn't offered.
+ */
+export type PaymentMethod = 'card_full' | 'card_deposit_cash';
+
 export interface USAddressData {
   street_name: string;
   house_number: string;
@@ -80,6 +92,15 @@ export interface BookingData {
   additionalServices: string[]; moveDate: string; moveTime: string;
   name: string; phone: string; email: string; notes: string;
   estimatedPrice: number; estimatedVolume: number;
+  /* Payment selection — see PaymentMethod above. Defaults to 'card_full';
+   * the booking widget flips this to 'card_deposit_cash' when the
+   * customer clicks "Pay with cash" in markets where COUNTRY_PAYMENT
+   * has cashEnabled=true. */
+  paymentMethod:    PaymentMethod;
+  /** Resolved deposit charged online when the customer selects cash. */
+  depositAmount?:   number;
+  /** Resolved cash-on-delivery amount due to the driver. */
+  cashDueAmount?:   number;
 }
 
 const defaultBooking: BookingData = {
@@ -91,6 +112,7 @@ const defaultBooking: BookingData = {
   inventory: {}, vanType: '', helpers: 0, additionalServices: [],
   moveDate: '', moveTime: '', name: '', phone: '', email: '', notes: '',
   estimatedPrice: 0, estimatedVolume: 0,
+  paymentMethod: 'card_full',
 };
 
 const AppContext = createContext<AppState | undefined>(undefined);

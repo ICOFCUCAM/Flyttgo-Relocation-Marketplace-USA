@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Banknote, CreditCard, MapPin, Clock, Info } from 'lucide-react';
 import { useApp } from '../../lib/store';
-import type { BookingCountry } from '../../lib/store';
+import type { BookingCountry, PaymentMethod } from '../../lib/store';
 import NorwayAddressAutocomplete, { USAddress } from '../NorwayAddressAutocomplete';
+import { COUNTRY_PAYMENT, formatCurrency, splitPayment } from '../../lib/constants';
+import { getRouteDistance, haversineKm, RouteResult } from '../../lib/routing';
 
 const COUNTRY_LABEL: Record<BookingCountry, string> = {
   us: 'USA',
@@ -57,34 +60,112 @@ const FIELD_LABELS: Record<BookingCountry, { pickup: string; dropoff: string; da
   no: { pickup: 'Henteadresse',       dropoff: 'Leveringsadresse',  date: 'Flyttedato' },
 };
 
+const PAY_LABELS: Record<BookingCountry, {
+  fullCard:    string;
+  cashSplit:   string;
+  payNow:      string;
+  payLater:    string;
+  estimateAt:  string;
+  byRoad:      string;
+  asTheCrowFlies: string;
+  estimating:  string;
+}> = {
+  us: { fullCard: 'Pay full online (card)',         cashSplit: 'Pay 30% online + cash on delivery',           payNow: 'Pay now',     payLater: 'Cash on delivery', estimateAt: 'Estimate based on distance',  byRoad: 'By road',         asTheCrowFlies: 'Straight-line', estimating: 'Estimating distance…' },
+  ca: { fullCard: 'Pay full online (card)',         cashSplit: 'Pay 30% online + cash on delivery',           payNow: 'Pay now',     payLater: 'Cash on delivery', estimateAt: 'Estimate based on distance',  byRoad: 'By road',         asTheCrowFlies: 'Straight-line', estimating: 'Estimating distance…' },
+  de: { fullCard: 'Komplett online zahlen (Karte)', cashSplit: '30 % online + Restbetrag bar bei Lieferung',  payNow: 'Jetzt zahlen', payLater: 'Bar bei Lieferung', estimateAt: 'Schätzung anhand der Entfernung', byRoad: 'Straße', asTheCrowFlies: 'Luftlinie', estimating: 'Entfernung wird berechnet…' },
+  fr: { fullCard: 'Payer en ligne (carte)',         cashSplit: '30 % en ligne + espèces à la livraison',      payNow: 'Payer maintenant', payLater: 'Espèces à la livraison', estimateAt: 'Estimation basée sur la distance', byRoad: 'Par la route', asTheCrowFlies: 'À vol d’oiseau', estimating: 'Calcul de la distance…' },
+  gb: { fullCard: 'Pay full online (card)',         cashSplit: 'Pay 30% online + cash on delivery',           payNow: 'Pay now',     payLater: 'Cash on delivery', estimateAt: 'Estimate based on distance',  byRoad: 'By road',         asTheCrowFlies: 'Straight-line', estimating: 'Estimating distance…' },
+  no: { fullCard: 'Betal alt på nett (kort)',       cashSplit: '30 % på nett + resten kontant ved levering',  payNow: 'Betal nå',    payLater: 'Kontant ved levering', estimateAt: 'Estimat basert på avstand', byRoad: 'Vei', asTheCrowFlies: 'Luftlinje', estimating: 'Beregner avstand…' },
+};
+
 interface Props {
   country: BookingCountry;
   /** Compact variant for inline placement on long pages. Default false. */
   compact?: boolean;
 }
 
+/* Indicative per-mile/km coefficient for the in-widget price preview.
+ * The booking flow runs the canonical calculator from constants.ts and
+ * the calculate-price edge function — this preview only needs to be in
+ * the right ballpark so the customer sees a number on the cash split. */
+const INDICATIVE_BASE_PER_BOOKING: Record<BookingCountry, number> = {
+  us: 380, ca: 420, gb: 320, de: 360, fr: 380, no: 3200,
+};
+const INDICATIVE_PER_KM: Record<BookingCountry, number> = {
+  us: 1.4, ca: 1.5, gb: 1.3, de: 1.3, fr: 1.4, no: 12,
+};
+
+function indicativeTotal(country: BookingCountry, distanceKm: number | null): number {
+  const base = INDICATIVE_BASE_PER_BOOKING[country];
+  const perKm = INDICATIVE_PER_KM[country];
+  return Math.round(base + Math.max(0, distanceKm ?? 0) * perKm);
+}
+
 /**
- * Country-scoped shopfront booking widget.
+ * Country-scoped shopfront booking widget with two payment options
+ * (full-card or 30% online + 70% cash on delivery) and a dual
+ * distance preview (OSRM road distance + Haversine straight-line).
  *
- * Three-field form (pickup / drop-off / move date) that mirrors the
- * inputs the existing BookingFlow opens on, with the difference that
- * every input here is restricted to the selected national marketplace.
- * Address autocomplete uses Nominatim with `countrycodes=<iso>` and
- * the `country` field on the resulting address is set to the country's
- * label, so BookingFlow can pre-fill its own state without re-typing.
- *
- * "Get a quote" hands the structured pickup + drop-off + move date
- * over to the global BookingData store, sets `country = <iso>`, and
- * navigates to /book — which is the existing 6-step BookingFlow.
+ * The cash option is hidden in markets where COUNTRY_PAYMENT.cashEnabled
+ * is false — see lib/constants.ts.
  */
 export default function BookingShortcut({ country, compact = false }: Props) {
   const { setBookingData, setPage } = useApp();
-  const [pickup, setPickup]   = useState<USAddress | null>(null);
-  const [dropoff, setDropoff] = useState<USAddress | null>(null);
+  const [pickup,  setPickup]    = useState<USAddress | null>(null);
+  const [dropoff, setDropoff]   = useState<USAddress | null>(null);
   const [moveDate, setMoveDate] = useState('');
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card_full');
 
-  const labels = FIELD_LABELS[country];
+  /* ── Two distance systems, both displayed for transparency ──
+   * 1) OSRM via getRouteDistance — real road distance + ETA
+   * 2) Haversine — straight-line "as the crow flies"
+   * The booking total is computed off the OSRM number (or the
+   * Haversine fallback when OSRM is unreachable); the second
+   * number is shown for context so customers can see we're being
+   * honest about the routing. */
+  const [route,         setRoute]         = useState<RouteResult | null>(null);
+  const [routeLoading,  setRouteLoading]  = useState(false);
+  const straightLineKm =
+    pickup?.lat != null && dropoff?.lat != null && pickup.lng != null && dropoff.lng != null
+      ? Math.round(haversineKm({ lat: pickup.lat, lng: pickup.lng }, { lat: dropoff.lat, lng: dropoff.lng }) * 10) / 10
+      : null;
+
+  useEffect(() => {
+    let cancelled = false;
+    if (pickup?.lat == null || pickup?.lng == null || dropoff?.lat == null || dropoff?.lng == null) {
+      setRoute(null);
+      return;
+    }
+    setRouteLoading(true);
+    (async () => {
+      const r = await getRouteDistance(
+        { lat: pickup.lat!, lng: pickup.lng! },
+        { lat: dropoff.lat!, lng: dropoff.lng! },
+      );
+      if (cancelled) return;
+      setRoute(r);
+      setRouteLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [pickup, dropoff]);
+
+  const labels  = FIELD_LABELS[country];
+  const payL    = PAY_LABELS[country];
+  const policy  = COUNTRY_PAYMENT[country];
+
+  /* If the country has cash disabled, force the toggle to card-only
+   * regardless of any earlier state from another country. */
+  useEffect(() => {
+    if (!policy.cashEnabled && paymentMethod === 'card_deposit_cash') {
+      setPaymentMethod('card_full');
+    }
+  }, [policy.cashEnabled, paymentMethod]);
+
+  /* Live indicative total + payment split. Cleared until both
+   * addresses are picked. */
+  const indicative = pickup && dropoff ? indicativeTotal(country, route?.distanceKm ?? straightLineKm) : null;
+  const split = indicative != null ? splitPayment(indicative, country, paymentMethod) : null;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -93,6 +174,12 @@ export default function BookingShortcut({ country, compact = false }: Props) {
       return;
     }
     setSubmitError(null);
+
+    /* Final split from the canonical helper so the booking flow
+     * inherits the same numbers the customer just saw. */
+    const finalSplit = indicative != null
+      ? splitPayment(indicative, country, paymentMethod)
+      : { deposit: 0, cashDue: 0 };
 
     setBookingData({
       country,
@@ -127,6 +214,11 @@ export default function BookingShortcut({ country, compact = false }: Props) {
         formatted:    dropoff.formatted,
       },
       moveDate,
+      paymentMethod,
+      depositAmount: finalSplit.deposit,
+      cashDueAmount: finalSplit.cashDue,
+      distanceKm:      route?.distanceKm    ?? straightLineKm ?? null,
+      durationMinutes: route?.durationMinutes ?? null,
       step: 2,
     });
     setPage('booking');
@@ -176,10 +268,100 @@ export default function BookingShortcut({ country, compact = false }: Props) {
             value={moveDate}
             min={new Date().toISOString().slice(0, 10)}
             onChange={e => setMoveDate(e.target.value)}
-            className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm bg-white"
+            className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none text-sm bg-white"
           />
         </div>
       </div>
+
+      {/* ── Distance preview ───────────────────────────────────── */}
+      {(pickup && dropoff) && (
+        <div className="mt-4 bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+          {routeLoading && <span className="text-slate-500">{payL.estimating}</span>}
+          {!routeLoading && (
+            <div className="flex items-center gap-3 flex-wrap text-slate-700">
+              {route && (
+                <span className="inline-flex items-center gap-1.5">
+                  <MapPin size={12} className="text-amber-600" />
+                  <strong className="text-slate-900">{payL.byRoad}</strong>
+                  · {route.distanceKm} km
+                  {route.durationMinutes != null && (
+                    <>
+                      <span className="mx-1">·</span>
+                      <Clock size={12} className="text-slate-400" />
+                      {Math.floor(route.durationMinutes / 60)}h {route.durationMinutes % 60}m
+                    </>
+                  )}
+                </span>
+              )}
+              {straightLineKm != null && (
+                <span className="inline-flex items-center gap-1.5 text-slate-500">
+                  <span className="mx-1">·</span>
+                  <strong>{payL.asTheCrowFlies}</strong> · {straightLineKm} km
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Payment method toggle ──────────────────────────────── */}
+      <div className="mt-4 grid gap-2">
+        <button
+          type="button"
+          onClick={() => setPaymentMethod('card_full')}
+          className={`flex items-start gap-3 p-3 rounded-xl border text-left transition ${
+            paymentMethod === 'card_full'
+              ? 'border-amber-400 bg-amber-50'
+              : 'border-slate-200 hover:border-amber-300'
+          }`}
+        >
+          <CreditCard size={18} className={paymentMethod === 'card_full' ? 'text-amber-600 mt-0.5' : 'text-slate-400 mt-0.5'} />
+          <div className="flex-1">
+            <p className="text-sm font-bold text-slate-900">{payL.fullCard}</p>
+            {indicative != null && (
+              <p className="text-xs text-slate-600 mt-0.5">
+                {payL.payNow}: <strong>{formatCurrency(indicative, country)}</strong>
+              </p>
+            )}
+          </div>
+        </button>
+
+        {policy.cashEnabled && (
+          <button
+            type="button"
+            onClick={() => setPaymentMethod('card_deposit_cash')}
+            className={`flex items-start gap-3 p-3 rounded-xl border text-left transition ${
+              paymentMethod === 'card_deposit_cash'
+                ? 'border-amber-400 bg-amber-50'
+                : 'border-slate-200 hover:border-amber-300'
+            }`}
+          >
+            <Banknote size={18} className={paymentMethod === 'card_deposit_cash' ? 'text-amber-600 mt-0.5' : 'text-slate-400 mt-0.5'} />
+            <div className="flex-1">
+              <p className="text-sm font-bold text-slate-900">{payL.cashSplit}</p>
+              {split && indicative != null && paymentMethod === 'card_deposit_cash' && (
+                <p className="text-xs text-slate-600 mt-0.5">
+                  {payL.payNow}: <strong>{formatCurrency(split.deposit, country)}</strong>
+                  <span className="mx-1">·</span>
+                  {payL.payLater}: <strong>{formatCurrency(split.cashDue, country)}</strong>
+                </p>
+              )}
+              {split && indicative != null && paymentMethod !== 'card_deposit_cash' && (
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {policy.depositPct}% {payL.payNow.toLowerCase()} · {policy.cashOnDeliveryPct}% {payL.payLater.toLowerCase()}
+                </p>
+              )}
+            </div>
+          </button>
+        )}
+      </div>
+
+      {!policy.cashEnabled && (
+        <p className="mt-2 text-[11px] text-slate-500 flex items-start gap-1.5">
+          <Info size={12} className="mt-0.5 flex-shrink-0 text-slate-400" />
+          Cash on delivery isn’t available in {COUNTRY_LABEL[country]} yet.
+        </p>
+      )}
 
       {submitError && (
         <div className="mt-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
