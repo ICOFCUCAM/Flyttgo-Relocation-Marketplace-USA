@@ -31,6 +31,40 @@ export default {
         accent: { DEFAULT: "hsl(var(--accent))", foreground: "hsl(var(--accent-foreground))" },
         popover: { DEFAULT: "hsl(var(--popover))", foreground: "hsl(var(--popover-foreground))" },
         card: { DEFAULT: "hsl(var(--card))", foreground: "hsl(var(--card-foreground))" },
+
+        /* FlyttGo design tokens (mirrors src/index.css :root vars).
+         * Use these utilities (bg-brand-500, text-ink-900, …) instead
+         * of the raw amber/slate Tailwind palette so a future palette
+         * swap touches one file. */
+        brand: {
+          50:  'var(--brand-50)',
+          400: 'var(--brand-400)',
+          500: 'var(--brand-500)',
+          600: 'var(--brand-600)',
+          DEFAULT: 'var(--brand-500)',
+        },
+        ink: {
+          700: 'var(--ink-700)',
+          800: 'var(--ink-800)',
+          900: 'var(--ink-900)',
+          950: 'var(--ink-950)',
+          DEFAULT: 'var(--ink-900)',
+        },
+        surface: {
+          canvas: 'var(--surface-canvas)',
+          soft:   'var(--surface-soft)',
+          warm:   'var(--surface-warm)',
+        },
+        trust: {
+          50:  'var(--trust-50)',
+          600: 'var(--trust-600)',
+          DEFAULT: 'var(--trust-600)',
+        },
+        danger: {
+          50:  'var(--danger-50)',
+          600: 'var(--danger-600)',
+          DEFAULT: 'var(--danger-600)',
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -51,6 +85,19 @@ export default {
         lg: "calc(var(--radius) + 2px)",
         md: "var(--radius)",
         sm: "calc(var(--radius) - 2px)",
+      },
+      transitionTimingFunction: {
+        marketplace: 'cubic-bezier(0.32, 0.72, 0, 1)',
+      },
+      transitionDuration: {
+        fast: 'var(--motion-fast)',
+        base: 'var(--motion-base)',
+        slow: 'var(--motion-slow)',
+      },
+      boxShadow: {
+        soft:     'var(--shadow-soft)',
+        medium:   'var(--shadow-medium)',
+        elevated: 'var(--shadow-elevated)',
       },
       keyframes: {
         "accordion-down": { from: { height: "0" }, to: { height: "var(--radix-accordion-content-height)" } },

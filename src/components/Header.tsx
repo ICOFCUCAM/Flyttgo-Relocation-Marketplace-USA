@@ -4,6 +4,7 @@ import i18n, { LANG_STORAGE_KEY } from '../lib/i18n';
 import { useAuth } from '../lib/auth';
 import { useApp, Page } from '../lib/store';
 import { LogIn, Bell, User as UserIcon } from 'lucide-react';
+import ThemeToggle from './global/ThemeToggle';
 import { useNotifications } from '../hooks/useNotifications';
 import type { Page as PageType } from '../lib/store';
 
@@ -32,8 +33,6 @@ export default function Header() {
   const { setPage, currentPage, setShowAuthModal, setAuthMode } = useApp();
   const { t, i18n: i18nInstance } = useTranslation();
   const [mobileOpen,    setMobileOpen]    = useState(false);
-  const [toolsOpen,     setToolsOpen]     = useState(false);
-  const [companiesOpen, setCompaniesOpen] = useState(false);
   const [marketsOpen,   setMarketsOpen]   = useState(false);
   const [langOpen,      setLangOpen]      = useState(false);
   const [userMenuOpen,  setUserMenuOpen]  = useState(false);
@@ -47,23 +46,6 @@ export default function Header() {
    * click detection has to check both nodes. */
   const langBtnRef = useRef<HTMLButtonElement>(null);
   const langPopRef = useRef<HTMLDivElement>(null);
-
-  /* Moving tools + corporate dropdown items — rebuilt on every render
-   * so t() picks up the active language. Cheap — it's just 9 objects. */
-  const MOVING_TOOLS = [
-    { label: t('home.toolCalcTitle', 'Van Size Calculator'),  desc: t('header.toolCalcDesc', 'Find the right van for your move'), page: 'van-guide' as Page },
-    { label: t('home.toolCheckTitle', 'Moving Checklist'),     desc: t('header.toolCheckDesc', 'Step-by-step packing guide'),       page: 'checklist' as Page },
-    { label: t('header.subPlans', 'Subscription Plans'),       desc: t('header.subPlansDesc', 'Save with a driver subscription'),   page: 'subscriptions' as Page },
-  ];
-
-  const CORPORATE_LINKS = [
-    { label: t('home.corpBulk', 'Bulk Booking Management'),       desc: t('home.corpBulkDesc', 'Multi-location deliveries at scale'),    page: 'bulk-booking' as Page },
-    { label: t('home.corpRecurring', 'Recurring Deliveries'),      desc: t('home.corpRecurringDesc', 'Daily, weekly or monthly scheduling'), page: 'recurring-deliveries' as Page },
-    { label: t('home.corpAnalytics', 'Company Dashboard Info'),    desc: t('home.corpAnalyticsDesc', 'Track spending & delivery performance'), page: 'company-dashboard-info' as Page },
-    { label: t('home.corpInvoice', 'Invoice & Billing'),           desc: t('home.corpInvoiceDesc', 'Consolidated monthly invoices'),         page: 'invoice-billing' as Page },
-    { label: t('home.corpApi', 'Corporate API Access'),            desc: t('home.corpApiDesc', 'Integrate FlyttGo into your systems'),       page: 'corporate-api-access' as Page },
-    { label: t('home.corpAnalytics', 'Corporate Dashboard'),       desc: t('header.corpDashDesc', 'Enterprise logistics command center'),    page: 'corporate-dashboard' as Page },
-  ];
 
   /* Real-time notifications for the bell icon. Returns an empty list
    * silently if the notifications table / RLS / publication aren't
@@ -105,15 +87,12 @@ export default function Header() {
   }, []);
 
   function closeAll() {
-    setToolsOpen(false);
-    setCompaniesOpen(false); setUserMenuOpen(false);
+    setUserMenuOpen(false);
     setMarketsOpen(false);
     setNotifOpen(false);
   }
 
-  function toggle(which: 'tools' | 'companies' | 'user' | 'notif' | 'markets') {
-    setToolsOpen(which === 'tools'         ? (s) => !s : false);
-    setCompaniesOpen(which === 'companies' ? (s) => !s : false);
+  function toggle(which: 'user' | 'notif' | 'markets') {
     setMarketsOpen(which === 'markets'     ? (s) => !s : false);
     setUserMenuOpen(which === 'user'       ? (s) => !s : false);
     setNotifOpen(which === 'notif'         ? (s) => !s : false);
@@ -158,28 +137,6 @@ export default function Header() {
         currentPage === page ? 'text-emerald-600 bg-emerald-50' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
       }`}
     >{label}</button>
-  );
-
-  const dropdown = (
-    open: boolean,
-    label: string,
-    which: 'tools' | 'companies' | 'user',
-    children: React.ReactNode,
-    alignRight = false
-  ) => (
-    <div className="relative">
-      <button
-        onClick={() => toggle(which)}
-        className={`flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium transition ${
-          open ? 'text-emerald-600 bg-emerald-50' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-        }`}
-      >{label}{chevron(open)}</button>
-      {open && (
-        <div className={`absolute top-full ${alignRight ? 'right-0' : 'left-0'} mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 z-50`}>
-          {children}
-        </div>
-      )}
-    </div>
   );
 
   return (
@@ -270,8 +227,8 @@ export default function Header() {
                 </svg>
               </div>
               <div className="flex flex-col leading-none">
-                <span className="text-xl font-bold text-gray-900 font-serif tracking-tight">Flytt<span className="text-emerald-600">Go</span></span>
-                <span className="hidden sm:inline text-[9px] uppercase tracking-[0.18em] text-gray-500 font-mono mt-0.5">Global Logistics &amp; Relocation Marketplace</span>
+                <span className="text-xl font-extrabold text-gray-900 tracking-tight">Flytt<span className="text-amber-500">Go</span></span>
+                <span className="hidden sm:inline text-[10px] uppercase tracking-wider text-gray-500 mt-0.5 font-semibold">Global moving marketplace</span>
               </div>
             </button>
 
@@ -321,7 +278,30 @@ export default function Header() {
 
             {/* Right side */}
             <div className="flex items-center gap-2">
-              <button onClick={() => handleNav('booking')} className="hidden sm:flex items-center gap-1.5 px-5 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 transition shadow-sm">{t('header.bookNow')}</button>
+              {/* ⌘K command palette discovery hint. Dispatching the
+                  same keyboard combo via a synthetic KeyboardEvent
+                  would be brittle — instead we fire a custom event
+                  that AppLayout's listener can pick up. */}
+              <button
+                type="button"
+                onClick={() => {
+                  /* Mirror the keydown handler in AppLayout. */
+                  const evt = new KeyboardEvent('keydown', { key: 'k', metaKey: true });
+                  window.dispatchEvent(evt);
+                }}
+                aria-label="Search FlyttGo (Command K)"
+                className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-base ease-marketplace text-xs"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
+                <span className="font-mono text-[10px] border border-slate-300 rounded px-1 py-0.5">⌘K</span>
+              </button>
+              {/* Theme toggle — Light / Dark / System. Hidden <md to
+                  preserve nav real estate; mobile menu drawer carries
+                  the same control. */}
+              <div className="hidden md:block">
+                <ThemeToggle compact />
+              </div>
+              <button onClick={() => handleNav('booking')} className="hidden sm:flex items-center gap-1.5 px-5 py-2 bg-amber-500 text-slate-900 rounded-lg text-sm font-bold hover:bg-amber-600 transition shadow-sm shadow-amber-500/25">{t('header.bookNow')}</button>
 
               {/* Notifications bell — signed-in only. Subscribes to
                * the notifications table over Supabase Realtime; flips
@@ -517,7 +497,7 @@ export default function Header() {
                 </button>
               </>
             )}
-            <button onClick={() => handleNav('booking')} className="block w-full py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-semibold text-center mt-1">{t('header.bookNow')}</button>
+            <button onClick={() => handleNav('booking')} className="block w-full py-2.5 bg-amber-500 text-slate-900 rounded-lg text-sm font-bold text-center mt-1 hover:bg-amber-600 transition shadow-sm shadow-amber-500/25">{t('header.bookNow')}</button>
           </div>
         </div>
       </div>

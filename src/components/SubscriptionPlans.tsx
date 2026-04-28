@@ -1,8 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { SUBSCRIPTION_PLANS, calculateCommission } from '../lib/constants';
+import { SUBSCRIPTION_PLANS, calculateCommission, COMMISSION } from '../lib/constants';
 import { useApp } from '../lib/store';
 import { useAuth } from '../lib/auth';
 import { supabase } from '../lib/supabase';
+import {
+  SUBSCRIPTION_TIERS, findTier, localPriceForTier, PRIVILEGE_LABELS,
+  type SubscriptionTierSlug,
+} from '../lib/subscription-tiers';
+import { COUNTRY_PROFILES } from '../lib/country-profiles';
+import {
+  checkCipEligibilityFull, CIP_THRESHOLDS,
+  type DocumentStatus, type CipDocumentSlug,
+} from '../lib/cip-eligibility';
+import { loadProviderScore } from '../lib/provider-scoring-store';
+import type { PricingCountry } from '../lib/pricing-engine';
 
 /** The application states we care about for gating. 'approved' → plans
  *  are actionable. Anything else → we redirect or warn. */
@@ -13,10 +24,73 @@ type ApplicationGate =
   | 'rejected'      // rejected, needs re-upload
   | 'approved';     // ready to subscribe
 
+/* Map the existing driver_documents.document_type values to the
+ * four canonical CIP document slugs the eligibility check expects.
+ * We're flexible on naming because the underlying table predates
+ * the CIP requirements layer. */
+function mapDocTypeToCipSlug(raw: string | null | undefined): CipDocumentSlug | null {
+  const v = (raw ?? '').toLowerCase().replace(/[\s-]/g, '_');
+  if (v.includes('insurance'))                                return 'insurance';
+  if (v.includes('vehicle_compliance') || v.includes('vehicle_registration')
+                                       || v.includes('mot')) return 'vehicle_compliance';
+  if (v.includes('tax')           || v.includes('vat')
+                                  || v.includes('siret'))    return 'tax_registration';
+  if (v.includes('company')       || v.includes('business')
+                                  || v.includes('registration')
+                                  || v.includes('gewerbe')
+                                  || v.includes('cac'))      return 'company_registration';
+  return null;
+}
+
 export default function SubscriptionPlans() {
   const { setShowAuthModal, setAuthMode, setPage } = useApp();
   const { user, profile } = useAuth();
   const [examplePrice, setExamplePrice] = useState(1000);
+  /* Country picker for the country-multiplier pricing engine.
+   * Defaults to US benchmark; provider lands here with their saved
+   * country once we surface it from the dashboard. */
+  const [country, setCountry] = useState<PricingCountry>('us');
+  /* CIP eligibility — fetched for signed-in approved providers so
+   * the gating panel reads the real numbers from provider_reputation
+   * + the document statuses from driver_documents. */
+  const [cipEligibility, setCipEligibility] = useState<ReturnType<typeof checkCipEligibilityFull> | null>(null);
+
+  useEffect(() => {
+    if (!user?.id) { setCipEligibility(null); return; }
+    let cancelled = false;
+
+    async function loadEligibility() {
+      const score = await loadProviderScore(user!.id);
+
+      /* Pull the latest status per CIP-required document type from
+       * driver_documents. The table stores raw strings — we map
+       * them to our four canonical CIP slugs. Missing rows imply
+       * the doc hasn't been uploaded. */
+      const { data: docRows } = await supabase
+        .from('driver_documents')
+        .select('document_type, verification_status')
+        .eq('driver_id', user!.id);
+
+      const docMap = new Map<CipDocumentSlug, DocumentStatus['status']>();
+      for (const r of (docRows ?? [])) {
+        const slug = mapDocTypeToCipSlug(r.document_type);
+        if (!slug) continue;
+        const status: DocumentStatus['status'] =
+          r.verification_status === 'approved' ? 'approved' :
+          r.verification_status === 'rejected' ? 'rejected' :
+                                                  'pending';
+        /* Approved beats pending; pending beats missing. */
+        const prev = docMap.get(slug);
+        if (prev === 'approved') continue;
+        docMap.set(slug, status);
+      }
+      const documents: DocumentStatus[] = Array.from(docMap.entries()).map(([slug, status]) => ({ slug, status }));
+      if (!cancelled) setCipEligibility(checkCipEligibilityFull(score, documents));
+    }
+
+    void loadEligibility().catch(() => { if (!cancelled) setCipEligibility(null); });
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   /* Gate state — reflects whether this signed-in user is actually
    * allowed to click Subscribe. Admins and signed-out visitors skip
@@ -107,8 +181,25 @@ export default function SubscriptionPlans() {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-gradient-to-br from-emerald-700 via-emerald-800 to-gray-900 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl sm:text-5xl font-bold mb-4">Driver Subscription Plans</h1>
-          <p className="text-lg text-emerald-100 max-w-2xl mx-auto">Choose the plan that maximizes your earnings. Upgrade anytime.</p>
+          <h1 className="text-4xl sm:text-5xl font-bold mb-4">Provider Subscription Tiers</h1>
+          <p className="text-lg text-emerald-100 max-w-2xl mx-auto mb-6">
+            Five tiers from Silver entry to Certified Infrastructure Partner.
+            Country-aware pricing — pick your market below.
+          </p>
+          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full pl-4 pr-2 py-1.5">
+            <span className="text-xs uppercase tracking-wider text-emerald-100">Market</span>
+            <select
+              value={country}
+              onChange={e => setCountry(e.target.value as PricingCountry)}
+              className="bg-transparent text-white text-sm font-bold outline-none"
+            >
+              {COUNTRY_PROFILES.map(p => (
+                <option key={p.code} value={p.code} className="text-slate-900">
+                  {p.flag} {p.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -161,33 +252,71 @@ export default function SubscriptionPlans() {
         )}
 
         <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-6 mb-16">
-          {SUBSCRIPTION_PLANS.map(plan => (
-            <div key={plan.id} className={`bg-white rounded-2xl border-2 p-6 relative ${plan.popular ? 'border-emerald-500 shadow-xl shadow-emerald-500/10' : 'border-gray-100'}`}>
-              {plan.popular && (
+          {SUBSCRIPTION_PLANS.map(plan => {
+            /* Resolve display + privileges from the canonical tier
+             * catalogue. The legacy `plan` keeps its db-stable id
+             * (silver / silver_plus / gold / gold_pro / elite); the
+             * tier provides display names + locale-aware pricing
+             * + privilege list. */
+            const tier         = findTier(plan.id as SubscriptionTierSlug);
+            const localPrice   = localPriceForTier(tier, country);
+            const isCip        = tier.slug === 'elite';
+            return (
+            <div key={plan.id} className={`bg-white rounded-2xl border-2 p-6 relative flex flex-col ${
+              isCip      ? 'border-amber-500 shadow-2xl shadow-amber-500/20 ring-2 ring-amber-300/40' :
+              plan.popular ? 'border-emerald-500 shadow-xl shadow-emerald-500/10' : 'border-gray-100'
+            }`}>
+              {isCip && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-ink-900 text-amber-300 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
+                  Institutional · Procurement-ready
+                </div>
+              )}
+              {plan.popular && !isCip && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-xs font-bold px-4 py-1 rounded-full">MOST POPULAR</div>
               )}
-              <h3 className="text-xl font-bold text-gray-900 mb-1">{plan.name}</h3>
+              <h3 className="text-xl font-bold text-gray-900 leading-tight mb-1">{tier.displayName}</h3>
+              <p className="text-xs text-gray-500 leading-relaxed mb-4 min-h-[2rem]">{tier.tagline}</p>
               <div className="mb-4">
-                <span className="text-3xl font-bold text-gray-900">{plan.price}</span>
-                <span className="text-gray-500 text-sm"> USD{plan.period}</span>
+                <span className="text-3xl font-bold text-gray-900">{localPrice.formatted}</span>
+                {!localPrice.isFree && <span className="text-gray-500 text-sm"> / month</span>}
               </div>
               <div className="mb-4">
                 <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                  isCip ? 'bg-ink-900 text-amber-300' :
                   plan.priorityLevel >= 4 ? 'bg-purple-100 text-purple-700' :
                   plan.priorityLevel >= 3 ? 'bg-emerald-100 text-emerald-700' :
                   plan.priorityLevel >= 2 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
                 }`}>
-                  {plan.dispatchPriority} Priority
+                  {Math.round(tier.commissionPct * 100)}% commission · {tier.privileges.includes('first-access-jobs')
+                    ? 'first-access' : tier.privileges.includes('priority-dispatch')
+                    ? 'priority' : tier.privileges.includes('high-dispatch')
+                    ? 'high' : tier.privileges.includes('moderate-dispatch')
+                    ? 'moderate' : 'standard'} dispatch
                 </span>
               </div>
-              <ul className="space-y-2 mb-6">
-                {plan.features.map((f, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm">
+              <ul className="space-y-2 mb-4 flex-1">
+                {tier.privileges.map(p => (
+                  <li key={p} className="flex items-start gap-2 text-sm">
                     <svg className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/></svg>
-                    <span className="text-gray-600">{f}</span>
+                    <span className="text-gray-600">{PRIVILEGE_LABELS[p]}</span>
                   </li>
                 ))}
               </ul>
+
+              {/* Cash-booking economics. Drivers see the commission they
+                  pay on cash bookings (deposit released by admin under
+                  release_escrow_manually) at their plan tier. */}
+              <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-amber-700 mb-1">
+                  Cash-booking economics
+                </p>
+                <p className="text-xs text-amber-900 leading-relaxed">
+                  Customer pays a <strong>{Math.round(COMMISSION.cashDeposit * 100)}% deposit</strong> online + the
+                  rest in cash to you on delivery.{' '}
+                  <strong>{plan.commissionRate}%</strong> platform commission applies to your
+                  net earning when escrow is released.
+                </p>
+              </div>
               <button
                 onClick={handleSubscribeClick}
                 disabled={gate === 'loading'}
@@ -204,8 +333,55 @@ export default function SubscriptionPlans() {
                                                'Subscribe Now'}
               </button>
             </div>
-          ))}
+            );
+          })}
         </div>
+
+        {/* CIP eligibility panel — only for signed-in approved
+            providers. Shows current rating / completion / on-time /
+            verification vs the CIP thresholds with explicit blockers. */}
+        {user && profile?.role !== 'admin' && cipEligibility && (
+          <div className={`rounded-2xl border-2 p-6 mb-12 ${
+            cipEligibility.qualifies
+              ? 'bg-amber-50 border-amber-400'
+              : 'bg-white border-slate-200'
+          }`}>
+            <div className="flex items-baseline justify-between flex-wrap gap-2 mb-4">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-amber-700 mb-1">
+                  Certified Infrastructure Partner
+                </p>
+                <h3 className="text-xl font-extrabold text-slate-900">
+                  {cipEligibility.qualifies
+                    ? "You qualify."
+                    : "Eligibility check"}
+                </h3>
+              </div>
+              <p className="text-xs text-slate-500">
+                Min rating {CIP_THRESHOLDS.minRating} · {CIP_THRESHOLDS.minCompletedJobs}+ rated jobs ·{' '}
+                {Math.round(CIP_THRESHOLDS.minOnTimeRate * 100)}% on-time · verification level 4
+              </p>
+            </div>
+            {cipEligibility.qualifies ? (
+              <p className="text-sm text-slate-700 leading-relaxed">
+                You meet every requirement for the Certified Infrastructure
+                Partner tier — institutional gateway with corporate, university,
+                and government deployment routing. Subscribe above to activate.
+              </p>
+            ) : (
+              <ul className="space-y-1.5">
+                {cipEligibility.blockers.map(b => (
+                  <li key={b.field} className="flex items-baseline justify-between text-xs gap-2">
+                    <span className="text-slate-700 capitalize">{b.field}</span>
+                    <span className="text-slate-500">
+                      {b.current} <span className="text-slate-400">→ {b.required}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
 
         {/* Earnings Comparison */}
         <div className="bg-white rounded-2xl border border-gray-100 p-8 mb-16">

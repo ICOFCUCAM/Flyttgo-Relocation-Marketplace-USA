@@ -39,6 +39,15 @@ export default function TermsPage() {
               ⚠️ IMPORTANT NOTICE: FlyttGo is a digital marketplace platform only. FlyttGo does NOT provide transport services and bears ZERO liability for goods, damage, loss, or delay. All liability rests with the registered transport provider (driver's company).
             </p>
           </div>
+          <div className="mt-4 bg-white/5 border border-white/10 rounded-xl px-5 py-4">
+            <p className="text-white/80 text-sm leading-relaxed">
+              FlyttGo Global Logistics &amp; Relocation Marketplace operates as a
+              digital coordination platform connecting customers with independent
+              licensed relocation providers across multiple jurisdictions worldwide.
+              Service providers are responsible for compliance with their national
+              licensing, taxation, insurance, and regulatory requirements.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -64,10 +73,10 @@ export default function TermsPage() {
           <section id="overview" className="mb-10">
             <h2 className="text-xl font-bold text-[#0B2E59] mb-4">1. Platform Overview & Legal Status</h2>
             <p className="text-gray-700 leading-relaxed mb-4">
-              These Terms and Conditions ("Terms") constitute a legally binding agreement between you ("User," "Customer," or "Provider") and Wankong LLC, a Delaware limited liability company operating the FlyttGo Relocation Marketplace USA platform ("FlyttGo," "we," "us," or "our"). By accessing or using the FlyttGo platform, website, or mobile application (collectively, the "Platform"), you agree to be bound by these Terms in their entirety.
+              These Terms and Conditions ("Terms") constitute a legally binding agreement between you ("User," "Customer," or "Provider") and Wankong LLC, a Delaware limited liability company operating the FlyttGo Global Logistics & Relocation Marketplace platform ("FlyttGo," "we," "us," or "our"). By accessing or using the FlyttGo platform, website, or mobile application (collectively, the "Platform"), you agree to be bound by these Terms in their entirety.
             </p>
             <p className="text-gray-700 leading-relaxed mb-4">
-              <strong>FlyttGo Relocation Marketplace USA is a digital coordination platform that connects customers with independent licensed relocation service providers.</strong> FlyttGo does not operate as a moving carrier, freight broker, or freight forwarder. FlyttGo does not own vehicles, employ drivers or movers, and does not provide any transportation, moving, packing, storage, or logistics service directly. Transportation services are performed by independent providers under their own operating authority (including, where applicable, USDOT and MC numbers issued by the FMCSA).
+              <strong>FlyttGo Global Logistics & Relocation Marketplace is a digital coordination platform that connects customers with independent licensed relocation service providers.</strong> FlyttGo does not operate as a moving carrier, freight broker, or freight forwarder. FlyttGo does not own vehicles, employ drivers or movers, and does not provide any transportation, moving, packing, storage, or logistics service directly. Transportation services are performed by independent providers under their own operating authority (including, where applicable, USDOT and MC numbers issued by the FMCSA).
             </p>
             <p className="text-gray-700 leading-relaxed mb-4">
               The Platform facilitates connections between customers seeking relocation coordination services ("Customers") and independent providers operating under registered businesses ("Providers"), including licensed motor carriers, independent labor crews, packing service providers, self-storage operators, truck rental partners, and insurance providers.
@@ -260,7 +269,7 @@ export default function TermsPage() {
           <section id="contact" className="mb-10">
             <h2 className="text-xl font-bold text-[#0B2E59] mb-4">13. Contact Information</h2>
             <div className="bg-gray-50 rounded-xl p-5">
-              <p className="font-bold text-gray-800 mb-2">Wankong LLC, operator of FlyttGo Relocation Marketplace USA,</p>
+              <p className="font-bold text-gray-800 mb-2">Wankong LLC, operator of FlyttGo Global Logistics & Relocation Marketplace,</p>
               <p className="text-gray-600 text-sm">New York, NY</p>
               <p className="text-gray-600 text-sm">Legal & Compliance: legal@flyttgo.com</p>
               <p className="text-gray-600 text-sm">Customer Support: support@flyttgo.com</p>

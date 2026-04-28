@@ -2,6 +2,19 @@
 import React, { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
+import { toast } from "sonner";
+import {
+  adminListDisputes, adminResolveDispute, adminReleasePayout,
+  adminRequestEvidence, adminEscalateDispute, adminSetProviderSuspension,
+} from "../lib/admin-disputes-store";
+import type { DisputeRow } from "../lib/disputes-store";
+import { DISPUTE_CATEGORIES, type ResolutionPath } from "../lib/dispute-rules";
+import {
+  matchProviders,
+  type MatchedProviderRow, type MatchingMode, type SpecializationTag,
+} from "../lib/matching-engine-store";
+import { COUNTRY_PROFILES } from "../lib/country-profiles";
+import type { PricingCountry } from "../lib/pricing-engine";
 
 /* Lazy-loaded Leaflet map — ~150 KB bundle is only paid when the
  * admin actually opens the Fleet Map tab. */
@@ -15,6 +28,7 @@ type AdminTab =
   | "applications"
   | "revenue"
   | "disputes"
+  | "matcher"
   | "settings";
 
 /* ── CSV export helper ──────────────────────────────────────────
@@ -98,6 +112,54 @@ export default function AdminDashboard() {
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
   const [manualRefundPercent, setManualRefundPercent] = useState<number>(0);
+  /* Real disputes from the disputes table — backed by RPCs in
+   * docs/install-dispute-completion.sql. */
+  const [disputes, setDisputes] = useState<DisputeRow[]>([]);
+  const [disputesLoading, setDisputesLoading] = useState(false);
+
+  /* Matcher console state. Lets ops type a hypothetical request +
+   * see how the Smart Matching Engine ranks providers + why. */
+  const [mCountry,    setMCountry]    = useState<PricingCountry>('us');
+  const [mCrewSize,   setMCrewSize]   = useState<2 | 3 | 4 | 5>(3);
+  const [mNeedsTruck, setMNeedsTruck] = useState(true);
+  const [mNeedsPack,  setMNeedsPack]  = useState(false);
+  const [mTags,       setMTags]       = useState<SpecializationTag[]>([]);
+  const [mMode,       setMMode]       = useState<MatchingMode>('instant');
+  const [mResults,    setMResults]    = useState<MatchedProviderRow[] | null>(null);
+  const [mLoading,    setMLoading]    = useState(false);
+
+  async function runMatcher() {
+    setMLoading(true);
+    try {
+      const rows = await matchProviders({
+        country:            mCountry,
+        crewSize:           mCrewSize,
+        needsTruck:         mNeedsTruck,
+        needsPacking:       mNeedsPack,
+        specializationTags: mTags,
+      }, mMode);
+      setMResults(rows);
+    } catch (err) {
+      toast.error('Matcher failed', {
+        description: err instanceof Error ? err.message : 'Try again in a moment.',
+      });
+    } finally {
+      setMLoading(false);
+    }
+  }
+
+  async function refreshDisputes() {
+    setDisputesLoading(true);
+    try {
+      setDisputes(await adminListDisputes());
+    } catch (err) {
+      toast.error("Failed to load disputes", {
+        description: err instanceof Error ? err.message : "Try again in a moment.",
+      });
+    } finally {
+      setDisputesLoading(false);
+    }
+  }
   const [selectedApplication, setSelectedApplication] = useState<any | null>(null);
   const [appDocuments, setAppDocuments] = useState<any[]>([]);
   const [applicationDocStatus, setApplicationDocStatus] = useState<Record<string, string[]>>({});
@@ -139,6 +201,7 @@ export default function AdminDashboard() {
     "applications",
     "revenue",
     "disputes",
+    "matcher",
     "settings",
   ];
 
@@ -150,6 +213,14 @@ export default function AdminDashboard() {
   /* ── Manual booking dispatch modal state ──────────────────── */
   const [dispatchBooking, setDispatchBooking] = useState<any | null>(null);
   const [dispatchDriverId, setDispatchDriverId] = useState<string>("");
+
+  /* Refresh real-disputes list when the tab opens. */
+  useEffect(() => {
+    if (tab === 'disputes' && profile?.role === 'admin') {
+      void refreshDisputes();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, profile?.role]);
 
   useEffect(() => {
     if (loading || !profile || profile.role !== "admin") return;
@@ -886,20 +957,196 @@ export default function AdminDashboard() {
 
         {tab === "disputes" && (
           <div>
-            <h1 className="text-xl font-bold mb-4">Disputes</h1>
-            <table className="w-full bg-white rounded shadow">
-              <thead className="bg-gray-100"><tr><th className="p-3 text-left">Route</th><th className="p-3 text-left">Status</th><th className="p-3 text-left">Price</th><th className="p-3 text-left">Actions</th></tr></thead>
-              <tbody>
-                {bookings.map((b: any) => (
-                  <tr key={b.id} className="border-t">
-                    <td className="p-3">{b.pickup_address} → {b.dropoff_address}</td>
-                    <td className="p-3">{b.status}</td>
-                    <td className="p-3">{safeNumber(b.price_estimate).toFixed(0)} USD</td>
-                    <td className="p-3"><button onClick={() => { setSelectedBooking(b); setManualRefundPercent(0); setTab("disputes"); }} className="bg-blue-600 text-white px-2 py-1 text-xs rounded">Open Dispute</button></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-xl font-bold">Disputes</h1>
+              <div className="flex items-center gap-3 text-xs text-gray-500">
+                <span>{disputes.length} open + closed cases</span>
+                <button
+                  onClick={() => void refreshDisputes()}
+                  className="text-blue-600 hover:text-blue-800 underline"
+                >Refresh</button>
+              </div>
+            </div>
+
+            {disputesLoading && disputes.length === 0 ? (
+              <div className="bg-white rounded shadow p-6 text-sm text-gray-500">
+                Loading disputes…
+              </div>
+            ) : disputes.length === 0 ? (
+              <div className="bg-white rounded shadow p-6 text-sm text-gray-500">
+                No disputes filed yet. Customer-side filing happens at /dispute.
+              </div>
+            ) : (
+              <div className="bg-white rounded shadow overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-100 text-xs uppercase tracking-wider text-gray-600">
+                    <tr>
+                      <th className="p-3 text-left">Filed</th>
+                      <th className="p-3 text-left">Country · category</th>
+                      <th className="p-3 text-left">Booking</th>
+                      <th className="p-3 text-left">Status</th>
+                      <th className="p-3 text-left">Suggested</th>
+                      <th className="p-3 text-left">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {disputes.map(d => (
+                      <DisputeRow
+                        key={d.id}
+                        dispute={d}
+                        onChanged={refreshDisputes}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === "matcher" && (
+          <div>
+            <h1 className="text-xl font-bold mb-1">Smart matcher console</h1>
+            <p className="text-sm text-gray-500 mb-4">
+              Type a hypothetical request, run the matcher, see who'd dispatch
+              and why. Read-only — does not create a booking.
+            </p>
+
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-5 space-y-4">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Country</p>
+                  <select
+                    value={mCountry}
+                    onChange={e => setMCountry(e.target.value as PricingCountry)}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white"
+                  >
+                    {COUNTRY_PROFILES.map(p => (
+                      <option key={p.code} value={p.code}>{p.flag} {p.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Crew size</p>
+                  <select
+                    value={mCrewSize}
+                    onChange={e => setMCrewSize(Number(e.target.value) as 2 | 3 | 4 | 5)}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white"
+                  >
+                    {[2, 3, 4, 5].map(n => <option key={n} value={n}>{n} movers</option>)}
+                  </select>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Mode</p>
+                  <select
+                    value={mMode}
+                    onChange={e => setMMode(e.target.value as MatchingMode)}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white"
+                  >
+                    <option value="instant">instant (top 1)</option>
+                    <option value="multi_quote">multi_quote (top 3)</option>
+                    <option value="enterprise">enterprise (top 5 · CIP first)</option>
+                  </select>
+                </div>
+                <div className="flex items-end">
+                  <button
+                    onClick={runMatcher}
+                    disabled={mLoading}
+                    className="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg disabled:opacity-50"
+                  >
+                    {mLoading ? 'Running…' : 'Run matcher'}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <label className="flex items-center gap-1.5 text-xs">
+                  <input type="checkbox" checked={mNeedsTruck}
+                    onChange={e => setMNeedsTruck(e.target.checked)}
+                    className="accent-emerald-600" />
+                  needs truck
+                </label>
+                <label className="flex items-center gap-1.5 text-xs">
+                  <input type="checkbox" checked={mNeedsPack}
+                    onChange={e => setMNeedsPack(e.target.checked)}
+                    className="accent-emerald-600" />
+                  needs packing
+                </label>
+              </div>
+
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Specialization tags</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {([
+                    'apartment-relocation','office-relocation','corporate-relocation',
+                    'international-relocation','student-relocation','equipment-relocation',
+                    'long-distance','local-moves','packing-only','labor-only',
+                    'storage-staging','last-mile-freight','climate-controlled',
+                    'fragile-handling','piano-or-art','corporate-it-decommission',
+                  ] as SpecializationTag[]).map(tag => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => setMTags(t =>
+                        t.includes(tag) ? t.filter(x => x !== tag) : [...t, tag]
+                      )}
+                      className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md border transition ${
+                        mTags.includes(tag)
+                          ? 'bg-emerald-600 text-white border-emerald-600'
+                          : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                      }`}
+                    >{tag}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* RESULTS */}
+            {mResults === null ? (
+              <p className="text-sm text-gray-500">Hit "Run matcher" to see candidates.</p>
+            ) : mResults.length === 0 ? (
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-amber-800">
+                No providers matched the filters. Try relaxing tier (switch
+                to instant mode), removing tags, or toggling truck off.
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-600">
+                    <tr>
+                      <th className="p-3 text-left">#</th>
+                      <th className="p-3 text-left">Provider</th>
+                      <th className="p-3 text-left">Score</th>
+                      <th className="p-3 text-left">Tier</th>
+                      <th className="p-3 text-left">Reliability</th>
+                      <th className="p-3 text-left">Distance</th>
+                      <th className="p-3 text-left">Reasons</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {mResults.map((r, i) => (
+                      <tr key={r.user_id} className="border-t align-top">
+                        <td className="p-3 text-xs text-gray-500">{i + 1}</td>
+                        <td className="p-3 font-mono text-xs">{r.user_id.slice(0, 8)}…</td>
+                        <td className="p-3 font-bold">{r.match_score}</td>
+                        <td className="p-3 text-xs uppercase tracking-wider">
+                          {r.is_cip ? <span className="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded">CIP</span>
+                            : r.tier_slug ?? <span className="text-gray-400">none</span>}
+                        </td>
+                        <td className="p-3 text-xs">{r.rank_score ?? '—'}</td>
+                        <td className="p-3 text-xs">{r.distance_km ? `${r.distance_km} km` : '—'}</td>
+                        <td className="p-3 text-xs text-gray-600">
+                          {r.reasons.length === 0 ? <span className="text-gray-400">—</span>
+                            : <ul className="space-y-0.5">
+                                {r.reasons.map(x => <li key={x}>· {x}</li>)}
+                              </ul>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
@@ -1058,5 +1305,143 @@ export default function AdminDashboard() {
         </div>
       )}
     </div>
+  );
+}
+
+/* ── DisputeRow — admin queue row with action buttons ────────────── */
+
+function DisputeRow({ dispute: d, onChanged }: { dispute: DisputeRow; onChanged: () => void }) {
+  const cat = DISPUTE_CATEGORIES.find(c => c.slug === d.category_slug);
+  const [busy, setBusy] = useState(false);
+
+  async function run<T>(label: string, fn: () => Promise<T>): Promise<void> {
+    setBusy(true);
+    try {
+      await fn();
+      toast.success(label);
+      onChanged();
+    } catch (err) {
+      toast.error(label + ' failed', {
+        description: err instanceof Error ? err.message : 'Try again in a moment.',
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function promptResolve(path: ResolutionPath) {
+    const rationale = prompt(`Rationale for ${path.replace(/_/g, ' ')}?`) ?? '';
+    if (!rationale.trim()) return;
+    let amount: number | null = null;
+    let pct:    number | null = null;
+    if (path === 'partial_refund' || path === 'service_credit') {
+      const raw = prompt('Refund / credit amount in booking currency (e.g. 60.00)?') ?? '';
+      const n   = Number(raw);
+      if (!Number.isFinite(n) || n <= 0) return;
+      amount = n;
+    }
+    if (path === 'full_refund') {
+      const raw = prompt('Full refund amount (booking total)?') ?? '';
+      const n   = Number(raw);
+      if (!Number.isFinite(n) || n <= 0) return;
+      amount = n;
+      pct    = 1.0;
+    }
+    void run('Resolved', () => adminResolveDispute(d.id, path, amount, pct, rationale));
+  }
+
+  function promptRelease() {
+    const r = prompt('Rationale for releasing payout (no refund)?') ?? '';
+    if (!r.trim()) return;
+    void run('Payout released', () => adminReleasePayout(d.id, r));
+  }
+
+  function promptEvidence() {
+    const r = prompt('Note explaining what evidence is needed?') ?? '';
+    if (!r.trim()) return;
+    void run('Evidence requested', () => adminRequestEvidence(d.id, r));
+  }
+
+  function promptEscalate() {
+    const r = prompt('Reason for escalation?') ?? '';
+    if (!r.trim()) return;
+    void run('Escalated', () => adminEscalateDispute(d.id, r));
+  }
+
+  function promptSuspend() {
+    if (!d.provider_user_id) {
+      toast.error('No provider linked to this dispute');
+      return;
+    }
+    const r = prompt('Reason for suspending the provider?') ?? '';
+    if (!r.trim()) return;
+    void run('Provider suspended', () => adminSetProviderSuspension(d.provider_user_id!, true, r));
+  }
+
+  const statusTone =
+    d.status === 'open'             ? 'bg-amber-100 text-amber-700' :
+    d.status === 'under_review'     ? 'bg-blue-100 text-blue-700' :
+    d.status === 'resolved'         ? 'bg-emerald-100 text-emerald-700' :
+    d.status === 'closed_no_action' ? 'bg-gray-100 text-gray-500' :
+                                      'bg-rose-100 text-rose-700';
+
+  return (
+    <tr className="border-t align-top">
+      <td className="p-3 text-xs text-gray-500 whitespace-nowrap">
+        {new Date(d.filed_at).toLocaleDateString()}
+      </td>
+      <td className="p-3">
+        <div className="font-bold">{cat?.label ?? d.category_slug}</div>
+        <div className="text-xs text-gray-500 uppercase">{d.country}</div>
+      </td>
+      <td className="p-3 text-xs font-mono text-gray-500 truncate max-w-[10rem]">
+        {d.booking_id.slice(0, 8)}…
+      </td>
+      <td className="p-3">
+        <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md ${statusTone}`}>
+          {d.status.replace(/_/g, ' ')}
+        </span>
+      </td>
+      <td className="p-3 text-xs">
+        {d.suggested_path ? (
+          <div className="capitalize">
+            {d.suggested_path.replace(/_/g, ' ')}
+            {d.suggested_pct != null && <span className="text-gray-400"> · {Math.round(d.suggested_pct * 100)}%</span>}
+          </div>
+        ) : <span className="text-gray-400">—</span>}
+      </td>
+      <td className="p-3">
+        {d.status === 'resolved' || d.status === 'closed_no_action' ? (
+          <span className="text-xs text-gray-400">Closed</span>
+        ) : (
+          <div className="flex flex-wrap gap-1">
+            <button disabled={busy} onClick={promptRelease}
+              className="text-[10px] font-bold uppercase tracking-wider bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded disabled:opacity-50">
+              Release
+            </button>
+            <button disabled={busy} onClick={() => promptResolve('partial_refund')}
+              className="text-[10px] font-bold uppercase tracking-wider bg-amber-600 hover:bg-amber-700 text-white px-2 py-1 rounded disabled:opacity-50">
+              Partial refund
+            </button>
+            <button disabled={busy} onClick={() => promptResolve('full_refund')}
+              className="text-[10px] font-bold uppercase tracking-wider bg-rose-600 hover:bg-rose-700 text-white px-2 py-1 rounded disabled:opacity-50">
+              Full refund
+            </button>
+            <button disabled={busy} onClick={promptEvidence}
+              className="text-[10px] font-bold uppercase tracking-wider bg-gray-700 hover:bg-gray-800 text-white px-2 py-1 rounded disabled:opacity-50">
+              Request evidence
+            </button>
+            <button disabled={busy} onClick={promptEscalate}
+              className="text-[10px] font-bold uppercase tracking-wider bg-purple-600 hover:bg-purple-700 text-white px-2 py-1 rounded disabled:opacity-50">
+              Escalate
+            </button>
+            <button disabled={busy} onClick={promptSuspend}
+              className="text-[10px] font-bold uppercase tracking-wider bg-rose-800 hover:bg-rose-900 text-white px-2 py-1 rounded disabled:opacity-50">
+              Suspend provider
+            </button>
+          </div>
+        )}
+      </td>
+    </tr>
   );
 }

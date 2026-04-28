@@ -4,13 +4,24 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
    TYPES
 ───────────────────────────────────────────── */
 
+/**
+ * ISO 3166-1 alpha-2 country code restricting the address autocomplete
+ * to a single national geocoding scope. Drives:
+ *   - Nominatim `countrycodes=` filter
+ *   - `Accept-Language` header for localised results
+ *   - `country` field on the resulting address
+ */
+export type CountryCode = 'us' | 'ca' | 'de' | 'fr' | 'gb' | 'no';
+
 export interface USAddress {
   street_name: string;
   house_number: string;
   postcode: string;
   city: string;
   state: string;
-  country: 'USA';
+  /** Country label written into the address. Stays as a string so existing
+   *  consumers that read .country don't break. */
+  country: string;
   lat: number | null;
   lng: number | null;
   formatted: string;
@@ -48,7 +59,27 @@ interface Props {
   required?: boolean;
   error?: string;
   className?: string;
+  /** Country to scope address suggestions to. Defaults to 'us'. */
+  countryCode?: CountryCode;
 }
+
+const COUNTRY_LANG: Record<CountryCode, string> = {
+  us: 'en-US',
+  ca: 'en-CA',
+  gb: 'en-GB',
+  de: 'de-DE',
+  fr: 'fr-FR',
+  no: 'nb-NO',
+};
+
+const COUNTRY_LABEL: Record<CountryCode, string> = {
+  us: 'USA',
+  ca: 'Canada',
+  gb: 'United Kingdom',
+  de: 'Germany',
+  fr: 'France',
+  no: 'Norway',
+};
 
 /* ─── US state code map for compact display ─── */
 const STATE_CODES: Record<string, string> = {
@@ -76,18 +107,22 @@ function highlightMatch(text: string, query: string) {
   );
 }
 
-function buildFormatted(r: NominatimResult): { line1: string; line2: string; full: string; address: USAddress } {
+function buildFormatted(r: NominatimResult, countryCode: CountryCode): { line1: string; line2: string; full: string; address: USAddress } {
   const a = r.address || {};
   const street = a.road || '';
   const houseNumber = a.house_number || '';
   const city = a.city || a.town || a.village || a.hamlet || a.county || '';
-  const stateName = a.state || '';
-  const stateCode = STATE_CODES[stateName] || stateName;
+  const region = a.state || '';
+  /* US gets compact state codes; everywhere else keeps the localised
+   * region/state/Bundesland/département/county string. */
+  const regionShort = countryCode === 'us' ? (STATE_CODES[region] || region) : region;
   const postcode = a.postcode || '';
 
   const line1 = [houseNumber, street].filter(Boolean).join(' ').trim();
-  const stateZip = [stateCode, postcode].filter(Boolean).join(' ');
-  const line2 = [city, stateZip].filter(Boolean).join(', ');
+  /* US convention is "City, ST 90210"; most of Europe writes "Postcode City". */
+  const line2 = countryCode === 'us'
+    ? [city, [regionShort, postcode].filter(Boolean).join(' ')].filter(Boolean).join(', ')
+    : [postcode, city, regionShort].filter(Boolean).join(' ').trim();
   const full = [line1, line2].filter(Boolean).join(', ') || r.display_name;
 
   return {
@@ -99,8 +134,8 @@ function buildFormatted(r: NominatimResult): { line1: string; line2: string; ful
       house_number: houseNumber,
       postcode,
       city,
-      state: stateCode,
-      country: 'USA',
+      state: regionShort,
+      country: COUNTRY_LABEL[countryCode],
       lat: r.lat ? Number(r.lat) : null,
       lng: r.lon ? Number(r.lon) : null,
       formatted: full,
@@ -111,13 +146,15 @@ function buildFormatted(r: NominatimResult): { line1: string; line2: string; ful
 export default function NorwayAddressAutocomplete({
   value,
   onSelect,
-  placeholder = 'Search US address…',
+  placeholder,
   label,
   id = 'address',
   required = false,
   error,
   className = '',
+  countryCode = 'us',
 }: Props) {
+  const resolvedPlaceholder = placeholder ?? `Search ${COUNTRY_LABEL[countryCode]} address…`;
   const [query, setQuery] = useState(value || '');
   const [suggestions, setSuggestions] = useState<NominatimResult[]>([]);
   const [open, setOpen] = useState(false);
@@ -157,10 +194,10 @@ export default function NorwayAddressAutocomplete({
     setApiError(false);
 
     try {
-      const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&countrycodes=us&limit=8&q=${encodeURIComponent(q)}`;
+      const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&countrycodes=${countryCode}&limit=8&q=${encodeURIComponent(q)}`;
       const res = await fetch(url, {
         signal: AbortSignal.timeout(5000),
-        headers: { 'Accept-Language': 'en-US' },
+        headers: { 'Accept-Language': COUNTRY_LANG[countryCode] },
       });
 
       if (!res.ok) throw new Error('Nominatim API error');
@@ -189,7 +226,7 @@ export default function NorwayAddressAutocomplete({
   };
 
   const handleSelect = (result: NominatimResult) => {
-    const { full, address } = buildFormatted(result);
+    const { full, address } = buildFormatted(result, countryCode);
     setQuery(full);
     setSelected(true);
     setOpen(false);
@@ -253,7 +290,7 @@ export default function NorwayAddressAutocomplete({
           onFocus={() => {
             if (suggestions.length > 0 && !selected) setOpen(true);
           }}
-          placeholder={placeholder}
+          placeholder={resolvedPlaceholder}
           autoComplete="off"
           className={`w-full pl-10 pr-10 py-3 border rounded-xl text-sm outline-none transition-all
             ${hasError
@@ -318,7 +355,7 @@ export default function NorwayAddressAutocomplete({
           </div>
           <ul className="max-h-64 overflow-y-auto">
             {suggestions.map((result, idx) => {
-              const { line1, line2 } = buildFormatted(result);
+              const { line1, line2 } = buildFormatted(result, countryCode);
               const isActive = idx === activeIdx;
 
               return (

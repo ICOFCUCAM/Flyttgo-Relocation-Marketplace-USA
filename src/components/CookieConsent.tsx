@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Cookie } from 'lucide-react';
 
 const STORAGE_KEY = 'flyttgo_cookie_consent';
+export const REOPEN_CONSENT_EVENT = 'flyttgo:reopen-consent';
 
 type Choice = 'all' | 'essential' | null;
 
@@ -17,10 +18,25 @@ type Choice = 'all' | 'essential' | null;
  * choice changes, so a future analytics loader can subscribe to it
  * and start tracking the moment consent is granted (no full reload
  * required).
+ *
+ * Customers can re-open the dialog at any time via the Footer
+ * "Manage cookies" link, which fires `flyttgo:reopen-consent` →
+ * we reset the local choice back to null so the banner re-renders.
  */
 export function hasAnalyticsConsent(): boolean {
   if (typeof window === 'undefined') return false;
   return window.localStorage.getItem(STORAGE_KEY) === 'all';
+}
+
+/**
+ * Imperative helper any UI can call ("Manage cookies" link in
+ * Footer, a settings page, ⌘K palette action) to re-open the
+ * consent dialog. Wipes the stored choice so the banner re-renders.
+ */
+export function reopenCookieConsent(): void {
+  if (typeof window === 'undefined') return;
+  window.localStorage.removeItem(STORAGE_KEY);
+  window.dispatchEvent(new CustomEvent(REOPEN_CONSENT_EVENT));
 }
 
 export default function CookieConsent() {
@@ -31,6 +47,14 @@ export default function CookieConsent() {
     setMounted(true);
     const stored = window.localStorage.getItem(STORAGE_KEY) as Choice;
     setChoice(stored ?? null);
+
+    /* Re-open handler — fires when the customer clicks "Manage
+     * cookies" in the footer or anywhere else that calls
+     * reopenCookieConsent(). Resets local state so the banner
+     * re-renders with no preselected choice. */
+    const onReopen = () => setChoice(null);
+    window.addEventListener(REOPEN_CONSENT_EVENT, onReopen as EventListener);
+    return () => window.removeEventListener(REOPEN_CONSENT_EVENT, onReopen as EventListener);
   }, []);
 
   const save = (value: 'all' | 'essential') => {

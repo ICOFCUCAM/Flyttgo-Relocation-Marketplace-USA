@@ -10,6 +10,110 @@ html {
   scroll-padding-top: 120px;
 }
 
+/* ── Reserve space for the mobile bottom nav (~64px) on screens
+ *    narrower than the lg breakpoint, so fixed-bottom widgets and
+ *    page content don't get hidden behind the tab bar.
+ *    Hidden on lg+ where MobileBottomNav itself is hidden. */
+@media (max-width: 1023px) {
+  body {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  }
+}
+
+/* ── FlyttGo design tokens ────────────────────────────────────────
+ * Centralised CSS custom properties consumed by the marketplace
+ * primitives in src/components/ds/*. Keep in lockstep with
+ * tailwind.config.ts theme.extend so utility classes and inline
+ * styles read the same source of truth.
+ *
+ * Brand:       amber-500 / 400 — the primary action color
+ * Ink:         deep navy (#0b1f3a) — the inverse / dark surfaces
+ * Surface:     warm-white (#fafaf7) — the soft section background
+ * Trust:       emerald-600 — verification + success
+ * Semantic:    danger / warning / info, mapped to clear accessible hues
+ *
+ * Motion:      three durations + one ease curve.
+ * Spacing:     section vertical rhythm, container padding scale.
+ * Radius:      one-stop pill / card / xl ladder.
+ * ────────────────────────────────────────────────────────────────── */
+:root {
+  /* Brand palette */
+  --brand-500: #f59e0b;
+  --brand-400: #fbbf24;
+  --brand-600: #d97706;
+  --brand-50:  #fffbeb;
+
+  /* Ink palette (navy used as dark surfaces + heavy CTA contrast) */
+  --ink-950: #06111f;
+  --ink-900: #0b1f3a;
+  --ink-800: #1a2e4f;
+  --ink-700: #2d4a7a;
+
+  /* Surface */
+  --surface-canvas: #ffffff;
+  --surface-soft:   #fafaf7;
+  --surface-warm:   #fff8eb;
+
+  /* Trust / semantic */
+  --trust-600:    #059669;
+  --trust-50:     #ecfdf5;
+  --danger-600:   #dc2626;
+  --danger-50:    #fee2e2;
+  --warning-500:  #f59e0b;
+  --info-600:     #2563eb;
+
+  /* Motion (durations + ease) */
+  --motion-fast:   120ms;
+  --motion-base:   200ms;
+  --motion-slow:   320ms;
+  --ease-marketplace: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* Spacing — section rhythm */
+  --space-section-y:    5rem;   /* 80px */
+  --space-section-y-lg: 6rem;   /* 96px */
+  --space-section-y-sm: 4rem;   /* 64px */
+  --space-container-x:  1rem;
+  --space-container-x-md: 1.5rem;
+  --space-container-x-lg: 2rem;
+  --space-container-max: 80rem; /* 1280px */
+
+  /* Radii */
+  --radius-pill: 9999px;
+  --radius-xl:   1rem;
+  --radius-2xl:  1.25rem;
+
+  /* Shadows */
+  --shadow-soft:    0 1px 3px rgba(11, 31, 58, 0.08), 0 1px 2px rgba(11, 31, 58, 0.04);
+  --shadow-medium:  0 8px 24px rgba(11, 31, 58, 0.08);
+  --shadow-elevated:0 20px 48px rgba(11, 31, 58, 0.14);
+}
+
+/* ── Dark-mode overrides ────────────────────────────────────────
+ * Every component that consumes design tokens (bg-surface-canvas,
+ * text-ink-900, bg-brand-50, …) flips automatically when the .dark
+ * class is on <html>. ThemeProvider in src/components/theme-provider
+ * toggles that class based on the user's "Light / Dark / System"
+ * preference (persisted to localStorage).
+ *
+ * Components that still use raw Tailwind colour classes (bg-white,
+ * text-slate-900) won't flip yet — the migration to design tokens
+ * is incremental. ThemeToggle is hidden in dev for surfaces that
+ * still need work. */
+:root.dark {
+  --surface-canvas: #06111f;  /* deepest navy */
+  --surface-soft:   #0b1f3a;  /* mid navy */
+  --surface-warm:   #1a2e4f;  /* lifted dark surface */
+  --ink-900:        #f8fafc;  /* near-white text on dark bg */
+  --ink-800:        #e2e8f0;
+  --ink-700:        #cbd5e1;
+  --brand-50:       rgba(245, 158, 11, 0.12);  /* faint amber wash */
+  --trust-50:       rgba(5, 150, 105, 0.15);
+  --danger-50:      rgba(220, 38, 38, 0.18);
+  --shadow-soft:    0 1px 3px rgba(0, 0, 0, 0.4),  0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-medium:  0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-elevated:0 20px 48px rgba(0, 0, 0, 0.55);
+}
+
 @layer base {
   :root {
     --background: 210 40% 98%;

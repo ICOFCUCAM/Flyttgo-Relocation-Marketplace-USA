@@ -39,13 +39,40 @@ export const VAN_TYPES = [
   { id: 'luton_van',  name: 'Box Truck',   image: IMAGES.vans.luton,  capacity: '630–700 ft³', payload: '2200–2600 lb', examples: ['16 ft Box Truck with Liftgate'],                                          bestFor: ['2–3 bedroom house moves','Office relocation','Heavy furniture'], items: ['Beds','Wardrobes','Large sofas','35+ boxes'],         pricePerHour: 190 },
 ];
 
+/**
+ * Subscription plans aligned with VanMan-UK's canonical 5-tier system.
+ * The plan id is the value written into `drivers.tier` on the shared
+ * Supabase backend — every site (FlyttGo, Global Relocation USA,
+ * VanMan-UK) uses the same identifiers so a driver registered on one
+ * surface is recognised by all of them.
+ */
 export const SUBSCRIPTION_PLANS = [
-  { id: 'free',      name: 'Free',      price: 0,   period: '',       jobVisibility: 'Jobs up to $50',  commission: { '0-50': 0 },                                  dispatchPriority: 'Standard',  priorityLevel: 1, features: ['Access to jobs up to $50','0% commission on visible jobs','Standard dispatch priority','Basic support'],                                                                                  popular: false, color: 'gray' },
-  { id: 'basic',     name: 'Basic',     price: 0,   period: '',       jobVisibility: 'All jobs',         commission: { '51-150': 20, '151-500': 15, '500+': 10 },     dispatchPriority: 'Moderate',  priorityLevel: 2, features: ['Access to all jobs','Moderate dispatch priority','20% commission ($51-150)','15% commission ($151-500)','10% commission ($500+)'],                                                  popular: false, color: 'blue' },
-  { id: 'pro_mini',  name: 'Pro Mini',  price: 15,  period: '/day',   jobVisibility: 'All jobs',         commission: { '51-150': 10, '151-500': 5, '500+': 4 },       dispatchPriority: 'High',      priorityLevel: 3, features: ['Access to all jobs','High dispatch priority','10% commission ($51-150)','5% commission ($151-500)','3-5% commission ($500+)','Priority support'],                                 popular: true,  color: 'green' },
-  { id: 'pro',       name: 'Pro',       price: 150, period: '/month', jobVisibility: 'All jobs',         commission: { '51-150': 10, '151-500': 5, '500+': 4 },       dispatchPriority: 'Very High', priorityLevel: 4, features: ['Access to all jobs','Very high dispatch priority','10% commission ($51-150)','5% commission ($151-500)','3-5% commission ($500+)','Premium support','Priority job matching'],    popular: false, color: 'purple' },
-  { id: 'unlimited', name: 'Unlimited', price: 249, period: '/month', jobVisibility: 'All jobs',         commission: { all: 0 },                                      dispatchPriority: 'Highest',   priorityLevel: 5, features: ['Access to all jobs','Highest dispatch priority','0% commission on ALL jobs','VIP support','Priority job matching','Earnings maximized'],                                                          popular: false, color: 'amber' },
-];
+  { id: 'silver',      name: 'Silver',      price: 0,   period: '/mo',  commissionRate: 30, dispatchPriority: 'Standard',  priorityLevel: 1, popular: false, jobVisibility: 'All jobs', features: ['30% platform commission','Standard job queue access','Verified driver badge','Goods-in-transit insurance included','Weekly BACS payout','Community support forum'] },
+  { id: 'silver_plus', name: 'Silver Plus', price: 29,  period: '/day', commissionRate: 25, dispatchPriority: 'Moderate',  priorityLevel: 2, popular: false, jobVisibility: 'All jobs', features: ['25% platform commission — save 5%','Moderate dispatch priority','Silver Plus profile badge','Enhanced insurance coverage','Weekly BACS payout','24/7 driver support'] },
+  { id: 'gold',        name: 'Gold',        price: 49,  period: '/day', commissionRate: 20, dispatchPriority: 'High',      priorityLevel: 3, popular: true,  jobVisibility: 'All jobs', features: ['20% platform commission','High dispatch priority','Gold profile badge & trust seal','Premium insurance coverage','Bi-weekly BACS payout','Dedicated account manager'] },
+  { id: 'gold_pro',    name: 'Gold Pro',    price: 79,  period: '/mo',  commissionRate: 15, dispatchPriority: 'Very High', priorityLevel: 4, popular: false, jobVisibility: 'All jobs', features: ['15% platform commission','Very high dispatch priority','Gold Pro badge + featured listing','Corporate job access','Weekly BACS payout','Priority phone support'] },
+  { id: 'elite',       name: 'Elite',       price: 129, period: '/mo',  commissionRate: 10, dispatchPriority: 'Highest',   priorityLevel: 5, popular: false, jobVisibility: 'All jobs', features: ['10% platform commission','First access to ALL jobs','Elite badge + top of marketplace','Corporate & enterprise accounts','Same-day BACS payout','Personal account manager'] },
+] as const;
+
+/**
+ * Commission and cash-deposit constants — lifted from VanMan-UK so the
+ * three marketplaces compute the same numbers against the shared
+ * Supabase booking row. Update only if VanMan-UK updates first.
+ */
+export const COMMISSION = {
+  silver:            0.30,  // 30%
+  silver_plus:       0.25,  // 25%
+  gold:              0.20,  // 20%
+  gold_pro:          0.15,  // 15%
+  elite:             0.10,  // 10%
+  /** Share of the booking total charged online up front when the
+   *  customer chooses cash on delivery. The remainder (1 - cashDeposit)
+   *  is paid in cash to the driver on completion. */
+  cashDeposit:       0.30,
+  /** Below this job value the platform takes 0% commission (drivers
+   *  keep the full amount as a small-job incentive). */
+  smallJobThreshold: 50,
+};
 
 /* Phase 1 launch cities — initial US rollout footprint.
  * Provider counts represent verified marketplace participants; bookings reflect
@@ -121,19 +148,27 @@ export const PRICING = {
   vat: 0,
 };
 
-export function calculateCommission(jobPrice: number, plan: string) {
-  const safePrice = Number(jobPrice ?? 0);
-  if (safePrice <= 50) return { rate: 0, commission: 0, earning: safePrice };
-  const planData = SUBSCRIPTION_PLANS.find(p => p.id === plan);
-  if (!planData) return { rate: 0, commission: 0, earning: safePrice };
-  if (plan === 'unlimited') return { rate: 0, commission: 0, earning: safePrice };
-  if (plan === 'free') return { rate: -1, commission: 0, earning: 0 };
-  let rate = 0;
-  if (safePrice <= 150) rate = Number((planData.commission as any)['51-150'] ?? 0);
-  else if (safePrice <= 500) rate = Number((planData.commission as any)['151-500'] ?? 0);
-  else rate = Number((planData.commission as any)['500+'] ?? 0);
-  const commission = safePrice * (rate / 100);
-  return { rate, commission, earning: safePrice - commission };
+/**
+ * Commission for a job value, given the driver's plan id. Mirrors
+ * VanMan-UK's calculateCommission so the released-escrow trigger and
+ * the customer-facing earning preview compute identical numbers.
+ *
+ *   - Below COMMISSION.smallJobThreshold the platform takes 0%
+ *   - Otherwise the rate is the plan's commissionRate (silver=30%,
+ *     silver_plus=25%, gold=20%, gold_pro=15%, elite=10%)
+ *
+ * Returns { rate, commission, earning } where rate is a percentage
+ * (not a decimal) — kept for backward compat with the consumer UI.
+ */
+export function calculateCommission(jobValue: number, planId: string) {
+  const safeValue = Number(jobValue ?? 0);
+  if (safeValue <= COMMISSION.smallJobThreshold) {
+    return { rate: 0, commission: 0, earning: safeValue };
+  }
+  const plan = SUBSCRIPTION_PLANS.find(p => p.id === planId);
+  const rate = plan?.commissionRate ?? 30; // silver default
+  const commission = Math.round(safeValue * (rate / 100));
+  return { rate, commission, earning: safeValue - commission };
 }
 
 export function calculatePrice(vanType: string, hours: number, distanceKm: number, helpers: number, extras: string[]) {
@@ -271,3 +306,127 @@ export const GLOBAL_PROVIDER_CATEGORIES = [
   'University relocation partner',
   'Corporate relocation vendor',
 ];
+
+/* ──────────────────────────────────────────────────────────────────────
+ * COUNTRY PAYMENT POLICY
+ *
+ * Per-country payment configuration. Each country sets its own:
+ *   - currency / currencySymbol  → formatting on the booking widget
+ *   - cashEnabled                → whether the "Pay with cash" option
+ *                                  is offered at all (some markets we
+ *                                  may want to launch card-only first)
+ *   - depositPct                 → portion charged online up front via
+ *                                  Stripe (or local card processor) when
+ *                                  the customer picks the cash option
+ *   - cashOnDeliveryPct          → portion paid in cash to the driver
+ *                                  on completion (always 100 - depositPct)
+ *   - minDeposit                 → currency-relative floor; protects
+ *                                  short low-value bookings from a deposit
+ *                                  too small to cover Stripe's fee
+ *
+ * Default policy across all six markets: 30% online deposit,
+ * 70% cash on delivery, mirroring the VanMan-UK pattern.
+ * Tweak per country from the dashboard once we have real data.
+ * ──────────────────────────────────────────────────────────────────── */
+
+import type { BookingCountry } from './store';
+
+export interface CountryPaymentPolicy {
+  currency:           string;
+  currencySymbol:     string;
+  cashEnabled:        boolean;
+  depositPct:         number;   // 0-100
+  cashOnDeliveryPct:  number;   // 0-100  (depositPct + this === 100)
+  minDeposit:         number;   // floor amount in the local currency
+}
+
+export const COUNTRY_PAYMENT: Record<BookingCountry, CountryPaymentPolicy> = {
+  us: { currency: 'USD', currencySymbol: '$',  cashEnabled: true,  depositPct: 30, cashOnDeliveryPct: 70, minDeposit:   50 },
+  ca: { currency: 'CAD', currencySymbol: 'C$', cashEnabled: true,  depositPct: 30, cashOnDeliveryPct: 70, minDeposit:   60 },
+  gb: { currency: 'GBP', currencySymbol: '£',  cashEnabled: true,  depositPct: 30, cashOnDeliveryPct: 70, minDeposit:   40 },
+  de: { currency: 'EUR', currencySymbol: '€',  cashEnabled: true,  depositPct: 30, cashOnDeliveryPct: 70, minDeposit:   45 },
+  fr: { currency: 'EUR', currencySymbol: '€',  cashEnabled: true,  depositPct: 30, cashOnDeliveryPct: 70, minDeposit:   45 },
+  /* Norway: cash flagged off by default (high-trust card market;
+   * many Norwegian movers prefer Vipps). Flip to true if commercially
+   * required. */
+  no: { currency: 'NOK', currencySymbol: 'kr', cashEnabled: false, depositPct: 30, cashOnDeliveryPct: 70, minDeposit: 500 },
+};
+
+/**
+ * Format an amount in the country's currency. Uses Intl.NumberFormat
+ * so 1234.56 reads as "$1,234.56" in en-US, "1.234,56 €" in de-DE,
+ * "1 234,56 kr" in nb-NO, etc. Falls back to a manual symbol prefix
+ * if Intl isn't available.
+ */
+export function formatCurrency(amount: number, country: BookingCountry): string {
+  const policy = COUNTRY_PAYMENT[country];
+  const locale =
+    country === 'de' ? 'de-DE' :
+    country === 'fr' ? 'fr-FR' :
+    country === 'no' ? 'nb-NO' :
+    country === 'gb' ? 'en-GB' :
+    country === 'ca' ? 'en-CA' :
+                       'en-US';
+  try {
+    return new Intl.NumberFormat(locale, {
+      style:    'currency',
+      currency: policy.currency,
+      maximumFractionDigits: amount % 1 === 0 ? 0 : 2,
+    }).format(amount);
+  } catch {
+    return `${policy.currencySymbol}${Math.round(amount).toLocaleString()}`;
+  }
+}
+
+/**
+ * Split a total price into the deposit + cash-on-delivery amounts
+ * for the customer's selected payment method. Card-only callers get
+ * the full amount as deposit and 0 as cash. Cash callers get the
+ * country's deposit %, floored at COUNTRY_PAYMENT.minDeposit.
+ */
+export type PaymentMethod = 'card_full' | 'card_deposit_cash';
+
+export function splitPayment(
+  total:    number,
+  country:  BookingCountry,
+  method:   PaymentMethod,
+): { deposit: number; cashDue: number } {
+  if (method === 'card_full') return { deposit: total, cashDue: 0 };
+  const policy   = COUNTRY_PAYMENT[country];
+  const rawDep   = (total * policy.depositPct) / 100;
+  const deposit  = Math.max(rawDep, policy.minDeposit);
+  const cashDue  = Math.max(0, total - deposit);
+  return {
+    deposit: Math.round(deposit * 100) / 100,
+    cashDue: Math.round(cashDue * 100) / 100,
+  };
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+ * REFUND POLICY (admin-flow, lifted from VanMan-UK)
+ *
+ * VanMan-UK does NOT use a per-plan automatic refund retention model.
+ * Refunds run through the SQL functions installed by the
+ * escrow_management_migration.sql migration on the shared Supabase:
+ *
+ *   release_escrow_manually(booking_id)  — admin releases held funds
+ *                                          to the driver wallet;
+ *                                          commission is deducted at
+ *                                          the driver's tier rate
+ *                                          (see COMMISSION above).
+ *   refund_escrow_manually(booking_id)   — admin reverses the driver's
+ *                                          pending balance and marks
+ *                                          the booking refunded; the
+ *                                          actual Stripe refund is
+ *                                          initiated separately from
+ *                                          the Stripe Dashboard.
+ *
+ * The cash-deposit (30%) is the only amount the platform ever holds
+ * on a cash booking — the remaining 70% is paid in cash to the driver
+ * on completion and is outside the platform's escrow.
+ *
+ * If a customer cancels a cash booking before the move, admin runs
+ * refund_escrow_manually + issues a Stripe refund of the deposit.
+ * If they no-show, admin runs release_escrow_manually so the driver
+ * keeps their deposit share net of commission.
+ * ──────────────────────────────────────────────────────────────────── */

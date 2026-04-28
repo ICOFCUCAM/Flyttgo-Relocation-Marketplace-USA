@@ -26,6 +26,44 @@ export type Page =
   | 'universities'
   | 'market-us' | 'market-canada' | 'market-germany'
   | 'market-france' | 'market-uk' | 'market-norway'
+  /* Referral program surface. */
+  | 'refer'
+  /* Provider profile (slug carried via ?slug= query param). */
+  | 'provider-profile'
+  /* Provider directory (search + filter). */
+  | 'providers-directory'
+  /* Side-by-side provider comparison (Wave 30). */
+  | 'compare'
+  /* Service-category landing page (Wave 31).
+   *
+   * Slug carried via the URL path segment (`/services/long-distance`)
+   * rather than a `?slug=` query param so the page reads as a real
+   * SEO target. pathToPage prefix-matches /services/. */
+  | 'service-category'
+  /* US pricing transparency landing page. */
+  | 'pricing'
+  /* Provider-facing pricing settings (driver portal). */
+  | 'provider-pricing-settings'
+  /* Public preview of country-specific onboarding requirements. */
+  | 'provider-requirements'
+  /* Customer quote-approval workflow (long-distance / international /
+   * complex labor briefs). Companion to the instant-booking flow. */
+  | 'request-quote'
+  /* Customer dispute filing + inbox. */
+  | 'dispute'
+  /* Institutional gateway pages — corporate / government / NGO /
+   * pilot frameworks. Companion to the existing /enterprise-relocation
+   * + /universities + /corporate marketing surfaces. */
+  | 'government-programs'
+  | 'ngo-deployment'
+  | 'pilot-deployment-programs'
+  /* Email-token landing for organization invites. */
+  | 'accept-org-invite'
+  /* Procurement-compatible institutional access layer. */
+  | 'vendor-pack'
+  | 'procurement-rfp'
+  | 'deployment-regions'
+  | 'capability-brief'
   /* Fallback for URLs that don't match any known route. */
   | 'not-found';
 
@@ -48,12 +86,26 @@ interface AppState {
  * BookingData so BookingFlow can pre-fill its address fields without
  * the customer having to re-enter anything.
  */
+export type BookingCountry = 'us' | 'ca' | 'de' | 'fr' | 'gb' | 'no';
+
+/**
+ * Payment method the customer has selected on the booking widget.
+ *   - 'card_full'         : pay 100% online up front
+ *   - 'card_deposit_cash' : pay the country's deposit % online,
+ *                           remainder in cash to the driver on completion
+ *
+ * Cash availability is country-scoped — see COUNTRY_PAYMENT.cashEnabled
+ * in lib/constants.ts. The widget hides the cash option in markets
+ * where it isn't offered.
+ */
+export type PaymentMethod = 'card_full' | 'card_deposit_cash';
+
 export interface USAddressData {
   street_name: string;
   house_number: string;
   postcode: string;
   city: string;
-  country: 'the USA';
+  country: string;
   lat: number | null;
   lng: number | null;
   formatted: string;
@@ -61,6 +113,11 @@ export interface USAddressData {
 
 export interface BookingData {
   step: number;
+  /** Country the booking is being made in. Drives which national
+   *  marketplace (and which address autocomplete scope) the booking
+   *  flow operates against. Set by the country page hero before
+   *  navigating to /book. */
+  country: BookingCountry;
   pickupAddress: string; pickupLat?: number | null; pickupLng?: number | null;
   pickupPostcode?: string; pickupCity?: string;
   pickupAddressData?: USAddressData;
@@ -73,16 +130,44 @@ export interface BookingData {
   additionalServices: string[]; moveDate: string; moveTime: string;
   name: string; phone: string; email: string; notes: string;
   estimatedPrice: number; estimatedVolume: number;
+  /* Payment selection — see PaymentMethod above. Defaults to 'card_full';
+   * the booking widget flips this to 'card_deposit_cash' when the
+   * customer clicks "Pay with cash" in markets where COUNTRY_PAYMENT
+   * has cashEnabled=true. */
+  paymentMethod:    PaymentMethod;
+  /** Resolved deposit charged online when the customer selects cash. */
+  depositAmount?:   number;
+  /** Resolved cash-on-delivery amount due to the driver. */
+  cashDueAmount?:   number;
+  /** Promo code applied at the booking widget. Stored uppercase. */
+  promoCode?:       string;
+  /** Discount fraction (0–1) resolved for the promo code. The booking
+   *  flow + payment step use this to gross-down the final total. */
+  promoDiscountPct?: number;
+  /** Provider the Smart Matching Engine recommended at quote-widget
+   *  submit time. The booking flow / dispatch trigger can use this
+   *  as a hint for who to route to first. */
+  suggestedProviderUserId?: string;
+  suggestedMatchScore?:     number;
+  /** Insurance tier the customer picked on the quote widget. Carries
+   *  through to the BookingFlow where the canonical pricing engine
+   *  applies the per-hour upcharge. */
+  insuranceTier?:    'basic' | 'full' | 'premium';
+  /** Customer-declared replacement value of inventory in the local
+   *  currency. Used by the calculator to recommend a tier. */
+  declaredValue?:    number;
 }
 
 const defaultBooking: BookingData = {
-  step: 1, pickupAddress: '', pickupLat: null, pickupLng: null,
+  step: 1, country: 'us',
+  pickupAddress: '', pickupLat: null, pickupLng: null,
   pickupPostcode: '', pickupCity: '', dropoffAddress: '', dropoffLat: null,
   dropoffLng: null, dropoffPostcode: '', dropoffCity: '', distanceKm: null,
   durationMinutes: null, moveType: '', propertyType: '', bedrooms: '',
   inventory: {}, vanType: '', helpers: 0, additionalServices: [],
   moveDate: '', moveTime: '', name: '', phone: '', email: '', notes: '',
   estimatedPrice: 0, estimatedVolume: 0,
+  paymentMethod: 'card_full',
 };
 
 const AppContext = createContext<AppState | undefined>(undefined);

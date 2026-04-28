@@ -52,7 +52,7 @@ export const en = {
     insuranceLine1:  'Goods-in-transit cover',
     insuranceLine2:  'up to $50,000 per booking',
     supportHours:    'Mon–Sun · 08:00–22:00',
-    rights:          '© 2026 Wankong LLC. FlyttGo Relocation Marketplace USA. All rights reserved.',
+    rights:          '© 2026 Wankong LLC. FlyttGo Global Logistics & Relocation Marketplace. All rights reserved.',
     privacy:         'Privacy Policy',
     terms:           'Terms of Service',
     liability:       'Liability',
@@ -163,7 +163,7 @@ export const en = {
 
     /* Driver CTA */
     driverCtaTitle:    'Become a FlyttGo Driver',
-    driverCtaSubtitle: 'Apply to operate as a verified provider on the FlyttGo Relocation Marketplace USA — labor crews, licensed carriers, packers, and storage operators welcome.',
+    driverCtaSubtitle: 'Apply to operate as a verified provider on the FlyttGo Global Logistics & Relocation Marketplace — labor crews, licensed carriers, packers, and storage operators welcome.',
     driverFeature1:    'Flexible working hours',
     driverFeature2:    'Earn up to $3,000/month',
     driverFeature3:    'Weekly payouts via Stripe',

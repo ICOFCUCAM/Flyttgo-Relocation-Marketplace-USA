@@ -4,7 +4,7 @@ import CountryPage from '../../components/global/CountryPage';
 export default function CanadaPage() {
   return (
     <CountryPage
-      iso2="CA"
+      iso2="ca" flag="🇨🇦"
       name="Canada"
       localLabel="Canada deployment node"
       positioning="The Canadian marketplace coordinates interprovincial carrier matching, moving labor, packing, storage, and corporate relocation across English- and French-speaking provinces. FlyttGo provides the coordination layer; relocations are performed by independent licensed Canadian providers."

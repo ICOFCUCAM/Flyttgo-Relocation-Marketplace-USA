@@ -1,8 +1,20 @@
 import React, { useState, useEffect, lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
+import { PackageSearch, Bookmark, MapPin, Calendar, X, Share2 } from "lucide-react";
+import { toast } from "sonner";
 import { supabase, supabaseFunctionUrl } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
 import { useApp } from "../lib/store";
+import { EmptyState } from "./ds";
+import {
+  useSavedQuotesStore,
+  removeSavedQuote,
+  relativeTimeFromMs,
+  buildShareUrl,
+  type SavedQuote,
+} from "../lib/saved-quotes-store";
+import { formatCurrency } from "../lib/constants";
+import RateProviderModal from "./RateProviderModal";
 
 /* Lazy-load Leaflet so the map bundle (~150 KB) is only fetched on
  * pages that actually have an in-transit booking to track. */
@@ -46,6 +58,11 @@ export default function MyBookings() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [escrowMap, setEscrowMap] = useState<any>({});
+  /* Set of booking_ids the customer has already rated. Lets us hide
+   * the "Rate provider" button so we don't nudge the same booking
+   * twice. */
+  const [ratedBookingIds, setRatedBookingIds] = useState<Set<string>>(new Set());
+  const [ratingTarget, setRatingTarget] = useState<{ bookingId: string; driverId: string } | null>(null);
 
   useEffect(() => { if (!user) return; fetchBookings(); }, [user]);
 
@@ -62,25 +79,48 @@ export default function MyBookings() {
       const map: any = {};
       escrow?.forEach(e => { map[e.booking_id] = e; });
       setEscrowMap(map);
+
+      /* Pull the customer's existing ratings so the rate-this-move
+       * button can hide on bookings they've already rated. */
+      const { data: ratings } = await supabase
+        .from("provider_ratings")
+        .select("booking_id")
+        .eq("customer_user_id", user?.id)
+        .in("booking_id", ids);
+      setRatedBookingIds(new Set((ratings ?? []).map((r: any) => r.booking_id)));
     }
     setLoading(false);
   }
 
   async function cancelBooking(id: string) {
     if (!confirm("Cancel this booking?")) return;
-    await supabase.from("bookings").update({ status: "cancelled" }).eq("id", id);
+    const { error } = await supabase.from("bookings").update({ status: "cancelled" }).eq("id", id);
+    if (error) {
+      toast.error('Could not cancel booking', { description: error.message });
+    } else {
+      toast.success('Booking cancelled', { description: 'Refund (if any) is processed by ops within 24 hours.' });
+    }
     fetchBookings();
   }
 
   async function confirmCompletion(bookingId: string) {
     // 'customer_confirmed' is not in the bookings.status CHECK constraint —
     // rely on the customer_confirmation boolean + DB trigger instead.
-    await supabase.from("bookings").update({ customer_confirmation: true }).eq("id", bookingId);
+    const { error } = await supabase.from("bookings").update({ customer_confirmation: true }).eq("id", bookingId);
+    if (error) {
+      toast.error('Could not confirm completion', { description: error.message });
+      return;
+    }
     const { data: booking } = await supabase.from("bookings").select("driver_confirmation").eq("id", bookingId).single();
     if (booking?.driver_confirmation === true) {
       await fetch(supabaseFunctionUrl("process-payment"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "release_escrow", bookingId }) });
-      alert("Job complete! Payment released to driver.");
-    } else { alert("Confirmed! Waiting for driver confirmation to release payment."); }
+      toast.success('Job complete', { description: 'Payment released to your driver.' });
+    } else {
+      toast('Waiting for driver confirmation', {
+        description: 'We\'ll release payment as soon as both sides confirm.',
+        icon: '⏳',
+      });
+    }
     fetchBookings();
   }
 
@@ -124,6 +164,27 @@ export default function MyBookings() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-5xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-6">{t('myBookings.title')}</h1>
+
+        {/* Saved-quote panel — only renders when the customer has at
+         * least one saved brief. Persisted to localStorage by the
+         * BookingShortcut "Save this quote" button. */}
+        <SavedQuotesPanel
+          onResume={(q) => {
+            setBookingData({
+              country:        q.country,
+              pickupAddress:  q.pickupAddress,
+              dropoffAddress: q.dropoffAddress,
+              moveDate:       q.moveDate ?? '',
+              paymentMethod:  q.paymentMethod,
+              depositAmount:  q.depositAmount,
+              cashDueAmount:  q.cashDueAmount,
+              distanceKm:      q.distanceKm ?? null,
+              durationMinutes: q.durationMinutes ?? null,
+              step: 2,
+            });
+            setPage('booking');
+          }}
+        />
         <div className="flex flex-wrap gap-2 mb-6">
           {["all","pending","driver_assigned","in_transit","completed","cancelled"].map(f => (
             <button key={f} onClick={() => setFilter(f)} className={`px-4 py-2 rounded text-sm ${filter === f ? "bg-emerald-600 text-white" : "bg-white border"}`}>{f.replace(/_/g, " ")}</button>
@@ -146,7 +207,27 @@ export default function MyBookings() {
             ))}
           </div>
         )
-        : filtered.length === 0 ? <div className="text-center py-12 text-gray-500">{t('myBookings.noBookings')}</div>
+        : filtered.length === 0 ? (
+          <EmptyState
+            icon={PackageSearch}
+            title={t('myBookings.noBookings', 'No bookings yet') as string}
+            body={
+              <span>
+                {filter === 'all'
+                  ? "You haven't booked a move yet. Pick your country, get an instant quote, and your first booking lands here."
+                  : `No bookings match the "${filter.replace(/_/g, ' ')}" filter. Switch back to All to see everything you've booked.`}
+              </span>
+            }
+            primaryAction={{
+              label: filter === 'all' ? 'Get a quote' : 'Show all bookings',
+              onClick: () => filter === 'all' ? setPage('home') : setFilter('all'),
+            }}
+            secondaryAction={filter === 'all' ? {
+              label: 'How it works',
+              onClick: () => setPage('how-it-works'),
+            } : undefined}
+          />
+        )
         : filtered.map(booking => {
           const escrow = escrowMap[booking.id];
           const rawPrice = booking.final_price ?? booking.original_price ?? booking.price_estimate;
@@ -209,6 +290,17 @@ export default function MyBookings() {
                 )}
                 {booking.status === "pending" && <button onClick={() => cancelBooking(booking.id)} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">{t('myBookings.cancel')}</button>}
                 {booking.status === "completed" && !booking.customer_confirmation && <button onClick={() => confirmCompletion(booking.id)} className="px-4 py-2 bg-emerald-600 text-white rounded text-sm">{t('myBookings.confirmCompletion')}</button>}
+                {/* Rating CTA — only on completed bookings the
+                 * customer hasn't yet rated and where a driver was
+                 * actually assigned. */}
+                {booking.status === "completed" && booking.driver_id && !ratedBookingIds.has(booking.id) && (
+                  <button
+                    onClick={() => setRatingTarget({ bookingId: booking.id, driverId: booking.driver_id! })}
+                    className="px-4 py-2 bg-amber-500 text-slate-900 rounded text-sm font-semibold hover:bg-amber-600 transition"
+                  >
+                    Rate provider ★
+                  </button>
+                )}
                 <button onClick={() => repeatBooking(booking)} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">{t('myBookings.repeatBooking')}</button>
               </div>
               <div className="text-xs text-gray-400 mt-3">{t('myBookings.loyaltyPoints')}: {Math.floor(Number(price || 0) / 100)}</div>
@@ -216,6 +308,158 @@ export default function MyBookings() {
           );
         })}
       </div>
+
+      {ratingTarget && user && (
+        <RateProviderModal
+          bookingId={ratingTarget.bookingId}
+          driverRowId={ratingTarget.driverId}
+          customerUserId={user.id}
+          onClose={(submitted) => {
+            if (submitted) {
+              setRatedBookingIds(prev => new Set(prev).add(ratingTarget.bookingId));
+            }
+            setRatingTarget(null);
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────
+ * Saved-quote panel
+ *
+ * Renders the customer's bookmarked briefs (pickup / drop-off / total)
+ * in a compact card grid above the main bookings list. Each card has
+ * "Resume" (continues the booking flow with the brief pre-loaded) and
+ * "Remove" (deletes the saved entry).
+ *
+ * Self-suppresses when the store is empty so the layout stays clean
+ * for first-time visitors.
+ * ───────────────────────────────────────────────────────────────── */
+function SavedQuotesPanel({ onResume }: { onResume: (q: SavedQuote) => void }) {
+  const quotes = useSavedQuotesStore();
+  if (quotes.length === 0) return null;
+
+  return (
+    <section className="mb-8">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Bookmark size={16} className="text-amber-600" />
+          <h2 className="text-lg font-bold text-slate-900">Saved quotes</h2>
+          <span className="text-xs text-slate-500">({quotes.length})</span>
+        </div>
+      </div>
+      <div className="grid sm:grid-cols-2 gap-3">
+        {quotes.map(q => (
+          <article
+            key={q.id}
+            className="relative bg-white border border-slate-200 hover:border-amber-300 hover:shadow-medium rounded-2xl p-4 transition-base ease-marketplace"
+          >
+            <button
+              onClick={() => removeSavedQuote(q.id)}
+              aria-label="Remove saved quote"
+              className="absolute right-2 top-2 p-1 rounded-md text-slate-400 hover:text-danger-600 hover:bg-slate-100 transition"
+            >
+              <X size={14} />
+            </button>
+
+            <div className="flex items-baseline gap-2 mb-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600">
+                {q.country.toUpperCase()}
+              </span>
+              <span className="text-[10px] text-slate-400">·</span>
+              <span className="text-[10px] text-slate-400">{relativeTimeFromMs(q.savedAt)}</span>
+            </div>
+
+            <div className="text-sm space-y-1 mb-3">
+              <p className="flex items-start gap-1.5 text-slate-700">
+                <MapPin size={12} className="text-emerald-500 mt-0.5 flex-shrink-0" />
+                <span className="truncate">{q.pickupAddress}</span>
+              </p>
+              <p className="flex items-start gap-1.5 text-slate-700">
+                <MapPin size={12} className="text-rose-500 mt-0.5 flex-shrink-0" />
+                <span className="truncate">{q.dropoffAddress}</span>
+              </p>
+              {q.moveDate && (
+                <p className="flex items-center gap-1.5 text-slate-500 text-xs">
+                  <Calendar size={11} />
+                  {q.moveDate}
+                </p>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between pt-3 border-t border-slate-100 gap-2">
+              <span className="text-sm">
+                <strong className="text-slate-900">
+                  {formatCurrency(q.indicativeTotal, q.country)}
+                </strong>
+                {q.distanceKm != null && (
+                  <span className="text-xs text-slate-500 ml-1.5">· {Math.round(q.distanceKm)} km</span>
+                )}
+              </span>
+              <div className="flex items-center gap-1.5">
+                <ShareQuoteButton quote={q} />
+                <button
+                  onClick={() => onResume(q)}
+                  className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-900 rounded-lg text-xs font-bold transition-base ease-marketplace"
+                >
+                  Resume →
+                </button>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────
+ * <ShareQuoteButton> — copy-link button on each saved quote.
+ *
+ * Encodes the quote into a URL-safe token (saved-quotes-store
+ * encoders), copies "https://flyttgo.us/?q=<token>" to the
+ * clipboard, and flashes a 2s "Copied" tick. Recipients land on
+ * the home page; AppLayout's inbound handler decodes the param
+ * and saves it to their local store.
+ *
+ * Uses navigator.share where available so mobile customers get the
+ * native share sheet; falls back to clipboard write on desktop.
+ * ───────────────────────────────────────────────────────────────── */
+function ShareQuoteButton({ quote }: { quote: SavedQuote }) {
+  async function share() {
+    const url = buildShareUrl(quote);
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: 'FlyttGo move quote',
+          text: `${quote.country.toUpperCase()}: ${quote.pickupAddress.split(',')[0]} → ${quote.dropoffAddress.split(',')[0]}`,
+          url,
+        });
+        toast.success('Shared');
+        return;
+      } catch { /* user cancelled — fall through to clipboard */ }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('Share link copied', {
+        description: 'Forward it to anyone — they\'ll land on the country shopfront with your brief pre-loaded.',
+      });
+    } catch {
+      window.prompt('Copy this share link:', url);
+    }
+  }
+
+  return (
+    <button
+      onClick={share}
+      aria-label="Share this quote"
+      title="Share with a partner"
+      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold border border-slate-300 text-slate-600 hover:border-slate-900 hover:text-slate-900 transition-base ease-marketplace"
+    >
+      <Share2 size={12} />
+      Share
+    </button>
   );
 }

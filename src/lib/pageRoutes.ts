@@ -82,6 +82,48 @@ const PAGE_TO_PATH: Record<Page, string> = {
   'market-uk':               '/uk',
   'market-norway':           '/norway',
 
+  /* Referral program landing. */
+  'refer':                   '/refer',
+
+  /* Provider profile (slug carried via ?slug=). */
+  'provider-profile':        '/provider',
+
+  /* Provider directory (search + filter). */
+  'providers-directory':     '/providers/directory',
+
+  /* Side-by-side provider comparison. */
+  'compare':                 '/compare',
+
+  /* Service-category landing pages. The Page→path map only holds the
+   * listing root; live navigations push the full /services/<slug>
+   * URL via history.pushState. */
+  'service-category':        '/services',
+
+  /* US pricing transparency. */
+  'pricing':                 '/pricing',
+
+  /* Provider-facing pricing settings. */
+  'provider-pricing-settings': '/driver/pricing',
+
+  /* Public preview of country-specific onboarding requirements. */
+  'provider-requirements':   '/providers/requirements',
+
+  /* Customer quote-approval workflow. */
+  'request-quote':           '/request-quote',
+
+  /* Customer dispute filing + inbox. */
+  'dispute':                 '/dispute',
+
+  /* Institutional gateway pages. */
+  'government-programs':         '/government-programs',
+  'ngo-deployment':              '/ngo-deployment',
+  'pilot-deployment-programs':   '/pilot-deployment-programs',
+  'accept-org-invite':           '/invite',
+  'vendor-pack':                 '/compliance/vendor-pack',
+  'procurement-rfp':             '/procurement/rfp',
+  'deployment-regions':          '/deployment-regions',
+  'capability-brief':            '/resources/capability-brief',
+
   /* Fallback for unknown routes. No real path — pathToPage() returns
    * this id for anything it can't match. setPage('not-found') still
    * updates history.pushState to whatever URL triggered the fallback. */
@@ -123,6 +165,24 @@ const PAGE_TITLES: Record<Page, string> = {
   'market-france':            'France Moves & Logistics · FlyttGo Global',
   'market-uk':                'United Kingdom Moves & Logistics · FlyttGo Global',
   'market-norway':            'Norway Moves & Logistics · FlyttGo Global',
+  'refer':                    'Give £25, get £25 · FlyttGo referrals',
+  'provider-profile':         'Provider profile · FlyttGo Global',
+  'providers-directory':      'Browse verified providers · FlyttGo Global',
+  'compare':                  'Compare providers side by side · FlyttGo Global',
+  'service-category':         'Service category · FlyttGo Global',
+  'pricing':                  'US relocation pricing · transparent rates · FlyttGo',
+  'provider-pricing-settings': 'Pricing settings · FlyttGo Provider Dashboard',
+  'provider-requirements':    'Provider onboarding requirements · FlyttGo',
+  'request-quote':            'Request quotes from verified providers · FlyttGo',
+  'dispute':                  'File a dispute · FlyttGo',
+  'government-programs':      'Government & ministry relocation programs · FlyttGo',
+  'ngo-deployment':           'NGO deployment logistics · FlyttGo',
+  'pilot-deployment-programs':'Pilot deployment programs · FlyttGo',
+  'accept-org-invite':        'Accept organization invite · FlyttGo',
+  'vendor-pack':              'Vendor compliance pack · FlyttGo',
+  'procurement-rfp':          'Submit a procurement inquiry · FlyttGo',
+  'deployment-regions':       'Deployment regions · FlyttGo',
+  'capability-brief':         'Capability brief · FlyttGo',
   'booking':                  'Book a Move · FlyttGo Global',
   'payment':                  'Secure Payment · FlyttGo Global',
   'tracking':                 'Track Your Coordination · FlyttGo Global',
@@ -196,6 +256,42 @@ const PAGE_DESCRIPTIONS: Record<Page, string> = {
     "United Kingdom moves & logistics — Goods Vehicle Operator Licence carrier matching, moving labor, packing, storage, and enterprise relocation across the UK marketplace.",
   'market-norway':
     "Norway moves & logistics — flytteselskap carrier matching, moving labor, packing, storage, and corporate flytting coordination across the Norwegian marketplace.",
+  'refer':
+    "Invite a friend to FlyttGo — they get £25 off their first move, you get £25 in account credit when they complete it. Share your code by link, WhatsApp, email or QR.",
+  'provider-profile':
+    "Verified provider on the FlyttGo marketplace — see ratings, services, sample jobs, and book directly with this licensed mover.",
+  'providers-directory':
+    "Browse every verified mover, packer, storage and freight partner on the FlyttGo global marketplace. Filter by country, tier, and service. Sort by rating, price, or reviews.",
+  'compare':
+    "Compare your shortlisted FlyttGo providers side by side — rating, reviews, starting price, services, fleet, verifications, and availability — in a single table.",
+  'service-category':
+    "FlyttGo service category — see the providers offering this service across our six markets, with verified credentials, ratings, and instant quotes.",
+  'pricing':
+    "Transparent US relocation pricing — labor-only $60–$120/hr, movers + truck $120–$250/hr, packing $40–$90/hr, corporate $150–$300/hr. See what drives the price and how FlyttGo's marketplace compares to national rates.",
+  'provider-pricing-settings':
+    "FlyttGo provider pricing settings — set service radius, crew sizes, truck and packing availability, hourly base, and weekend multiplier overrides. Live preview of customer total + provider payout.",
+  'provider-requirements':
+    "Country-specific provider onboarding requirements for FlyttGo — see exactly what documents and registrations you need before you apply. Adapts to your country, category, and vehicle availability.",
+  'request-quote':
+    "Request competing quotes from verified FlyttGo providers — for long-distance, international, corporate, or complex labor briefs. Providers respond within 4–24 hours; you pick the winner. Escrow protected.",
+  'dispute':
+    "File a FlyttGo booking dispute. Standardized categories (delay · price mismatch · damage claim · missing items · service incomplete · …), country-aware resolution paths, escrow held during review, 7-day SLA.",
+  'government-programs':
+    "FlyttGo government & ministry relocation programs — procurement-compatible, audit-ready settlement, vendor compliance gated to Certified Infrastructure Partners. Multi-region deployment routing across our nine markets.",
+  'ngo-deployment':
+    "NGO and humanitarian deployment logistics on FlyttGo — refugee mobility, staff relocation, field-mission cargo with framework agreements + donor-grade audit trails.",
+  'pilot-deployment-programs':
+    "FlyttGo pilot deployment programs — five archetypes (municipal / university / transit-authority / marketplace-rollout / identity-integrated) for ministries and authorities exploring institutional procurement before long-form rollout.",
+  'accept-org-invite':
+    "Accept your FlyttGo organization invite to join your team's institutional account — relocation requests, approval workflow, and invoice billing.",
+  'vendor-pack':
+    "FlyttGo vendor compliance pack for procurement teams — operator entities, deployment architecture, operating regions, data handling, security, service availability, and procurement contact channel.",
+  'procurement-rfp':
+    "Submit a procurement inquiry to FlyttGo — for ministries, universities, NGOs, transit authorities, and enterprise mobility teams. RFP intake routes to the procurement queue with a 2-business-day SLA.",
+  'deployment-regions':
+    "Markets where FlyttGo settles bookings today — live coverage, partner coverage, and expansion-ready countries for institutional pilot programmes.",
+  'capability-brief':
+    "FlyttGo capability brief — operator governance, geographic deployment readiness, compliance + provider verification, architecture, and procurement integration patterns. Delivered tailored to your procurement context.",
   'booking':
     'Book your next move in under 3 minutes. Get an instant quote, pick a verified driver, and track your delivery live — all with escrow payment built in.',
   'payment':
@@ -344,6 +440,13 @@ function upsertLink(rel: string, href: string) {
 export function pathToPage(path: string): Page {
   if (!path) return 'home';
   const normalised = path === '/' ? '/' : path.replace(/\/+$/, '');
+  /* Service category pages: /services/<slug> resolves to the
+   * service-category page; ServiceCategoryPage reads the slug from
+   * window.location.pathname. The bare /services keeps mapping to
+   * the existing services listing. */
+  if (normalised.startsWith('/services/') && normalised.length > '/services/'.length) {
+    return 'service-category';
+  }
   /* Unknown paths resolve to 'not-found' rather than silently
    * serving the homepage. NotFoundPage sets robots=noindex so
    * Google doesn't index the garbage URL, and the user sees a
