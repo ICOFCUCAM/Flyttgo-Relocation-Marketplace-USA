@@ -32,6 +32,8 @@ export type Page =
   | 'provider-profile'
   /* Provider directory (search + filter). */
   | 'providers-directory'
+  /* Side-by-side provider comparison (Wave 30). */
+  | 'compare'
   /* Fallback for URLs that don't match any known route. */
   | 'not-found';
 

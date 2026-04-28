@@ -91,6 +91,9 @@ const PAGE_TO_PATH: Record<Page, string> = {
   /* Provider directory (search + filter). */
   'providers-directory':     '/providers/directory',
 
+  /* Side-by-side provider comparison. */
+  'compare':                 '/compare',
+
   /* Fallback for unknown routes. No real path — pathToPage() returns
    * this id for anything it can't match. setPage('not-found') still
    * updates history.pushState to whatever URL triggered the fallback. */
@@ -135,6 +138,7 @@ const PAGE_TITLES: Record<Page, string> = {
   'refer':                    'Give £25, get £25 · FlyttGo referrals',
   'provider-profile':         'Provider profile · FlyttGo Global',
   'providers-directory':      'Browse verified providers · FlyttGo Global',
+  'compare':                  'Compare providers side by side · FlyttGo Global',
   'booking':                  'Book a Move · FlyttGo Global',
   'payment':                  'Secure Payment · FlyttGo Global',
   'tracking':                 'Track Your Coordination · FlyttGo Global',
@@ -214,6 +218,8 @@ const PAGE_DESCRIPTIONS: Record<Page, string> = {
     "Verified provider on the FlyttGo marketplace — see ratings, services, sample jobs, and book directly with this licensed mover.",
   'providers-directory':
     "Browse every verified mover, packer, storage and freight partner on the FlyttGo global marketplace. Filter by country, tier, and service. Sort by rating, price, or reviews.",
+  'compare':
+    "Compare your shortlisted FlyttGo providers side by side — rating, reviews, starting price, services, fleet, verifications, and availability — in a single table.",
   'booking':
     'Book your next move in under 3 minutes. Get an instant quote, pick a verified driver, and track your delivery live — all with escrow payment built in.',
   'payment':

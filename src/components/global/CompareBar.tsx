@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { GitCompare, X, ChevronUp } from 'lucide-react';
 import { useCompareStore, removeFromCompare, clearCompare, COMPARE_MAX } from '../../lib/compare-store';
-import ComparisonDrawer from './ComparisonDrawer';
+import { useApp } from '../../lib/store';
+import { track } from '../../lib/analytics';
 
 /**
  * Floating "Compare (n)" bar that docks to the bottom-center of the
@@ -17,7 +18,11 @@ const HIDE_ON_PATHS: RegExp[] = [/^\/book/, /^\/payment/, /^\/auth\/callback/];
 
 export default function CompareBar() {
   const items = useCompareStore();
-  const [open, setOpen] = useState(false);
+  const { setPage, currentPage } = useApp();
+
+  /* Suppress on the compare page itself so we don't render the bar
+   * on top of the table the customer is already reading. */
+  if (currentPage === 'compare') return null;
 
   /* Path-based suppression — the compare bar is a discovery tool, not
    * a booking-flow tool. */
@@ -64,7 +69,10 @@ export default function CompareBar() {
           </div>
 
           <button
-            onClick={() => setOpen(true)}
+            onClick={() => {
+              track('compare_bar_opened', { count: items.length });
+              setPage('compare');
+            }}
             className="flex-shrink-0 inline-flex items-center gap-1.5 bg-brand-500 hover:bg-brand-600 text-ink-900 font-bold text-xs px-3 py-2 rounded-xl transition-base ease-marketplace"
           >
             <ChevronUp size={14} />
@@ -79,8 +87,6 @@ export default function CompareBar() {
           Clear all
         </button>
       </div>
-
-      {open && <ComparisonDrawer onClose={() => setOpen(false)} />}
     </>
   );
 }
