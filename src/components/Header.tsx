@@ -278,6 +278,23 @@ export default function Header() {
 
             {/* Right side */}
             <div className="flex items-center gap-2">
+              {/* ⌘K command palette discovery hint. Dispatching the
+                  same keyboard combo via a synthetic KeyboardEvent
+                  would be brittle — instead we fire a custom event
+                  that AppLayout's listener can pick up. */}
+              <button
+                type="button"
+                onClick={() => {
+                  /* Mirror the keydown handler in AppLayout. */
+                  const evt = new KeyboardEvent('keydown', { key: 'k', metaKey: true });
+                  window.dispatchEvent(evt);
+                }}
+                aria-label="Search FlyttGo (Command K)"
+                className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-base ease-marketplace text-xs"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
+                <span className="font-mono text-[10px] border border-slate-300 rounded px-1 py-0.5">⌘K</span>
+              </button>
               {/* Theme toggle — Light / Dark / System. Hidden <md to
                   preserve nav real estate; mobile menu drawer carries
                   the same control. */}
