@@ -14,3 +14,4 @@ export { default as Eyebrow }        from './Eyebrow';
 export { default as SectionHeading } from './SectionHeading';
 export { default as StatBlock }      from './StatBlock';
 export { default as Pill }           from './Pill';
+export { default as AnimatedNumber } from './AnimatedNumber';
