@@ -115,7 +115,6 @@ export default function BookingShortcut({ country, compact = false }: Props) {
   const [dropoff, setDropoff]   = useState<USAddress | null>(null);
   const [moveDate, setMoveDate] = useState('');
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card_full');
 
   /* ── Two distance systems, both displayed for transparency ──
    * 1) OSRM via getRouteDistance — real road distance + ETA
@@ -154,31 +153,29 @@ export default function BookingShortcut({ country, compact = false }: Props) {
   const payL    = PAY_LABELS[country];
   const policy  = COUNTRY_PAYMENT[country];
 
-  /* If the country has cash disabled, force the toggle to card-only
-   * regardless of any earlier state from another country. */
-  useEffect(() => {
-    if (!policy.cashEnabled && paymentMethod === 'card_deposit_cash') {
-      setPaymentMethod('card_full');
-    }
-  }, [policy.cashEnabled, paymentMethod]);
-
-  /* Live indicative total + payment split. Cleared until both
-   * addresses are picked. */
+  /* Live indicative total + cash-method split. The split below always
+   * uses 'card_deposit_cash' so the customer sees the 30/70 breakdown
+   * without having to click anything; the actual booking is created
+   * with whichever button (Pay full or Cash) the customer presses. */
   const indicative = pickup && dropoff ? indicativeTotal(country, route?.distanceKm ?? straightLineKm) : null;
-  const split = indicative != null ? splitPayment(indicative, country, paymentMethod) : null;
+  const split = indicative != null ? splitPayment(indicative, country, 'card_deposit_cash') : null;
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  /**
+   * VanMan-UK two-button submit pattern: a primary "Pay £X" button
+   * (card-full) and a secondary "Cash" button (30% deposit + 70% cash
+   * on delivery). Both create the booking and navigate to /book —
+   * the only difference is the paymentMethod stored on bookingData,
+   * which the payment step then routes through Stripe accordingly.
+   */
+  function submit(method: PaymentMethod) {
     if (!pickup || !dropoff) {
       setSubmitError('Please pick a pickup and a drop-off address.');
       return;
     }
     setSubmitError(null);
 
-    /* Final split from the canonical helper so the booking flow
-     * inherits the same numbers the customer just saw. */
     const finalSplit = indicative != null
-      ? splitPayment(indicative, country, paymentMethod)
+      ? splitPayment(indicative, country, method)
       : { deposit: 0, cashDue: 0 };
 
     setBookingData({
@@ -214,7 +211,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
         formatted:    dropoff.formatted,
       },
       moveDate,
-      paymentMethod,
+      paymentMethod: method,
       depositAmount: finalSplit.deposit,
       cashDueAmount: finalSplit.cashDue,
       distanceKm:      route?.distanceKm    ?? straightLineKm ?? null,
@@ -226,7 +223,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
 
   return (
     <form
-      onSubmit={handleSubmit}
+      onSubmit={(e) => { e.preventDefault(); submit('card_full'); }}
       className={`bg-white text-slate-900 rounded-2xl shadow-2xl border border-slate-200 ${
         compact ? 'p-5' : 'p-6 lg:p-8'
       }`}
@@ -304,60 +301,36 @@ export default function BookingShortcut({ country, compact = false }: Props) {
         </div>
       )}
 
-      {/* ── Payment method toggle ──────────────────────────────── */}
-      <div className="mt-4 grid gap-2">
-        <button
-          type="button"
-          onClick={() => setPaymentMethod('card_full')}
-          className={`flex items-start gap-3 p-3 rounded-xl border text-left transition ${
-            paymentMethod === 'card_full'
-              ? 'border-amber-400 bg-amber-50'
-              : 'border-slate-200 hover:border-amber-300'
-          }`}
-        >
-          <CreditCard size={18} className={paymentMethod === 'card_full' ? 'text-amber-600 mt-0.5' : 'text-slate-400 mt-0.5'} />
-          <div className="flex-1">
-            <p className="text-sm font-bold text-slate-900">{payL.fullCard}</p>
-            {indicative != null && (
-              <p className="text-xs text-slate-600 mt-0.5">
-                {payL.payNow}: <strong>{formatCurrency(indicative, country)}</strong>
-              </p>
-            )}
+      {/* ── Indicative total + cash split breakdown ──────────────── */}
+      {indicative != null && (
+        <div className="mt-4 rounded-xl border border-slate-200 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 bg-slate-50">
+            <span className="text-sm text-slate-600">Estimated total</span>
+            <span className="text-lg font-extrabold text-slate-900">{formatCurrency(indicative, country)}</span>
           </div>
-        </button>
-
-        {policy.cashEnabled && (
-          <button
-            type="button"
-            onClick={() => setPaymentMethod('card_deposit_cash')}
-            className={`flex items-start gap-3 p-3 rounded-xl border text-left transition ${
-              paymentMethod === 'card_deposit_cash'
-                ? 'border-amber-400 bg-amber-50'
-                : 'border-slate-200 hover:border-amber-300'
-            }`}
-          >
-            <Banknote size={18} className={paymentMethod === 'card_deposit_cash' ? 'text-amber-600 mt-0.5' : 'text-slate-400 mt-0.5'} />
-            <div className="flex-1">
-              <p className="text-sm font-bold text-slate-900">{payL.cashSplit}</p>
-              {split && indicative != null && paymentMethod === 'card_deposit_cash' && (
-                <p className="text-xs text-slate-600 mt-0.5">
-                  {payL.payNow}: <strong>{formatCurrency(split.deposit, country)}</strong>
-                  <span className="mx-1">·</span>
-                  {payL.payLater}: <strong>{formatCurrency(split.cashDue, country)}</strong>
-                </p>
-              )}
-              {split && indicative != null && paymentMethod !== 'card_deposit_cash' && (
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {policy.depositPct}% {payL.payNow.toLowerCase()} · {policy.cashOnDeliveryPct}% {payL.payLater.toLowerCase()}
-                </p>
-              )}
+          {policy.cashEnabled && split && (
+            <div className="grid grid-cols-2 divide-x divide-slate-100 text-xs">
+              <div className="px-3 py-2 flex items-center gap-1.5">
+                <CreditCard size={12} className="text-slate-500" />
+                <div>
+                  <p className="text-slate-500">{payL.payNow}</p>
+                  <p className="font-bold text-slate-900">{formatCurrency(split.deposit, country)}</p>
+                </div>
+              </div>
+              <div className="px-3 py-2 flex items-center gap-1.5">
+                <Banknote size={12} className="text-emerald-600" />
+                <div>
+                  <p className="text-slate-500">{payL.payLater}</p>
+                  <p className="font-bold text-slate-900">{formatCurrency(split.cashDue, country)}</p>
+                </div>
+              </div>
             </div>
-          </button>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {!policy.cashEnabled && (
-        <p className="mt-2 text-[11px] text-slate-500 flex items-start gap-1.5">
+        <p className="mt-3 text-[11px] text-slate-500 flex items-start gap-1.5">
           <Info size={12} className="mt-0.5 flex-shrink-0 text-slate-400" />
           Cash on delivery isn’t available in {COUNTRY_LABEL[country]} yet.
         </p>
@@ -369,12 +342,30 @@ export default function BookingShortcut({ country, compact = false }: Props) {
         </div>
       )}
 
-      <button
-        type="submit"
-        className="mt-5 w-full px-6 py-3.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl transition shadow-lg shadow-amber-500/30"
-      >
-        {COUNTRY_CTA[country]}
-      </button>
+      {/* ── VanMan-UK two-button submit row ──────────────────────── */}
+      <div className="mt-5 flex gap-2">
+        <button
+          type="submit"
+          className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl transition shadow-lg shadow-amber-500/30"
+        >
+          <CreditCard size={16} />
+          {indicative != null
+            ? `Pay ${formatCurrency(indicative, country)}`
+            : COUNTRY_CTA[country]}
+        </button>
+        {policy.cashEnabled && (
+          <button
+            type="button"
+            onClick={() => submit('card_deposit_cash')}
+            className="px-4 py-3.5 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl transition"
+            title={split ? `${formatCurrency(split.deposit, country)} now · ${formatCurrency(split.cashDue, country)} cash on delivery` : undefined}
+          >
+            <Banknote size={16} />
+            {payL.payLater === 'Cash on delivery' ? 'Cash' : payL.payLater}
+          </button>
+        )}
+      </div>
+
       <p className="mt-3 text-xs text-slate-500 text-center flex items-center justify-center gap-2 flex-wrap">
         <span>★ 4.8 average</span>
         <span>·</span>
