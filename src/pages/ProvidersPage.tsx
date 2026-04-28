@@ -111,6 +111,12 @@ export default function ProvidersPage() {
               Apply as a provider
             </button>
             <button
+              onClick={() => setPage('provider-requirements')}
+              className="px-6 py-3 bg-amber-400 text-slate-900 font-mono text-xs uppercase tracking-[0.18em] hover:bg-amber-300 transition"
+            >
+              See country requirements
+            </button>
+            <button
               onClick={() => setPage('compliance')}
               className="px-6 py-3 border border-slate-300 text-slate-100 font-mono text-xs uppercase tracking-[0.18em] hover:bg-slate-800 transition"
             >

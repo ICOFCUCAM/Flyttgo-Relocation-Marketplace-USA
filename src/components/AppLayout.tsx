@@ -62,6 +62,7 @@ const ComparePage = lazy(() => import('../pages/ComparePage'));
 const ServiceCategoryPage = lazy(() => import('../pages/ServiceCategoryPage'));
 const PricingPage = lazy(() => import('../pages/PricingPage'));
 const ProviderPricingSettingsPage = lazy(() => import('../pages/provider/PricingSettingsPage'));
+const ProviderRequirementsPage = lazy(() => import('../pages/ProviderRequirementsPage'));
 const Footer             = lazy(() => import('./Footer'));
 const LiveBookingTicker  = lazy(() => import('./global/LiveBookingTicker'));
 const FloatingChat       = lazy(() => import('./global/FloatingChat'));
@@ -159,7 +160,7 @@ export default function AppLayout() {
    * show it on customer-discovery surfaces (home, country pages,
    * marketplace, how-it-works). Suppressed on dashboards, auth, and
    * payment surfaces where it would distract. */
-  const showTicker = ['home','marketplace','how-it-works','providers','cities','enterprise-relocation','partners','about','universities','market-us','market-canada','market-germany','market-france','market-uk','market-norway','refer','provider-profile','providers-directory','compare','service-category','pricing'].includes(currentPage);
+  const showTicker = ['home','marketplace','how-it-works','providers','cities','enterprise-relocation','partners','about','universities','market-us','market-canada','market-germany','market-france','market-uk','market-norway','refer','provider-profile','providers-directory','compare','service-category','pricing','provider-requirements'].includes(currentPage);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -219,6 +220,7 @@ export default function AppLayout() {
       case 'service-category':       return <ServiceCategoryPage />;
       case 'pricing':                return <PricingPage />;
       case 'provider-pricing-settings': return <ProviderPricingSettingsPage />;
+      case 'provider-requirements':  return <ProviderRequirementsPage />;
       case 'not-found':              return <NotFoundPage />;
       default:                       return <NotFoundPage />;
     }
