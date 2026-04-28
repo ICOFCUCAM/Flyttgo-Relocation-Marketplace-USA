@@ -4,6 +4,7 @@ import i18n, { LANG_STORAGE_KEY } from '../lib/i18n';
 import { useAuth } from '../lib/auth';
 import { useApp, Page } from '../lib/store';
 import { LogIn, Bell, User as UserIcon } from 'lucide-react';
+import ThemeToggle from './global/ThemeToggle';
 import { useNotifications } from '../hooks/useNotifications';
 import type { Page as PageType } from '../lib/store';
 
@@ -277,6 +278,12 @@ export default function Header() {
 
             {/* Right side */}
             <div className="flex items-center gap-2">
+              {/* Theme toggle — Light / Dark / System. Hidden <md to
+                  preserve nav real estate; mobile menu drawer carries
+                  the same control. */}
+              <div className="hidden md:block">
+                <ThemeToggle compact />
+              </div>
               <button onClick={() => handleNav('booking')} className="hidden sm:flex items-center gap-1.5 px-5 py-2 bg-amber-500 text-slate-900 rounded-lg text-sm font-bold hover:bg-amber-600 transition shadow-sm shadow-amber-500/25">{t('header.bookNow')}</button>
 
               {/* Notifications bell — signed-in only. Subscribes to
