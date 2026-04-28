@@ -1,6 +1,8 @@
 import React from 'react';
-import { Star, ShieldCheck, BadgeCheck, Truck, CreditCard } from 'lucide-react';
+import { Star, ShieldCheck, BadgeCheck, Truck, CreditCard, Cookie } from 'lucide-react';
 import { useApp, Page } from '../lib/store';
+import { reopenCookieConsent } from './CookieConsent';
+import { track } from '../lib/analytics';
 
 interface LinkItem { label: string; page: Page; }
 
@@ -140,7 +142,20 @@ export default function Footer() {
       <div className="border-t border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs text-white/50">
           <p>© {new Date().getFullYear()} FlyttGo Global Logistics &amp; Relocation Marketplace</p>
-          <p>Coordination layer · Not a moving company · Not a motor carrier</p>
+          <div className="flex items-center gap-4 flex-wrap">
+            <p>Coordination layer · Not a moving company · Not a motor carrier</p>
+            <button
+              type="button"
+              onClick={() => {
+                track('manage_cookies_clicked');
+                reopenCookieConsent();
+              }}
+              className="inline-flex items-center gap-1.5 text-white/75 hover:text-amber-300 transition"
+            >
+              <Cookie size={12} />
+              Manage cookies
+            </button>
+          </div>
         </div>
       </div>
     </footer>
