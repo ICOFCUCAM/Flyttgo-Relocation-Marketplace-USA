@@ -107,6 +107,11 @@ export interface BookingData {
   depositAmount?:   number;
   /** Resolved cash-on-delivery amount due to the driver. */
   cashDueAmount?:   number;
+  /** Promo code applied at the booking widget. Stored uppercase. */
+  promoCode?:       string;
+  /** Discount fraction (0–1) resolved for the promo code. The booking
+   *  flow + payment step use this to gross-down the final total. */
+  promoDiscountPct?: number;
 }
 
 const defaultBooking: BookingData = {

@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
-import { Banknote, CreditCard, MapPin, Clock, Info, Bookmark } from 'lucide-react';
+import { Banknote, CreditCard, MapPin, Clock, Info, Bookmark, Tag, Check, X as XIcon } from 'lucide-react';
 
 /* Lazy-loaded so the ~150 KB Leaflet bundle only ships once the
  * customer has picked both addresses (Wave 23). */
@@ -12,6 +12,7 @@ import { COUNTRY_PAYMENT, formatCurrency, splitPayment } from '../../lib/constan
 import { getRouteDistance, haversineKm, RouteResult } from '../../lib/routing';
 import { track } from '../../lib/analytics';
 import { saveQuote } from '../../lib/saved-quotes-store';
+import { applyPromo, type PromoCode } from '../../lib/promo-codes';
 
 const COUNTRY_LABEL: Record<BookingCountry, string> = {
   us: 'USA',
@@ -108,6 +109,16 @@ function indicativeTotal(country: BookingCountry, distanceKm: number | null): nu
   return Math.round(base + Math.max(0, distanceKm ?? 0) * perKm);
 }
 
+function promoErrorMessage(reason: 'unknown' | 'expired' | 'wrong_country' | 'min_total'): string {
+  switch (reason) {
+    case 'expired':       return "This code has expired.";
+    case 'wrong_country': return "This code isn't valid in this market.";
+    case 'min_total':     return "This code requires a higher booking total.";
+    case 'unknown':
+    default:              return "We don't recognise that code.";
+  }
+}
+
 /**
  * Country-scoped shopfront booking widget with two payment options
  * (full-card or 30% online + 70% cash on delivery) and a dual
@@ -122,6 +133,13 @@ export default function BookingShortcut({ country, compact = false }: Props) {
   const [dropoff, setDropoff]   = useState<USAddress | null>(null);
   const [moveDate, setMoveDate] = useState('');
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  /* Promo state. The applied code is the one we've validated; the
+   * input is the raw text the customer is currently typing. */
+  const [promoInput,    setPromoInput]    = useState('');
+  const [promoOpen,     setPromoOpen]     = useState(false);
+  const [promoApplied,  setPromoApplied]  = useState<PromoCode | null>(null);
+  const [promoError,    setPromoError]    = useState<string | null>(null);
 
   /* ── Two distance systems, both displayed for transparency ──
    * 1) OSRM via getRouteDistance — real road distance + ETA
@@ -164,8 +182,51 @@ export default function BookingShortcut({ country, compact = false }: Props) {
    * uses 'card_deposit_cash' so the customer sees the 30/70 breakdown
    * without having to click anything; the actual booking is created
    * with whichever button (Pay full or Cash) the customer presses. */
-  const indicative = pickup && dropoff ? indicativeTotal(country, route?.distanceKm ?? straightLineKm) : null;
+  const grossIndicative = pickup && dropoff ? indicativeTotal(country, route?.distanceKm ?? straightLineKm) : null;
+  /* Apply promo discount to the indicative total before it flows
+   * into splitPayment() — this keeps the deposit/cashDue split
+   * accurate when a code is active. */
+  const promoDiscountAmount = grossIndicative != null && promoApplied
+    ? Math.round(grossIndicative * promoApplied.pct)
+    : 0;
+  const indicative = grossIndicative != null ? grossIndicative - promoDiscountAmount : null;
   const split = indicative != null ? splitPayment(indicative, country, 'card_deposit_cash') : null;
+
+  /* If the customer changes country / clears addresses while a promo
+   * is applied, re-validate against the new context. The most common
+   * case is a country chip switch in the QuickQuoteDrawer — a
+   * country-scoped code may no longer apply. */
+  useEffect(() => {
+    if (!promoApplied) return;
+    const result = applyPromo(promoApplied.code, country, grossIndicative);
+    if (result.ok === false) {
+      setPromoApplied(null);
+      setPromoError(promoErrorMessage(result.reason));
+    }
+  }, [country, grossIndicative, promoApplied]);
+
+  function handleApplyPromo() {
+    const result = applyPromo(promoInput, country, grossIndicative);
+    if (result.ok === false) {
+      setPromoApplied(null);
+      setPromoError(promoErrorMessage(result.reason));
+      track('promo_code_rejected', { code: promoInput.toUpperCase(), reason: result.reason, country });
+      return;
+    }
+    setPromoApplied(result.code);
+    setPromoError(null);
+    setPromoInput('');
+    track('promo_code_applied', { code: result.code.code, pct: result.code.pct, country });
+    toast.success(`${result.code.code} applied`, {
+      description: result.code.label,
+    });
+  }
+
+  function handleRemovePromo() {
+    if (promoApplied) track('promo_code_removed', { code: promoApplied.code, country });
+    setPromoApplied(null);
+    setPromoError(null);
+  }
 
   /**
    * VanMan-UK two-button submit pattern: a primary "Pay £X" button
@@ -223,6 +284,8 @@ export default function BookingShortcut({ country, compact = false }: Props) {
       cashDueAmount: finalSplit.cashDue,
       distanceKm:      route?.distanceKm    ?? straightLineKm ?? null,
       durationMinutes: route?.durationMinutes ?? null,
+      promoCode:       promoApplied?.code,
+      promoDiscountPct: promoApplied?.pct,
       step: 2,
     });
 
@@ -234,6 +297,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
       cashDueAmount:   finalSplit.cashDue,
       distanceKm:      route?.distanceKm ?? straightLineKm,
       hasMoveDate:     Boolean(moveDate),
+      promoCode:       promoApplied?.code,
     });
 
     setPage('booking');
@@ -362,11 +426,26 @@ export default function BookingShortcut({ country, compact = false }: Props) {
       )}
 
       {/* ── Indicative total + cash split breakdown ──────────────── */}
-      {indicative != null && (
+      {indicative != null && grossIndicative != null && (
         <div className="mt-4 rounded-xl border border-slate-200 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 bg-slate-50">
-            <span className="text-sm text-slate-600">Estimated total</span>
-            <span className="text-lg font-extrabold text-slate-900">{formatCurrency(indicative, country)}</span>
+            <div className="min-w-0">
+              <span className="text-sm text-slate-600 block">Estimated total</span>
+              {promoApplied && promoDiscountAmount > 0 && (
+                <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider inline-flex items-center gap-1 mt-0.5">
+                  <Tag size={10} />
+                  {promoApplied.code} · −{Math.round(promoApplied.pct * 100)}%
+                </span>
+              )}
+            </div>
+            <div className="text-right">
+              {promoApplied && promoDiscountAmount > 0 && (
+                <span className="text-xs text-slate-400 line-through block">
+                  {formatCurrency(grossIndicative, country)}
+                </span>
+              )}
+              <span className="text-lg font-extrabold text-slate-900">{formatCurrency(indicative, country)}</span>
+            </div>
           </div>
           {policy.cashEnabled && split && (
             <div className="grid grid-cols-2 divide-x divide-slate-100 text-xs">
@@ -395,6 +474,68 @@ export default function BookingShortcut({ country, compact = false }: Props) {
           Cash on delivery isn’t available in {COUNTRY_LABEL[country]} yet.
         </p>
       )}
+
+      {/* ── Promo code (Wave 26) ─────────────────────────────────── */}
+      <div className="mt-3">
+        {promoApplied ? (
+          <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-200 text-xs">
+            <span className="inline-flex items-center gap-1.5 text-emerald-700 font-bold">
+              <Check size={12} />
+              {promoApplied.code} · {promoApplied.label}
+            </span>
+            <button
+              type="button"
+              onClick={handleRemovePromo}
+              aria-label="Remove promo code"
+              className="text-emerald-700/70 hover:text-emerald-900 inline-flex items-center gap-1"
+            >
+              <XIcon size={12} />
+              Remove
+            </button>
+          </div>
+        ) : promoOpen ? (
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-300 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/20 bg-white text-xs">
+                <Tag size={12} className="text-slate-400" />
+                <input
+                  type="text"
+                  value={promoInput}
+                  onChange={e => { setPromoInput(e.target.value.toUpperCase()); setPromoError(null); }}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleApplyPromo(); } }}
+                  placeholder="Enter code (e.g. WELCOME10)"
+                  spellCheck={false}
+                  autoCapitalize="characters"
+                  className="flex-1 bg-transparent outline-none uppercase tracking-wider"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleApplyPromo}
+                disabled={!promoInput.trim()}
+                className="px-3 py-2 rounded-lg bg-slate-900 text-white text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-800 transition"
+              >
+                Apply
+              </button>
+            </div>
+            {promoError && (
+              <p className="mt-1.5 text-[11px] text-red-600 inline-flex items-center gap-1">
+                <Info size={11} />
+                {promoError}
+              </p>
+            )}
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setPromoOpen(true)}
+            className="text-xs text-slate-500 hover:text-amber-700 inline-flex items-center gap-1.5 underline-offset-2 hover:underline"
+          >
+            <Tag size={12} />
+            Have a promo code?
+          </button>
+        )}
+      </div>
 
       {submitError && (
         <div className="mt-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
