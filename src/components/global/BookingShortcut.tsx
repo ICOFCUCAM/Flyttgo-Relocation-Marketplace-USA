@@ -1,5 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { Banknote, CreditCard, MapPin, Clock, Info, Bookmark } from 'lucide-react';
+
+/* Lazy-loaded so the ~150 KB Leaflet bundle only ships once the
+ * customer has picked both addresses (Wave 23). */
+const RoutePreviewMap = lazy(() => import('./RoutePreviewMap'));
 import { toast } from 'sonner';
 import { useApp } from '../../lib/store';
 import type { BookingCountry, PaymentMethod } from '../../lib/store';
@@ -313,6 +317,18 @@ export default function BookingShortcut({ country, compact = false }: Props) {
           />
         </div>
       </div>
+
+      {/* ── Inline route preview map (Wave 23) ───────────────────
+          Renders only once both endpoints have coordinates so the
+          Leaflet bundle stays out of the first paint. */}
+      {pickup?.lat != null && pickup?.lng != null && dropoff?.lat != null && dropoff?.lng != null && (
+        <Suspense fallback={<div className="mt-4 h-44 rounded-xl bg-slate-100 border border-slate-200 animate-pulse" />}>
+          <RoutePreviewMap
+            pickup={{  lat: pickup.lat,  lng: pickup.lng  }}
+            dropoff={{ lat: dropoff.lat, lng: dropoff.lng }}
+          />
+        </Suspense>
+      )}
 
       {/* ── Distance preview ───────────────────────────────────── */}
       {(pickup && dropoff) && (
