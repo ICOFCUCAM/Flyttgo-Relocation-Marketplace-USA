@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { useApp } from '../../lib/store';
+import { openQuickQuote } from '../../lib/quick-quote';
 
 /**
  * Slim sticky quote bar that drops in from the top once the user has
@@ -15,7 +16,7 @@ import { useApp } from '../../lib/store';
 const HIDE_ON = ['booking', 'auth-callback', 'payment', 'driver-portal', 'admin', 'customer-dashboard'];
 
 export default function StickyQuoteBar() {
-  const { currentPage, setPage } = useApp();
+  const { currentPage } = useApp();
   const [shown, setShown] = useState(false);
 
   useEffect(() => {
@@ -41,7 +42,7 @@ export default function StickyQuoteBar() {
           </p>
         </div>
         <button
-          onClick={() => setPage('booking')}
+          onClick={() => openQuickQuote({ source: 'sticky_bar' })}
           className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm rounded-lg transition shadow"
         >
           Get a quote →

@@ -68,6 +68,7 @@ const StickyQuoteBar     = lazy(() => import('./global/StickyQuoteBar'));
 const ScrollProgress     = lazy(() => import('./global/ScrollProgress'));
 const CompareBar         = lazy(() => import('./global/CompareBar'));
 const CommandPalette     = lazy(() => import('./global/CommandPalette'));
+const QuickQuoteDrawer   = lazy(() => import('./global/QuickQuoteDrawer'));
 
 function Loading() {
   return (
@@ -292,6 +293,14 @@ export default function AppLayout() {
       {currentPage !== 'auth-callback' && (
         <Suspense fallback={null}>
           <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+        </Suspense>
+      )}
+      {/* Global "Get a quote" slide-over. Listens for the
+          `flyttgo:open-quick-quote` event so any CTA in the app can
+          pop the booking widget without navigating away. */}
+      {currentPage !== 'auth-callback' && currentPage !== 'booking' && (
+        <Suspense fallback={null}>
+          <QuickQuoteDrawer />
         </Suspense>
       )}
     </div>
