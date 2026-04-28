@@ -76,7 +76,7 @@ function Loading() {
 }
 
 export default function AppLayout() {
-  const { currentPage } = useApp();
+  const { currentPage, setPage } = useApp();
   const [paletteOpen, setPaletteOpen] = React.useState(false);
 
   /* Scroll to the top of the viewport whenever the current page
@@ -87,6 +87,43 @@ export default function AppLayout() {
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, [currentPage]);
+
+  /* ── Inbound shared-quote handler (Wave 19) ────────────────
+   * If a customer arrives with `?q=<token>` in the URL — typically
+   * forwarded by a partner / spouse / housemate — decode the
+   * embedded brief, save it to their local quote store with a
+   * "shared with you" label, navigate to the matching country
+   * shopfront, and clean the URL so a refresh doesn't re-trigger.
+   * Runs once at boot. */
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const token  = params.get('q');
+    if (!token) return;
+
+    let cancelled = false;
+    void Promise.all([
+      import('../lib/saved-quotes-store'),
+      import('../lib/analytics'),
+    ]).then(([store, analytics]) => {
+      if (cancelled) return;
+      const payload = store.decodeSharedQuote(token);
+      if (!payload) return;
+      store.saveQuote({ ...payload, label: payload.label ?? 'Shared with you' });
+      analytics.track('shared_quote_received', { country: payload.country });
+
+      /* Clean the URL so the customer doesn't re-import on refresh. */
+      params.delete('q');
+      const cleanedSearch = params.toString();
+      const cleanedPath   = window.location.pathname + (cleanedSearch ? `?${cleanedSearch}` : '');
+      window.history.replaceState({}, '', cleanedPath);
+
+      /* Land on the matching country shopfront — the imported quote
+       * sits in MyBookings → Saved quotes ready to resume. */
+      setPage(`market-${payload.country}` as typeof currentPage);
+    });
+    return () => { cancelled = true; };
+  }, [setPage]);
 
   /* Global ⌘K / Ctrl-K → command palette. Closes on Esc inside the
    * palette itself. Suppresses the browser's "save as" dialog. */
