@@ -168,11 +168,8 @@ export default function CommandPalette({ open, onClose }: Props) {
         group: 'Compare',
         perform: () => {
           track('command_palette_action', { type: 'open_compare' });
-          /* The compare drawer reads the same store; clicking the
-           * existing CompareBar 'Compare' button opens it. We
-           * dispatch a synthetic event so any listening UI opens. */
-          window.dispatchEvent(new CustomEvent('flyttgo:open-compare'));
           onClose();
+          setPage('compare');
         },
       },
     ] : [];
