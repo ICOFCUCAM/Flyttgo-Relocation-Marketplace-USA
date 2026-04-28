@@ -50,6 +50,7 @@ export type TierPrivilege =
   | 'corporate-relocation-access'   // Gold Pro+
   | 'enterprise-relocation-access'  // Elite/CIP only
   | 'university-relocation-access'  // Elite/CIP only
+  | 'municipal-relocation-access'   // Elite/CIP only
   | 'government-deployment-access'  // Elite/CIP only
   | 'api-routing-priority'          // Elite/CIP only
   | 'accelerated-payout'            // Elite/CIP only
@@ -139,7 +140,8 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
       'first-access-jobs',
       'priority-dispatch', 'top-of-marketplace',
       'corporate-relocation-access', 'enterprise-relocation-access',
-      'university-relocation-access', 'government-deployment-access',
+      'university-relocation-access', 'municipal-relocation-access',
+      'government-deployment-access',
       'api-routing-priority', 'accelerated-payout',
       'advanced-analytics', 'featured-listing',
       'dedicated-account-manager', 'priority-phone-support',
@@ -250,6 +252,7 @@ export const PRIVILEGE_LABELS: Record<TierPrivilege, string> = {
   'corporate-relocation-access': 'Corporate relocation visibility',
   'enterprise-relocation-access':'Enterprise relocation eligibility',
   'university-relocation-access':'University relocation eligibility',
+  'municipal-relocation-access': 'Municipal relocation eligibility',
   'government-deployment-access':'Government deployment routing',
   'api-routing-priority':        'API booking routing priority',
   'accelerated-payout':          'Accelerated payout eligibility',
