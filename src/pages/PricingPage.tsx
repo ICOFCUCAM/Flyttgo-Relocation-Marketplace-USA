@@ -6,6 +6,8 @@ import {
 import { useApp } from '../lib/store';
 import { Section, Eyebrow, Pill } from '../components/ds';
 import LivePriceCalculator from '../components/global/LivePriceCalculator';
+import PaymentMethodPicker from '../components/global/PaymentMethodPicker';
+import { COUNTRY_PROFILES } from '../lib/country-profiles';
 import {
   US_PRICING_TIERS, formatPricingRange, MARKETPLACE_COMMISSION,
   STRATEGIC_POSITIONING, type PricingTier,
@@ -174,6 +176,29 @@ export default function PricingPage() {
               Silver-tier keeps 70%.
             </p>
           </div>
+        </div>
+      </Section>
+
+      {/* PAYMENT METHODS PER MARKET */}
+      <Section tone="canvas" size="default">
+        <Eyebrow tone="brand" className="mb-1">Multi-gateway adaptive payments</Eyebrow>
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900 mb-2">
+          Pay the way your market actually pays.
+        </h2>
+        <p className="text-slate-600 max-w-2xl mb-6">
+          Stripe in structured markets · Paystack + Flutterwave in West and East
+          Africa · Razorpay in India · M-Pesa direct in Kenya · PayPal as a
+          cross-border fallback. Every gateway settles via FlyttGo escrow.
+        </p>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {COUNTRY_PROFILES.map(p => (
+            <PaymentMethodPicker
+              key={p.code}
+              country={p.code}
+              compact
+              readOnly
+            />
+          ))}
         </div>
       </Section>
 
