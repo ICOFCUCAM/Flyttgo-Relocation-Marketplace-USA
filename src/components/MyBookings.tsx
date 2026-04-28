@@ -1,8 +1,10 @@
 import React, { useState, useEffect, lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
+import { PackageSearch } from "lucide-react";
 import { supabase, supabaseFunctionUrl } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
 import { useApp } from "../lib/store";
+import { EmptyState } from "./ds";
 
 /* Lazy-load Leaflet so the map bundle (~150 KB) is only fetched on
  * pages that actually have an in-transit booking to track. */
@@ -146,7 +148,27 @@ export default function MyBookings() {
             ))}
           </div>
         )
-        : filtered.length === 0 ? <div className="text-center py-12 text-gray-500">{t('myBookings.noBookings')}</div>
+        : filtered.length === 0 ? (
+          <EmptyState
+            icon={PackageSearch}
+            title={t('myBookings.noBookings', 'No bookings yet') as string}
+            body={
+              <span>
+                {filter === 'all'
+                  ? "You haven't booked a move yet. Pick your country, get an instant quote, and your first booking lands here."
+                  : `No bookings match the "${filter.replace(/_/g, ' ')}" filter. Switch back to All to see everything you've booked.`}
+              </span>
+            }
+            primaryAction={{
+              label: filter === 'all' ? 'Get a quote' : 'Show all bookings',
+              onClick: () => filter === 'all' ? setPage('home') : setFilter('all'),
+            }}
+            secondaryAction={filter === 'all' ? {
+              label: 'How it works',
+              onClick: () => setPage('how-it-works'),
+            } : undefined}
+          />
+        )
         : filtered.map(booking => {
           const escrow = escrowMap[booking.id];
           const rawPrice = booking.final_price ?? booking.original_price ?? booking.price_estimate;
