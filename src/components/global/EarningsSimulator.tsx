@@ -65,9 +65,25 @@ export default function EarningsSimulator({ compact = false, initial }: Props) {
   const [truck,           setTruck]           = useState(initial?.truckAvailable   ?? true);
   const [packing,         setPacking]         = useState(initial?.packingAvailable ?? true);
   const [storage,         setStorage]         = useState(initial?.storageAvailable ?? false);
-  const [hoursPerWeek,    setHoursPerWeek]    = useState(initial?.hoursPerWeek     ?? 30);
+  const [daysPerWeek,     setDaysPerWeek]     = useState(initial?.daysPerWeek      ?? 5);
+  const [hoursPerDay,     setHoursPerDay]     = useState(initial?.hoursPerDay      ?? 6);
+  /* When the spec's two-input form (days × hours/day) is the user's
+   * mental model, hoursPerWeek follows it. The provider can also
+   * grab the weekly slider directly to override — both stay in sync. */
+  const [hoursPerWeek,    setHoursPerWeek]    = useState(
+    initial?.hoursPerWeek ?? (initial?.daysPerWeek ?? 5) * (initial?.hoursPerDay ?? 6),
+  );
   const [weekendShare,    setWeekendShare]    = useState((initial?.weekendShare    ?? 0.3) * 100);
   const [corridor,        setCorridor]        = useState<RelocationCorridor>(initial?.corridor ?? 'local');
+
+  /* Whenever days × hours/day changes, sync the weekly total. The
+   * weekly slider then overrides if the provider grabs it directly. */
+  useEffect(() => {
+    setHoursPerWeek(daysPerWeek * hoursPerDay);
+    /* Intentionally only listening to days × hours/day — manual
+     * changes to hoursPerWeek shouldn't loop back. */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [daysPerWeek, hoursPerDay]);
 
   /* Track first interaction once per mount so we know how often the
    * simulator drives onboarding intent. */
@@ -195,16 +211,51 @@ export default function EarningsSimulator({ compact = false, initial }: Props) {
           </div>
         </Field>
 
-        <Field label={`Hours per week · ${hoursPerWeek}h`} icon={CalendarDays}>
-          <input
-            type="range"
-            min={5}
-            max={70}
-            step={1}
-            value={hoursPerWeek}
-            onChange={e => patch(() => setHoursPerWeek(Number(e.target.value)))}
-            className="w-full accent-amber-500"
-          />
+        <Field label="Availability" icon={CalendarDays}>
+          <div className="grid grid-cols-2 gap-4 mb-3">
+            <div>
+              <p className="text-[10px] text-slate-500 mb-1">
+                Days per week · <strong>{daysPerWeek}</strong>
+              </p>
+              <input
+                type="range"
+                min={1}
+                max={7}
+                step={1}
+                value={daysPerWeek}
+                onChange={e => patch(() => setDaysPerWeek(Number(e.target.value)))}
+                className="w-full accent-amber-500"
+              />
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-500 mb-1">
+                Hours per day · <strong>{hoursPerDay}h</strong>
+              </p>
+              <input
+                type="range"
+                min={1}
+                max={12}
+                step={1}
+                value={hoursPerDay}
+                onChange={e => patch(() => setHoursPerDay(Number(e.target.value)))}
+                className="w-full accent-amber-500"
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-[11px] text-slate-500 bg-slate-50 rounded-lg px-3 py-1.5">
+            <CalendarDays size={11} className="text-slate-400" />
+            <span>= <strong className="text-ink-900">{hoursPerWeek}h/week</strong></span>
+            <input
+              type="range"
+              min={5}
+              max={70}
+              step={1}
+              value={hoursPerWeek}
+              onChange={e => patch(() => setHoursPerWeek(Number(e.target.value)))}
+              aria-label="Hours per week (overrides days × hours)"
+              className="ml-auto flex-1 accent-amber-500"
+            />
+          </div>
         </Field>
 
         <Field label={`Weekend mix · ${weekendShare.toFixed(0)}%`} last>

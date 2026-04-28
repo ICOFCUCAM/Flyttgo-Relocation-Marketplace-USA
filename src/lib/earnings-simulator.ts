@@ -63,8 +63,15 @@ export interface EarningsInput {
   packingAvailable:  boolean;
   /** Whether the provider offers storage staging. */
   storageAvailable:  boolean;
-  /** Operating availability. */
-  hoursPerWeek:      number;       // 1–80
+  /** Operating availability — hours per week.
+   *
+   *  Pass `hoursPerWeek` directly, OR pass `daysPerWeek` + `hoursPerDay`
+   *  and the simulator multiplies them out. The two-input form mirrors
+   *  how providers naturally describe their schedule (e.g. "5 days,
+   *  6 hours"). When both are passed, hoursPerWeek wins. */
+  hoursPerWeek?:     number;       // 1–80
+  daysPerWeek?:      number;       // 1–7
+  hoursPerDay?:      number;       // 1–14
   /** Share of jobs taken on weekends (0–1). 0 = weekday only,
    *  1 = weekend only. Translates into a weighted weekend uplift. */
   weekendShare?:     number;       // default 0
@@ -131,7 +138,15 @@ export function simulateEarnings(input: EarningsInput): EarningsBreakdown {
   const corridorMult   = CORRIDOR_MULTIPLIERS[corridor];
   const commissionPct  = input.commissionPct ?? COMMISSION_DEFAULT;
   const weekendShare   = clamp(input.weekendShare ?? 0, 0, 1);
-  const hoursPerWeek   = clamp(input.hoursPerWeek, 1, 80);
+  /* Hours-per-week resolution:
+   *   1. Explicit hoursPerWeek wins.
+   *   2. daysPerWeek × hoursPerDay if both passed.
+   *   3. Fall back to 30h/wk default. */
+  const explicitHours  = input.hoursPerWeek;
+  const derivedHours   = input.daysPerWeek != null && input.hoursPerDay != null
+    ? input.daysPerWeek * input.hoursPerDay
+    : null;
+  const hoursPerWeek   = clamp(explicitHours ?? derivedHours ?? 30, 1, 80);
 
   /* Step 1 — base per-mover hourly × city × crew = base crew hourly. */
   const baseRate     = baseline.baseHourly * cityMultiplier;
