@@ -1,6 +1,7 @@
 import React from 'react';
 import { useApp } from '../lib/store';
 import { SectionIndex } from '../components/global/CountryPage';
+import EarningsSimulator from '../components/global/EarningsSimulator';
 
 const CATEGORIES = [
   { title: 'Licensed moving carrier', body: 'USDOT/MC, GüKG, GVOL, registre des transporteurs, yrkestransportløyve — country-specific operator licensing.' },
@@ -49,9 +50,26 @@ export default function ProvidersPage() {
         </div>
       </section>
 
+      {/* GLRM.03 — Earnings simulator (acquisition lever) */}
+      <section className="border-b border-slate-200 bg-amber-50/40">
+        <div className="max-w-7xl mx-auto px-6 py-20">
+          <SectionIndex id="GLRM.03" label="Earnings simulator" />
+          <h2 className="font-serif text-3xl lg:text-4xl leading-tight text-slate-900 mb-3">
+            How much can I earn on FlyttGo?
+          </h2>
+          <p className="text-slate-600 max-w-2xl mb-8 leading-relaxed">
+            Same engine the booking widget runs against. Pick your city, crew
+            size, services, and weekly hours — the simulator estimates your
+            hourly, weekly, monthly, and annual income after the marketplace
+            commission.
+          </p>
+          <EarningsSimulator />
+        </div>
+      </section>
+
       <section className="border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-6 py-20">
-          <SectionIndex id="GLRM.03" label="How providers join" />
+          <SectionIndex id="GLRM.04" label="How providers join" />
           <ol className="space-y-px bg-slate-200">
             {[
               { n: '01', t: 'Submit registration', b: 'Country, category, operator licence reference, contact and tax details.' },
@@ -71,7 +89,7 @@ export default function ProvidersPage() {
 
       <section className="bg-slate-900 text-slate-100">
         <div className="max-w-7xl mx-auto px-6 py-20">
-          <SectionIndex id="GLRM.04" label="Country-level compliance responsibility" />
+          <SectionIndex id="GLRM.05" label="Country-level compliance responsibility" />
           <div className="grid md:grid-cols-2 gap-10">
             <h2 className="font-serif text-3xl lg:text-4xl leading-tight text-white">
               Providers comply. The marketplace coordinates.
