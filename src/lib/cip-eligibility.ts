@@ -121,6 +121,23 @@ export function checkCipEligibility(score: ProviderScoreRow | null): CipEligibil
     });
   }
 
+  /* Dispute ratio = lost-disputes / max(total-rated-jobs, 1).
+   * Uses rating_count as the denominator since it tracks completed
+   * + customer-facing jobs (the same "jobs done" the spec asks
+   * about). For brand-new providers we floor the denominator at 1
+   * to avoid divide-by-zero — they're shielded by the minRating /
+   * minCompletedJobs gates anyway. */
+  const lostDisputes  = score.dispute_loss_count ?? 0;
+  const totalJobs     = Math.max(score.rating_count ?? 0, 1);
+  const disputeRatio  = lostDisputes / totalJobs;
+  if (disputeRatio > CIP_THRESHOLDS.maxDisputeRatio) {
+    blockers.push({
+      field:    'dispute ratio',
+      current:  (disputeRatio * 100).toFixed(1) + '%',
+      required: '≤ ' + (CIP_THRESHOLDS.maxDisputeRatio * 100).toFixed(1) + '%',
+    });
+  }
+
   if (score.is_suspended) {
     blockers.push({
       field:    'account status',
