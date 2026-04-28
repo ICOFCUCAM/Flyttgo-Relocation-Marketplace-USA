@@ -56,6 +56,7 @@ const MarketFrancePage   = lazy(() => import('../pages/markets/FrancePage'));
 const MarketUKPage       = lazy(() => import('../pages/markets/UKPage'));
 const MarketNorwayPage   = lazy(() => import('../pages/markets/NorwayPage'));
 const ReferPage          = lazy(() => import('../pages/ReferPage'));
+const ProviderProfilePage = lazy(() => import('../pages/ProviderProfilePage'));
 const Footer             = lazy(() => import('./Footer'));
 const LiveBookingTicker  = lazy(() => import('./global/LiveBookingTicker'));
 const FloatingChat       = lazy(() => import('./global/FloatingChat'));
@@ -152,7 +153,7 @@ export default function AppLayout() {
    * show it on customer-discovery surfaces (home, country pages,
    * marketplace, how-it-works). Suppressed on dashboards, auth, and
    * payment surfaces where it would distract. */
-  const showTicker = ['home','marketplace','how-it-works','providers','cities','enterprise-relocation','partners','about','universities','market-us','market-canada','market-germany','market-france','market-uk','market-norway','refer'].includes(currentPage);
+  const showTicker = ['home','marketplace','how-it-works','providers','cities','enterprise-relocation','partners','about','universities','market-us','market-canada','market-germany','market-france','market-uk','market-norway','refer','provider-profile'].includes(currentPage);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -206,6 +207,7 @@ export default function AppLayout() {
       case 'market-uk':              return <MarketUKPage />;
       case 'market-norway':          return <MarketNorwayPage />;
       case 'refer':                  return <ReferPage />;
+      case 'provider-profile':       return <ProviderProfilePage />;
       case 'not-found':              return <NotFoundPage />;
       default:                       return <NotFoundPage />;
     }

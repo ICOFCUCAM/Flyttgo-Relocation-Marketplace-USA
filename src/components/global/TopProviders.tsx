@@ -1,61 +1,33 @@
 import React from 'react';
-import { Star, Truck, ShieldCheck, Award } from 'lucide-react';
+import { Star, Truck, ShieldCheck, Award, ArrowRight } from 'lucide-react';
 import AddToCompareButton from './AddToCompareButton';
+import { useApp } from '../../lib/store';
+import { PROVIDERS } from '../../lib/providers-catalogue';
+import { track } from '../../lib/analytics';
 
 /**
- * "Top-rated providers" card row. The shape mirrors what we surface
- * in the booking shortlist later: badge + business name + star
- * rating + review count + price-from + verification chips. Today the
- * list is curated for the home page; once the marketplace has live
- * provider data, swap in a query against `drivers` + aggregated
- * ratings.
+ * "Top-rated providers" card row. Sources from lib/providers-catalogue
+ * so the home grid + the per-provider profile pages stay in sync —
+ * one record edits both surfaces.
+ *
+ * Each card now navigates to /provider?slug=<slug> on click; the
+ * AddToCompare button still toggles the compare-store snapshot
+ * without leaving the home page.
  */
-
-interface Provider {
-  name:    string;
-  city:    string;
-  flag:    string;
-  rating:  number;
-  reviews: number;
-  fromPrice: string;
-  badge?:  string;
-  verified: ('USDOT' | 'GVOL' | 'GüKG' | 'Registre' | 'Yrkesløyve' | 'Bilingual')[];
-}
-
-const PROVIDERS: Provider[] = [
-  {
-    name: 'Big Apple Movers Co.',     city: 'New York City, NY',     flag: '🇺🇸',
-    rating: 4.95, reviews: 2_180,     fromPrice: 'from $480',
-    badge: 'Elite',                   verified: ['USDOT'],
-  },
-  {
-    name: 'London Lift & Shift Ltd.', city: 'London, UK',            flag: '🇬🇧',
-    rating: 4.92, reviews: 1_640,     fromPrice: 'from £380',
-    badge: 'Gold Pro',                verified: ['GVOL'],
-  },
-  {
-    name: 'Oslo Flyttebyrå AS',       city: 'Oslo, NO',              flag: '🇳🇴',
-    rating: 4.97, reviews: 1_120,     fromPrice: 'fra 4 200 kr',
-    badge: 'Home market',             verified: ['Yrkesløyve'],
-  },
-  {
-    name: 'Berlin Umzugsprofis',      city: 'Berlin, DE',            flag: '🇩🇪',
-    rating: 4.89, reviews: 1_350,     fromPrice: 'ab 420 €',
-    badge: 'Gold',                    verified: ['GüKG'],
-  },
-  {
-    name: 'Déménageurs Île-de-France',city: 'Paris, FR',             flag: '🇫🇷',
-    rating: 4.86, reviews: 1_080,     fromPrice: 'à partir de 460 €',
-    badge: 'Gold',                    verified: ['Registre'],
-  },
-  {
-    name: 'Maple Move Co.',           city: 'Toronto, CA',           flag: '🇨🇦',
-    rating: 4.88, reviews:   880,     fromPrice: 'from C$520',
-    badge: 'Bilingual',               verified: ['Bilingual'],
-  },
-];
-
 export default function TopProviders() {
+  const { setPage } = useApp();
+
+  function openProfile(slug: string) {
+    track('top_provider_clicked', { slug });
+    if (typeof window !== 'undefined') {
+      window.history.pushState({}, '', `/provider?slug=${slug}`);
+    }
+    setPage('provider-profile');
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    }
+  }
+
   return (
     <section className="bg-white py-16 sm:py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -76,8 +48,9 @@ export default function TopProviders() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {PROVIDERS.map(p => (
             <article
-              key={p.name}
-              className="bg-[#fafaf7] hover:bg-white border border-slate-200 hover:border-amber-300 hover:shadow-lg rounded-2xl p-5 transition"
+              key={p.slug}
+              className="group bg-[#fafaf7] hover:bg-white border border-slate-200 hover:border-amber-300 hover:shadow-lg rounded-2xl p-5 transition cursor-pointer"
+              onClick={() => openProfile(p.slug)}
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
@@ -116,15 +89,26 @@ export default function TopProviders() {
                 {p.verified.map(v => (
                   <span key={v} className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md">
                     <ShieldCheck size={10} />
-                    {v} verified
+                    {v}
                   </span>
                 ))}
               </div>
 
-              <div className="mt-3 flex items-center justify-end">
+              <div
+                className="mt-3 flex items-center justify-between gap-2"
+                onClick={e => e.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  onClick={() => openProfile(p.slug)}
+                  className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 group-hover:text-amber-700"
+                >
+                  Open profile
+                  <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
+                </button>
                 <AddToCompareButton
                   item={{
-                    id:        `top-${p.name.toLowerCase().replace(/\W+/g, '-')}`,
+                    id:        p.slug,
                     name:      p.name,
                     city:      p.city,
                     flag:      p.flag,
