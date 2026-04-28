@@ -21,8 +21,22 @@ import {
   COMMISSION_BAND,
 } from './data';
 import type {
-  QuoteBreakdown, QuoteInput, QuoteStep,
+  QuoteBreakdown, QuoteInput, QuoteStep, PricingCountry, InsuranceTier,
 } from './types';
+import { COUNTRY_PROFILES } from '../country-profiles';
+
+/* Per-country insurance availability + per-hour multiplier resolver.
+ * Looks up the country profile (which lives in country-profiles.ts to
+ * avoid circular imports back into pricing-engine/data.ts) and
+ * returns the multiplier to apply to the global INSURANCE_OPTIONS
+ * rate. Falls back to 1.0 when the tier isn't listed for that country
+ * — calling code is responsible for not offering the tier in the UI. */
+function resolveInsuranceMultiplier(country: PricingCountry, tier: InsuranceTier): number {
+  const profile = COUNTRY_PROFILES.find(p => p.code === country);
+  if (!profile) return 1.0;
+  const entry = profile.insuranceAvailability.find(a => a.tier === tier);
+  return entry?.perHourMultiplier ?? 1.0;
+}
 
 /* Strip "City, ST" → "city"; lowercase + trim; keep accents (so
  * "Montréal" matches the table key). */
@@ -166,15 +180,20 @@ export function calculateQuote(input: QuoteInput): QuoteBreakdown {
     });
   }
 
-  /* ── Layer 8 — Insurance tier ─────────────────────────────────── */
+  /* ── Layer 8 — Insurance tier · country-adaptive ──────────────── */
   const ins = INSURANCE_OPTIONS[insurance];
-  const insuranceContribution = ins.perHour * estimatedHours;
+  const countryInsuranceMult = resolveInsuranceMultiplier(input.country, insurance);
+  const insurancePerHour     = ins.perHour * countryInsuranceMult;
+  const insuranceContribution = insurancePerHour * estimatedHours;
   if (insuranceContribution > 0) {
+    const detail = countryInsuranceMult !== 1.0
+      ? `${baseline.symbol}${insurancePerHour.toFixed(0)}/hr × ${estimatedHours}h · ${input.country.toUpperCase()} ×${countryInsuranceMult.toFixed(2)}`
+      : `${baseline.symbol}${insurancePerHour.toFixed(0)}/hr × ${estimatedHours}h`;
     steps.push({
       layer:        'insurance',
       label:        ins.label,
       contribution: insuranceContribution,
-      detail:       `${baseline.symbol}${ins.perHour}/hr × ${estimatedHours}h`,
+      detail,
     });
   }
 

@@ -25,7 +25,7 @@
  *   5. Verify the calculator + simulator chip rows pick it up.
  * ───────────────────────────────────────────────────────────────── */
 
-import type { PricingCountry, ServiceType } from './pricing-engine';
+import type { PricingCountry, ServiceType, InsuranceTier } from './pricing-engine';
 
 /** How a country quotes prices to customers.
  *
@@ -68,9 +68,25 @@ export interface CountryProfile {
   /** Subset of ServiceType slugs that actually exist in this market.
    *  Surfaces only these in the simulator + calculator UI. */
   availableServices: ServiceType[];
+  /** Insurance tiers that customers can pick in this market. Some
+   *  countries gate certain tiers (e.g. AE corporate-relocation
+   *  customers can't buy Basic-only — Full or Premium minimum). The
+   *  engine applies these in two ways:
+   *    1. UI: insurance picker only shows the listed tiers.
+   *    2. Engine: per-tier per-hour overrides multiply the global
+   *       INSURANCE_OPTIONS rate by `perHourMultiplier`. */
+  insuranceAvailability: InsuranceAvailability[];
   /** Customer-facing copy describing the market's stance, used in
    *  the PricingPage strategic-positioning panel + country shopfronts. */
   marketNote:   string;
+}
+
+export interface InsuranceAvailability {
+  tier:               InsuranceTier;
+  /** Multiplier on the global per-hour rate. 1.0 = no change. */
+  perHourMultiplier:  number;
+  /** Optional per-country footnote shown next to the tier in the UI. */
+  note?:              string;
 }
 
 export const COUNTRY_PROFILES: CountryProfile[] = [
@@ -84,6 +100,11 @@ export const COUNTRY_PROFILES: CountryProfile[] = [
     taxMode:      'sales-tax-added',
     serviceModel: 'labor-only-plus-truck',
     availableServices: ['labor-only', 'movers-truck', 'packing', 'storage', 'corporate'],
+    insuranceAvailability: [
+      { tier: 'basic',   perHourMultiplier: 1.0 },
+      { tier: 'full',    perHourMultiplier: 1.0 },
+      { tier: 'premium', perHourMultiplier: 1.0, note: 'High-value home + interstate' },
+    ],
     marketNote:
       "Largest opportunity is labor-only + coordination. FMCSA-aware verification " +
       "for interstate; sales tax handled per-state at checkout.",
@@ -98,6 +119,11 @@ export const COUNTRY_PROFILES: CountryProfile[] = [
     taxMode:      'sales-tax-added',
     serviceModel: 'labor-only-plus-truck',
     availableServices: ['labor-only', 'movers-truck', 'packing', 'storage', 'corporate'],
+    insuranceAvailability: [
+      { tier: 'basic',   perHourMultiplier: 1.0 },
+      { tier: 'full',    perHourMultiplier: 1.0 },
+      { tier: 'premium', perHourMultiplier: 1.0 },
+    ],
     marketNote:
       "GST/PST/HST handled per-province at checkout. Cross-border (US ↔ CA) freight " +
       "coordination available.",
@@ -112,6 +138,11 @@ export const COUNTRY_PROFILES: CountryProfile[] = [
     taxMode:      'vat-included',
     serviceModel: 'hourly-crew',
     availableServices: ['labor-only', 'movers-truck', 'packing', 'storage', 'corporate'],
+    insuranceAvailability: [
+      { tier: 'basic',   perHourMultiplier: 1.0 },
+      { tier: 'full',    perHourMultiplier: 1.0 },
+      { tier: 'premium', perHourMultiplier: 1.05, note: 'Includes ABTA-aligned cover' },
+    ],
     marketNote:
       "20% VAT included in every quote. GVOL operator licensing for full-truck " +
       "moves; sub-3.5t crews can run unlicensed.",
@@ -126,6 +157,13 @@ export const COUNTRY_PROFILES: CountryProfile[] = [
     taxMode:      'vat-included',
     serviceModel: 'full-service-bundle',
     availableServices: ['movers-truck', 'packing', 'storage', 'corporate'],
+    insuranceAvailability: [
+      /* DE law requires Verkehrshaftpflicht (carrier liability) so
+       * Basic isn't a meaningful customer-facing option here — the
+       * tier is folded into the regulated baseline. */
+      { tier: 'full',    perHourMultiplier: 1.10, note: 'Carrier liability already included by law' },
+      { tier: 'premium', perHourMultiplier: 1.10 },
+    ],
     marketNote:
       "19% MwSt. included. GüKG-licensed Umzugsfirma. Customers expect bundled " +
       "crew + vehicle + packing — labor-only is rare.",
@@ -140,6 +178,11 @@ export const COUNTRY_PROFILES: CountryProfile[] = [
     taxMode:      'vat-included',
     serviceModel: 'packing-heavy',
     availableServices: ['movers-truck', 'packing', 'storage', 'corporate'],
+    insuranceAvailability: [
+      { tier: 'basic',   perHourMultiplier: 1.0 },
+      { tier: 'full',    perHourMultiplier: 1.05 },
+      { tier: 'premium', perHourMultiplier: 1.05, note: 'Inclut la garantie déménageur' },
+    ],
     marketNote:
       "20% TVA included. Inscription au registre des transporteurs. Packing " +
       "(emballage) typically leads the quote, hauling follows.",
@@ -154,6 +197,12 @@ export const COUNTRY_PROFILES: CountryProfile[] = [
     taxMode:      'vat-included',
     serviceModel: 'full-service-bundle',
     availableServices: ['movers-truck', 'packing', 'storage', 'corporate'],
+    insuranceAvailability: [
+      /* NO insurance market is regulated up — basic is rolled into
+       * the operator licence, customers pick Full or Premium. */
+      { tier: 'full',    perHourMultiplier: 1.15, note: 'Bredde-dekning · NOK levels' },
+      { tier: 'premium', perHourMultiplier: 1.15 },
+    ],
     marketNote:
       "25% MVA included. Yrkestransportløyve required for commercial " +
       "transport. Premium market — highest hourly in the marketplace.",
@@ -168,6 +217,12 @@ export const COUNTRY_PROFILES: CountryProfile[] = [
     taxMode:      'quoted-net',
     serviceModel: 'crew-only-distance',
     availableServices: ['labor-only', 'movers-truck'],
+    insuranceAvailability: [
+      /* Informal sector — Basic only; formal goods-in-transit cover
+       * is rare and usually negotiated direct between provider +
+       * corporate customers. */
+      { tier: 'basic', perHourMultiplier: 0.5, note: 'Limited goods-in-transit cover' },
+    ],
     marketNote:
       "Crew-only with distance-based pricing dominates. Lagos premium of ~40% " +
       "over national baseline; Abuja federal capital follows.",
@@ -182,6 +237,9 @@ export const COUNTRY_PROFILES: CountryProfile[] = [
     taxMode:      'quoted-net',
     serviceModel: 'crew-only-distance',
     availableServices: ['labor-only', 'movers-truck'],
+    insuranceAvailability: [
+      { tier: 'basic', perHourMultiplier: 0.5, note: 'Limited goods-in-transit cover' },
+    ],
     marketNote:
       "Nairobi metro carries the highest multiplier; Mombasa coastal moves " +
       "carry their own logistics premium. Negotiated services common.",
@@ -196,6 +254,12 @@ export const COUNTRY_PROFILES: CountryProfile[] = [
     taxMode:      'vat-included',
     serviceModel: 'employer-sponsored',
     availableServices: ['movers-truck', 'packing', 'storage', 'corporate'],
+    insuranceAvailability: [
+      /* AE corporate-sponsored sector defaults to Full minimum;
+       * Basic-only isn't offered (matches employer expectations). */
+      { tier: 'full',    perHourMultiplier: 1.10, note: 'Mandatory minimum for corporate accounts' },
+      { tier: 'premium', perHourMultiplier: 1.10 },
+    ],
     marketNote:
       "5% VAT included. Employer-sponsored relocation dominates — corporate " +
       "and packing services lead. Dubai + Abu Dhabi top the multiplier.",
@@ -213,4 +277,49 @@ export function findCountryProfile(code: PricingCountry): CountryProfile {
  *  panel so prospects can scan from highest-paying markets down. */
 export function countriesByEarningPotential(): CountryProfile[] {
   return [...COUNTRY_PROFILES].sort((a, b) => a.usdRate - b.usdRate);
+}
+
+/* Locale-keyed Intl.NumberFormat per currency. Cached so we don't
+ * pay the Intl constructor cost on every render. */
+const FORMATTER_CACHE = new Map<string, Intl.NumberFormat>();
+
+const LOCALE_BY_CURRENCY: Record<CountryProfile['currency'], string> = {
+  USD: 'en-US',
+  CAD: 'en-CA',
+  GBP: 'en-GB',
+  EUR: 'en-IE',          // shared EU locale; EUR symbol position varies less than format
+  NOK: 'nb-NO',
+  NGN: 'en-NG',
+  KES: 'en-KE',
+  AED: 'en-AE',
+};
+
+/**
+ * Format a price for a given country using locale-aware
+ * Intl.NumberFormat. Returns the country's currency string with
+ * proper grouping (`₦8,500`), symbol position (`$1,200` vs `1 200 kr`),
+ * and decimal handling per locale.
+ *
+ *   formatPrice(8500, 'ng') → '₦8,500'
+ *   formatPrice(1200, 'us') → '$1,200'
+ *   formatPrice(600,  'no') → 'kr 600' (Norwegian convention)
+ */
+export function formatPrice(amount: number, country: PricingCountry, opts: {
+  /** Show 2 decimals (default 0 — relocation pricing is whole-unit). */
+  decimals?: number;
+} = {}): string {
+  const profile  = findCountryProfile(country);
+  const decimals = opts.decimals ?? 0;
+  const cacheKey = `${profile.currency}-${decimals}`;
+  let formatter = FORMATTER_CACHE.get(cacheKey);
+  if (!formatter) {
+    formatter = new Intl.NumberFormat(LOCALE_BY_CURRENCY[profile.currency], {
+      style:                 'currency',
+      currency:              profile.currency,
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
+    FORMATTER_CACHE.set(cacheKey, formatter);
+  }
+  return formatter.format(amount);
 }
