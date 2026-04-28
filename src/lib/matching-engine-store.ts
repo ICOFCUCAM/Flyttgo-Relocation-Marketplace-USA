@@ -64,6 +64,9 @@ export interface MatchedProviderRow {
   tier_slug:            string | null;
   tier_position:        number;
   rank_score:           number | null;
+  /** Resolved Identity & Trust level (1-7). Enterprise mode
+   *  requires this to be ≥ 4 (Verified Carrier). */
+  trust_level:          number;
   is_cip:               boolean;
   is_top_rated:         boolean;
   /** True when the provider has every non-conditional required

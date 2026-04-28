@@ -26,12 +26,15 @@ const LiveOpsControlCenter = lazy(() => import("./LiveOpsControlCenter"));
 /* Finance Console — same pattern. The audit log and ledger pulls
  * are heavyweight; only fetch them when the operator opens the tab. */
 const FinanceConsole = lazy(() => import("./FinanceConsole"));
+/* Identity & Trust queue — admin verification review. */
+const AdminVerificationQueue = lazy(() => import("./AdminVerificationQueue"));
 import LiveOpsStrip from "./global/LiveOpsStrip";
 
 type AdminTab =
   | "overview"
   | "live-ops"
   | "finance"
+  | "identity"
   | "fleet-map"
   | "drivers"
   | "bookings"
@@ -207,6 +210,7 @@ export default function AdminDashboard() {
     "overview",
     "live-ops",
     "finance",
+    "identity",
     "fleet-map",
     "drivers",
     "bookings",
@@ -705,6 +709,16 @@ export default function AdminDashboard() {
             </div>
           }>
             <FinanceConsole />
+          </Suspense>
+        )}
+
+        {tab === "identity" && (
+          <Suspense fallback={
+            <div className="bg-gray-100 rounded-xl h-[400px] animate-pulse flex items-center justify-center text-gray-400 text-sm">
+              Loading Identity Verification Queue…
+            </div>
+          }>
+            <AdminVerificationQueue />
           </Suspense>
         )}
 

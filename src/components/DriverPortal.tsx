@@ -13,6 +13,10 @@ const NearbyJobsMap = lazy(() => import('./NearbyJobsMap'));
  * tab. Avoids pulling supabase storage helpers + dispute-rules into
  * the main bundle for drivers who never see a complaint. */
 const ProviderDisputesPanel = lazy(() => import('./ProviderDisputesPanel'));
+/* Identity & Trust panel — same lazy pattern. The verification
+ * fetch + trust-level computation only fire when the driver opens
+ * the identity tab. */
+const IdentityVerificationPanel = lazy(() => import('./IdentityVerificationPanel'));
 
 function safeNumber(value: any): number {
   const n = Number(value ?? 0);
@@ -593,7 +597,7 @@ export default function DriverPortal() {
 
       <div className="p-6 max-w-7xl mx-auto">
         <div className="flex gap-2 mb-6 flex-wrap">
-          {(['overview', 'jobs', 'earnings', 'wallet', 'subscription', 'disputes'] as const).map(tab => (
+          {(['overview', 'jobs', 'earnings', 'wallet', 'subscription', 'disputes', 'identity'] as const).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 rounded capitalize text-sm font-medium ${activeTab === tab ? 'bg-black text-white' : 'bg-gray-200 text-gray-700'}`}>{t(`driverPortal.${tab}`, tab)}</button>
           ))}
           {/* Pricing settings — separate page rather than in-tab so the
@@ -814,6 +818,12 @@ export default function DriverPortal() {
         {activeTab === 'disputes' && user && (
           <Suspense fallback={<div className="h-32 bg-white rounded-xl border animate-pulse" />}>
             <ProviderDisputesPanel providerUserId={user.id} />
+          </Suspense>
+        )}
+
+        {activeTab === 'identity' && user && (
+          <Suspense fallback={<div className="h-32 bg-white rounded-xl border animate-pulse" />}>
+            <IdentityVerificationPanel providerUserId={user.id} />
           </Suspense>
         )}
       </div>
