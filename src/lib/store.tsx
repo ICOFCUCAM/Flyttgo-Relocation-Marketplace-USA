@@ -34,6 +34,12 @@ export type Page =
   | 'providers-directory'
   /* Side-by-side provider comparison (Wave 30). */
   | 'compare'
+  /* Service-category landing page (Wave 31).
+   *
+   * Slug carried via the URL path segment (`/services/long-distance`)
+   * rather than a `?slug=` query param so the page reads as a real
+   * SEO target. pathToPage prefix-matches /services/. */
+  | 'service-category'
   /* Fallback for URLs that don't match any known route. */
   | 'not-found';
 
