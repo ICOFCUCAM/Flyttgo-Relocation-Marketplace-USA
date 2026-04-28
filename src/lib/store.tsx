@@ -59,6 +59,11 @@ export type Page =
   | 'pilot-deployment-programs'
   /* Email-token landing for organization invites. */
   | 'accept-org-invite'
+  /* Procurement-compatible institutional access layer. */
+  | 'vendor-pack'
+  | 'procurement-rfp'
+  | 'deployment-regions'
+  | 'capability-brief'
   /* Fallback for URLs that don't match any known route. */
   | 'not-found';
 

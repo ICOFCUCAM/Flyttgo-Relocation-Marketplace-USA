@@ -37,6 +37,10 @@ const INSTITUTIONAL: LinkItem[] = [
   { label: 'Government Programs',    page: 'government-programs' },
   { label: 'NGO Deployment',         page: 'ngo-deployment' },
   { label: 'Pilot Programs',         page: 'pilot-deployment-programs' },
+  { label: 'Deployment Regions',     page: 'deployment-regions' },
+  { label: 'Vendor Compliance Pack', page: 'vendor-pack' },
+  { label: 'Capability Brief',       page: 'capability-brief' },
+  { label: 'Submit Procurement RFP', page: 'procurement-rfp' },
 ];
 
 const COMPANY: LinkItem[] = [
