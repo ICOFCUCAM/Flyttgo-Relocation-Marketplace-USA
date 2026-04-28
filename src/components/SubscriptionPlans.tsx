@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { SUBSCRIPTION_PLANS, calculateCommission } from '../lib/constants';
+import { SUBSCRIPTION_PLANS, calculateCommission, PLAN_REFUND_POLICY } from '../lib/constants';
 import { useApp } from '../lib/store';
 import { useAuth } from '../lib/auth';
 import { supabase } from '../lib/supabase';
@@ -180,7 +180,7 @@ export default function SubscriptionPlans() {
                   {plan.dispatchPriority} Priority
                 </span>
               </div>
-              <ul className="space-y-2 mb-6">
+              <ul className="space-y-2 mb-4">
                 {plan.features.map((f, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm">
                     <svg className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/></svg>
@@ -188,6 +188,24 @@ export default function SubscriptionPlans() {
                   </li>
                 ))}
               </ul>
+
+              {/* Cash-on-delivery policy per plan — surfaces the
+                  refund-retention drivers earn under PLAN_REFUND_POLICY. */}
+              {(() => {
+                const refund = PLAN_REFUND_POLICY[plan.id] ?? PLAN_REFUND_POLICY.basic;
+                return (
+                  <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-amber-700 mb-1">
+                      Cash-booking policy
+                    </p>
+                    <p className="text-xs text-amber-900 leading-relaxed">
+                      {refund.cancellationGraceHours}h cancellation grace ·{' '}
+                      <strong>{refund.noShowDriverSharePct}% of forfeited deposit</strong>{' '}
+                      paid to you on a customer no-show
+                    </p>
+                  </div>
+                );
+              })()}
               <button
                 onClick={handleSubscribeClick}
                 disabled={gate === 'loading'}
