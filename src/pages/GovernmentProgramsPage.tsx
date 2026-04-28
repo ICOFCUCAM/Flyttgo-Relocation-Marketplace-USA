@@ -6,6 +6,7 @@ import {
 import { useApp } from '../lib/store';
 import { Section, Eyebrow, Pill } from '../components/ds';
 import { COMPLIANCE_DISCLOSURE } from '../lib/onboarding-rules';
+import InstitutionalCTAs from '../components/global/InstitutionalCTAs';
 
 /* ─────────────────────────────────────────────────────────────────
  * <GovernmentProgramsPage> — /government-programs
@@ -71,6 +72,9 @@ export default function GovernmentProgramsPage() {
           compliance, audit-ready settlement, and framework-agreement pricing
           land out-of-the-box.
         </p>
+        <div className="mt-7">
+          <InstitutionalCTAs emphasizePrimary />
+        </div>
       </Section>
 
       {/* COMPLIANCE DISCLOSURE */}

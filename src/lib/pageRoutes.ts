@@ -119,6 +119,10 @@ const PAGE_TO_PATH: Record<Page, string> = {
   'ngo-deployment':              '/ngo-deployment',
   'pilot-deployment-programs':   '/pilot-deployment-programs',
   'accept-org-invite':           '/invite',
+  'vendor-pack':                 '/compliance/vendor-pack',
+  'procurement-rfp':             '/procurement/rfp',
+  'deployment-regions':          '/deployment-regions',
+  'capability-brief':            '/resources/capability-brief',
 
   /* Fallback for unknown routes. No real path — pathToPage() returns
    * this id for anything it can't match. setPage('not-found') still
@@ -175,6 +179,10 @@ const PAGE_TITLES: Record<Page, string> = {
   'ngo-deployment':           'NGO deployment logistics · FlyttGo',
   'pilot-deployment-programs':'Pilot deployment programs · FlyttGo',
   'accept-org-invite':        'Accept organization invite · FlyttGo',
+  'vendor-pack':              'Vendor compliance pack · FlyttGo',
+  'procurement-rfp':          'Submit a procurement inquiry · FlyttGo',
+  'deployment-regions':       'Deployment regions · FlyttGo',
+  'capability-brief':         'Capability brief · FlyttGo',
   'booking':                  'Book a Move · FlyttGo Global',
   'payment':                  'Secure Payment · FlyttGo Global',
   'tracking':                 'Track Your Coordination · FlyttGo Global',
@@ -276,6 +284,14 @@ const PAGE_DESCRIPTIONS: Record<Page, string> = {
     "FlyttGo pilot deployment programs — five archetypes (municipal / university / transit-authority / marketplace-rollout / identity-integrated) for ministries and authorities exploring institutional procurement before long-form rollout.",
   'accept-org-invite':
     "Accept your FlyttGo organization invite to join your team's institutional account — relocation requests, approval workflow, and invoice billing.",
+  'vendor-pack':
+    "FlyttGo vendor compliance pack for procurement teams — operator entities, deployment architecture, operating regions, data handling, security, service availability, and procurement contact channel.",
+  'procurement-rfp':
+    "Submit a procurement inquiry to FlyttGo — for ministries, universities, NGOs, transit authorities, and enterprise mobility teams. RFP intake routes to the procurement queue with a 2-business-day SLA.",
+  'deployment-regions':
+    "Markets where FlyttGo settles bookings today — live coverage, partner coverage, and expansion-ready countries for institutional pilot programmes.",
+  'capability-brief':
+    "FlyttGo capability brief — operator governance, geographic deployment readiness, compliance + provider verification, architecture, and procurement integration patterns. Delivered tailored to your procurement context.",
   'booking':
     'Book your next move in under 3 minutes. Get an instant quote, pick a verified driver, and track your delivery live — all with escrow payment built in.',
   'payment':

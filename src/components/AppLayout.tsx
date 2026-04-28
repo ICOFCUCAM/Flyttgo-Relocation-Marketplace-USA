@@ -69,6 +69,10 @@ const GovernmentProgramsPage = lazy(() => import('../pages/GovernmentProgramsPag
 const NGODeploymentPage = lazy(() => import('../pages/NGODeploymentPage'));
 const PilotDeploymentProgramsPage = lazy(() => import('../pages/PilotDeploymentProgramsPage'));
 const AcceptOrgInvitePage = lazy(() => import('../pages/AcceptOrgInvitePage'));
+const VendorCompliancePackPage = lazy(() => import('../pages/VendorCompliancePackPage'));
+const RFPSubmissionPage = lazy(() => import('../pages/RFPSubmissionPage'));
+const DeploymentRegionsPage = lazy(() => import('../pages/DeploymentRegionsPage'));
+const CapabilityBriefPage = lazy(() => import('../pages/CapabilityBriefPage'));
 const Footer             = lazy(() => import('./Footer'));
 const LiveBookingTicker  = lazy(() => import('./global/LiveBookingTicker'));
 const FloatingChat       = lazy(() => import('./global/FloatingChat'));
@@ -166,7 +170,7 @@ export default function AppLayout() {
    * show it on customer-discovery surfaces (home, country pages,
    * marketplace, how-it-works). Suppressed on dashboards, auth, and
    * payment surfaces where it would distract. */
-  const showTicker = ['home','marketplace','how-it-works','providers','cities','enterprise-relocation','partners','about','universities','market-us','market-canada','market-germany','market-france','market-uk','market-norway','refer','provider-profile','providers-directory','compare','service-category','pricing','provider-requirements','government-programs','ngo-deployment','pilot-deployment-programs'].includes(currentPage);
+  const showTicker = ['home','marketplace','how-it-works','providers','cities','enterprise-relocation','partners','about','universities','market-us','market-canada','market-germany','market-france','market-uk','market-norway','refer','provider-profile','providers-directory','compare','service-category','pricing','provider-requirements','government-programs','ngo-deployment','pilot-deployment-programs','vendor-pack','procurement-rfp','deployment-regions','capability-brief'].includes(currentPage);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -233,6 +237,10 @@ export default function AppLayout() {
       case 'ngo-deployment':            return <NGODeploymentPage />;
       case 'pilot-deployment-programs': return <PilotDeploymentProgramsPage />;
       case 'accept-org-invite':         return <AcceptOrgInvitePage />;
+      case 'vendor-pack':               return <VendorCompliancePackPage />;
+      case 'procurement-rfp':           return <RFPSubmissionPage />;
+      case 'deployment-regions':        return <DeploymentRegionsPage />;
+      case 'capability-brief':          return <CapabilityBriefPage />;
       case 'not-found':              return <NotFoundPage />;
       default:                       return <NotFoundPage />;
     }

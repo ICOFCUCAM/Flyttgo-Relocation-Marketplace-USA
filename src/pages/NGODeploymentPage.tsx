@@ -6,6 +6,7 @@ import {
 import { useApp } from '../lib/store';
 import { Section, Eyebrow, Pill } from '../components/ds';
 import { COMPLIANCE_DISCLOSURE } from '../lib/onboarding-rules';
+import InstitutionalCTAs from '../components/global/InstitutionalCTAs';
 
 /* ─────────────────────────────────────────────────────────────────
  * <NGODeploymentPage> — /ngo-deployment
@@ -48,6 +49,12 @@ export default function NGODeploymentPage() {
           markets. Framework agreements + Certified Infrastructure Partner
           tier + escrow settlement land out-of-the-box.
         </p>
+        <div className="mt-7">
+          <InstitutionalCTAs
+            only={['submit-procurement-inquiry','start-pilot-deployment','download-capability-brief']}
+            emphasizePrimary
+          />
+        </div>
       </Section>
 
       {/* COMPLIANCE */}
