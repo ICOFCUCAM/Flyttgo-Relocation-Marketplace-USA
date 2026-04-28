@@ -8,7 +8,9 @@ import { useApp } from '../../lib/store';
 import { useAuth } from '../../lib/auth';
 import {
   loadProviderPricing, saveProviderPricing,
-  PROVIDER_PRICING_DEFAULTS, type ProviderPricingRow,
+  listAvailabilityBlackouts, addAvailabilityBlackout, removeAvailabilityBlackout,
+  PROVIDER_PRICING_DEFAULTS,
+  type ProviderPricingRow, type AvailabilityBlackoutRow,
 } from '../../lib/provider-pricing-store';
 import {
   calculateQuote, COUNTRY_BASELINES, COMMISSION_DEFAULT,
@@ -50,14 +52,47 @@ export default function PricingSettingsPage() {
   const [previewCountry, setPreviewCountry] = useState<PricingCountry>('us');
   const [previewWeekend, setPreviewWeekend] = useState(true);
 
+  /* Availability blackouts — list + add form state. */
+  const [blackouts, setBlackouts] = useState<AvailabilityBlackoutRow[]>([]);
+  const [blackoutStart, setBlackoutStart] = useState('');
+  const [blackoutEnd,   setBlackoutEnd]   = useState('');
+  const [blackoutReason,setBlackoutReason]= useState('');
+
   useEffect(() => {
     if (!user?.id) return;
     setLoading(true);
-    loadProviderPricing(user.id)
-      .then(r => { setRow(r); setLoadError(null); })
+    Promise.all([
+      loadProviderPricing(user.id),
+      listAvailabilityBlackouts(user.id),
+    ])
+      .then(([r, bs]) => { setRow(r); setBlackouts(bs); setLoadError(null); })
       .catch(err => setLoadError(err.message))
       .finally(() => setLoading(false));
   }, [user?.id]);
+
+  async function handleAddBlackout() {
+    if (!user?.id || !blackoutStart || !blackoutEnd) return;
+    if (blackoutEnd < blackoutStart) {
+      toast.error('End date must be on or after the start date'); return;
+    }
+    try {
+      const fresh = await addAvailabilityBlackout(user.id, blackoutStart, blackoutEnd, blackoutReason || undefined);
+      setBlackouts(prev => [...prev, fresh].sort((a, b) => a.starts_on.localeCompare(b.starts_on)));
+      setBlackoutStart(''); setBlackoutEnd(''); setBlackoutReason('');
+      toast.success('Blackout added');
+    } catch (err) {
+      toast.error('Failed to add blackout', { description: err instanceof Error ? err.message : '' });
+    }
+  }
+
+  async function handleRemoveBlackout(id: string) {
+    try {
+      await removeAvailabilityBlackout(id);
+      setBlackouts(prev => prev.filter(b => b.id !== id));
+    } catch (err) {
+      toast.error('Failed to remove', { description: err instanceof Error ? err.message : '' });
+    }
+  }
 
   /* Derived: the engine's preview total + payout. Recomputes on
    * every edit; calculateQuote is pure + synchronous. */
@@ -257,6 +292,31 @@ export default function PricingSettingsPage() {
               </div>
             </Field>
 
+            <Field label="Home base coordinates (optional)">
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  type="number" step="0.000001" min={-90} max={90}
+                  placeholder="Latitude (e.g. 32.7767)"
+                  value={row.home_lat ?? ''}
+                  onChange={e => patch('home_lat', e.target.value === '' ? null : Number(e.target.value))}
+                  className="px-3 py-2 text-sm border border-slate-300 rounded-lg"
+                />
+                <input
+                  type="number" step="0.000001" min={-180} max={180}
+                  placeholder="Longitude (e.g. -96.7970)"
+                  value={row.home_lng ?? ''}
+                  onChange={e => patch('home_lng', e.target.value === '' ? null : Number(e.target.value))}
+                  className="px-3 py-2 text-sm border border-slate-300 rounded-lg"
+                />
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1">
+                Feeds the matcher's distance scoring. Without coordinates the
+                distance signal degenerates to neutral — the matcher still
+                works but can't preferentially route to nearby providers.
+                You can paste from Google Maps "What's here?" / Apple Maps.
+              </p>
+            </Field>
+
             {/* Rate floor */}
             <h2 className="mt-8 text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">
               2. Rate overrides
@@ -349,6 +409,74 @@ export default function PricingSettingsPage() {
                   />
                 </div>
               </Field>
+            )}
+
+            {/* Availability blackouts — feeds the matcher's calendar
+                exclusion. Adding a date range here means dispatch
+                skips this provider for any booking whose move_date
+                lands inside the range. */}
+            <h2 className="mt-8 text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">
+              3. Availability blackouts
+            </h2>
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+              <p className="text-xs text-amber-700 font-bold uppercase tracking-wider mb-1">
+                Block dispatch for date ranges
+              </p>
+              <p className="text-xs text-slate-700 leading-relaxed">
+                Holidays, fleet maintenance, training weeks. The matcher
+                excludes you from bookings whose move date lands inside any
+                listed range.
+              </p>
+            </div>
+
+            <div className="grid sm:grid-cols-3 gap-2 mb-2">
+              <input
+                type="date" value={blackoutStart}
+                onChange={e => setBlackoutStart(e.target.value)}
+                className="px-3 py-2 text-sm border border-slate-300 rounded-lg"
+                placeholder="Start"
+              />
+              <input
+                type="date" value={blackoutEnd}
+                min={blackoutStart || undefined}
+                onChange={e => setBlackoutEnd(e.target.value)}
+                className="px-3 py-2 text-sm border border-slate-300 rounded-lg"
+                placeholder="End"
+              />
+              <button
+                onClick={handleAddBlackout}
+                disabled={!blackoutStart || !blackoutEnd}
+                className="px-3 py-2 bg-ink-900 text-white text-sm font-bold rounded-lg disabled:opacity-50"
+              >
+                Add blackout
+              </button>
+            </div>
+            <input
+              type="text" value={blackoutReason}
+              onChange={e => setBlackoutReason(e.target.value)}
+              placeholder="Reason (optional · e.g. Holiday closure)"
+              className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg mb-3"
+            />
+
+            {blackouts.length > 0 ? (
+              <ul className="space-y-1.5 mb-4">
+                {blackouts.map(b => (
+                  <li key={b.id} className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2 text-xs">
+                    <span>
+                      <strong>{new Date(b.starts_on).toLocaleDateString()}</strong>
+                      <span className="mx-1">→</span>
+                      <strong>{new Date(b.ends_on).toLocaleDateString()}</strong>
+                      {b.reason && <span className="text-slate-500 ml-2">· {b.reason}</span>}
+                    </span>
+                    <button
+                      onClick={() => handleRemoveBlackout(b.id)}
+                      className="text-slate-400 hover:text-rose-600 text-xs"
+                    >Remove</button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs text-slate-400 mb-4">No blackouts on file.</p>
             )}
 
             <div className="mt-8 pt-6 border-t border-slate-200 flex items-center justify-between gap-3">

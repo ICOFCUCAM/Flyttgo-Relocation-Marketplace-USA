@@ -27,6 +27,10 @@ export interface ProviderPricingRow {
   weekend_multiplier_override:  number | null;
   truck_per_hour_override:      number | null;
   packing_per_hour_override:    number | null;
+  /** Home base coordinates — feeds the matcher's distance factor.
+   *  Null when the provider hasn't supplied a precise location yet. */
+  home_lat:                     number | null;
+  home_lng:                     number | null;
   created_at?:                  string;
   updated_at?:                  string;
 }
@@ -41,7 +45,50 @@ export const PROVIDER_PRICING_DEFAULTS: ProviderPricingRow = {
   weekend_multiplier_override:  null,
   truck_per_hour_override:      null,
   packing_per_hour_override:    null,
+  home_lat:                     null,
+  home_lng:                     null,
 };
+
+/* ── Availability blackouts ───────────────────────────────────── */
+
+export interface AvailabilityBlackoutRow {
+  id:          string;
+  user_id:     string;
+  starts_on:   string;        // ISO date
+  ends_on:     string;
+  reason?:     string | null;
+  created_at:  string;
+}
+
+export async function listAvailabilityBlackouts(userId: string): Promise<AvailabilityBlackoutRow[]> {
+  const { data, error } = await supabase
+    .from('provider_availability_blackouts')
+    .select('*')
+    .eq('user_id', userId)
+    .order('starts_on', { ascending: true });
+  if (error) throw new Error(`listAvailabilityBlackouts failed: ${error.message}`);
+  return (data ?? []) as AvailabilityBlackoutRow[];
+}
+
+export async function addAvailabilityBlackout(
+  userId: string, startsOn: string, endsOn: string, reason?: string,
+): Promise<AvailabilityBlackoutRow> {
+  const { data, error } = await supabase
+    .from('provider_availability_blackouts')
+    .insert({ user_id: userId, starts_on: startsOn, ends_on: endsOn, reason: reason ?? null })
+    .select()
+    .single();
+  if (error) throw new Error(`addAvailabilityBlackout failed: ${error.message}`);
+  return data as AvailabilityBlackoutRow;
+}
+
+export async function removeAvailabilityBlackout(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('provider_availability_blackouts')
+    .delete()
+    .eq('id', id);
+  if (error) throw new Error(`removeAvailabilityBlackout failed: ${error.message}`);
+}
 
 /**
  * Load the signed-in provider's pricing row. Returns the defaults
