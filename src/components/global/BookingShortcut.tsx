@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Banknote, CreditCard, MapPin, Clock, Info, Bookmark, Check } from 'lucide-react';
+import { Banknote, CreditCard, MapPin, Clock, Info, Bookmark } from 'lucide-react';
+import { toast } from 'sonner';
 import { useApp } from '../../lib/store';
 import type { BookingCountry, PaymentMethod } from '../../lib/store';
 import NorwayAddressAutocomplete, { USAddress } from '../NorwayAddressAutocomplete';
@@ -117,7 +118,6 @@ export default function BookingShortcut({ country, compact = false }: Props) {
   const [dropoff, setDropoff]   = useState<USAddress | null>(null);
   const [moveDate, setMoveDate] = useState('');
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [justSaved, setJustSaved]     = useState(false);
 
   /* ── Two distance systems, both displayed for transparency ──
    * 1) OSRM via getRouteDistance — real road distance + ETA
@@ -240,7 +240,9 @@ export default function BookingShortcut({ country, compact = false }: Props) {
    * saved-quotes-store; surfaced on MyBookings under "Saved quotes". */
   function handleSave() {
     if (!pickup || !dropoff || indicative == null) {
-      setSubmitError('Please pick a pickup and a drop-off address before saving.');
+      toast.error('Pick a pickup and a drop-off address first', {
+        description: 'We need both ends of the route to save the quote.',
+      });
       return;
     }
     setSubmitError(null);
@@ -257,8 +259,10 @@ export default function BookingShortcut({ country, compact = false }: Props) {
       durationMinutes: route?.durationMinutes ?? null,
     });
     track('quote_saved', { country, indicativeTotal: indicative });
-    setJustSaved(true);
-    setTimeout(() => setJustSaved(false), 2200);
+    toast.success('Quote saved', {
+      description: `${formatCurrency(indicative, country)} · find it on My Bookings.`,
+      action: { label: 'Open', onClick: () => setPage('my-bookings') },
+    });
   }
 
   return (
@@ -410,15 +414,10 @@ export default function BookingShortcut({ country, compact = false }: Props) {
         type="button"
         onClick={handleSave}
         disabled={!pickup || !dropoff || indicative == null}
-        className={`mt-2 w-full inline-flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-base ease-marketplace ${
-          justSaved
-            ? 'bg-trust-50 text-trust-600'
-            : 'border border-slate-300 text-slate-600 hover:border-slate-900 hover:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed'
-        }`}
-        aria-live="polite"
+        className="mt-2 w-full inline-flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider border border-slate-300 text-slate-600 hover:border-slate-900 hover:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-base ease-marketplace"
       >
-        {justSaved ? <Check size={14} /> : <Bookmark size={14} />}
-        {justSaved ? 'Saved · find it on My Bookings' : 'Save this quote for later'}
+        <Bookmark size={14} />
+        Save this quote for later
       </button>
 
       <p className="mt-3 text-xs text-slate-500 text-center flex items-center justify-center gap-2 flex-wrap">

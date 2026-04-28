@@ -4,6 +4,7 @@ import {
   TrendingUp, Wallet, Users,
   type LucideIcon,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAuth } from '../lib/auth';
 import { useApp } from '../lib/store';
 import { Section, Eyebrow, SectionHeading, Pill, AnimatedNumber } from '../components/ds';
@@ -89,10 +90,14 @@ export default function ReferPage() {
       setShowAuthModal(true);
       return;
     }
-    void navigator.clipboard.writeText(shareUrl);
-    setCopied(true);
-    track('referral_link_copied', { code });
-    setTimeout(() => setCopied(false), 2000);
+    void navigator.clipboard.writeText(shareUrl).then(() => {
+      track('referral_link_copied', { code });
+      setCopied(true);
+      toast.success('Referral link copied', {
+        description: `When a friend books with code ${code}, you both get £${REFERRAL_VALUE_GBP}.`,
+      });
+      setTimeout(() => setCopied(false), 2000);
+    });
   }
 
   const greeting = user

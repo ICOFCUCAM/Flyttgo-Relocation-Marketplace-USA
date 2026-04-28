@@ -1,6 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
-import { PackageSearch, Bookmark, MapPin, Calendar, X, Share2, Check } from "lucide-react";
+import { PackageSearch, Bookmark, MapPin, Calendar, X, Share2 } from "lucide-react";
+import { toast } from "sonner";
 import { supabase, supabaseFunctionUrl } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
 import { useApp } from "../lib/store";
@@ -78,19 +79,33 @@ export default function MyBookings() {
 
   async function cancelBooking(id: string) {
     if (!confirm("Cancel this booking?")) return;
-    await supabase.from("bookings").update({ status: "cancelled" }).eq("id", id);
+    const { error } = await supabase.from("bookings").update({ status: "cancelled" }).eq("id", id);
+    if (error) {
+      toast.error('Could not cancel booking', { description: error.message });
+    } else {
+      toast.success('Booking cancelled', { description: 'Refund (if any) is processed by ops within 24 hours.' });
+    }
     fetchBookings();
   }
 
   async function confirmCompletion(bookingId: string) {
     // 'customer_confirmed' is not in the bookings.status CHECK constraint —
     // rely on the customer_confirmation boolean + DB trigger instead.
-    await supabase.from("bookings").update({ customer_confirmation: true }).eq("id", bookingId);
+    const { error } = await supabase.from("bookings").update({ customer_confirmation: true }).eq("id", bookingId);
+    if (error) {
+      toast.error('Could not confirm completion', { description: error.message });
+      return;
+    }
     const { data: booking } = await supabase.from("bookings").select("driver_confirmation").eq("id", bookingId).single();
     if (booking?.driver_confirmation === true) {
       await fetch(supabaseFunctionUrl("process-payment"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "release_escrow", bookingId }) });
-      alert("Job complete! Payment released to driver.");
-    } else { alert("Confirmed! Waiting for driver confirmation to release payment."); }
+      toast.success('Job complete', { description: 'Payment released to your driver.' });
+    } else {
+      toast('Waiting for driver confirmation', {
+        description: 'We\'ll release payment as soon as both sides confirm.',
+        icon: '⏳',
+      });
+    }
     fetchBookings();
   }
 
@@ -373,8 +388,6 @@ function SavedQuotesPanel({ onResume }: { onResume: (q: SavedQuote) => void }) {
  * native share sheet; falls back to clipboard write on desktop.
  * ───────────────────────────────────────────────────────────────── */
 function ShareQuoteButton({ quote }: { quote: SavedQuote }) {
-  const [copied, setCopied] = React.useState(false);
-
   async function share() {
     const url = buildShareUrl(quote);
     if (typeof navigator !== 'undefined' && navigator.share) {
@@ -384,13 +397,15 @@ function ShareQuoteButton({ quote }: { quote: SavedQuote }) {
           text: `${quote.country.toUpperCase()}: ${quote.pickupAddress.split(',')[0]} → ${quote.dropoffAddress.split(',')[0]}`,
           url,
         });
+        toast.success('Shared');
         return;
       } catch { /* user cancelled — fall through to clipboard */ }
     }
     try {
       await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      toast.success('Share link copied', {
+        description: 'Forward it to anyone — they\'ll land on the country shopfront with your brief pre-loaded.',
+      });
     } catch {
       window.prompt('Copy this share link:', url);
     }
@@ -400,15 +415,11 @@ function ShareQuoteButton({ quote }: { quote: SavedQuote }) {
     <button
       onClick={share}
       aria-label="Share this quote"
-      title={copied ? 'Copied!' : 'Share with a partner'}
-      className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-base ease-marketplace ${
-        copied
-          ? 'bg-emerald-50 text-emerald-700'
-          : 'border border-slate-300 text-slate-600 hover:border-slate-900 hover:text-slate-900'
-      }`}
+      title="Share with a partner"
+      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold border border-slate-300 text-slate-600 hover:border-slate-900 hover:text-slate-900 transition-base ease-marketplace"
     >
-      {copied ? <Check size={12} /> : <Share2 size={12} />}
-      {copied ? 'Copied' : 'Share'}
+      <Share2 size={12} />
+      Share
     </button>
   );
 }
