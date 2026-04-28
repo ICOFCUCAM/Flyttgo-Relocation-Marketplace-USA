@@ -5,6 +5,8 @@ import type { Page, BookingCountry } from '../../lib/store';
 import { applyCountryLanguage } from '../../lib/i18n';
 import BookingShortcut from './BookingShortcut';
 import CountrySchema from './CountrySchema';
+import { POPULAR_CITIES } from '../../lib/popular-cities';
+import { track } from '../../lib/analytics';
 
 /**
  * Section-index label — kept for backward compatibility with editorial
@@ -168,6 +170,37 @@ export default function CountryPage(props: CountryPageProps) {
               <p className="text-lg text-white/85 leading-relaxed max-w-xl mb-7">
                 {props.positioning}
               </p>
+
+              {POPULAR_CITIES[props.iso2]?.length > 0 && (
+                <div className="mb-6">
+                  <p className="text-xs font-bold uppercase tracking-wider text-amber-300/80 mb-2">
+                    Popular {props.name} moves
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {POPULAR_CITIES[props.iso2].map(city => (
+                      <button
+                        key={city}
+                        type="button"
+                        onClick={() => {
+                          track('country_popular_city_clicked', { country: props.iso2, city });
+                          if (typeof window !== 'undefined') {
+                            const qs = new URLSearchParams({ country: props.iso2, q: city });
+                            window.history.pushState({}, '', `/providers/directory?${qs}`);
+                          }
+                          go('providers-directory');
+                          if (typeof window !== 'undefined') {
+                            window.dispatchEvent(new PopStateEvent('popstate'));
+                          }
+                        }}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold transition"
+                      >
+                        <MapPin size={11} className="text-amber-300" />
+                        {city}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="flex flex-wrap gap-x-5 gap-y-2 text-white/80 text-sm">
                 <span className="flex items-center gap-1.5">
