@@ -10,6 +10,16 @@ html {
   scroll-padding-top: 120px;
 }
 
+/* ── Reserve space for the mobile bottom nav (~64px) on screens
+ *    narrower than the lg breakpoint, so fixed-bottom widgets and
+ *    page content don't get hidden behind the tab bar.
+ *    Hidden on lg+ where MobileBottomNav itself is hidden. */
+@media (max-width: 1023px) {
+  body {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  }
+}
+
 @layer base {
   :root {
     --background: 210 40% 98%;
