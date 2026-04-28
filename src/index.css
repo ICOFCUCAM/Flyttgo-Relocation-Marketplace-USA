@@ -88,6 +88,32 @@ html {
   --shadow-elevated:0 20px 48px rgba(11, 31, 58, 0.14);
 }
 
+/* ── Dark-mode overrides ────────────────────────────────────────
+ * Every component that consumes design tokens (bg-surface-canvas,
+ * text-ink-900, bg-brand-50, …) flips automatically when the .dark
+ * class is on <html>. ThemeProvider in src/components/theme-provider
+ * toggles that class based on the user's "Light / Dark / System"
+ * preference (persisted to localStorage).
+ *
+ * Components that still use raw Tailwind colour classes (bg-white,
+ * text-slate-900) won't flip yet — the migration to design tokens
+ * is incremental. ThemeToggle is hidden in dev for surfaces that
+ * still need work. */
+:root.dark {
+  --surface-canvas: #06111f;  /* deepest navy */
+  --surface-soft:   #0b1f3a;  /* mid navy */
+  --surface-warm:   #1a2e4f;  /* lifted dark surface */
+  --ink-900:        #f8fafc;  /* near-white text on dark bg */
+  --ink-800:        #e2e8f0;
+  --ink-700:        #cbd5e1;
+  --brand-50:       rgba(245, 158, 11, 0.12);  /* faint amber wash */
+  --trust-50:       rgba(5, 150, 105, 0.15);
+  --danger-50:      rgba(220, 38, 38, 0.18);
+  --shadow-soft:    0 1px 3px rgba(0, 0, 0, 0.4),  0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-medium:  0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-elevated:0 20px 48px rgba(0, 0, 0, 0.55);
+}
+
 @layer base {
   :root {
     --background: 210 40% 98%;

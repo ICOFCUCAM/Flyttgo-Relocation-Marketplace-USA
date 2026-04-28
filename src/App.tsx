@@ -15,7 +15,7 @@ const queryClient = new QueryClient();
 export default function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="light">
+      <ThemeProvider defaultTheme="system">
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <AppProvider>
