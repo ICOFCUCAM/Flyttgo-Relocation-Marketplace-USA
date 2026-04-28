@@ -8,7 +8,10 @@ import {
   type SubscriptionTierSlug,
 } from '../lib/subscription-tiers';
 import { COUNTRY_PROFILES } from '../lib/country-profiles';
-import { checkCipEligibility, CIP_THRESHOLDS } from '../lib/cip-eligibility';
+import {
+  checkCipEligibilityFull, CIP_THRESHOLDS,
+  type DocumentStatus, type CipDocumentSlug,
+} from '../lib/cip-eligibility';
 import { loadProviderScore } from '../lib/provider-scoring-store';
 import type { PricingCountry } from '../lib/pricing-engine';
 
@@ -21,6 +24,24 @@ type ApplicationGate =
   | 'rejected'      // rejected, needs re-upload
   | 'approved';     // ready to subscribe
 
+/* Map the existing driver_documents.document_type values to the
+ * four canonical CIP document slugs the eligibility check expects.
+ * We're flexible on naming because the underlying table predates
+ * the CIP requirements layer. */
+function mapDocTypeToCipSlug(raw: string | null | undefined): CipDocumentSlug | null {
+  const v = (raw ?? '').toLowerCase().replace(/[\s-]/g, '_');
+  if (v.includes('insurance'))                                return 'insurance';
+  if (v.includes('vehicle_compliance') || v.includes('vehicle_registration')
+                                       || v.includes('mot')) return 'vehicle_compliance';
+  if (v.includes('tax')           || v.includes('vat')
+                                  || v.includes('siret'))    return 'tax_registration';
+  if (v.includes('company')       || v.includes('business')
+                                  || v.includes('registration')
+                                  || v.includes('gewerbe')
+                                  || v.includes('cac'))      return 'company_registration';
+  return null;
+}
+
 export default function SubscriptionPlans() {
   const { setShowAuthModal, setAuthMode, setPage } = useApp();
   const { user, profile } = useAuth();
@@ -30,15 +51,44 @@ export default function SubscriptionPlans() {
    * country once we surface it from the dashboard. */
   const [country, setCountry] = useState<PricingCountry>('us');
   /* CIP eligibility — fetched for signed-in approved providers so
-   * the gating panel reads the real numbers from provider_reputation. */
-  const [cipEligibility, setCipEligibility] = useState<ReturnType<typeof checkCipEligibility> | null>(null);
+   * the gating panel reads the real numbers from provider_reputation
+   * + the document statuses from driver_documents. */
+  const [cipEligibility, setCipEligibility] = useState<ReturnType<typeof checkCipEligibilityFull> | null>(null);
 
   useEffect(() => {
     if (!user?.id) { setCipEligibility(null); return; }
     let cancelled = false;
-    loadProviderScore(user.id)
-      .then(score => { if (!cancelled) setCipEligibility(checkCipEligibility(score)); })
-      .catch(() => { if (!cancelled) setCipEligibility(null); });
+
+    async function loadEligibility() {
+      const score = await loadProviderScore(user!.id);
+
+      /* Pull the latest status per CIP-required document type from
+       * driver_documents. The table stores raw strings — we map
+       * them to our four canonical CIP slugs. Missing rows imply
+       * the doc hasn't been uploaded. */
+      const { data: docRows } = await supabase
+        .from('driver_documents')
+        .select('document_type, verification_status')
+        .eq('driver_id', user!.id);
+
+      const docMap = new Map<CipDocumentSlug, DocumentStatus['status']>();
+      for (const r of (docRows ?? [])) {
+        const slug = mapDocTypeToCipSlug(r.document_type);
+        if (!slug) continue;
+        const status: DocumentStatus['status'] =
+          r.verification_status === 'approved' ? 'approved' :
+          r.verification_status === 'rejected' ? 'rejected' :
+                                                  'pending';
+        /* Approved beats pending; pending beats missing. */
+        const prev = docMap.get(slug);
+        if (prev === 'approved') continue;
+        docMap.set(slug, status);
+      }
+      const documents: DocumentStatus[] = Array.from(docMap.entries()).map(([slug, status]) => ({ slug, status }));
+      if (!cancelled) setCipEligibility(checkCipEligibilityFull(score, documents));
+    }
+
+    void loadEligibility().catch(() => { if (!cancelled) setCipEligibility(null); });
     return () => { cancelled = true; };
   }, [user?.id]);
 
