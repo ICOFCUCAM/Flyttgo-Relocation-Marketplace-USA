@@ -56,6 +56,7 @@ const MarketFrancePage   = lazy(() => import('../pages/markets/FrancePage'));
 const MarketUKPage       = lazy(() => import('../pages/markets/UKPage'));
 const MarketNorwayPage   = lazy(() => import('../pages/markets/NorwayPage'));
 const Footer             = lazy(() => import('./Footer'));
+const LiveBookingTicker  = lazy(() => import('./global/LiveBookingTicker'));
 
 function Loading() {
   return (
@@ -83,6 +84,11 @@ export default function AppLayout() {
    * just be visual noise during the ~100 ms session handoff. */
   const showHeader = currentPage !== 'auth-callback';
   const showFooter = !['booking', 'driver-portal', 'admin', 'auth-callback'].includes(currentPage);
+  /* Live booking ticker is a marketplace social-proof element — only
+   * show it on customer-discovery surfaces (home, country pages,
+   * marketplace, how-it-works). Suppressed on dashboards, auth, and
+   * payment surfaces where it would distract. */
+  const showTicker = ['home','marketplace','how-it-works','providers','cities','enterprise-relocation','partners','about','universities','market-us','market-canada','market-germany','market-france','market-uk','market-norway'].includes(currentPage);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -150,6 +156,11 @@ export default function AppLayout() {
       {showFooter && (
         <Suspense fallback={null}>
           <Footer />
+        </Suspense>
+      )}
+      {showTicker && (
+        <Suspense fallback={null}>
+          <LiveBookingTicker />
         </Suspense>
       )}
     </div>

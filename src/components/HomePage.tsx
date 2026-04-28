@@ -2,6 +2,10 @@ import React from 'react';
 import { Star, ShieldCheck, Truck, Clock, BadgeCheck, MapPin, Users, MessageCircle } from 'lucide-react';
 import { useApp } from '../lib/store';
 import type { Page, BookingCountry } from '../lib/store';
+import LiveBookingTicker from './global/LiveBookingTicker';
+import PressStrip from './global/PressStrip';
+import WhyFlyttGo from './global/WhyFlyttGo';
+import HomeFAQ from './global/HomeFAQ';
 
 /* ────────────────────────────────────────────────────────────
  *  COUNTRY SHOPFRONT METADATA
@@ -305,6 +309,12 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ─── PRESS STRIP ───────────────────────────────────── */}
+      <PressStrip />
+
+      {/* ─── WHY FLYTTGO ───────────────────────────────────── */}
+      <WhyFlyttGo />
+
       {/* ─── REVIEWS ──────────────────────────────────────── */}
       <section className="bg-white py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -313,15 +323,29 @@ export default function HomePage() {
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
               4.8 average from 27,000+ moves
             </h2>
+            <div className="mt-4 inline-flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-full px-4 py-1.5">
+              <span className="flex gap-0.5">
+                {[1,2,3,4,5].map(i => <Star key={i} size={14} className="fill-emerald-600 text-emerald-600" />)}
+              </span>
+              <span className="text-sm font-bold text-emerald-700">Trustpilot</span>
+              <span className="text-sm text-emerald-700">·</span>
+              <span className="text-sm text-emerald-700">4.8 / 5 from 12,800+ reviews</span>
+            </div>
           </div>
 
-          <div className="grid sm:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { name: 'Emily Johnson',  city: 'Austin → Atlanta',         text: 'Booked a licensed long-distance carrier in under five minutes. The price held, escrow released exactly when the team finished unloading.' },
-              { name: 'Lukas Müller',   city: 'Berlin → München',         text: 'Drei Anbieter im Vergleich, faire Preise, transparente Versicherung. Genau das, was Umzüge in Deutschland gebraucht haben.' },
-              { name: 'Sophie Dubois',  city: 'Paris → Lyon',             text: 'Devis instantané, déménageurs licenciés, paiement sécurisé. Le déménagement le plus simple que j’ai jamais fait.' },
+              { name: 'Emily Johnson',  city: 'Austin → Atlanta',         flag: '🇺🇸', text: 'Booked a licensed long-distance carrier in under five minutes. The price held, escrow released exactly when the team finished unloading.' },
+              { name: 'Lukas Müller',   city: 'Berlin → München',         flag: '🇩🇪', text: 'Drei Anbieter im Vergleich, faire Preise, transparente Versicherung. Genau das, was Umzüge in Deutschland gebraucht haben.' },
+              { name: 'Sophie Dubois',  city: 'Paris → Lyon',             flag: '🇫🇷', text: 'Devis instantané, déménageurs licenciés, paiement sécurisé. Le déménagement le plus simple que j’ai jamais fait.' },
+              { name: 'James Walker',   city: 'London → Manchester',      flag: '🇬🇧', text: 'Used the cash-on-delivery option for our office move. Slick — 30% online, the rest paid in cash to a brilliant GVOL operator.' },
+              { name: 'Erik Hansen',    city: 'Oslo → Bergen',            flag: '🇳🇴', text: 'Norsk språk gjennom hele bestillingen. Lisensiert flytteselskap, sporing i sanntid, raskt utbetalt fra escrow.' },
+              { name: 'Ava Tremblay',   city: 'Toronto → Montréal',       flag: '🇨🇦', text: 'Bilingual coordination across two provinces, federally compliant carrier, transparent total — no surprises at the dock.' },
+              { name: 'Marco Drechsler', city: 'Hamburg → München',       flag: '🇩🇪', text: 'Konzernumzug für 18 Mitarbeiter in einer Buchung. Audit-Trail war Gold wert für unsere Procurement-Abteilung.' },
+              { name: 'Olivia Reyes',   city: 'Brooklyn → LA',            flag: '🇺🇸', text: 'Cross-country with a USDOT carrier, full $50k goods-in-transit cover, real-time GPS the whole way. Five stars, no hesitation.' },
+              { name: 'Camille Bernard', city: 'Marseille → Bordeaux',    flag: '🇫🇷', text: 'Calcul de prix instantané, déménageur noté 4,9, escrow libéré dès que j’ai confirmé à l’arrivée. Très professionnel.' },
             ].map(r => (
-              <article key={r.name} className="bg-[#fafaf7] rounded-2xl p-6 border border-slate-100">
+              <article key={r.name} className="bg-[#fafaf7] rounded-2xl p-6 border border-slate-100 hover:shadow-lg hover:border-amber-200 transition">
                 <div className="flex gap-1 mb-3">
                   {[1,2,3,4,5].map(i => <Star key={i} size={16} className="fill-amber-400 text-amber-400" />)}
                 </div>
@@ -330,8 +354,11 @@ export default function HomePage() {
                   <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold">
                     {r.name.charAt(0)}
                   </div>
-                  <div>
-                    <p className="font-bold text-slate-900 text-sm">{r.name}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                      {r.name}
+                      <span aria-hidden className="text-base leading-none">{r.flag}</span>
+                    </p>
                     <p className="text-xs text-slate-500">{r.city}</p>
                   </div>
                 </div>
@@ -340,6 +367,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ─── FAQ ───────────────────────────────────────────── */}
+      <HomeFAQ />
 
       {/* ─── TRUST + STATS ───────────────────────────────── */}
       <section className="bg-[#0b1f3a] text-white py-14">
