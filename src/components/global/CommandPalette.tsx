@@ -124,6 +124,7 @@ export default function CommandPalette({ open, onClose }: Props) {
       { id: 'p-help',         label: 'Help center',                icon: Layers,                     group: 'Pages', perform: go('help') },
       { id: 'p-driver-onb',   label: 'Become a provider',          hint: 'Driver / operator apply', icon: Truck,        group: 'Pages', perform: go('driver-onboarding') },
       { id: 'p-subs',         label: 'Subscription tiers',         hint: 'Silver → Elite',          icon: Truck,        group: 'Pages', perform: go('subscriptions') },
+      { id: 'p-refer',        label: 'Refer a friend · £25 / £25', hint: 'Give £25, get £25',       icon: Sparkles,     group: 'Pages', keywords: ['referral', 'invite', 'credit'], perform: go('refer') },
     ];
 
     /* Authenticated-only surfaces. */
