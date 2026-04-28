@@ -127,3 +127,83 @@ export function relativeTimeFromMs(ms: number): string {
   if (diff < 604_800)   return `${Math.floor(diff / 86_400)}d ago`;
   return new Date(ms).toLocaleDateString();
 }
+
+/* ─────────────────────────────────────────────────────────────────
+ * Shareable-quote URL helpers
+ *
+ * Encodes a quote into a URL-safe base64 string so a customer can
+ * forward "https://flyttgo.us/?q=ABC123…" to a partner / spouse /
+ * housemate. The recipient lands on the home page; an effect in
+ * AppLayout (see Wave 19 wiring) decodes the param, drops the
+ * quote into their local store, and routes them to the matching
+ * country shopfront so they can review and book.
+ *
+ * No PII inside — we only round-trip the brief (country, addresses,
+ * total, split, distance). The quote id and savedAt are regenerated
+ * on the recipient's side because they're now /that customer's/
+ * record, not the sender's.
+ * ───────────────────────────────────────────────────────────────── */
+
+export type SharedQuotePayload = Omit<SavedQuote, 'id' | 'savedAt'>;
+
+function toBase64Url(bytes: Uint8Array): string {
+  let bin = '';
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return (typeof btoa !== 'undefined' ? btoa(bin) : Buffer.from(bin, 'binary').toString('base64'))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
+
+function fromBase64Url(s: string): Uint8Array {
+  const pad = s.length % 4 === 0 ? '' : '='.repeat(4 - (s.length % 4));
+  const std = s.replace(/-/g, '+').replace(/_/g, '/') + pad;
+  const bin = typeof atob !== 'undefined' ? atob(std) : Buffer.from(std, 'base64').toString('binary');
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+/** Encode a quote into a URL-safe base64 token. */
+export function encodeSharedQuote(payload: SharedQuotePayload): string {
+  const json = JSON.stringify(payload);
+  const bytes = new TextEncoder().encode(json);
+  return toBase64Url(bytes);
+}
+
+/** Decode the `?q=` URL param into a quote payload. Returns null if
+ *  the token is missing / malformed / fails the shape check. */
+export function decodeSharedQuote(token: string | null | undefined): SharedQuotePayload | null {
+  if (!token) return null;
+  try {
+    const bytes = fromBase64Url(token);
+    const json  = new TextDecoder().decode(bytes);
+    const parsed = JSON.parse(json) as Partial<SharedQuotePayload>;
+    if (!parsed || typeof parsed !== 'object') return null;
+    /* Minimum viable shape — anything else missing is fine, the
+     * country shopfront will fall back to defaults. */
+    if (!parsed.country || !parsed.pickupAddress || !parsed.dropoffAddress
+        || typeof parsed.indicativeTotal !== 'number') return null;
+    return parsed as SharedQuotePayload;
+  } catch {
+    return null;
+  }
+}
+
+/** Build the canonical share URL for a saved quote. */
+export function buildShareUrl(quote: SavedQuote, base = 'https://flyttgo.us'): string {
+  const token = encodeSharedQuote({
+    country:         quote.country,
+    pickupAddress:   quote.pickupAddress,
+    dropoffAddress:  quote.dropoffAddress,
+    moveDate:        quote.moveDate,
+    paymentMethod:   quote.paymentMethod,
+    indicativeTotal: quote.indicativeTotal,
+    depositAmount:   quote.depositAmount,
+    cashDueAmount:   quote.cashDueAmount,
+    distanceKm:      quote.distanceKm,
+    durationMinutes: quote.durationMinutes,
+    label:           quote.label,
+  });
+  return `${base}/?q=${token}`;
+}

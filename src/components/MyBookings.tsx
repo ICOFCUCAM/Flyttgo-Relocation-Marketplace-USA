@@ -1,6 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
-import { PackageSearch, Bookmark, MapPin, Calendar, X } from "lucide-react";
+import { PackageSearch, Bookmark, MapPin, Calendar, X, Share2, Check } from "lucide-react";
 import { supabase, supabaseFunctionUrl } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
 import { useApp } from "../lib/store";
@@ -9,6 +9,7 @@ import {
   useSavedQuotesStore,
   removeSavedQuote,
   relativeTimeFromMs,
+  buildShareUrl,
   type SavedQuote,
 } from "../lib/saved-quotes-store";
 import { formatCurrency } from "../lib/constants";
@@ -333,7 +334,7 @@ function SavedQuotesPanel({ onResume }: { onResume: (q: SavedQuote) => void }) {
               )}
             </div>
 
-            <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+            <div className="flex items-center justify-between pt-3 border-t border-slate-100 gap-2">
               <span className="text-sm">
                 <strong className="text-slate-900">
                   {formatCurrency(q.indicativeTotal, q.country)}
@@ -342,16 +343,72 @@ function SavedQuotesPanel({ onResume }: { onResume: (q: SavedQuote) => void }) {
                   <span className="text-xs text-slate-500 ml-1.5">· {Math.round(q.distanceKm)} km</span>
                 )}
               </span>
-              <button
-                onClick={() => onResume(q)}
-                className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-900 rounded-lg text-xs font-bold transition-base ease-marketplace"
-              >
-                Resume →
-              </button>
+              <div className="flex items-center gap-1.5">
+                <ShareQuoteButton quote={q} />
+                <button
+                  onClick={() => onResume(q)}
+                  className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-900 rounded-lg text-xs font-bold transition-base ease-marketplace"
+                >
+                  Resume →
+                </button>
+              </div>
             </div>
           </article>
         ))}
       </div>
     </section>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────
+ * <ShareQuoteButton> — copy-link button on each saved quote.
+ *
+ * Encodes the quote into a URL-safe token (saved-quotes-store
+ * encoders), copies "https://flyttgo.us/?q=<token>" to the
+ * clipboard, and flashes a 2s "Copied" tick. Recipients land on
+ * the home page; AppLayout's inbound handler decodes the param
+ * and saves it to their local store.
+ *
+ * Uses navigator.share where available so mobile customers get the
+ * native share sheet; falls back to clipboard write on desktop.
+ * ───────────────────────────────────────────────────────────────── */
+function ShareQuoteButton({ quote }: { quote: SavedQuote }) {
+  const [copied, setCopied] = React.useState(false);
+
+  async function share() {
+    const url = buildShareUrl(quote);
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: 'FlyttGo move quote',
+          text: `${quote.country.toUpperCase()}: ${quote.pickupAddress.split(',')[0]} → ${quote.dropoffAddress.split(',')[0]}`,
+          url,
+        });
+        return;
+      } catch { /* user cancelled — fall through to clipboard */ }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      window.prompt('Copy this share link:', url);
+    }
+  }
+
+  return (
+    <button
+      onClick={share}
+      aria-label="Share this quote"
+      title={copied ? 'Copied!' : 'Share with a partner'}
+      className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-base ease-marketplace ${
+        copied
+          ? 'bg-emerald-50 text-emerald-700'
+          : 'border border-slate-300 text-slate-600 hover:border-slate-900 hover:text-slate-900'
+      }`}
+    >
+      {copied ? <Check size={12} /> : <Share2 size={12} />}
+      {copied ? 'Copied' : 'Share'}
+    </button>
   );
 }
