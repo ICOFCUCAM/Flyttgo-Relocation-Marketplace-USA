@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
+import { VitePWA } from "vite-plugin-pwa";
 import path from "path";
 
 export default defineConfig(({ mode }) => ({
@@ -7,7 +8,89 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
-  plugins: [react()],
+  plugins: [
+    react(),
+    /* Workbox-driven service worker.
+     *
+     *   - Auto-update mode: when a new SW is detected we update in
+     *     the background and reload on next navigation. The PWA
+     *     install prompt component handles "new version available"
+     *     messaging.
+     *   - Precache: every JS / CSS / font / image emitted by the
+     *     build (Workbox computes this from the manifest).
+     *   - Runtime cache:
+     *       · /api / Supabase / Stripe → NetworkFirst with 5s
+     *         timeout so the customer never sees stale booking data
+     *       · Unsplash + Google Fonts → CacheFirst (immutable URLs)
+     *       · Nominatim address suggestions → StaleWhileRevalidate
+     *         so typing the same address twice in a session is
+     *         instant
+     *   - Offline fallback: any failed navigation falls through to
+     *     /offline.html which we ship as a static asset.
+     *
+     * Disabled in dev (the SW would shadow HMR). Run `npm run build &&
+     * npm run preview` to test offline behaviour locally. */
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: [
+        'favicon.svg',
+        'apple-touch-icon.svg',
+        'og.svg',
+        'robots.txt',
+      ],
+      manifest: false, // we ship our own /public/manifest.json
+      workbox: {
+        navigateFallback: '/offline.html',
+        navigateFallbackDenylist: [
+          /^\/api/,
+          /^\/auth\/callback/,
+          /^\/admin/,
+          /^\/_/,
+        ],
+        globPatterns: ['**/*.{js,css,html,svg,png,jpg,jpeg,webp,woff2}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/[a-z0-9.-]+\.supabase\.co\/.*$/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'supabase-data',
+              networkTimeoutSeconds: 5,
+              expiration: { maxEntries: 50, maxAgeSeconds: 5 * 60 },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/api\.stripe\.com\/.*$/i,
+            handler: 'NetworkOnly', // never cache Stripe API responses
+          },
+          {
+            urlPattern: /^https:\/\/images\.unsplash\.com\/.*$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'unsplash-images',
+              expiration: { maxEntries: 60, maxAgeSeconds: 30 * 24 * 60 * 60 },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.(?:googleapis|gstatic)\.com\/.*$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts',
+              expiration: { maxEntries: 30, maxAgeSeconds: 365 * 24 * 60 * 60 },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/nominatim\.openstreetmap\.org\/.*$/i,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'nominatim-suggestions',
+              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 },
+            },
+          },
+        ],
+      },
+      devOptions: { enabled: false },
+    }),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>You're offline · FlyttGo</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <style>
+    :root {
+      --brand: #f59e0b;
+      --ink: #0b1f3a;
+      --soft: #fafaf7;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--soft);
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .card {
+      max-width: 28rem;
+      width: 100%;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 1.25rem;
+      box-shadow: 0 20px 48px rgba(11, 31, 58, 0.14);
+      padding: 2.5rem 2rem;
+      text-align: center;
+    }
+    .icon {
+      width: 4rem;
+      height: 4rem;
+      margin: 0 auto 1.5rem;
+      background: #fffbeb;
+      border-radius: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin: 0 0 0.5rem;
+      letter-spacing: -0.01em;
+    }
+    p {
+      color: #64748b;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin: 0 0 1rem;
+    }
+    .channels {
+      margin-top: 1.5rem;
+      display: grid;
+      gap: 0.5rem;
+    }
+    button {
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 0.9rem;
+      padding: 0.75rem 1.25rem;
+      border-radius: 0.75rem;
+      transition: transform 200ms cubic-bezier(0.32, 0.72, 0, 1), background-color 200ms;
+    }
+    button.primary {
+      background: var(--brand);
+      color: var(--ink);
+      box-shadow: 0 8px 24px rgba(245, 158, 11, 0.25);
+    }
+    button.primary:hover { background: #d97706; }
+    button.secondary {
+      background: white;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+    }
+    button.secondary:hover { border-color: var(--ink); color: var(--ink); }
+    .footer {
+      margin-top: 1.5rem;
+      font-size: 0.75rem;
+      color: #94a3b8;
+    }
+    .footer a {
+      color: var(--brand);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <main class="card" role="alert">
+    <div class="icon" aria-hidden="true">🌐</div>
+    <h1>You're offline</h1>
+    <p>
+      We can't reach FlyttGo from this device right now. Check your
+      connection and we'll automatically take you back where you were
+      as soon as it returns.
+    </p>
+    <p>
+      Your booking data is safe — anything you've already filled in is
+      stored locally and will sync when you're back online.
+    </p>
+
+    <div class="channels">
+      <button class="primary" onclick="window.location.reload()">Try again</button>
+      <button class="secondary" onclick="window.location.href='/'">Go home (cached)</button>
+    </div>
+
+    <p class="footer">
+      Need urgent help?
+      <a href="tel:+447432112438">+44 7432 112438</a>
+      ·
+      <a href="https://wa.me/447432112438">WhatsApp</a>
+    </p>
+  </main>
+
+  <script>
+    /* Auto-retry: when the browser regains connectivity, reload so
+     * the customer is back in the live app without having to click. */
+    window.addEventListener('online', () => {
+      // Small delay so the network actually settles before we reload.
+      setTimeout(() => window.location.reload(), 600);
+    });
+  </script>
+</body>
+</html>
