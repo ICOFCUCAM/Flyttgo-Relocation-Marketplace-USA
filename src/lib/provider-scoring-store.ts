@@ -24,7 +24,8 @@ export type TrustBadgeSlug =
   | 'new-provider'
   | 'corporate-ready'
   | 'university-ready'
-  | 'government-ready';
+  | 'government-ready'
+  | 'certified-infrastructure-partner';
 
 export interface ProviderScoreRow {
   user_id:               string;
@@ -34,6 +35,8 @@ export interface ProviderScoreRow {
   completion_rate:       number | null;            // 0–1
   on_time_rate:          number | null;            // 0–1
   response_speed_score:  number | null;            // 0–1
+  /** Linear decay: 1.0 if active in last 24h, 0 if inactive ≥60d. */
+  recent_activity_score: number | null;
   verification_level:    VerificationLevel;
   is_top_rated:          boolean;
   is_suspended:          boolean;
@@ -59,7 +62,7 @@ export interface ProviderRatingRow {
 export async function loadProviderScore(userId: string): Promise<ProviderScoreRow | null> {
   const { data, error } = await supabase
     .from('provider_reputation')
-    .select('user_id, rank_score, avg_rating, rating_count, completion_rate, on_time_rate, response_speed_score, verification_level, is_top_rated, is_suspended, warning_count_30d, trust_badges')
+    .select('user_id, rank_score, avg_rating, rating_count, completion_rate, on_time_rate, response_speed_score, recent_activity_score, verification_level, is_top_rated, is_suspended, warning_count_30d, trust_badges')
     .eq('user_id', userId)
     .maybeSingle();
   if (error) throw new Error(`loadProviderScore failed: ${error.message}`);
@@ -168,9 +171,18 @@ export function deriveTrustBadges(score: ProviderScoreRow): TrustBadgeSlug[] {
 
   /* Persisted badges from the row override the derived defaults
    * when admin has explicitly granted Corporate / University /
-   * Government readiness. */
+   * Government readiness or upgraded the provider to the
+   * Certified Infrastructure Partner tier. */
   for (const b of score.trust_badges ?? []) {
     if (!badges.includes(b)) badges.push(b);
+  }
+
+  /* CIP shadows every other badge when present — sort it to front. */
+  if (badges.includes('certified-infrastructure-partner')) {
+    return [
+      'certified-infrastructure-partner',
+      ...badges.filter(b => b !== 'certified-infrastructure-partner'),
+    ];
   }
 
   return badges;

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Trophy, Zap, ShieldCheck, BadgeCheck, Sparkles, Building2,
-  GraduationCap, Landmark, type LucideIcon,
+  GraduationCap, Landmark, Award, type LucideIcon,
 } from 'lucide-react';
 import {
   loadProviderScore, deriveTrustBadges,
@@ -34,6 +34,7 @@ const BADGE_DEF: Record<TrustBadgeSlug, { label: string; icon: LucideIcon; tone:
   'corporate-ready':     { label: 'Corporate Relocation Ready', icon: Building2, tone: 'bg-indigo-50 text-indigo-700' },
   'university-ready':    { label: 'University Relocation Ready', icon: GraduationCap, tone: 'bg-blue-50 text-blue-700' },
   'government-ready':    { label: 'Government Deployment Ready', icon: Landmark, tone: 'bg-rose-50 text-rose-700' },
+  'certified-infrastructure-partner': { label: 'Certified Infrastructure Partner', icon: Award, tone: 'bg-ink-900 text-amber-300' },
 };
 
 interface Props {
