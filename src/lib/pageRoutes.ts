@@ -88,6 +88,9 @@ const PAGE_TO_PATH: Record<Page, string> = {
   /* Provider profile (slug carried via ?slug=). */
   'provider-profile':        '/provider',
 
+  /* Provider directory (search + filter). */
+  'providers-directory':     '/providers/directory',
+
   /* Fallback for unknown routes. No real path — pathToPage() returns
    * this id for anything it can't match. setPage('not-found') still
    * updates history.pushState to whatever URL triggered the fallback. */
@@ -131,6 +134,7 @@ const PAGE_TITLES: Record<Page, string> = {
   'market-norway':            'Norway Moves & Logistics · FlyttGo Global',
   'refer':                    'Give £25, get £25 · FlyttGo referrals',
   'provider-profile':         'Provider profile · FlyttGo Global',
+  'providers-directory':      'Browse verified providers · FlyttGo Global',
   'booking':                  'Book a Move · FlyttGo Global',
   'payment':                  'Secure Payment · FlyttGo Global',
   'tracking':                 'Track Your Coordination · FlyttGo Global',
@@ -208,6 +212,8 @@ const PAGE_DESCRIPTIONS: Record<Page, string> = {
     "Invite a friend to FlyttGo — they get £25 off their first move, you get £25 in account credit when they complete it. Share your code by link, WhatsApp, email or QR.",
   'provider-profile':
     "Verified provider on the FlyttGo marketplace — see ratings, services, sample jobs, and book directly with this licensed mover.",
+  'providers-directory':
+    "Browse every verified mover, packer, storage and freight partner on the FlyttGo global marketplace. Filter by country, tier, and service. Sort by rating, price, or reviews.",
   'booking':
     'Book your next move in under 3 minutes. Get an instant quote, pick a verified driver, and track your delivery live — all with escrow payment built in.',
   'payment':
