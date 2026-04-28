@@ -9,7 +9,7 @@ import {
 } from '../../lib/earnings-simulator';
 import { CITY_MULTIPLIERS } from '../../lib/pricing-engine';
 import type { PricingCountry } from '../../lib/pricing-engine';
-import { COUNTRY_PROFILES, findCountryProfile } from '../../lib/country-profiles';
+import { COUNTRY_PROFILES, findCountryProfile, formatPrice } from '../../lib/country-profiles';
 import { useApp } from '../../lib/store';
 import { track } from '../../lib/analytics';
 
@@ -286,7 +286,7 @@ export default function EarningsSimulator({ compact = false, initial }: Props) {
 
           <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-200/80 mb-1">Hourly</p>
           <p className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-1">
-            {breakdown.symbol}{breakdown.providerHourly.toFixed(0)}
+            {formatPrice(breakdown.providerHourly, country)}
             <span className="text-emerald-200/70 text-base font-normal ml-1">/hr</span>
           </p>
           {/* Country context strip — currency · tax mode · service
@@ -306,9 +306,9 @@ export default function EarningsSimulator({ compact = false, initial }: Props) {
           })()}
 
           <div className="space-y-3 mb-5">
-            <Stat label="Weekly"  value={breakdown.weeklyIncome}  symbol={breakdown.symbol} />
-            <Stat label="Monthly" value={breakdown.monthlyIncome} symbol={breakdown.symbol} highlight />
-            <Stat label="Annual"  value={breakdown.annualIncome}  symbol={breakdown.symbol} />
+            <Stat label="Weekly"  value={breakdown.weeklyIncome}  country={country} />
+            <Stat label="Monthly" value={breakdown.monthlyIncome} country={country} highlight />
+            <Stat label="Annual"  value={breakdown.annualIncome}  country={country} />
           </div>
 
           <details className="bg-black/15 rounded-lg overflow-hidden">
@@ -412,14 +412,14 @@ function Toggle({ active, onClick, icon: Icon, children }: {
   );
 }
 
-function Stat({ label, value, symbol, highlight = false }: {
-  label: string; value: number; symbol: string; highlight?: boolean;
+function Stat({ label, value, country, highlight = false }: {
+  label: string; value: number; country: PricingCountry; highlight?: boolean;
 }) {
   return (
     <div className={`flex items-baseline justify-between gap-3 ${highlight ? 'pt-3 border-t border-white/15' : ''}`}>
       <span className="text-xs text-emerald-100/80 uppercase tracking-wider font-bold">{label}</span>
       <span className={`font-extrabold tracking-tight ${highlight ? 'text-3xl' : 'text-xl'} text-white`}>
-        {symbol}{Math.round(value).toLocaleString('en-US')}
+        {formatPrice(value, country)}
       </span>
     </div>
   );

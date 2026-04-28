@@ -8,7 +8,7 @@ import {
   calculateQuote, COUNTRY_BASELINES, CITY_MULTIPLIERS,
   type QuoteInput, type ServiceType, type InsuranceTier, type PricingCountry,
 } from '../../lib/pricing-engine';
-import { COUNTRY_PROFILES } from '../../lib/country-profiles';
+import { COUNTRY_PROFILES, formatPrice } from '../../lib/country-profiles';
 import { track } from '../../lib/analytics';
 
 /* ─────────────────────────────────────────────────────────────────
@@ -275,10 +275,10 @@ export default function LivePriceCalculator() {
           </p>
         </div>
         <p className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-1">
-          {baseline.symbol}{breakdown.customerTotal.toLocaleString('en-US')}
+          {formatPrice(breakdown.customerTotal, state.country)}
         </p>
         <p className="text-xs text-white/70 mb-5">
-          {baseline.symbol}{breakdown.hourlyEffective.toFixed(0)}/hr effective ·
+          {formatPrice(breakdown.hourlyEffective, state.country)}/hr effective ·
           {' '}{breakdown.billedHours}h billed
         </p>
 
