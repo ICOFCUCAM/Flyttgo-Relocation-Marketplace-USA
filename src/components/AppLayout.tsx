@@ -61,6 +61,7 @@ const FloatingChat       = lazy(() => import('./global/FloatingChat'));
 const ExitIntentModal    = lazy(() => import('./global/ExitIntentModal'));
 const MobileBottomNav    = lazy(() => import('./global/MobileBottomNav'));
 const PWAInstallPrompt   = lazy(() => import('./global/PWAInstallPrompt'));
+const StickyQuoteBar     = lazy(() => import('./global/StickyQuoteBar'));
 
 function Loading() {
   return (
@@ -190,6 +191,14 @@ export default function AppLayout() {
       {currentPage !== 'auth-callback' && (
         <Suspense fallback={null}>
           <PWAInstallPrompt />
+        </Suspense>
+      )}
+      {/* Sticky quote bar — drops in once the customer has scrolled
+          past the hero, so the conversion path stays one click away
+          deep on the page. */}
+      {showTicker && (
+        <Suspense fallback={null}>
+          <StickyQuoteBar />
         </Suspense>
       )}
     </div>

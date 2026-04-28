@@ -8,6 +8,7 @@ import WhyFlyttGo from './global/WhyFlyttGo';
 import HomeFAQ from './global/HomeFAQ';
 import SmartMatchingSection from './global/SmartMatchingSection';
 import CarbonOffset from './global/CarbonOffset';
+import TopProviders from './global/TopProviders';
 
 /* ────────────────────────────────────────────────────────────
  *  COUNTRY SHOPFRONT METADATA
@@ -319,6 +320,9 @@ export default function HomePage() {
 
       {/* ─── WHY FLYTTGO ───────────────────────────────────── */}
       <WhyFlyttGo />
+
+      {/* ─── TOP-RATED PROVIDERS ───────────────────────────── */}
+      <TopProviders />
 
       {/* ─── CARBON OFFSET ─────────────────────────────────── */}
       <CarbonOffset />
