@@ -44,6 +44,7 @@ const LEGAL: LinkItem[] = [
   { label: 'Privacy Policy',        page: 'privacy' },
   { label: 'Liability',             page: 'liability' },
   { label: 'Provider Terms',        page: 'driver-terms' },
+  { label: 'File a dispute',        page: 'dispute' },
 ];
 
 export default function Footer() {

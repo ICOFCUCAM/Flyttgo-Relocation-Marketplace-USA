@@ -49,6 +49,8 @@ export type Page =
   /* Customer quote-approval workflow (long-distance / international /
    * complex labor briefs). Companion to the instant-booking flow. */
   | 'request-quote'
+  /* Customer dispute filing + inbox. */
+  | 'dispute'
   /* Fallback for URLs that don't match any known route. */
   | 'not-found';
 
