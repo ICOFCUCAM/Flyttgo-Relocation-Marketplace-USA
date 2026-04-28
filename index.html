@@ -3,22 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#059669" />
+    <meta name="theme-color" content="#0f172a" />
 
-    <title>FlyttGo Relocation Marketplace USA</title>
-    <meta name="description" content="Relocation coordination marketplace connecting customers with licensed movers, relocation crews, storage providers, and packing services across the United States. Operated by Wankong LLC, Delaware." />
-    <meta name="keywords" content="United States relocation marketplace, interstate moving coordination, moving labor marketplace USA, relocation services coordination platform, FMCSA carrier verification, USDOT registered movers" />
+    <title>FlyttGo Global Logistics &amp; Relocation Marketplace</title>
+    <meta name="description" content="FlyttGo Global Logistics & Relocation Marketplace — worldwide digital coordination infrastructure connecting customers with licensed relocation providers, logistics partners, workforce support, storage, and mobility services across multiple jurisdictions." />
+    <meta name="keywords" content="global relocation marketplace, moving labor marketplace, licensed carrier matching platform, international relocation coordination, cross-border relocation support, FMCSA carrier verification, GVOL operator matching, GüKG Umzugsfirma, registre des transporteurs, yrkestransportløyve, marketplace coordination infrastructure" />
     <link rel="canonical" href="https://flyttgo.us/" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
+
+    <!-- Editorial type stack: IBM Plex Serif headlines, Inter body,
+         JetBrains Mono for infrastructure labels (GLRM design system). -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    />
 
     <!-- Icons -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
     <link rel="manifest" href="/manifest.json" />
 
-    <!-- Leaflet (used by DeliveryMap for real-time delivery tracking).
-         Loaded via CDN so Leaflet itself doesn't bloat the JS bundle;
-         the component reads `L` from the global scope. -->
+    <!-- Leaflet (delivery tracking maps) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
       crossorigin="" />
@@ -28,59 +35,69 @@
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="FlyttGo Relocation Marketplace USA" />
+    <meta property="og:site_name" content="FlyttGo Global Logistics &amp; Relocation Marketplace" />
     <meta property="og:locale" content="en_US" />
     <meta property="og:url" content="https://flyttgo.us/" />
-    <meta property="og:title" content="FlyttGo Relocation Marketplace USA" />
-    <meta property="og:description" content="Relocation coordination marketplace connecting customers with licensed movers, relocation crews, storage providers, and packing services across the United States." />
+    <meta property="og:title" content="FlyttGo Global Logistics &amp; Relocation Marketplace" />
+    <meta property="og:description" content="Worldwide digital coordination marketplace connecting customers with licensed relocation providers, logistics partners, workforce support, storage, and mobility services across multiple jurisdictions." />
     <meta property="og:image" content="https://flyttgo.us/og.svg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="FlyttGo Relocation Marketplace USA — operated by Wankong LLC, Delaware" />
+    <meta property="og:image:alt" content="FlyttGo Global Logistics & Relocation Marketplace — country deployment nodes" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="FlyttGo Relocation Marketplace USA" />
-    <meta name="twitter:description" content="Relocation coordination marketplace connecting customers with licensed movers, relocation crews, storage providers, and packing services across the United States." />
+    <meta name="twitter:title" content="FlyttGo Global Logistics &amp; Relocation Marketplace" />
+    <meta name="twitter:description" content="Worldwide digital coordination marketplace — United States, Canada, Germany, France, United Kingdom, Norway." />
     <meta name="twitter:image" content="https://flyttgo.us/og.svg" />
-    <meta name="twitter:image:alt" content="FlyttGo Relocation Marketplace USA" />
+    <meta name="twitter:image:alt" content="FlyttGo Global Logistics & Relocation Marketplace" />
 
-    <!-- JSON-LD: Organization (Marketplace platform operator) -->
+    <!-- JSON-LD: Organization (global marketplace platform operator) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "Organization",
       "@id": "https://flyttgo.us/#organization",
-      "name": "FlyttGo Relocation Marketplace USA",
-      "alternateName": "FlyttGo USA",
-      "legalName": "Wankong LLC",
-      "description": "Digital relocation coordination marketplace connecting customers with licensed moving providers, relocation crews, storage networks, packing services, truck rental partners, and insurance options across the United States.",
+      "name": "FlyttGo Global Logistics & Relocation Marketplace",
+      "alternateName": "FlyttGo Global",
+      "description": "Worldwide digital coordination marketplace connecting customers with independent licensed relocation providers across multiple jurisdictions.",
       "url": "https://flyttgo.us/",
       "logo": "https://flyttgo.us/apple-touch-icon.svg",
       "image": "https://flyttgo.us/og.svg",
-      "telephone": "+1-XXX-XXX-XXXX",
-      "email": "support@flyttgo.us",
-      "foundingLocation": "Delaware, United States",
-      "address": {
-        "@type": "PostalAddress",
-        "streetAddress": "TODO — set Wankong LLC registered address",
-        "addressLocality": "Wilmington",
-        "postalCode": "19801",
-        "addressRegion": "DE",
-        "addressCountry": "US"
-      },
-      "areaServed": {
-        "@type": "Country",
-        "name": "United States"
-      },
+      "areaServed": [
+        { "@type": "Country", "name": "United States" },
+        { "@type": "Country", "name": "Canada" },
+        { "@type": "Country", "name": "Germany" },
+        { "@type": "Country", "name": "France" },
+        { "@type": "Country", "name": "United Kingdom" },
+        { "@type": "Country", "name": "Norway" }
+      ],
+      "subOrganization": [
+        {
+          "@type": "Organization",
+          "name": "Wankong LLC",
+          "description": "Operates United States and Canadian marketplace surfaces.",
+          "address": { "@type": "PostalAddress", "addressLocality": "Wilmington", "addressRegion": "DE", "addressCountry": "US" }
+        },
+        {
+          "@type": "Organization",
+          "name": "FlyttGo Technologies Group",
+          "description": "Operates Norway, United Kingdom, Germany, and France marketplace surfaces.",
+          "address": { "@type": "PostalAddress", "addressCountry": "NO" }
+        }
+      ],
       "knowsAbout": [
-        "Relocation coordination",
+        "Global relocation coordination",
         "Licensed motor carrier matching",
         "Moving labor marketplace",
-        "Self-storage integration",
+        "Cross-border relocation",
+        "International relocation coordination",
+        "Storage partner integration",
         "Truck rental coordination",
         "Packing services coordination",
-        "FMCSA-aware verification"
+        "Corporate relocation workflows",
+        "University relocation",
+        "FMCSA / GVOL / GüKG / registre des transporteurs / yrkestransportløyve awareness"
       ]
     }
     </script>
@@ -92,43 +109,58 @@
       "@type": "WebSite",
       "@id": "https://flyttgo.us/#website",
       "url": "https://flyttgo.us/",
-      "name": "FlyttGo Relocation Marketplace USA",
+      "name": "FlyttGo Global Logistics & Relocation Marketplace",
       "publisher": { "@id": "https://flyttgo.us/#organization" },
-      "inLanguage": ["en-US"]
+      "inLanguage": ["en-US","en-GB","de-DE","fr-FR","nb-NO"]
     }
     </script>
 
-    <!-- JSON-LD: Service catalog (marketplace coordination categories) -->
+    <!-- JSON-LD: Service catalog -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "Service",
-      "serviceType": "Relocation coordination marketplace",
+      "serviceType": "Global relocation coordination marketplace",
       "provider": { "@id": "https://flyttgo.us/#organization" },
-      "areaServed": { "@type": "Country", "name": "United States" },
+      "areaServed": [
+        { "@type": "Country", "name": "United States" },
+        { "@type": "Country", "name": "Canada" },
+        { "@type": "Country", "name": "Germany" },
+        { "@type": "Country", "name": "France" },
+        { "@type": "Country", "name": "United Kingdom" },
+        { "@type": "Country", "name": "Norway" }
+      ],
       "hasOfferCatalog": {
         "@type": "OfferCatalog",
-        "name": "FlyttGo USA marketplace categories",
+        "name": "FlyttGo global marketplace categories",
         "itemListElement": [
-          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Labor-only move support" } },
-          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Licensed carrier matching" } },
-          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Truck rental coordination" } },
-          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Packing services" } },
-          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Temporary storage integration" } },
-          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Insurance options selection" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Licensed moving carrier matching" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Moving labor marketplace coordination" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Packing services coordination" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Storage partner integration" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Truck rental partner coordination" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Insurance selection compatibility layer" } },
           { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Corporate relocation workflows" } },
-          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "University relocation support" } }
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Student relocation workflows" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Municipal relocation coordination support" } }
         ]
       }
     }
     </script>
 
-    <!-- Scroll precision fix for sticky header offset -->
+    <!-- Editorial design system tokens.
+         Headlines = IBM Plex Serif. Body = Inter. Code labels = JetBrains Mono.
+         80px vertical rhythm is applied per-section via py-20 in components. -->
     <style>
-      html {
-        scroll-behavior: smooth;
-        scroll-padding-top: 120px;
+      :root {
+        --font-serif: 'IBM Plex Serif', ui-serif, Georgia, serif;
+        --font-sans:  'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        --font-mono:  'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       }
+      html { scroll-behavior: smooth; scroll-padding-top: 120px; font-family: var(--font-sans); }
+      body { font-family: var(--font-sans); }
+      .font-serif { font-family: var(--font-serif) !important; }
+      .font-mono  { font-family: var(--font-mono)  !important; }
     </style>
   </head>
   <body>

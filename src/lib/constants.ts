@@ -196,3 +196,78 @@ export const PROPERTY_PRESETS: Record<string, Record<string, number>> = {
   '3 Bedrooms':   { 'Double Bed': 2, 'Single Bed': 1, 'Wardrobe (Large)': 3, 'Sofa (3-seater)': 1, 'Armchair': 2, 'Dining Table': 1, 'Fridge/Freezer': 1, 'Washing Machine': 1, 'Dishwasher': 1, 'Moving Box (Large)': 35 },
   'Office Move':  { 'Office Desk': 4, 'Office Chair': 4, 'Filing Cabinet': 2, 'Monitor': 4, 'Printer': 1, 'Moving Box (Large)': 20 },
 };
+
+/* ──────────────────────────────────────────────────────────────────────
+ * GLOBAL — FlyttGo Global Logistics & Relocation Marketplace constants.
+ *
+ * These power the homepage, country deployment pages, and the global
+ * navigation surfaces. Kept separate from the legacy USA constants
+ * above so the in-app booking flow keeps reading the same shapes it
+ * was built against.
+ * ──────────────────────────────────────────────────────────────────── */
+
+import type { Page } from './store';
+
+export interface GlobalService {
+  code:        string;
+  title:       string;
+  description: string;
+}
+
+/* Phase 5 — Marketplace service architecture (global service stack). */
+export const GLOBAL_SERVICES: GlobalService[] = [
+  { code: 'GLRM/SVC.01', title: 'Licensed moving carrier matching',          description: 'Country-licensed carrier matching — USDOT/MC, GüKG, GVOL, registre des transporteurs, yrkestransportløyve, provincial / federal Canadian permits.' },
+  { code: 'GLRM/SVC.02', title: 'Moving labor marketplace coordination',     description: 'Independent labor crews for loading, unloading, and in-home moves matched against the relocation brief.' },
+  { code: 'GLRM/SVC.03', title: 'Packing services coordination',             description: 'Packing crews, materials, and crating from independent providers integrated into the coordinated relocation.' },
+  { code: 'GLRM/SVC.04', title: 'Storage partner integration',               description: 'Self-storage, bonded warehouse, and staged-storage partners integrated into the move plan.' },
+  { code: 'GLRM/SVC.05', title: 'Truck rental partner coordination',         description: 'Vehicle rental partners reserved alongside labor and carrier coordination.' },
+  { code: 'GLRM/SVC.06', title: 'Insurance selection compatibility layer',   description: 'Compare valuation coverage and third-party transit insurance options at coordination time.' },
+  { code: 'GLRM/SVC.07', title: 'Corporate relocation workflows',            description: 'Procurement, approvals, audit logs, and consolidated invoicing for HR, mobility, and operations teams.' },
+  { code: 'GLRM/SVC.08', title: 'Student relocation workflows',              description: 'Move-in, move-out, semester mobility, and international arrival corridors for universities.' },
+  { code: 'GLRM/SVC.09', title: 'Municipal relocation coordination support', description: 'Public-sector and municipal workforce relocation coordination with bonded providers and audit-ready records.' },
+];
+
+export interface GlobalMarket {
+  iso:        string;
+  name:       string;
+  route:      Page;
+  phaseLabel: string;
+  tagline:    string;
+}
+
+/* Phase 4 — Country deployment pages. Routes match pageRoutes.ts. */
+export const GLOBAL_MARKETS: GlobalMarket[] = [
+  { iso: 'US', name: 'United States',  route: 'market-us',      phaseLabel: 'Phase 1 · Live',              tagline: 'FMCSA-aware carrier matching, moving labor, packing, storage, and enterprise relocation.' },
+  { iso: 'CA', name: 'Canada',         route: 'market-canada',  phaseLabel: 'Phase 2 · Activating',        tagline: 'Interprovincial carrier matching, bilingual marketplace surfaces, and corporate relocation.' },
+  { iso: 'DE', name: 'Germany',        route: 'market-germany', phaseLabel: 'Phase 3 · European corridor', tagline: 'GüKG-licensed Umzugsfirma matching, moving labor, packing, and Konzernumzug workflows.' },
+  { iso: 'FR', name: 'France',         route: 'market-france',  phaseLabel: 'Phase 3 · European corridor', tagline: 'Déménageur matching, moving labor, packing, and corporate déménagement coordination.' },
+  { iso: 'GB', name: 'United Kingdom', route: 'market-uk',      phaseLabel: 'Phase 3 · European corridor', tagline: 'GVOL operator matching, moving labor, packing, storage, and enterprise relocation.' },
+  { iso: 'NO', name: 'Norway',         route: 'market-norway',  phaseLabel: 'Phase 3 · Home market',       tagline: 'Yrkestransportløyve flytteselskap matching, flyttehjelp, packing, and corporate flytting.' },
+];
+
+export interface GlobalRolloutPhase {
+  phase:    string;
+  timeline: string;
+  scope:    string;
+}
+
+/* Phase 8 — Global rollout structure panel. */
+export const GLOBAL_ROLLOUT: GlobalRolloutPhase[] = [
+  { phase: 'Phase 1', timeline: '2026',     scope: 'United States marketplace rollout — Austin, Atlanta, Dallas, Phoenix, Charlotte, with progressive activation across additional metros.' },
+  { phase: 'Phase 2', timeline: '2026 H2',  scope: 'Canada integration — Toronto, Montreal, Vancouver, Calgary, Ottawa, Edmonton, with bilingual marketplace surfaces.' },
+  { phase: 'Phase 3', timeline: '2027 H1',  scope: 'European relocation corridors — Norway (home market), United Kingdom, Germany, France, with provider onboarding across major metros.' },
+  { phase: 'Phase 4', timeline: '2027 H2+', scope: 'Intercontinental relocation corridors — Africa to Europe, Europe to United States, Africa to United States, deployed through 2030 and beyond.' },
+];
+
+/* Phase 6 — Provider onboarding categories (global). */
+export const GLOBAL_PROVIDER_CATEGORIES = [
+  'Licensed moving carrier',
+  'Moving labor provider',
+  'Packing services provider',
+  'Storage facility partner',
+  'Vehicle rental partner',
+  'Freight forwarding partner',
+  'International relocation coordinator',
+  'University relocation partner',
+  'Corporate relocation vendor',
+];
