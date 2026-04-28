@@ -64,6 +64,7 @@ const PWAInstallPrompt   = lazy(() => import('./global/PWAInstallPrompt'));
 const StickyQuoteBar     = lazy(() => import('./global/StickyQuoteBar'));
 const ScrollProgress     = lazy(() => import('./global/ScrollProgress'));
 const CompareBar         = lazy(() => import('./global/CompareBar'));
+const CommandPalette     = lazy(() => import('./global/CommandPalette'));
 
 function Loading() {
   return (
@@ -75,6 +76,7 @@ function Loading() {
 
 export default function AppLayout() {
   const { currentPage } = useApp();
+  const [paletteOpen, setPaletteOpen] = React.useState(false);
 
   /* Scroll to the top of the viewport whenever the current page
    * changes. Without this, clicking a link from deep down the page
@@ -84,6 +86,23 @@ export default function AppLayout() {
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, [currentPage]);
+
+  /* Global ⌘K / Ctrl-K → command palette. Closes on Esc inside the
+   * palette itself. Suppresses the browser's "save as" dialog. */
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const isModK =
+        (e.key === 'k' || e.key === 'K') &&
+        (e.metaKey || e.ctrlKey) &&
+        !e.altKey && !e.shiftKey;
+      if (isModK) {
+        e.preventDefault();
+        setPaletteOpen(o => !o);
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   const legalPages = ['terms', 'privacy', 'liability', 'driver-terms'];
   /* The auth callback page is a transient, full-screen landing surface
@@ -224,6 +243,14 @@ export default function AppLayout() {
       <Suspense fallback={null}>
         <CompareBar />
       </Suspense>
+      {/* ⌘K / Ctrl-K command palette. Mounted globally so power
+          users can navigate from any page. Hidden on auth-callback
+          (full-screen Supabase handoff). */}
+      {currentPage !== 'auth-callback' && (
+        <Suspense fallback={null}>
+          <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+        </Suspense>
+      )}
     </div>
   );
 }
