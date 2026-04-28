@@ -1,14 +1,15 @@
 {
-  "name": "FlyttGo Relocation Marketplace USA",
-  "short_name": "FlyttGo USA",
-  "description": "Relocation coordination marketplace connecting customers with licensed movers, relocation crews, storage providers, and packing services across the United States. Operated by Wankong LLC, Delaware.",
-  "start_url": "/",
+  "name": "FlyttGo Global Logistics & Relocation Marketplace",
+  "short_name": "FlyttGo Global",
+  "description": "Worldwide marketplace connecting customers with licensed movers, packers, storage and relocation providers across the United States, Canada, Germany, France, the United Kingdom, and Norway.",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#059669",
+  "background_color": "#0b1f3a",
+  "theme_color": "#f59e0b",
   "orientation": "portrait-primary",
   "lang": "en",
+  "id": "/",
   "icons": [
     {
       "src": "/favicon.svg",
@@ -26,10 +27,28 @@
   "categories": ["business", "lifestyle", "productivity"],
   "shortcuts": [
     {
-      "name": "Book a move",
-      "short_name": "Book",
-      "description": "Get an instant moving quote",
-      "url": "/?action=booking",
+      "name": "Get a quote",
+      "short_name": "Quote",
+      "description": "Compare licensed movers in 60 seconds",
+      "url": "/book?source=pwa-shortcut",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "United States",
+      "short_name": "US",
+      "url": "/us?source=pwa-shortcut",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "United Kingdom",
+      "short_name": "UK",
+      "url": "/uk?source=pwa-shortcut",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "My bookings",
+      "short_name": "My moves",
+      "url": "/my-bookings?source=pwa-shortcut",
       "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
     }
   ]

@@ -60,6 +60,7 @@ const LiveBookingTicker  = lazy(() => import('./global/LiveBookingTicker'));
 const FloatingChat       = lazy(() => import('./global/FloatingChat'));
 const ExitIntentModal    = lazy(() => import('./global/ExitIntentModal'));
 const MobileBottomNav    = lazy(() => import('./global/MobileBottomNav'));
+const PWAInstallPrompt   = lazy(() => import('./global/PWAInstallPrompt'));
 
 function Loading() {
   return (
@@ -184,6 +185,13 @@ export default function AppLayout() {
       <Suspense fallback={null}>
         <MobileBottomNav />
       </Suspense>
+      {/* PWA install prompt — fires on the beforeinstallprompt event
+          when the manifest qualifies; falls back to a soft iOS hint. */}
+      {currentPage !== 'auth-callback' && (
+        <Suspense fallback={null}>
+          <PWAInstallPrompt />
+        </Suspense>
+      )}
     </div>
   );
 }

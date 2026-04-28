@@ -4,6 +4,7 @@ import { useApp } from '../../lib/store';
 import type { Page, BookingCountry } from '../../lib/store';
 import { applyCountryLanguage } from '../../lib/i18n';
 import BookingShortcut from './BookingShortcut';
+import CountrySchema from './CountrySchema';
 
 /**
  * Section-index label — kept for backward compatibility with editorial
@@ -125,6 +126,11 @@ export default function CountryPage(props: CountryPageProps) {
 
   return (
     <main className="bg-white text-slate-900">
+      {/* Per-country JSON-LD: LocalBusiness + AggregateRating + Service +
+          BreadcrumbList. Powers Google rich results for the country
+          shopfront (star rating, breadcrumb trail, service catalog). */}
+      <CountrySchema iso={props.iso2} />
+
       {/* ─── HERO ──────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
