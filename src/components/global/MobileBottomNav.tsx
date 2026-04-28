@@ -2,6 +2,7 @@ import React from 'react';
 import { Home, Search, MessageCircle, User, type LucideIcon } from 'lucide-react';
 import { useApp, Page } from '../../lib/store';
 import { useAuth } from '../../lib/auth';
+import { openQuickQuote } from '../../lib/quick-quote';
 
 /**
  * Mobile bottom tab nav. Sticky to the viewport bottom on screens
@@ -39,6 +40,13 @@ export default function MobileBottomNav() {
     if (t.page === 'profile' && !user) {
       setAuthMode('signin');
       setShowAuthModal(true);
+      return;
+    }
+    /* The Quote tab opens the slide-over drawer instead of jumping to
+     * /book — keeps the customer on the current page so they can
+     * resume reading after they get their quote. */
+    if (t.page === 'booking') {
+      openQuickQuote({ source: 'mobile_nav' });
       return;
     }
     setPage(t.page);

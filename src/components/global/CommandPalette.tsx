@@ -11,6 +11,7 @@ import { applyCountryLanguage } from '../../lib/i18n';
 import { track } from '../../lib/analytics';
 import { useCompareStore } from '../../lib/compare-store';
 import { useSavedQuotesStore } from '../../lib/saved-quotes-store';
+import { openQuickQuote } from '../../lib/quick-quote';
 
 /* ─────────────────────────────────────────────────────────────────
  * <CommandPalette> — ⌘K / Ctrl-K cross-marketplace navigator.
@@ -139,7 +140,11 @@ export default function CommandPalette({ open, onClose }: Props) {
     }
 
     const actions: CommandItem[] = [
-      { id: 'a-quote',     label: 'Get a quote',                   hint: 'Open the booking flow',  icon: Sparkles,     group: 'Actions', shortcut: '⏎', keywords: ['book', 'price'], perform: go('booking') },
+      { id: 'a-quote',     label: 'Get a quote',                   hint: 'Quick-quote slide-over', icon: Sparkles,     group: 'Actions', shortcut: '⏎', keywords: ['book', 'price'], perform: () => {
+        track('command_palette_action', { type: 'quick_quote' });
+        onClose();
+        openQuickQuote({ source: 'command_palette' });
+      } },
       { id: 'a-track',     label: 'Track a delivery',              icon: MapPin,                                                          group: 'Actions',                              perform: go('tracking') },
       { id: 'a-whatsapp',  label: 'Talk to support on WhatsApp',   icon: MessageCircle,            group: 'Actions',                                                                   perform: () => {
         track('command_palette_action', { type: 'whatsapp' });
