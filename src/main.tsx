@@ -3,6 +3,13 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import './lib/i18n'; // initialise i18next before any component renders
 import './index.css';
+import { initAnalytics } from './lib/analytics';
+
+/* Boot the analytics + error-tracking facade. No-op until the
+ * customer grants cookie consent AND VITE_POSTHOG_KEY / VITE_SENTRY_DSN
+ * are set in the environment. Events fired before consent are queued
+ * (max 50) and flushed when consent + provider become available. */
+initAnalytics();
 
 /* Register the Workbox service worker (built by vite-plugin-pwa).
  * The SW is responsible for offline support, asset cache-first, and

@@ -5,6 +5,7 @@ import type { BookingCountry, PaymentMethod } from '../../lib/store';
 import NorwayAddressAutocomplete, { USAddress } from '../NorwayAddressAutocomplete';
 import { COUNTRY_PAYMENT, formatCurrency, splitPayment } from '../../lib/constants';
 import { getRouteDistance, haversineKm, RouteResult } from '../../lib/routing';
+import { track } from '../../lib/analytics';
 
 const COUNTRY_LABEL: Record<BookingCountry, string> = {
   us: 'USA',
@@ -218,6 +219,17 @@ export default function BookingShortcut({ country, compact = false }: Props) {
       durationMinutes: route?.durationMinutes ?? null,
       step: 2,
     });
+
+    track('booking_shortcut_submitted', {
+      country,
+      paymentMethod:   method,
+      indicativeTotal: indicative,
+      depositAmount:   finalSplit.deposit,
+      cashDueAmount:   finalSplit.cashDue,
+      distanceKm:      route?.distanceKm ?? straightLineKm,
+      hasMoveDate:     Boolean(moveDate),
+    });
+
     setPage('booking');
   }
 
