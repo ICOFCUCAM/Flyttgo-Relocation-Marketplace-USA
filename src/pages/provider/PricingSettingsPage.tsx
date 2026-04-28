@@ -15,6 +15,7 @@ import {
 } from '../../lib/pricing-engine';
 import type { BookingCountry } from '../../lib/store';
 import { Section, Eyebrow, Pill } from '../../components/ds';
+import EarningsSimulator from '../../components/global/EarningsSimulator';
 import { track } from '../../lib/analytics';
 
 /* ─────────────────────────────────────────────────────────────────
@@ -426,6 +427,30 @@ export default function PricingSettingsPage() {
             )}
           </aside>
         </div>
+      </Section>
+
+      {/* EARNINGS SIMULATOR — anchored on the provider's current capacity */}
+      <Section tone="canvas" size="default">
+        <Eyebrow tone="brand" className="mb-1">Earnings projection</Eyebrow>
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-900 mb-2">
+          What you could earn at this configuration.
+        </h2>
+        <p className="text-slate-600 max-w-2xl mb-6">
+          Anchored on the capacity + service mix you've set above. Tweak the
+          inputs to model different weekly hours, weekend mixes, or
+          relocation corridors.
+        </p>
+        <EarningsSimulator
+          initial={{
+            crewSize:           row.available_crew_sizes[0] ?? 2,
+            truckAvailable:     row.truck_available,
+            packingAvailable:   row.packing_available,
+            storageAvailable:   row.storage_available,
+            hoursPerWeek:       30,
+            weekendShare:       0.3,
+            corridor:           'local',
+          }}
+        />
       </Section>
     </main>
   );
