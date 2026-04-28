@@ -8,6 +8,7 @@ import LiveBookingTicker from './global/LiveBookingTicker';
 import PressStrip from './global/PressStrip';
 import DeploymentReadinessStrip from './global/DeploymentReadinessStrip';
 import WorldDeploymentMap from './global/WorldDeploymentMap';
+import PlatformOrbitDiagram from './global/PlatformOrbitDiagram';
 import WhyFlyttGo from './global/WhyFlyttGo';
 import HomeFAQ from './global/HomeFAQ';
 import SmartMatchingSection from './global/SmartMatchingSection';
@@ -344,6 +345,34 @@ export default function HomePage() {
             </p>
           </header>
           <WorldDeploymentMap />
+        </div>
+      </section>
+
+      {/* ─── PLATFORM ECOSYSTEM ORBIT ─────────────────────────
+          Visual system map of FlyttGoTech Core + the eight modules
+          around it. Reads as a platform infrastructure ecosystem
+          — what governments, universities, and procurement readers
+          recognise instantly. Pure SVG, no external dependency. */}
+      <section className="bg-slate-50 border-b border-slate-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+          <header className="text-center mb-8">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-emerald-600 font-bold mb-2">
+              Platform architecture
+            </p>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900 mb-3">
+              FlyttGoTech Core orchestrates eight interoperable modules
+            </h2>
+            <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto">
+              Hover any module for its scope and institutional relevance. The outer halo
+              shows our deployment compatibility — SaaS, PaaS, IaaS, sovereign-ready.
+            </p>
+          </header>
+          <PlatformOrbitDiagram />
+          <p className="mt-8 text-sm sm:text-base text-slate-700 max-w-3xl mx-auto text-center leading-relaxed">
+            <span className="font-semibold text-slate-900">FlyttGoTech Core</span> orchestrates
+            interoperable mobility infrastructure modules supporting enterprise, university,
+            municipal, and national-scale deployment environments.
+          </p>
         </div>
       </section>
 
