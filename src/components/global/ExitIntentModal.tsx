@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { X, Mail, Sparkles } from 'lucide-react';
+import { track } from '../../lib/analytics';
 
 const STORAGE_KEY = 'flyttgo_exit_intent_seen';
 
@@ -39,6 +40,7 @@ export default function ExitIntentModal() {
       if (e.clientY > 0 || e.relatedTarget) return;
       window.localStorage.setItem(STORAGE_KEY, '1');
       setOpen(true);
+      track('exit_intent_modal_shown');
       document.removeEventListener('mouseleave', onLeave);
     };
 
@@ -61,6 +63,7 @@ export default function ExitIntentModal() {
      * For now we just record locally and show the success state so
      * the conversion path stays consistent during pre-launch. */
     setSubmitted(true);
+    track('exit_intent_email_captured');
     setTimeout(() => setOpen(false), 2000);
   }
 

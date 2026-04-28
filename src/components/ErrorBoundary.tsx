@@ -1,4 +1,5 @@
 import React, { Component, ReactNode } from 'react';
+import { captureError } from '../lib/analytics';
 
 interface Props {
   children: ReactNode;
@@ -28,7 +29,9 @@ export default class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     /* eslint-disable-next-line no-console */
     console.error('[FlyttGo] Uncaught error:', error, info.componentStack);
-    /* TODO: forward to Sentry / Logsnag / your error tracker once one is wired up. */
+    /* Forwarded to the analytics facade — no-op until VITE_SENTRY_DSN
+     * is set + the customer has granted analytics consent. */
+    captureError(error, { componentStack: info.componentStack });
   }
 
   handleReload = () => {

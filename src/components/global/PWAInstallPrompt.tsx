@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Download, X, Smartphone } from 'lucide-react';
+import { track } from '../../lib/analytics';
 
 /**
  * Custom PWA install prompt.
@@ -69,8 +70,10 @@ export default function PWAInstallPrompt() {
 
   async function install() {
     if (!evt) return;
+    track('pwa_install_prompted');
     await evt.prompt();
     const { outcome } = await evt.userChoice;
+    track('pwa_install_outcome', { outcome });
     setEvt(null);
     if (outcome === 'accepted') {
       setHidden(true);
