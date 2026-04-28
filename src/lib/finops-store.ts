@@ -48,17 +48,19 @@ export interface LedgerRow {
 }
 
 export interface FinopsOverview {
-  window_from:               string;
-  window_to:                 string;
-  gross_revenue_usd:         number;
-  gross_payouts_usd:         number;
-  gross_subscriptions_usd:   number;
-  gross_refunds_usd:         number;
-  escrow_held_usd:           number;
-  escrow_released_usd:       number;
-  transaction_count:         number;
-  currencies_seen:           string[];
-  generated_at:              string;
+  window_from:                 string;
+  window_to:                   string;
+  gross_revenue_usd:           number;
+  gross_payouts_usd:           number;
+  gross_subscriptions_usd:     number;
+  gross_refunds_usd:           number;
+  escrow_held_usd:             number;
+  escrow_released_usd:         number;
+  platform_commissions_usd:    number;
+  enterprise_invoices_usd:     number;
+  transaction_count:           number;
+  currencies_seen:             string[];
+  generated_at:                string;
 }
 
 export interface SubscriptionRevenueRow {

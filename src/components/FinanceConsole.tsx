@@ -271,6 +271,8 @@ function OverviewTab() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <Stat label="Gross revenue (USD)"      value={fmt(data.gross_revenue_usd)}       tone="emerald" />
             <Stat label="Provider payouts"          value={fmt(data.gross_payouts_usd)}        />
+            <Stat label="Platform commissions"      value={fmt(data.platform_commissions_usd)} tone="emerald" />
+            <Stat label="Enterprise invoices"       value={fmt(data.enterprise_invoices_usd)}  tone="violet" />
             <Stat label="Subscription revenue"      value={fmt(data.gross_subscriptions_usd)}  tone="blue" />
             <Stat label="Refunds"                   value={fmt(data.gross_refunds_usd)}        tone="red" />
             <Stat label="Escrow held"               value={fmt(data.escrow_held_usd)}          tone="amber" />
@@ -908,42 +910,56 @@ const ENTERPRISE_COLUMNS = [
 ];
 
 function EnterpriseTab() {
-  const [rows,    setRows]    = useState<LedgerRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [invoices,      setInvoices]      = useState<LedgerRow[]>([]);
+  const [subRevenue,    setSubRevenue]    = useState<LedgerRow[]>([]);
+  const [loading,       setLoading]       = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    /* Enterprise lane = subscription_payment from CIP/Gold Pro
-     * tier providers + any explicit enterprise_invoice rows once
-     * the table backs them. For v1 we proxy via subscription
-     * payments (the unified_ledger surfaces those). */
-    loadFinopsLedger({
-      kind: 'subscription_payment',
-      fromIso: isoDaysAgo(365),
-      limit: 500,
-    })
-      .then(d => { if (!cancelled) setRows(d); })
+    /* Enterprise revenue = organization_invoices stream (the real
+     * institutional invoices) + the subscription stream from
+     * Gold Pro / CIP-tier providers (procurement-grade access). */
+    Promise.all([
+      loadFinopsLedger({ kind: 'enterprise_invoice',  fromIso: isoDaysAgo(365), limit: 500 }),
+      loadFinopsLedger({ kind: 'subscription_payment', fromIso: isoDaysAgo(365), limit: 500 }),
+    ])
+      .then(([inv, sub]) => {
+        if (cancelled) return;
+        setInvoices(inv);
+        setSubRevenue(sub);
+      })
       .catch(err => { if (!cancelled) toast.error('Could not load enterprise billing', { description: err?.message }); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, []);
 
-  const totalUsd = rows.reduce((s, r) => s + Number(r.amount_usd), 0);
+  const invoiceTotal = invoices.reduce((s, r) => s + Number(r.amount_usd), 0);
+  const subTotal     = subRevenue.reduce((s, r) => s + Number(r.amount_usd), 0);
+  const totalUsd     = invoiceTotal + subTotal;
+
+  /* Combined feed for the table — invoices first (the primary
+   * institutional revenue), tier subscriptions secondary. */
+  const rows = useMemo(() => [...invoices, ...subRevenue], [invoices, subRevenue]);
 
   return (
     <section className="space-y-4">
       <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Enterprise Billing Tracker</h3>
       <div className="bg-violet-50 border border-violet-200 rounded-xl px-4 py-3 text-sm text-violet-800">
-        <p className="font-semibold mb-0.5">Enterprise contracts surface here</p>
+        <p className="font-semibold mb-0.5">Procurement-grade revenue stream</p>
         <p className="text-xs">
-          Tier subscriptions (Silver+ / Gold / Gold Pro / CIP) + procurement-grade invoices.
-          Standalone <code>enterprise_invoices</code> rows are wired into <code>unified_ledger</code> as
-          they're created; v1 reports against the subscription stream.
+          <code>organization_invoices</code> (department-rolled monthly statements) plus
+          tier-subscription revenue from Gold Pro and Certified Infrastructure Partner
+          accounts. Invoice <code>period_start</code> drives the occurred-at so January
+          invoices land in January's report regardless of when they were finalised.
         </p>
       </div>
 
-      <Stat label="Booked enterprise revenue · last year" value={fmt(totalUsd)} tone="violet" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <Stat label="Enterprise invoices · last year" value={fmt(invoiceTotal)} tone="violet" />
+        <Stat label="Tier subscriptions · last year"  value={fmt(subTotal)}     tone="blue"   />
+        <Stat label="Combined enterprise revenue"      value={fmt(totalUsd)}     tone="emerald"/>
+      </div>
 
       <div className="flex justify-end gap-2">
         <button onClick={() => exportCsv('enterprise-billing.csv', ENTERPRISE_COLUMNS, rows)}
