@@ -28,6 +28,8 @@ export type Page =
   | 'market-france' | 'market-uk' | 'market-norway'
   /* Referral program surface. */
   | 'refer'
+  /* Provider profile (slug carried via ?slug= query param). */
+  | 'provider-profile'
   /* Fallback for URLs that don't match any known route. */
   | 'not-found';
 
