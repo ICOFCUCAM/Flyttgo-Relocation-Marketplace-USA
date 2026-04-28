@@ -271,3 +271,88 @@ export async function rejectRelocationRequest(
       comment,
     });
 }
+
+/* ── Auto-dispatch + invoices + invites (PR #60) ────────────────── */
+
+/**
+ * Manually trigger the dispatch flow for an approved request. The
+ * SQL trigger fires automatically on status='approved' transitions,
+ * but admins can call this RPC directly to retry when no provider
+ * was available initially or to force a re-match.
+ */
+export async function dispatchRelocationRequest(requestId: string): Promise<string | null> {
+  const { data, error } = await supabase.rpc('dispatch_relocation_request', { p_request_id: requestId });
+  if (error) throw new Error(`dispatchRelocationRequest failed: ${error.message}`);
+  return (data ?? null) as string | null;
+}
+
+/**
+ * Run the monthly invoice rollup for a specific period (typically
+ * the previous calendar month). Idempotent — re-running for the
+ * same period updates existing invoices via the unique constraint.
+ *
+ * In production this is called by a pg_cron job on the 1st of every
+ * month; admins can call manually to backfill.
+ */
+export async function runMonthlyOrgInvoices(periodStart: string): Promise<number> {
+  const { data, error } = await supabase.rpc('run_monthly_org_invoices', { p_period_start: periodStart });
+  if (error) throw new Error(`runMonthlyOrgInvoices failed: ${error.message}`);
+  return (data ?? 0) as number;
+}
+
+/* ── Invites ──────────────────────────────────────────────────── */
+
+export interface OrganizationInviteRow {
+  id:                  string;
+  organization_id:     string;
+  invited_email:       string;
+  role:                OrganizationRole;
+  department_id?:      string | null;
+  token:               string;
+  invited_by_user_id:  string;
+  accepted_at?:        string | null;
+  accepted_user_id?:   string | null;
+  expires_at:          string;
+  revoked_at?:         string | null;
+  created_at:          string;
+}
+
+export async function createOrgInvite(
+  orgId:        string,
+  email:        string,
+  role:         OrganizationRole,
+  departmentId?: string,
+): Promise<string> {
+  const { data, error } = await supabase.rpc('create_org_invite', {
+    p_org_id:  orgId,
+    p_email:   email,
+    p_role:    role,
+    p_dept_id: departmentId ?? null,
+  });
+  if (error) throw new Error(`createOrgInvite failed: ${error.message}`);
+  return data as string;
+}
+
+export async function acceptOrgInvite(token: string): Promise<string> {
+  const { data, error } = await supabase.rpc('accept_org_invite', { p_token: token });
+  if (error) throw new Error(`acceptOrgInvite failed: ${error.message}`);
+  return data as string;
+}
+
+export async function listOrgInvites(orgId: string): Promise<OrganizationInviteRow[]> {
+  const { data, error } = await supabase
+    .from('organization_invites')
+    .select('*')
+    .eq('organization_id', orgId)
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(`listOrgInvites failed: ${error.message}`);
+  return (data ?? []) as OrganizationInviteRow[];
+}
+
+export async function revokeOrgInvite(inviteId: string): Promise<void> {
+  const { error } = await supabase
+    .from('organization_invites')
+    .update({ revoked_at: new Date().toISOString() })
+    .eq('id', inviteId);
+  if (error) throw new Error(`revokeOrgInvite failed: ${error.message}`);
+}

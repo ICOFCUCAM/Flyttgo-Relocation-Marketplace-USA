@@ -118,6 +118,7 @@ const PAGE_TO_PATH: Record<Page, string> = {
   'government-programs':         '/government-programs',
   'ngo-deployment':              '/ngo-deployment',
   'pilot-deployment-programs':   '/pilot-deployment-programs',
+  'accept-org-invite':           '/invite',
 
   /* Fallback for unknown routes. No real path — pathToPage() returns
    * this id for anything it can't match. setPage('not-found') still
@@ -173,6 +174,7 @@ const PAGE_TITLES: Record<Page, string> = {
   'government-programs':      'Government & ministry relocation programs · FlyttGo',
   'ngo-deployment':           'NGO deployment logistics · FlyttGo',
   'pilot-deployment-programs':'Pilot deployment programs · FlyttGo',
+  'accept-org-invite':        'Accept organization invite · FlyttGo',
   'booking':                  'Book a Move · FlyttGo Global',
   'payment':                  'Secure Payment · FlyttGo Global',
   'tracking':                 'Track Your Coordination · FlyttGo Global',
@@ -272,6 +274,8 @@ const PAGE_DESCRIPTIONS: Record<Page, string> = {
     "NGO and humanitarian deployment logistics on FlyttGo — refugee mobility, staff relocation, field-mission cargo with framework agreements + donor-grade audit trails.",
   'pilot-deployment-programs':
     "FlyttGo pilot deployment programs — five archetypes (municipal / university / transit-authority / marketplace-rollout / identity-integrated) for ministries and authorities exploring institutional procurement before long-form rollout.",
+  'accept-org-invite':
+    "Accept your FlyttGo organization invite to join your team's institutional account — relocation requests, approval workflow, and invoice billing.",
   'booking':
     'Book your next move in under 3 minutes. Get an instant quote, pick a verified driver, and track your delivery live — all with escrow payment built in.',
   'payment':
