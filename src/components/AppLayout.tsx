@@ -62,6 +62,7 @@ const ExitIntentModal    = lazy(() => import('./global/ExitIntentModal'));
 const MobileBottomNav    = lazy(() => import('./global/MobileBottomNav'));
 const PWAInstallPrompt   = lazy(() => import('./global/PWAInstallPrompt'));
 const StickyQuoteBar     = lazy(() => import('./global/StickyQuoteBar'));
+const ScrollProgress     = lazy(() => import('./global/ScrollProgress'));
 
 function Loading() {
   return (
@@ -162,6 +163,10 @@ export default function AppLayout() {
       >
         Skip to main content
       </a>
+      {/* Top-of-page scroll progress bar — orient the reader on long pages */}
+      <Suspense fallback={null}>
+        <ScrollProgress currentPage={currentPage} />
+      </Suspense>
       {showHeader && <Header />}
       <AuthModal />
       <main id="main-content" tabIndex={-1}>
