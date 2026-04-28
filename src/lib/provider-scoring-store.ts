@@ -41,6 +41,11 @@ export interface ProviderScoreRow {
   is_top_rated:          boolean;
   is_suspended:          boolean;
   warning_count_30d:     number;
+  /** Total disputes filed against the provider. */
+  dispute_count:         number;
+  /** Disputes resolved against the provider (any path other than
+   *  mediation / close_no_action / request_evidence). */
+  dispute_loss_count:    number;
   trust_badges:          TrustBadgeSlug[];
 }
 
@@ -62,7 +67,7 @@ export interface ProviderRatingRow {
 export async function loadProviderScore(userId: string): Promise<ProviderScoreRow | null> {
   const { data, error } = await supabase
     .from('provider_reputation')
-    .select('user_id, rank_score, avg_rating, rating_count, completion_rate, on_time_rate, response_speed_score, recent_activity_score, verification_level, is_top_rated, is_suspended, warning_count_30d, trust_badges')
+    .select('user_id, rank_score, avg_rating, rating_count, completion_rate, on_time_rate, response_speed_score, recent_activity_score, verification_level, is_top_rated, is_suspended, warning_count_30d, dispute_count, dispute_loss_count, trust_badges')
     .eq('user_id', userId)
     .maybeSingle();
   if (error) throw new Error(`loadProviderScore failed: ${error.message}`);
