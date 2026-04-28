@@ -1,47 +1,73 @@
-import React, { useState } from 'react';
-import { MessageCircle, X, Phone } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { MessageCircle, X } from 'lucide-react';
+import { useApp } from '../../lib/store';
 
 /**
  * Floating chat / WhatsApp button. Bottom-right; on click expands a
- * small panel with three contact channels (WhatsApp, phone, email) so
- * the customer can pick the one they prefer instead of forcing them
- * into a single channel.
+ * panel with three contact channels (WhatsApp, phone, email).
  *
- * The numbers below are placeholders — wire to real support numbers
- * before launch. Per-country routing (UK customer → UK number) can
- * read currentPage from useApp() and pick the right destination.
+ * The WhatsApp deep-link is templated per current page so the
+ * conversation opens with context — the customer doesn't have to
+ * re-explain which country / move type they came from.
  */
 
 interface ContactChannel {
   label: string;
   href:  string;
   hint:  string;
-  brand: string; // tailwind bg color
+  brand: string;
 }
 
-const CHANNELS: ContactChannel[] = [
-  {
-    label: 'WhatsApp',
-    href:  'https://wa.me/447432112438',
-    hint:  'Average reply: 2 min',
-    brand: 'bg-[#25D366] hover:bg-[#1ebe5a]',
-  },
-  {
-    label: 'Call us',
-    href:  'tel:+447432112438',
-    hint:  '24/7 · 6 countries',
-    brand: 'bg-slate-900 hover:bg-slate-800',
-  },
-  {
-    label: 'Email',
-    href:  'mailto:support@flyttgo.us',
-    hint:  'Reply within 1 hour',
-    brand: 'bg-amber-500 hover:bg-amber-600',
-  },
-];
+const COUNTRY_GREETING: Record<string, string> = {
+  'market-us':      "Hi! I'd like to book a move in the United States.",
+  'market-canada':  "Hi! I'd like to book a move in Canada.",
+  'market-germany': "Hallo! Ich möchte einen Umzug in Deutschland buchen.",
+  'market-france':  "Bonjour ! Je souhaite réserver un déménagement en France.",
+  'market-uk':      "Hi! I'd like to book a move in the UK.",
+  'market-norway':  "Hei! Jeg vil bestille en flytting i Norge.",
+  'booking':        "Hi! I'm midway through booking a move and have a question.",
+  'enterprise-relocation': "Hi! I'm enquiring about FlyttGo for our company's relocation programme.",
+  'universities':   "Hi! I'm enquiring about FlyttGo for our university housing relocation.",
+  'providers':      "Hi! I'd like to apply as a provider on FlyttGo.",
+  'driver-onboarding': "Hi! I'd like to apply as a driver / provider on FlyttGo.",
+};
+
+function whatsappUrl(message: string): string {
+  // Wired to a UK number for now — switch to per-country routing once
+  // we have local numbers contracted.
+  const base = 'https://wa.me/447432112438';
+  return `${base}?text=${encodeURIComponent(message)}`;
+}
 
 export default function FloatingChat() {
+  const { currentPage } = useApp();
   const [open, setOpen] = useState(false);
+
+  const greeting = useMemo(
+    () => COUNTRY_GREETING[currentPage] ?? "Hi! I'd like to book a move with FlyttGo.",
+    [currentPage],
+  );
+
+  const channels: ContactChannel[] = useMemo(() => [
+    {
+      label: 'WhatsApp',
+      href:  whatsappUrl(greeting),
+      hint:  'Average reply: 2 min',
+      brand: 'bg-[#25D366] hover:bg-[#1ebe5a]',
+    },
+    {
+      label: 'Call us',
+      href:  'tel:+447432112438',
+      hint:  '24/7 · 6 countries',
+      brand: 'bg-slate-900 hover:bg-slate-800',
+    },
+    {
+      label: 'Email',
+      href:  `mailto:support@flyttgo.us?subject=${encodeURIComponent('FlyttGo enquiry')}&body=${encodeURIComponent(greeting)}`,
+      hint:  'Reply within 1 hour',
+      brand: 'bg-amber-500 hover:bg-amber-600',
+    },
+  ], [greeting]);
 
   return (
     <div className="fixed right-4 bottom-4 z-30 flex flex-col items-end gap-2">
@@ -61,7 +87,7 @@ export default function FloatingChat() {
             </div>
           </div>
           <div className="p-3 space-y-2">
-            {CHANNELS.map(c => (
+            {channels.map(c => (
               <a
                 key={c.label}
                 href={c.href}
@@ -73,6 +99,14 @@ export default function FloatingChat() {
                 <span className="text-[10px] font-normal opacity-90">{c.hint}</span>
               </a>
             ))}
+          </div>
+          {/* Pre-filled message preview so the customer knows what
+              we're sending on their behalf. */}
+          <div className="px-4 pb-4 pt-1">
+            <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1">
+              Pre-filled message
+            </p>
+            <p className="text-xs text-slate-600 italic line-clamp-2">“{greeting}”</p>
           </div>
         </div>
       )}
