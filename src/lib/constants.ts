@@ -39,13 +39,40 @@ export const VAN_TYPES = [
   { id: 'luton_van',  name: 'Box Truck',   image: IMAGES.vans.luton,  capacity: '630–700 ft³', payload: '2200–2600 lb', examples: ['16 ft Box Truck with Liftgate'],                                          bestFor: ['2–3 bedroom house moves','Office relocation','Heavy furniture'], items: ['Beds','Wardrobes','Large sofas','35+ boxes'],         pricePerHour: 190 },
 ];
 
+/**
+ * Subscription plans aligned with VanMan-UK's canonical 5-tier system.
+ * The plan id is the value written into `drivers.tier` on the shared
+ * Supabase backend — every site (FlyttGo, Global Relocation USA,
+ * VanMan-UK) uses the same identifiers so a driver registered on one
+ * surface is recognised by all of them.
+ */
 export const SUBSCRIPTION_PLANS = [
-  { id: 'free',      name: 'Free',      price: 0,   period: '',       jobVisibility: 'Jobs up to $50',  commission: { '0-50': 0 },                                  dispatchPriority: 'Standard',  priorityLevel: 1, features: ['Access to jobs up to $50','0% commission on visible jobs','Standard dispatch priority','Basic support'],                                                                                  popular: false, color: 'gray' },
-  { id: 'basic',     name: 'Basic',     price: 0,   period: '',       jobVisibility: 'All jobs',         commission: { '51-150': 20, '151-500': 15, '500+': 10 },     dispatchPriority: 'Moderate',  priorityLevel: 2, features: ['Access to all jobs','Moderate dispatch priority','20% commission ($51-150)','15% commission ($151-500)','10% commission ($500+)'],                                                  popular: false, color: 'blue' },
-  { id: 'pro_mini',  name: 'Pro Mini',  price: 15,  period: '/day',   jobVisibility: 'All jobs',         commission: { '51-150': 10, '151-500': 5, '500+': 4 },       dispatchPriority: 'High',      priorityLevel: 3, features: ['Access to all jobs','High dispatch priority','10% commission ($51-150)','5% commission ($151-500)','3-5% commission ($500+)','Priority support'],                                 popular: true,  color: 'green' },
-  { id: 'pro',       name: 'Pro',       price: 150, period: '/month', jobVisibility: 'All jobs',         commission: { '51-150': 10, '151-500': 5, '500+': 4 },       dispatchPriority: 'Very High', priorityLevel: 4, features: ['Access to all jobs','Very high dispatch priority','10% commission ($51-150)','5% commission ($151-500)','3-5% commission ($500+)','Premium support','Priority job matching'],    popular: false, color: 'purple' },
-  { id: 'unlimited', name: 'Unlimited', price: 249, period: '/month', jobVisibility: 'All jobs',         commission: { all: 0 },                                      dispatchPriority: 'Highest',   priorityLevel: 5, features: ['Access to all jobs','Highest dispatch priority','0% commission on ALL jobs','VIP support','Priority job matching','Earnings maximized'],                                                          popular: false, color: 'amber' },
-];
+  { id: 'silver',      name: 'Silver',      price: 0,   period: '/mo',  commissionRate: 30, dispatchPriority: 'Standard',  priorityLevel: 1, popular: false, jobVisibility: 'All jobs', features: ['30% platform commission','Standard job queue access','Verified driver badge','Goods-in-transit insurance included','Weekly BACS payout','Community support forum'] },
+  { id: 'silver_plus', name: 'Silver Plus', price: 29,  period: '/day', commissionRate: 25, dispatchPriority: 'Moderate',  priorityLevel: 2, popular: false, jobVisibility: 'All jobs', features: ['25% platform commission — save 5%','Moderate dispatch priority','Silver Plus profile badge','Enhanced insurance coverage','Weekly BACS payout','24/7 driver support'] },
+  { id: 'gold',        name: 'Gold',        price: 49,  period: '/day', commissionRate: 20, dispatchPriority: 'High',      priorityLevel: 3, popular: true,  jobVisibility: 'All jobs', features: ['20% platform commission','High dispatch priority','Gold profile badge & trust seal','Premium insurance coverage','Bi-weekly BACS payout','Dedicated account manager'] },
+  { id: 'gold_pro',    name: 'Gold Pro',    price: 79,  period: '/mo',  commissionRate: 15, dispatchPriority: 'Very High', priorityLevel: 4, popular: false, jobVisibility: 'All jobs', features: ['15% platform commission','Very high dispatch priority','Gold Pro badge + featured listing','Corporate job access','Weekly BACS payout','Priority phone support'] },
+  { id: 'elite',       name: 'Elite',       price: 129, period: '/mo',  commissionRate: 10, dispatchPriority: 'Highest',   priorityLevel: 5, popular: false, jobVisibility: 'All jobs', features: ['10% platform commission','First access to ALL jobs','Elite badge + top of marketplace','Corporate & enterprise accounts','Same-day BACS payout','Personal account manager'] },
+] as const;
+
+/**
+ * Commission and cash-deposit constants — lifted from VanMan-UK so the
+ * three marketplaces compute the same numbers against the shared
+ * Supabase booking row. Update only if VanMan-UK updates first.
+ */
+export const COMMISSION = {
+  silver:            0.30,  // 30%
+  silver_plus:       0.25,  // 25%
+  gold:              0.20,  // 20%
+  gold_pro:          0.15,  // 15%
+  elite:             0.10,  // 10%
+  /** Share of the booking total charged online up front when the
+   *  customer chooses cash on delivery. The remainder (1 - cashDeposit)
+   *  is paid in cash to the driver on completion. */
+  cashDeposit:       0.30,
+  /** Below this job value the platform takes 0% commission (drivers
+   *  keep the full amount as a small-job incentive). */
+  smallJobThreshold: 50,
+};
 
 /* Phase 1 launch cities — initial US rollout footprint.
  * Provider counts represent verified marketplace participants; bookings reflect
@@ -121,19 +148,27 @@ export const PRICING = {
   vat: 0,
 };
 
-export function calculateCommission(jobPrice: number, plan: string) {
-  const safePrice = Number(jobPrice ?? 0);
-  if (safePrice <= 50) return { rate: 0, commission: 0, earning: safePrice };
-  const planData = SUBSCRIPTION_PLANS.find(p => p.id === plan);
-  if (!planData) return { rate: 0, commission: 0, earning: safePrice };
-  if (plan === 'unlimited') return { rate: 0, commission: 0, earning: safePrice };
-  if (plan === 'free') return { rate: -1, commission: 0, earning: 0 };
-  let rate = 0;
-  if (safePrice <= 150) rate = Number((planData.commission as any)['51-150'] ?? 0);
-  else if (safePrice <= 500) rate = Number((planData.commission as any)['151-500'] ?? 0);
-  else rate = Number((planData.commission as any)['500+'] ?? 0);
-  const commission = safePrice * (rate / 100);
-  return { rate, commission, earning: safePrice - commission };
+/**
+ * Commission for a job value, given the driver's plan id. Mirrors
+ * VanMan-UK's calculateCommission so the released-escrow trigger and
+ * the customer-facing earning preview compute identical numbers.
+ *
+ *   - Below COMMISSION.smallJobThreshold the platform takes 0%
+ *   - Otherwise the rate is the plan's commissionRate (silver=30%,
+ *     silver_plus=25%, gold=20%, gold_pro=15%, elite=10%)
+ *
+ * Returns { rate, commission, earning } where rate is a percentage
+ * (not a decimal) — kept for backward compat with the consumer UI.
+ */
+export function calculateCommission(jobValue: number, planId: string) {
+  const safeValue = Number(jobValue ?? 0);
+  if (safeValue <= COMMISSION.smallJobThreshold) {
+    return { rate: 0, commission: 0, earning: safeValue };
+  }
+  const plan = SUBSCRIPTION_PLANS.find(p => p.id === planId);
+  const rate = plan?.commissionRate ?? 30; // silver default
+  const commission = Math.round(safeValue * (rate / 100));
+  return { rate, commission, earning: safeValue - commission };
 }
 
 export function calculatePrice(vanType: string, hours: number, distanceKm: number, helpers: number, extras: string[]) {
@@ -368,113 +403,30 @@ export function splitPayment(
 }
 
 /* ──────────────────────────────────────────────────────────────────────
- * REFUND POLICY
+ * REFUND POLICY (admin-flow, lifted from VanMan-UK)
  *
- * Refunds on a cash-method booking depend on:
- *   - When the cancellation lands relative to the move (grace period).
- *     Inside the grace window → full refund of the deposit.
- *     Outside it → deposit forfeited; a portion of it goes to the
- *     driver as no-show compensation, scaled by their plan.
- *   - The driver's subscription plan. Higher tiers earn a higher
- *     share of the forfeited deposit so the cash-on-delivery model
- *     is viable for them (otherwise drivers carry the no-show risk).
+ * VanMan-UK does NOT use a per-plan automatic refund retention model.
+ * Refunds run through the SQL functions installed by the
+ * escrow_management_migration.sql migration on the shared Supabase:
  *
- * Only the cash payment method changes its behaviour here; full-card
- * bookings refund 100% inside the grace window and 0% outside (the
- * customer was already billed up front).
+ *   release_escrow_manually(booking_id)  — admin releases held funds
+ *                                          to the driver wallet;
+ *                                          commission is deducted at
+ *                                          the driver's tier rate
+ *                                          (see COMMISSION above).
+ *   refund_escrow_manually(booking_id)   — admin reverses the driver's
+ *                                          pending balance and marks
+ *                                          the booking refunded; the
+ *                                          actual Stripe refund is
+ *                                          initiated separately from
+ *                                          the Stripe Dashboard.
+ *
+ * The cash-deposit (30%) is the only amount the platform ever holds
+ * on a cash booking — the remaining 70% is paid in cash to the driver
+ * on completion and is outside the platform's escrow.
+ *
+ * If a customer cancels a cash booking before the move, admin runs
+ * refund_escrow_manually + issues a Stripe refund of the deposit.
+ * If they no-show, admin runs release_escrow_manually so the driver
+ * keeps their deposit share net of commission.
  * ──────────────────────────────────────────────────────────────────── */
-
-export interface PlanRefundPolicy {
-  /** Hours before the move when the deposit is still fully refundable. */
-  cancellationGraceHours: number;
-  /** Share of a forfeited deposit that flows to the driver (0-100). */
-  noShowDriverSharePct:   number;
-}
-
-/* Plan-id → refund policy. Indexed by SUBSCRIPTION_PLANS.id so admin
- * can raise a driver's plan and instantly change their no-show
- * compensation profile without a code change. */
-export const PLAN_REFUND_POLICY: Record<string, PlanRefundPolicy> = {
-  /* Free plan: drivers are not on the hook for no-shows because
-   * they pay no platform commission to begin with — the platform
-   * keeps the entire forfeited deposit. */
-  free:      { cancellationGraceHours: 24, noShowDriverSharePct:   0 },
-  basic:     { cancellationGraceHours: 24, noShowDriverSharePct:  25 },
-  pro_mini:  { cancellationGraceHours: 24, noShowDriverSharePct:  50 },
-  pro:       { cancellationGraceHours: 24, noShowDriverSharePct:  60 },
-  /* Unlimited plan: drivers pay a flat monthly subscription instead
-   * of per-job commission, so they take the largest share of the
-   * forfeited deposit when a customer no-shows. */
-  unlimited: { cancellationGraceHours: 12, noShowDriverSharePct:  75 },
-};
-
-/**
- * Compute the refund the customer receives, plus the driver's no-show
- * compensation, for a cash-method booking.
- *
- *   subtotal           — full booking price (deposit + cashDue)
- *   hoursBeforeMove    — gap between cancel-time and the move start;
- *                        negative values are treated as "already moved"
- *                        (no refund)
- *   driverPlanId       — value of SUBSCRIPTION_PLANS[i].id
- *   paymentMethod      — 'card_full' or 'card_deposit_cash'
- *
- * Returns customerRefund + driverCompensation + platformRetention.
- * The three numbers always sum to the deposit amount.
- */
-export function calculateRefund(args: {
-  subtotal:        number;
-  country:         BookingCountry;
-  hoursBeforeMove: number;
-  driverPlanId:    string;
-  paymentMethod:   PaymentMethod;
-}): {
-  depositCharged:      number;
-  cashDue:             number;
-  customerRefund:      number;
-  driverCompensation:  number;
-  platformRetention:   number;
-  insideGraceWindow:   boolean;
-} {
-  const policy = PLAN_REFUND_POLICY[args.driverPlanId] ?? PLAN_REFUND_POLICY.basic;
-  const insideGraceWindow = args.hoursBeforeMove >= policy.cancellationGraceHours;
-
-  const split = splitPayment(args.subtotal, args.country, args.paymentMethod);
-
-  /* Card-only: customer pre-paid the whole amount. Full refund inside
-   * the grace window, zero outside. */
-  if (args.paymentMethod === 'card_full') {
-    return {
-      depositCharged:     split.deposit,
-      cashDue:            0,
-      customerRefund:     insideGraceWindow ? split.deposit : 0,
-      driverCompensation: 0,
-      platformRetention:  insideGraceWindow ? 0 : split.deposit,
-      insideGraceWindow,
-    };
-  }
-
-  /* Cash-method (30/70). */
-  if (insideGraceWindow) {
-    return {
-      depositCharged:     split.deposit,
-      cashDue:            split.cashDue,
-      customerRefund:     split.deposit,
-      driverCompensation: 0,
-      platformRetention:  0,
-      insideGraceWindow,
-    };
-  }
-
-  /* Outside grace: customer forfeits the deposit. Driver gets their
-   * plan-based share, platform keeps the rest. */
-  const driverShare = (split.deposit * policy.noShowDriverSharePct) / 100;
-  return {
-    depositCharged:     split.deposit,
-    cashDue:            split.cashDue,
-    customerRefund:     0,
-    driverCompensation: Math.round(driverShare * 100) / 100,
-    platformRetention:  Math.round((split.deposit - driverShare) * 100) / 100,
-    insideGraceWindow,
-  };
-}
