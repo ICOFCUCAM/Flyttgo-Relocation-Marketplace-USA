@@ -1,5 +1,5 @@
-import React, { Suspense, lazy, useEffect, useState } from 'react';
-import { Banknote, CreditCard, MapPin, Clock, Info, Bookmark, Tag, Check, X as XIcon, ArrowDownUp, Leaf } from 'lucide-react';
+import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import { Banknote, CreditCard, MapPin, Clock, Info, Bookmark, Tag, Check, X as XIcon, ArrowDownUp, Leaf, Shield } from 'lucide-react';
 
 /* Lazy-loaded so the ~150 KB Leaflet bundle only ships once the
  * customer has picked both addresses (Wave 23). */
@@ -14,6 +14,28 @@ import { track } from '../../lib/analytics';
 import { saveQuote } from '../../lib/saved-quotes-store';
 import { applyPromo, type PromoCode } from '../../lib/promo-codes';
 import { matchProviders } from '../../lib/matching-engine-store';
+import { INSURANCE_OPTIONS, type InsuranceTier } from '../../lib/pricing-engine';
+import { COUNTRY_PROFILES } from '../../lib/country-profiles';
+
+/* Default declared value seeded into the insurance calculator so the
+ * per-tier upcharge has a number to anchor against on first render.
+ * Customer overrides via the input below. */
+const DEFAULT_DECLARED_VALUE_USD = 25_000;
+
+/* Recommend a tier from the customer's declared value:
+ *   <  $50k → basic   (within the $50k included limit)
+ *   <  $250k → full   (within the $250k Full limit)
+ *   else    → premium ($500k Premium limit)
+ *
+ * Pure thresholds in USD — for non-USD markets we approximate by
+ * dividing by the country's USD rate so the recommendation stays
+ * meaningful. */
+function recommendTier(declaredValueLocal: number, usdRate: number): InsuranceTier {
+  const usd = declaredValueLocal / Math.max(usdRate, 0.01);
+  if (usd < 50_000)  return 'basic';
+  if (usd < 250_000) return 'full';
+  return 'premium';
+}
 
 const COUNTRY_LABEL: Record<BookingCountry, string> = {
   us: 'USA',
@@ -155,6 +177,26 @@ export default function BookingShortcut({ country, compact = false }: Props) {
   const [promoOpen,     setPromoOpen]     = useState(false);
   const [promoApplied,  setPromoApplied]  = useState<PromoCode | null>(null);
   const [promoError,    setPromoError]    = useState<string | null>(null);
+
+  /* Insurance state — declared value is the customer's stated
+   * replacement value of inventory in the local currency; tier is
+   * the picker value. Default tier is whichever the country offers
+   * first (some markets gate Basic; see COUNTRY_PROFILES). */
+  const countryProfile = COUNTRY_PROFILES.find(p => p.code === country)!;
+  const availableTiers = countryProfile.insuranceAvailability;
+  const [declaredValue, setDeclaredValue] = useState<number>(
+    Math.round(DEFAULT_DECLARED_VALUE_USD / Math.max(countryProfile.usdRate, 0.01))
+  );
+  const [insuranceTier, setInsuranceTier] = useState<InsuranceTier>(
+    availableTiers[0]?.tier ?? 'basic'
+  );
+
+  /* Recommend a tier when the declared value crosses a threshold.
+   * Suggestion only, never auto-overrides the customer's pick. */
+  const recommendedTier = useMemo(
+    () => recommendTier(declaredValue, countryProfile.usdRate),
+    [declaredValue, countryProfile.usdRate],
+  );
 
   /* ── Two distance systems, both displayed for transparency ──
    * 1) OSRM via getRouteDistance — real road distance + ETA
@@ -321,6 +363,8 @@ export default function BookingShortcut({ country, compact = false }: Props) {
       promoDiscountPct: promoApplied?.pct,
       suggestedProviderUserId: suggestedProvider?.user_id,
       suggestedMatchScore:     suggestedProvider?.match_score,
+      insuranceTier,
+      declaredValue,
       step: 2,
     });
 
@@ -556,6 +600,89 @@ export default function BookingShortcut({ country, compact = false }: Props) {
           Cash on delivery isn’t available in {COUNTRY_LABEL[country]} yet.
         </p>
       )}
+
+      {/* ── Insurance & valuation calculator ─────────────────────────
+       * Customer enters their declared inventory value; we surface
+       * the country's available tiers with the per-hour upcharge.
+       * The price preview above intentionally does NOT roll insurance
+       * in — it's quoted separately so the customer sees both the
+       * core booking total and the protection premium. The tier
+       * selection persists into BookingData so the canonical engine
+       * applies it on the next page. */}
+      <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50/40">
+        <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Shield size={14} className="text-emerald-600" />
+            <p className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+              Coverage &amp; valuation
+            </p>
+          </div>
+          {recommendedTier !== insuranceTier && (
+            <button
+              type="button"
+              onClick={() => setInsuranceTier(recommendedTier)}
+              className="text-[10px] font-bold text-amber-700 hover:text-amber-800 underline-offset-2 hover:underline uppercase tracking-wider"
+            >
+              Use recommended ({recommendedTier})
+            </button>
+          )}
+        </div>
+        <div className="px-4 py-3 space-y-3">
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+              Declared value of your belongings ({countryProfile.symbol})
+            </label>
+            <input
+              type="number"
+              min={0}
+              step={1000}
+              value={declaredValue}
+              onChange={(e) => setDeclaredValue(Math.max(0, Number(e.target.value) || 0))}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none bg-white"
+              placeholder="25000"
+            />
+            <p className="text-[10px] text-slate-500 mt-1">
+              We use this to recommend coverage. Drives carrier liability claims if anything goes wrong.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {availableTiers.map(({ tier, perHourMultiplier, note }) => {
+              const opt = INSURANCE_OPTIONS[tier];
+              const perHourLocal = Math.round(opt.perHour * perHourMultiplier * countryProfile.usdRate);
+              const active = tier === insuranceTier;
+              const recommended = tier === recommendedTier;
+              return (
+                <button
+                  type="button"
+                  key={tier}
+                  onClick={() => setInsuranceTier(tier)}
+                  className={`relative text-left rounded-lg border p-3 transition ${
+                    active
+                      ? 'border-emerald-500 ring-2 ring-emerald-500/30 bg-white'
+                      : 'border-slate-200 bg-white hover:border-slate-400'
+                  }`}
+                >
+                  {recommended && !active && (
+                    <span className="absolute -top-2 right-2 text-[9px] font-bold uppercase tracking-wider bg-amber-500 text-slate-900 px-1.5 py-0.5 rounded">
+                      Best fit
+                    </span>
+                  )}
+                  <p className="text-xs font-bold text-slate-900 mb-0.5">{opt.label}</p>
+                  <p className="text-[10px] text-slate-500 mb-1.5 line-clamp-2">{opt.blurb}</p>
+                  <p className="text-xs font-semibold text-emerald-700">
+                    {perHourLocal === 0
+                      ? 'Included'
+                      : `+${formatCurrency(perHourLocal, country)}/hr`}
+                  </p>
+                  {note && (
+                    <p className="text-[10px] text-slate-400 mt-1 italic">{note}</p>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
 
       {/* ── Promo code (Wave 26) ─────────────────────────────────── */}
       <div className="mt-3">

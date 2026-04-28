@@ -14,6 +14,7 @@ import {
   type SavedQuote,
 } from "../lib/saved-quotes-store";
 import { formatCurrency } from "../lib/constants";
+import RateProviderModal from "./RateProviderModal";
 
 /* Lazy-load Leaflet so the map bundle (~150 KB) is only fetched on
  * pages that actually have an in-transit booking to track. */
@@ -57,6 +58,11 @@ export default function MyBookings() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [escrowMap, setEscrowMap] = useState<any>({});
+  /* Set of booking_ids the customer has already rated. Lets us hide
+   * the "Rate provider" button so we don't nudge the same booking
+   * twice. */
+  const [ratedBookingIds, setRatedBookingIds] = useState<Set<string>>(new Set());
+  const [ratingTarget, setRatingTarget] = useState<{ bookingId: string; driverId: string } | null>(null);
 
   useEffect(() => { if (!user) return; fetchBookings(); }, [user]);
 
@@ -73,6 +79,15 @@ export default function MyBookings() {
       const map: any = {};
       escrow?.forEach(e => { map[e.booking_id] = e; });
       setEscrowMap(map);
+
+      /* Pull the customer's existing ratings so the rate-this-move
+       * button can hide on bookings they've already rated. */
+      const { data: ratings } = await supabase
+        .from("provider_ratings")
+        .select("booking_id")
+        .eq("customer_user_id", user?.id)
+        .in("booking_id", ids);
+      setRatedBookingIds(new Set((ratings ?? []).map((r: any) => r.booking_id)));
     }
     setLoading(false);
   }
@@ -275,6 +290,17 @@ export default function MyBookings() {
                 )}
                 {booking.status === "pending" && <button onClick={() => cancelBooking(booking.id)} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">{t('myBookings.cancel')}</button>}
                 {booking.status === "completed" && !booking.customer_confirmation && <button onClick={() => confirmCompletion(booking.id)} className="px-4 py-2 bg-emerald-600 text-white rounded text-sm">{t('myBookings.confirmCompletion')}</button>}
+                {/* Rating CTA — only on completed bookings the
+                 * customer hasn't yet rated and where a driver was
+                 * actually assigned. */}
+                {booking.status === "completed" && booking.driver_id && !ratedBookingIds.has(booking.id) && (
+                  <button
+                    onClick={() => setRatingTarget({ bookingId: booking.id, driverId: booking.driver_id! })}
+                    className="px-4 py-2 bg-amber-500 text-slate-900 rounded text-sm font-semibold hover:bg-amber-600 transition"
+                  >
+                    Rate provider ★
+                  </button>
+                )}
                 <button onClick={() => repeatBooking(booking)} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">{t('myBookings.repeatBooking')}</button>
               </div>
               <div className="text-xs text-gray-400 mt-3">{t('myBookings.loyaltyPoints')}: {Math.floor(Number(price || 0) / 100)}</div>
@@ -282,6 +308,20 @@ export default function MyBookings() {
           );
         })}
       </div>
+
+      {ratingTarget && user && (
+        <RateProviderModal
+          bookingId={ratingTarget.bookingId}
+          driverRowId={ratingTarget.driverId}
+          customerUserId={user.id}
+          onClose={(submitted) => {
+            if (submitted) {
+              setRatedBookingIds(prev => new Set(prev).add(ratingTarget.bookingId));
+            }
+            setRatingTarget(null);
+          }}
+        />
+      )}
     </div>
   );
 }

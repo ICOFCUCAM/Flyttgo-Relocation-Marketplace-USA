@@ -149,6 +149,13 @@ export interface BookingData {
    *  as a hint for who to route to first. */
   suggestedProviderUserId?: string;
   suggestedMatchScore?:     number;
+  /** Insurance tier the customer picked on the quote widget. Carries
+   *  through to the BookingFlow where the canonical pricing engine
+   *  applies the per-hour upcharge. */
+  insuranceTier?:    'basic' | 'full' | 'premium';
+  /** Customer-declared replacement value of inventory in the local
+   *  currency. Used by the calculator to recommend a tier. */
+  declaredValue?:    number;
 }
 
 const defaultBooking: BookingData = {

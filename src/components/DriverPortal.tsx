@@ -9,6 +9,10 @@ import { useDriverLocationBeacon } from '../hooks/useDriverLocationBeacon';
 /* Lazy-load the Leaflet-backed jobs map so drivers who never
  * expand the map view don't pay the ~150 KB Leaflet + tile bundle. */
 const NearbyJobsMap = lazy(() => import('./NearbyJobsMap'));
+/* Disputes panel — only loaded when the driver opens the disputes
+ * tab. Avoids pulling supabase storage helpers + dispute-rules into
+ * the main bundle for drivers who never see a complaint. */
+const ProviderDisputesPanel = lazy(() => import('./ProviderDisputesPanel'));
 
 function safeNumber(value: any): number {
   const n = Number(value ?? 0);
@@ -589,8 +593,8 @@ export default function DriverPortal() {
 
       <div className="p-6 max-w-7xl mx-auto">
         <div className="flex gap-2 mb-6 flex-wrap">
-          {(['overview', 'jobs', 'earnings', 'wallet', 'subscription'] as const).map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 rounded capitalize text-sm font-medium ${activeTab === tab ? 'bg-black text-white' : 'bg-gray-200 text-gray-700'}`}>{t(`driverPortal.${tab}`)}</button>
+          {(['overview', 'jobs', 'earnings', 'wallet', 'subscription', 'disputes'] as const).map(tab => (
+            <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 rounded capitalize text-sm font-medium ${activeTab === tab ? 'bg-black text-white' : 'bg-gray-200 text-gray-700'}`}>{t(`driverPortal.${tab}`, tab)}</button>
           ))}
           {/* Pricing settings — separate page rather than in-tab so the
               live preview panel has room to breathe. */}
@@ -805,6 +809,12 @@ export default function DriverPortal() {
               })}
             </div>
           </div>
+        )}
+
+        {activeTab === 'disputes' && user && (
+          <Suspense fallback={<div className="h-32 bg-white rounded-xl border animate-pulse" />}>
+            <ProviderDisputesPanel providerUserId={user.id} />
+          </Suspense>
         )}
       </div>
     </div>
