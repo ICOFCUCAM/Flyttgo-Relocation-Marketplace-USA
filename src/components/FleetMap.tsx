@@ -206,7 +206,7 @@ export default function FleetMap({ onSuspendDriver, height = 'h-[600px]', classN
             lng:       loc.lng,
           };
         })
-        .filter((x): x is DriverWithLocation => x !== null);
+        .filter((x): x is NonNullable<typeof x> => x !== null);
 
       setDrivers(merged);
 
