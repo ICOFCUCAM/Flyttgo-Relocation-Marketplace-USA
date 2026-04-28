@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Search, Star, ShieldCheck, Award, Truck, ArrowRight, X, SlidersHorizontal,
   ArrowDownAZ, TrendingDown, TrendingUp,
@@ -67,6 +67,14 @@ export default function ProvidersDirectoryPage() {
   const [services,  setServices]  = useState<string[]>([]);
   const [sort,      setSort]      = useState<SortKey>('rating');
 
+  /* Typeahead state — Wave 32. The dropdown opens on focus + non-empty
+   * text and renders the top 5 catalogue matches as a click-through
+   * shortcut to the profile. ArrowUp/ArrowDown/Enter handle keyboard
+   * navigation; Escape closes without clearing the text. */
+  const [taOpen,    setTaOpen]    = useState(false);
+  const [taActive,  setTaActive]  = useState(0);
+  const taRef = useRef<HTMLDivElement>(null);
+
   /* Hydrate from URL on mount + persist on change. */
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -126,6 +134,45 @@ export default function ProvidersDirectoryPage() {
     return list;
   }, [text, countries, tiers, services, sort]);
 
+  /* Top 5 typeahead candidates. Looser-matching than the main filter
+   * (just name + city + service substring) so the dropdown surfaces
+   * options the customer might not have considered for the active
+   * country/tier/service chips. */
+  const typeaheadCandidates = useMemo<ProviderRecord[]>(() => {
+    const q = text.trim().toLowerCase();
+    if (q.length < 2) return [];
+    return PROVIDERS
+      .map(p => {
+        const hay = `${p.name} ${p.city} ${p.services.join(' ')}`.toLowerCase();
+        const i   = hay.indexOf(q);
+        if (i < 0) return null;
+        /* Earlier matches score higher; name-prefix beats city-prefix
+         * beats service-substring. */
+        const namePrefix = p.name.toLowerCase().startsWith(q) ? 100 : 0;
+        const cityPrefix = p.city.toLowerCase().startsWith(q) ? 50  : 0;
+        return { p, score: namePrefix + cityPrefix - i };
+      })
+      .filter((x): x is { p: ProviderRecord; score: number } => x !== null)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5)
+      .map(x => x.p);
+  }, [text]);
+
+  /* Click-outside closes the dropdown. */
+  useEffect(() => {
+    if (!taOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (taRef.current && !taRef.current.contains(e.target as Node)) {
+        setTaOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [taOpen]);
+
+  /* Reset the active row whenever the candidate set changes. */
+  useEffect(() => { setTaActive(0); }, [text]);
+
   function toggle<T extends string>(value: T, list: T[], set: (next: T[]) => void) {
     set(list.includes(value) ? list.filter(x => x !== value) : [...list, value]);
   }
@@ -166,20 +213,48 @@ export default function ProvidersDirectoryPage() {
           or add up to three to compare side-by-side.
         </p>
 
-        {/* Search bar */}
-        <div className="mt-7 max-w-2xl">
+        {/* Search bar with typeahead dropdown (Wave 32) */}
+        <div className="mt-7 max-w-2xl relative" ref={taRef}>
           <div className="flex items-center gap-3 bg-white rounded-xl shadow-medium px-4 py-3 text-ink-900">
             <Search size={18} className="text-slate-400 flex-shrink-0" />
             <input
               type="text"
+              role="combobox"
+              aria-expanded={taOpen && typeaheadCandidates.length > 0}
+              aria-controls="providers-typeahead-listbox"
+              aria-activedescendant={
+                taOpen && typeaheadCandidates[taActive]
+                  ? `ta-${typeaheadCandidates[taActive].slug}` : undefined
+              }
               value={text}
-              onChange={e => setText(e.target.value)}
+              onChange={e => { setText(e.target.value); setTaOpen(true); }}
+              onFocus={() => setTaOpen(true)}
+              onKeyDown={e => {
+                if (!taOpen || typeaheadCandidates.length === 0) return;
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  setTaActive(a => Math.min(a + 1, typeaheadCandidates.length - 1));
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  setTaActive(a => Math.max(a - 1, 0));
+                } else if (e.key === 'Enter') {
+                  const pick = typeaheadCandidates[taActive];
+                  if (pick) {
+                    e.preventDefault();
+                    setTaOpen(false);
+                    track('directory_typeahead_selected', { slug: pick.slug, query: text });
+                    openProfile(pick.slug);
+                  }
+                } else if (e.key === 'Escape') {
+                  setTaOpen(false);
+                }
+              }}
               placeholder="Search by name, city, vehicle, or service…"
               className="flex-1 bg-transparent outline-none text-sm placeholder-slate-400"
             />
             {text && (
               <button
-                onClick={() => setText('')}
+                onClick={() => { setText(''); setTaOpen(false); }}
                 aria-label="Clear search"
                 className="p-1 rounded text-slate-400 hover:text-ink-900"
               >
@@ -187,6 +262,57 @@ export default function ProvidersDirectoryPage() {
               </button>
             )}
           </div>
+
+          {taOpen && typeaheadCandidates.length > 0 && (
+            <ul
+              id="providers-typeahead-listbox"
+              role="listbox"
+              className="absolute left-0 right-0 mt-2 bg-white rounded-xl border border-slate-200 shadow-elevated overflow-hidden z-30 animate-in fade-in slide-in-from-top-1 duration-150"
+            >
+              {typeaheadCandidates.map((p, i) => {
+                const isActive = i === taActive;
+                return (
+                  <li
+                    id={`ta-${p.slug}`}
+                    key={p.slug}
+                    role="option"
+                    aria-selected={isActive}
+                    onMouseEnter={() => setTaActive(i)}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      setTaOpen(false);
+                      track('directory_typeahead_selected', { slug: p.slug, query: text });
+                      openProfile(p.slug);
+                    }}
+                    className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors ${
+                      isActive ? 'bg-brand-50' : 'bg-white hover:bg-surface-soft'
+                    }`}
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-brand-50 to-amber-200 flex items-center justify-center flex-shrink-0">
+                      <Truck size={14} className="text-brand-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-ink-900 truncate">{p.name}</p>
+                      <p className="text-xs text-slate-500 inline-flex items-center gap-1 truncate">
+                        <span aria-hidden>{p.flag}</span>{p.city}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end flex-shrink-0">
+                      <span className="text-xs font-bold text-brand-700">{p.fromPrice}</span>
+                      <span className="text-[10px] text-slate-500 inline-flex items-center gap-0.5">
+                        <Star size={9} className="fill-amber-400 text-amber-400" />
+                        {p.rating.toFixed(2)}
+                      </span>
+                    </div>
+                  </li>
+                );
+              })}
+              <li className="px-4 py-2 bg-surface-soft border-t border-slate-100 text-[10px] text-slate-500 flex items-center justify-between">
+                <span>↑↓ navigate · ⏎ open profile · Esc close</span>
+                <span>{typeaheadCandidates.length} match{typeaheadCandidates.length === 1 ? '' : 'es'}</span>
+              </li>
+            </ul>
+          )}
         </div>
       </Section>
 
