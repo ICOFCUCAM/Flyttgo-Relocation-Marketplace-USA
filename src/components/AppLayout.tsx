@@ -153,11 +153,22 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Skip-to-content link — invisible until keyboard-focused.
+          A11y must-have so keyboard users can bypass the long header
+          and global chrome and jump straight into the page content. */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-amber-500 focus:text-slate-900 focus:font-bold focus:rounded-lg focus:shadow-xl"
+      >
+        Skip to main content
+      </a>
       {showHeader && <Header />}
       <AuthModal />
-      <Suspense fallback={<Loading />}>
-        {renderPage()}
-      </Suspense>
+      <main id="main-content" tabIndex={-1}>
+        <Suspense fallback={<Loading />}>
+          {renderPage()}
+        </Suspense>
+      </main>
       {showFooter && (
         <Suspense fallback={null}>
           <Footer />

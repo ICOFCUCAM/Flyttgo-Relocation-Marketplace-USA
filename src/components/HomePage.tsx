@@ -407,6 +407,66 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ─── PROVIDERS-SIDE CTA — balance the marketplace ─── */}
+      <section className="bg-[#0b1f3a] text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
+          <div className="grid lg:grid-cols-12 gap-10 items-center">
+            <div className="lg:col-span-7">
+              <p className="text-amber-300 text-xs font-bold uppercase tracking-wider mb-2">
+                For movers · packers · storage operators
+              </p>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.05] mb-4">
+                Drive for FlyttGo. Keep up to <span className="text-amber-300">90%</span> of every job.
+              </h2>
+              <p className="text-base lg:text-lg text-white/75 leading-relaxed max-w-2xl mb-6">
+                Pick a subscription tier — Silver, Silver Plus, Gold, Gold Pro,
+                or Elite — and unlock lower commission, higher dispatch
+                priority, and corporate job access in the country you operate
+                in. Approval typically takes 24–48 hours after document upload.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => go('driver-onboarding')}
+                  className="inline-flex items-center gap-2 px-5 py-3 bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold rounded-xl shadow-lg shadow-amber-500/25 transition"
+                >
+                  Apply as a provider
+                </button>
+                <button
+                  onClick={() => go('subscriptions')}
+                  className="inline-flex items-center gap-2 px-5 py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold rounded-xl transition"
+                >
+                  See subscription tiers →
+                </button>
+              </div>
+            </div>
+            <div className="lg:col-span-5">
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { tier: 'Silver',      commission: '30%', perk: 'Free · standard queue' },
+                  { tier: 'Silver Plus', commission: '25%', perk: '£29/day · moderate priority' },
+                  { tier: 'Gold',        commission: '20%', perk: '£49/day · high priority', popular: true },
+                  { tier: 'Gold Pro',    commission: '15%', perk: '£79/mo · very high' },
+                  { tier: 'Elite',       commission: '10%', perk: '£129/mo · first access' },
+                ].map(t => (
+                  <div
+                    key={t.tier}
+                    className={`rounded-xl p-4 border transition ${
+                      t.popular
+                        ? 'bg-amber-400/15 border-amber-400/40'
+                        : 'bg-white/5 border-white/10'
+                    }`}
+                  >
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-amber-300">{t.tier}</p>
+                    <p className="text-2xl font-extrabold text-white mt-1">{t.commission}</p>
+                    <p className="text-[11px] text-white/60 mt-0.5 leading-snug">{t.perk}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ─── FINAL CTA ───────────────────────────────────── */}
       <section className="bg-gradient-to-br from-amber-400 to-amber-500 text-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20 text-center">
