@@ -63,6 +63,7 @@ const MobileBottomNav    = lazy(() => import('./global/MobileBottomNav'));
 const PWAInstallPrompt   = lazy(() => import('./global/PWAInstallPrompt'));
 const StickyQuoteBar     = lazy(() => import('./global/StickyQuoteBar'));
 const ScrollProgress     = lazy(() => import('./global/ScrollProgress'));
+const CompareBar         = lazy(() => import('./global/CompareBar'));
 
 function Loading() {
   return (
@@ -217,6 +218,12 @@ export default function AppLayout() {
           <StickyQuoteBar />
         </Suspense>
       )}
+      {/* Provider-comparison floating bar. Only renders when the
+          customer has at least one provider in the compare shortlist;
+          the component itself self-suppresses on /book and /payment. */}
+      <Suspense fallback={null}>
+        <CompareBar />
+      </Suspense>
     </div>
   );
 }

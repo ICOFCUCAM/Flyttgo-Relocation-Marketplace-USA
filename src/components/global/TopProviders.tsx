@@ -1,5 +1,6 @@
 import React from 'react';
 import { Star, Truck, ShieldCheck, Award } from 'lucide-react';
+import AddToCompareButton from './AddToCompareButton';
 
 /**
  * "Top-rated providers" card row. The shape mirrors what we surface
@@ -118,6 +119,22 @@ export default function TopProviders() {
                     {v} verified
                   </span>
                 ))}
+              </div>
+
+              <div className="mt-3 flex items-center justify-end">
+                <AddToCompareButton
+                  item={{
+                    id:        `top-${p.name.toLowerCase().replace(/\W+/g, '-')}`,
+                    name:      p.name,
+                    city:      p.city,
+                    flag:      p.flag,
+                    rating:    p.rating,
+                    reviews:   p.reviews,
+                    fromPrice: p.fromPrice,
+                    badge:     p.badge,
+                    verified:  p.verified,
+                  }}
+                />
               </div>
             </article>
           ))}
