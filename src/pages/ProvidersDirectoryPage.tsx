@@ -8,6 +8,7 @@ import { PROVIDERS, type ProviderRecord } from '../lib/providers-catalogue';
 import type { BookingCountry } from '../lib/store';
 import { Section, Eyebrow, Pill, EmptyState } from '../components/ds';
 import AddToCompareButton from '../components/global/AddToCompareButton';
+import RecentlyViewedRail from '../components/global/RecentlyViewedRail';
 import { track } from '../lib/analytics';
 
 /* ─────────────────────────────────────────────────────────────────
@@ -187,6 +188,11 @@ export default function ProvidersDirectoryPage() {
           </div>
         </div>
       </Section>
+
+      {/* RECENTLY VIEWED — surfaces the customer's browsing history
+          right above the filters so they can resume a profile in one
+          click. Self-suppresses for first-time visitors. */}
+      <RecentlyViewedRail />
 
       {/* FILTERS */}
       <Section tone="soft" size="sm">

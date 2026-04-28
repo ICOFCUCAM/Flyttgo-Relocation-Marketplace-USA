@@ -8,6 +8,7 @@ import type { Page } from '../lib/store';
 import { findProvider, PROVIDERS, type ProviderRecord } from '../lib/providers-catalogue';
 import { Section, Eyebrow, Pill, EmptyState } from '../components/ds';
 import AddToCompareButton from '../components/global/AddToCompareButton';
+import { recordRecentlyViewed } from '../lib/recently-viewed-store';
 import { track } from '../lib/analytics';
 
 /* ─────────────────────────────────────────────────────────────────
@@ -39,6 +40,23 @@ export default function ProviderProfilePage() {
   }, []);
 
   const provider = slug ? findProvider(slug) : undefined;
+
+  /* Record this view in the recently-viewed store so the home rail
+   * can surface it next time the customer visits. Runs after we
+   * confirm the provider exists, to avoid persisting bad slugs. */
+  useEffect(() => {
+    if (!provider) return;
+    recordRecentlyViewed({
+      slug:      provider.slug,
+      name:      provider.name,
+      city:      provider.city,
+      flag:      provider.flag,
+      rating:    provider.rating,
+      reviews:   provider.reviews,
+      fromPrice: provider.fromPrice,
+      badge:     provider.badge,
+    });
+  }, [provider]);
 
   if (!provider) {
     return (
