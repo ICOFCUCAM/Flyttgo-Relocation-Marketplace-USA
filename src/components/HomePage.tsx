@@ -11,6 +11,7 @@ import HomeFAQ from './global/HomeFAQ';
 import SmartMatchingSection from './global/SmartMatchingSection';
 import CarbonOffset from './global/CarbonOffset';
 import TopProviders from './global/TopProviders';
+import RecentlyViewedRail from './global/RecentlyViewedRail';
 
 /* ────────────────────────────────────────────────────────────
  *  COUNTRY SHOPFRONT METADATA
@@ -322,6 +323,12 @@ export default function HomePage() {
 
       {/* ─── WHY FLYTTGO ───────────────────────────────────── */}
       <WhyFlyttGo />
+
+      {/* ─── RECENTLY VIEWED (Wave 25) ───────────────────────
+          Renders only if the customer has opened a provider profile
+          before — otherwise self-suppresses, so first-time visitors
+          don't see an empty rail. */}
+      <RecentlyViewedRail />
 
       {/* ─── TOP-RATED PROVIDERS ───────────────────────────── */}
       <TopProviders />
