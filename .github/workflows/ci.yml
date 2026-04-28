@@ -1,0 +1,82 @@
+name: CI
+
+# Runs on every push to a branch and on every pull request that
+# targets the canonical branch. Three independent jobs in parallel —
+# install once via the workflow's cache, then typecheck / build / lint
+# from that warm node_modules.
+#
+# Lint is allowed to fail (`continue-on-error: true`) for now because
+# the legacy codebase has hundreds of pre-existing warnings; we want
+# the signal without blocking PRs while we clean them up.
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['claude/clone-website-data-oeaVn', 'main']
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  install:
+    name: Install dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+
+  typecheck:
+    name: TypeScript
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck
+
+  build:
+    name: Vite build
+    needs: install
+    runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_ANON_KEY: ci-build-stub
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 3
+
+  lint:
+    name: ESLint
+    needs: install
+    runs-on: ubuntu-latest
+    continue-on-error: true # legacy warnings — surface, don't block
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run lint
