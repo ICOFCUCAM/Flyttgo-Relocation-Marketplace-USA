@@ -2,6 +2,7 @@ import React from 'react';
 import { Star, ShieldCheck, Truck, Clock, BadgeCheck, MapPin, Users, MessageCircle } from 'lucide-react';
 import { useApp } from '../lib/store';
 import type { Page, BookingCountry } from '../lib/store';
+import { AnimatedNumber } from './ds';
 import LiveBookingTicker from './global/LiveBookingTicker';
 import PressStrip from './global/PressStrip';
 import WhyFlyttGo from './global/WhyFlyttGo';
@@ -384,21 +385,23 @@ export default function HomePage() {
       <HomeFAQ />
 
       {/* ─── TRUST + STATS ───────────────────────────────── */}
-      <section className="bg-[#0b1f3a] text-white py-14">
+      <section className="bg-ink-900 text-white py-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: Truck,       value: '27,000+', label: 'Moves coordinated' },
-              { icon: Users,       value: '5,400+',  label: 'Verified licensed providers' },
-              { icon: ShieldCheck, value: '$50k',    label: 'Insurance per booking' },
-              { icon: Clock,       value: '< 60s',   label: 'Average quote time' },
-            ].map(({ icon: Icon, value, label }) => (
+              { icon: Truck,       n: 27000, format: (n: number) => `${Math.round(n).toLocaleString()}+`, label: 'Moves coordinated' },
+              { icon: Users,       n: 5400,  format: (n: number) => `${Math.round(n).toLocaleString()}+`, label: 'Verified licensed providers' },
+              { icon: ShieldCheck, n: 50,    format: (n: number) => `$${Math.round(n)}k`,                  label: 'Insurance per booking' },
+              { icon: Clock,       n: 60,    format: (n: number) => `< ${Math.round(n)}s`,                 label: 'Average quote time' },
+            ].map(({ icon: Icon, n, format, label }) => (
               <div key={label} className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-brand-400/20 text-brand-400 flex items-center justify-center flex-shrink-0">
                   <Icon size={20} />
                 </div>
                 <div>
-                  <p className="text-2xl sm:text-3xl font-extrabold">{value}</p>
+                  <p className="text-2xl sm:text-3xl font-extrabold">
+                    <AnimatedNumber value={n} format={format} />
+                  </p>
                   <p className="text-sm text-white/70">{label}</p>
                 </div>
               </div>
