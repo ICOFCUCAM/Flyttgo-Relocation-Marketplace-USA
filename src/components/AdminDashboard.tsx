@@ -23,11 +23,15 @@ const FleetMap = lazy(() => import("./FleetMap"));
  * tab so the four aggregator RPCs aren't fired on every admin page
  * view. */
 const LiveOpsControlCenter = lazy(() => import("./LiveOpsControlCenter"));
+/* Finance Console — same pattern. The audit log and ledger pulls
+ * are heavyweight; only fetch them when the operator opens the tab. */
+const FinanceConsole = lazy(() => import("./FinanceConsole"));
 import LiveOpsStrip from "./global/LiveOpsStrip";
 
 type AdminTab =
   | "overview"
   | "live-ops"
+  | "finance"
   | "fleet-map"
   | "drivers"
   | "bookings"
@@ -202,6 +206,7 @@ export default function AdminDashboard() {
   const tabs: AdminTab[] = [
     "overview",
     "live-ops",
+    "finance",
     "fleet-map",
     "drivers",
     "bookings",
@@ -690,6 +695,16 @@ export default function AdminDashboard() {
             </div>
           }>
             <LiveOpsControlCenter />
+          </Suspense>
+        )}
+
+        {tab === "finance" && (
+          <Suspense fallback={
+            <div className="bg-gray-100 rounded-xl h-[400px] animate-pulse flex items-center justify-center text-gray-400 text-sm">
+              Loading Financial Operations Console…
+            </div>
+          }>
+            <FinanceConsole />
           </Suspense>
         )}
 
