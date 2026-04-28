@@ -38,6 +38,14 @@
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
+
+  <!-- Service category landing pages -->
+  <url><loc>https://flyttgo.us/services/long-distance</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://flyttgo.us/services/local</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://flyttgo.us/services/packing</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://flyttgo.us/services/storage</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://flyttgo.us/services/office</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://flyttgo.us/services/labor-only</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
   <url>
     <loc>https://flyttgo.us/book</loc>
     <changefreq>monthly</changefreq>

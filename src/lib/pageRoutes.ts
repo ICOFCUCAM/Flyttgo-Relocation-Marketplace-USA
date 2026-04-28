@@ -94,6 +94,11 @@ const PAGE_TO_PATH: Record<Page, string> = {
   /* Side-by-side provider comparison. */
   'compare':                 '/compare',
 
+  /* Service-category landing pages. The Page→path map only holds the
+   * listing root; live navigations push the full /services/<slug>
+   * URL via history.pushState. */
+  'service-category':        '/services',
+
   /* Fallback for unknown routes. No real path — pathToPage() returns
    * this id for anything it can't match. setPage('not-found') still
    * updates history.pushState to whatever URL triggered the fallback. */
@@ -139,6 +144,7 @@ const PAGE_TITLES: Record<Page, string> = {
   'provider-profile':         'Provider profile · FlyttGo Global',
   'providers-directory':      'Browse verified providers · FlyttGo Global',
   'compare':                  'Compare providers side by side · FlyttGo Global',
+  'service-category':         'Service category · FlyttGo Global',
   'booking':                  'Book a Move · FlyttGo Global',
   'payment':                  'Secure Payment · FlyttGo Global',
   'tracking':                 'Track Your Coordination · FlyttGo Global',
@@ -220,6 +226,8 @@ const PAGE_DESCRIPTIONS: Record<Page, string> = {
     "Browse every verified mover, packer, storage and freight partner on the FlyttGo global marketplace. Filter by country, tier, and service. Sort by rating, price, or reviews.",
   'compare':
     "Compare your shortlisted FlyttGo providers side by side — rating, reviews, starting price, services, fleet, verifications, and availability — in a single table.",
+  'service-category':
+    "FlyttGo service category — see the providers offering this service across our six markets, with verified credentials, ratings, and instant quotes.",
   'booking':
     'Book your next move in under 3 minutes. Get an instant quote, pick a verified driver, and track your delivery live — all with escrow payment built in.',
   'payment':
@@ -368,6 +376,13 @@ function upsertLink(rel: string, href: string) {
 export function pathToPage(path: string): Page {
   if (!path) return 'home';
   const normalised = path === '/' ? '/' : path.replace(/\/+$/, '');
+  /* Service category pages: /services/<slug> resolves to the
+   * service-category page; ServiceCategoryPage reads the slug from
+   * window.location.pathname. The bare /services keeps mapping to
+   * the existing services listing. */
+  if (normalised.startsWith('/services/') && normalised.length > '/services/'.length) {
+    return 'service-category';
+  }
   /* Unknown paths resolve to 'not-found' rather than silently
    * serving the homepage. NotFoundPage sets robots=noindex so
    * Google doesn't index the garbage URL, and the user sees a
