@@ -1,7 +1,17 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { useApp } from '../lib/store';
+import { useAuth } from '../lib/auth';
+import {
+  listMyOrganizations, listRelocationRequests,
+  approveRelocationRequest, rejectRelocationRequest,
+  dispatchRelocationRequest,
+  createOrgInvite, listOrgInvites, revokeOrgInvite,
+  type OrganizationRow, type RelocationRequestRow,
+  type OrganizationInviteRow, type OrganizationRole,
+} from '../lib/organizations-store';
 
-type DashTab = 'overview' | 'shipments' | 'recurring' | 'invoices' | 'drivers' | 'analytics' | 'api' | 'team' | 'documents' | 'support';
+type DashTab = 'overview' | 'shipments' | 'recurring' | 'invoices' | 'drivers' | 'analytics' | 'api' | 'team' | 'documents' | 'support' | 'relocations' | 'members';
 
 function StatCard({ icon, label, value, sub, color = 'emerald' }: { icon: string; label: string; value: string; sub?: string; color?: string }) {
   const colors: Record<string, string> = { emerald: 'bg-emerald-50 text-emerald-600', blue: 'bg-blue-50 text-blue-600', purple: 'bg-purple-50 text-purple-600', orange: 'bg-orange-50 text-orange-600' };
@@ -31,13 +41,15 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const NAV_ITEMS: { id: DashTab; icon: string; label: string }[] = [
-  { id: 'overview',   icon: '📊', label: 'Overview' },
-  { id: 'shipments',  icon: '🚚', label: 'Shipments' },
-  { id: 'recurring',  icon: '🔁', label: 'Recurring' },
-  { id: 'invoices',   icon: '💳', label: 'Invoices' },
-  { id: 'drivers',    icon: '👤', label: 'Drivers' },
-  { id: 'analytics',  icon: '📈', label: 'Analytics' },
-  { id: 'api',        icon: '🔗', label: 'API & Webhooks' },
+  { id: 'overview',    icon: '📊', label: 'Overview' },
+  { id: 'relocations', icon: '🏢', label: 'Relocations' },
+  { id: 'members',     icon: '👥', label: 'Members' },
+  { id: 'shipments',   icon: '🚚', label: 'Shipments' },
+  { id: 'recurring',   icon: '🔁', label: 'Recurring' },
+  { id: 'invoices',    icon: '💳', label: 'Invoices' },
+  { id: 'drivers',     icon: '👤', label: 'Drivers' },
+  { id: 'analytics',   icon: '📈', label: 'Analytics' },
+  { id: 'api',         icon: '🔗', label: 'API & Webhooks' },
   { id: 'team',       icon: '👥', label: 'Team' },
   { id: 'documents',  icon: '📄', label: 'Documents' },
   { id: 'support',    icon: '🎧', label: 'Support' },
@@ -45,9 +57,121 @@ const NAV_ITEMS: { id: DashTab; icon: string; label: string }[] = [
 
 export default function CorporateDashboard() {
   const { setPage, setShowAuthModal, setAuthMode } = useApp();
+  const { user } = useAuth();
   const [tab, setTab] = useState<DashTab>('overview');
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+
+  /* Real institutional data — only loaded when the user opens the
+   * Relocations or Members tab to keep the existing demo tabs zero-
+   * latency. */
+  const [orgs, setOrgs] = useState<OrganizationRow[]>([]);
+  const [activeOrgId, setActiveOrgId] = useState<string | null>(null);
+  const [requests, setRequests] = useState<RelocationRequestRow[]>([]);
+  const [invites, setInvites] = useState<OrganizationInviteRow[]>([]);
+  const [busy, setBusy] = useState(false);
+
+  /* Lazy-load orgs whenever the user lands on a real-data tab. */
+  useEffect(() => {
+    if (!user?.id) return;
+    if (tab !== 'relocations' && tab !== 'members') return;
+    if (orgs.length > 0) return;
+    listMyOrganizations(user.id)
+      .then(rows => {
+        setOrgs(rows);
+        if (rows.length > 0 && !activeOrgId) setActiveOrgId(rows[0].id);
+      })
+      .catch(err => toast.error('Failed to load organizations', { description: err.message }));
+  }, [tab, user?.id, orgs.length, activeOrgId]);
+
+  useEffect(() => {
+    if (!activeOrgId) return;
+    if (tab === 'relocations') {
+      listRelocationRequests(activeOrgId)
+        .then(setRequests)
+        .catch(err => toast.error('Failed to load requests', { description: err.message }));
+    } else if (tab === 'members') {
+      listOrgInvites(activeOrgId)
+        .then(setInvites)
+        .catch(err => toast.error('Failed to load invites', { description: err.message }));
+    }
+  }, [tab, activeOrgId]);
+
+  async function handleApprove(req: RelocationRequestRow) {
+    if (!user?.id) return;
+    setBusy(true);
+    try {
+      await approveRelocationRequest(req.id, user.id);
+      toast.success('Approved · auto-dispatching to provider');
+      const fresh = await listRelocationRequests(activeOrgId!);
+      setRequests(fresh);
+    } catch (err) {
+      toast.error('Approve failed', { description: err instanceof Error ? err.message : '' });
+    } finally { setBusy(false); }
+  }
+
+  async function handleReject(req: RelocationRequestRow) {
+    if (!user?.id) return;
+    const comment = prompt('Reason for rejecting?') ?? '';
+    if (!comment.trim()) return;
+    setBusy(true);
+    try {
+      await rejectRelocationRequest(req.id, user.id, comment);
+      toast.success('Rejected');
+      const fresh = await listRelocationRequests(activeOrgId!);
+      setRequests(fresh);
+    } catch (err) {
+      toast.error('Reject failed', { description: err instanceof Error ? err.message : '' });
+    } finally { setBusy(false); }
+  }
+
+  async function handleDispatch(req: RelocationRequestRow) {
+    setBusy(true);
+    try {
+      const bookingId = await dispatchRelocationRequest(req.id);
+      if (bookingId) toast.success('Dispatched', { description: `Booking ${bookingId.slice(0, 8)}…` });
+      else toast.warning('No eligible provider yet — admin will retry');
+      const fresh = await listRelocationRequests(activeOrgId!);
+      setRequests(fresh);
+    } catch (err) {
+      toast.error('Dispatch failed', { description: err instanceof Error ? err.message : '' });
+    } finally { setBusy(false); }
+  }
+
+  async function handleInvite() {
+    if (!activeOrgId) return;
+    const email = prompt('Email of the person to invite?') ?? '';
+    if (!email.trim()) return;
+    const role = (prompt('Role? (owner / approver / requester / viewer)') ?? '').trim();
+    if (!['owner','approver','requester','viewer'].includes(role)) {
+      toast.error('Invalid role'); return;
+    }
+    setBusy(true);
+    try {
+      const token = await createOrgInvite(activeOrgId, email, role as OrganizationRole);
+      const link = `${window.location.origin}/invite?token=${token}`;
+      await navigator.clipboard.writeText(link).catch(() => {});
+      toast.success('Invite created · link copied to clipboard', {
+        description: link,
+      });
+      const fresh = await listOrgInvites(activeOrgId);
+      setInvites(fresh);
+    } catch (err) {
+      toast.error('Invite failed', { description: err instanceof Error ? err.message : '' });
+    } finally { setBusy(false); }
+  }
+
+  async function handleRevokeInvite(invite: OrganizationInviteRow) {
+    setBusy(true);
+    try {
+      await revokeOrgInvite(invite.id);
+      const fresh = await listOrgInvites(activeOrgId!);
+      setInvites(fresh);
+      toast.success('Invite revoked');
+    } catch (err) {
+      toast.error('Revoke failed', { description: err instanceof Error ? err.message : '' });
+    } finally { setBusy(false); }
+  }
 
   const filteredShipments = SHIPMENTS.filter(s => {
     const matchSearch = s.id.toLowerCase().includes(search.toLowerCase()) || s.from.toLowerCase().includes(search.toLowerCase()) || s.to.toLowerCase().includes(search.toLowerCase());
@@ -167,6 +291,167 @@ export default function CorporateDashboard() {
           )}
 
           {/* ── SHIPMENTS ── */}
+          {tab === 'relocations' && (
+            <div>
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+                <h1 className="text-xl font-bold text-gray-900">Relocation requests</h1>
+                {orgs.length > 1 && (
+                  <select
+                    value={activeOrgId ?? ''}
+                    onChange={e => setActiveOrgId(e.target.value)}
+                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white"
+                  >
+                    {orgs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+                  </select>
+                )}
+              </div>
+              {orgs.length === 0 ? (
+                <div className="bg-white rounded-2xl p-6 border border-gray-100 text-sm text-gray-500">
+                  You're not yet a member of an organization. Reach out to
+                  partnerships@flyttgo.com to onboard your team.
+                </div>
+              ) : requests.length === 0 ? (
+                <div className="bg-white rounded-2xl p-6 border border-gray-100 text-sm text-gray-500">
+                  No relocation requests yet for {orgs.find(o => o.id === activeOrgId)?.name}.
+                </div>
+              ) : (
+                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-600">
+                      <tr>
+                        <th className="p-3 text-left">Filed</th>
+                        <th className="p-3 text-left">Segment · country</th>
+                        <th className="p-3 text-left">Brief</th>
+                        <th className="p-3 text-left">Status</th>
+                        <th className="p-3 text-left">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {requests.map(r => (
+                        <tr key={r.id} className="border-t align-top">
+                          <td className="p-3 text-xs text-gray-500 whitespace-nowrap">
+                            {new Date(r.created_at).toLocaleDateString()}
+                          </td>
+                          <td className="p-3">
+                            <div className="font-bold capitalize">{r.segment}</div>
+                            <div className="text-xs text-gray-500 uppercase">{r.country}{r.city ? ` · ${r.city}` : ''}</div>
+                          </td>
+                          <td className="p-3 text-xs text-gray-600 max-w-xs truncate">
+                            {(r.brief?.summary as string) ?? (r.brief?.inventoryNote as string) ?? '—'}
+                          </td>
+                          <td className="p-3">
+                            <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md ${
+                              r.status === 'submitted'   ? 'bg-amber-100 text-amber-700' :
+                              r.status === 'approved'    ? 'bg-blue-100 text-blue-700' :
+                              r.status === 'dispatched'  ? 'bg-emerald-100 text-emerald-700' :
+                              r.status === 'completed'   ? 'bg-gray-100 text-gray-600' :
+                              r.status === 'rejected' || r.status === 'cancelled' ? 'bg-rose-100 text-rose-700' :
+                                                          'bg-slate-100 text-slate-500'
+                            }`}>{r.status}</span>
+                          </td>
+                          <td className="p-3">
+                            {r.status === 'submitted' ? (
+                              <div className="flex gap-1.5">
+                                <button disabled={busy} onClick={() => handleApprove(r)}
+                                  className="text-[10px] font-bold uppercase tracking-wider bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded disabled:opacity-50">Approve</button>
+                                <button disabled={busy} onClick={() => handleReject(r)}
+                                  className="text-[10px] font-bold uppercase tracking-wider bg-rose-600 hover:bg-rose-700 text-white px-2 py-1 rounded disabled:opacity-50">Reject</button>
+                              </div>
+                            ) : r.status === 'approved' ? (
+                              <button disabled={busy} onClick={() => handleDispatch(r)}
+                                className="text-[10px] font-bold uppercase tracking-wider bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded disabled:opacity-50">Re-dispatch</button>
+                            ) : (
+                              <span className="text-xs text-gray-400">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {tab === 'members' && (
+            <div>
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+                <h1 className="text-xl font-bold text-gray-900">Members & invites</h1>
+                <div className="flex items-center gap-3">
+                  {orgs.length > 1 && (
+                    <select
+                      value={activeOrgId ?? ''}
+                      onChange={e => setActiveOrgId(e.target.value)}
+                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white"
+                    >
+                      {orgs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+                    </select>
+                  )}
+                  <button
+                    disabled={busy || !activeOrgId}
+                    onClick={handleInvite}
+                    className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-sm font-bold rounded-lg"
+                  >Invite member</button>
+                </div>
+              </div>
+              {orgs.length === 0 ? (
+                <div className="bg-white rounded-2xl p-6 border border-gray-100 text-sm text-gray-500">
+                  Join an organization first.
+                </div>
+              ) : invites.length === 0 ? (
+                <div className="bg-white rounded-2xl p-6 border border-gray-100 text-sm text-gray-500">
+                  No outstanding invites. The "Invite member" button copies a
+                  signed link you can share via your usual channel.
+                </div>
+              ) : (
+                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-600">
+                      <tr>
+                        <th className="p-3 text-left">Email</th>
+                        <th className="p-3 text-left">Role</th>
+                        <th className="p-3 text-left">Status</th>
+                        <th className="p-3 text-left">Expires</th>
+                        <th className="p-3 text-left">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {invites.map(i => {
+                        const expired = new Date(i.expires_at) < new Date();
+                        return (
+                          <tr key={i.id} className="border-t">
+                            <td className="p-3">{i.invited_email}</td>
+                            <td className="p-3 text-xs uppercase tracking-wider">{i.role}</td>
+                            <td className="p-3">
+                              {i.accepted_at ? (
+                                <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-md">Accepted</span>
+                              ) : i.revoked_at ? (
+                                <span className="text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-md">Revoked</span>
+                              ) : expired ? (
+                                <span className="text-[10px] font-bold uppercase tracking-wider bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded-md">Expired</span>
+                              ) : (
+                                <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-md">Pending</span>
+                              )}
+                            </td>
+                            <td className="p-3 text-xs text-gray-500">
+                              {new Date(i.expires_at).toLocaleDateString()}
+                            </td>
+                            <td className="p-3">
+                              {!i.accepted_at && !i.revoked_at && (
+                                <button disabled={busy} onClick={() => handleRevokeInvite(i)}
+                                  className="text-[10px] font-bold uppercase tracking-wider bg-rose-600 hover:bg-rose-700 text-white px-2 py-1 rounded disabled:opacity-50">Revoke</button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
           {tab === 'shipments' && (
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row gap-3">

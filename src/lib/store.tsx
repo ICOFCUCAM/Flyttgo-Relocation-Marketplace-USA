@@ -57,6 +57,8 @@ export type Page =
   | 'government-programs'
   | 'ngo-deployment'
   | 'pilot-deployment-programs'
+  /* Email-token landing for organization invites. */
+  | 'accept-org-invite'
   /* Fallback for URLs that don't match any known route. */
   | 'not-found';
 

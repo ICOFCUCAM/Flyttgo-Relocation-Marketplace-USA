@@ -68,6 +68,7 @@ const DisputePage = lazy(() => import('../pages/DisputePage'));
 const GovernmentProgramsPage = lazy(() => import('../pages/GovernmentProgramsPage'));
 const NGODeploymentPage = lazy(() => import('../pages/NGODeploymentPage'));
 const PilotDeploymentProgramsPage = lazy(() => import('../pages/PilotDeploymentProgramsPage'));
+const AcceptOrgInvitePage = lazy(() => import('../pages/AcceptOrgInvitePage'));
 const Footer             = lazy(() => import('./Footer'));
 const LiveBookingTicker  = lazy(() => import('./global/LiveBookingTicker'));
 const FloatingChat       = lazy(() => import('./global/FloatingChat'));
@@ -231,6 +232,7 @@ export default function AppLayout() {
       case 'government-programs':       return <GovernmentProgramsPage />;
       case 'ngo-deployment':            return <NGODeploymentPage />;
       case 'pilot-deployment-programs': return <PilotDeploymentProgramsPage />;
+      case 'accept-org-invite':         return <AcceptOrgInvitePage />;
       case 'not-found':              return <NotFoundPage />;
       default:                       return <NotFoundPage />;
     }
