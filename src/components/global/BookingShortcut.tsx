@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
-import { Banknote, CreditCard, MapPin, Clock, Info, Bookmark, Tag, Check, X as XIcon } from 'lucide-react';
+import { Banknote, CreditCard, MapPin, Clock, Info, Bookmark, Tag, Check, X as XIcon, ArrowDownUp, Leaf } from 'lucide-react';
 
 /* Lazy-loaded so the ~150 KB Leaflet bundle only ships once the
  * customer has picked both addresses (Wave 23). */
@@ -133,6 +133,20 @@ export default function BookingShortcut({ country, compact = false }: Props) {
   const [dropoff, setDropoff]   = useState<USAddress | null>(null);
   const [moveDate, setMoveDate] = useState('');
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  /* Swap counter — bumped each time the customer presses the swap
+   * button. We use it as part of the autocomplete key so the inputs
+   * re-mount with the swapped initial values (NorwayAddressAutocomplete
+   * only seeds query from `value` on mount). */
+  const [swapCount, setSwapCount] = useState(0);
+
+  function swapAddresses() {
+    if (!pickup && !dropoff) return;
+    setPickup(dropoff);
+    setDropoff(pickup);
+    setSwapCount(c => c + 1);
+    track('booking_shortcut_addresses_swapped', { country });
+  }
 
   /* Promo state. The applied code is the one we've validated; the
    * input is the raw text the customer is currently typing. */
@@ -352,24 +366,44 @@ export default function BookingShortcut({ country, compact = false }: Props) {
       </div>
 
       <div className="space-y-4">
-        <NorwayAddressAutocomplete
-          id={`shortcut-pickup-${country}`}
-          label={labels.pickup}
-          value={pickup?.formatted ?? ''}
-          placeholder={COUNTRY_PLACEHOLDER_PICKUP[country]}
-          countryCode={country}
-          required
-          onSelect={setPickup}
-        />
-        <NorwayAddressAutocomplete
-          id={`shortcut-dropoff-${country}`}
-          label={labels.dropoff}
-          value={dropoff?.formatted ?? ''}
-          placeholder={COUNTRY_PLACEHOLDER_DROPOFF[country]}
-          countryCode={country}
-          required
-          onSelect={setDropoff}
-        />
+        <div className="space-y-2">
+          <NorwayAddressAutocomplete
+            key={`pickup-${country}-${swapCount}`}
+            id={`shortcut-pickup-${country}`}
+            label={labels.pickup}
+            value={pickup?.formatted ?? ''}
+            placeholder={COUNTRY_PLACEHOLDER_PICKUP[country]}
+            countryCode={country}
+            required
+            onSelect={setPickup}
+          />
+
+          {/* Swap addresses (Wave 33). Disabled until at least one
+              address is set, so it doesn't render as a no-op affordance. */}
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={swapAddresses}
+              disabled={!pickup && !dropoff}
+              aria-label="Swap pickup and drop-off addresses"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 hover:bg-amber-100 text-slate-500 hover:text-amber-700 text-[10px] font-bold uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed transition"
+            >
+              <ArrowDownUp size={11} />
+              Swap
+            </button>
+          </div>
+
+          <NorwayAddressAutocomplete
+            key={`dropoff-${country}-${swapCount}`}
+            id={`shortcut-dropoff-${country}`}
+            label={labels.dropoff}
+            value={dropoff?.formatted ?? ''}
+            placeholder={COUNTRY_PLACEHOLDER_DROPOFF[country]}
+            countryCode={country}
+            required
+            onSelect={setDropoff}
+          />
+        </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">{labels.date}</label>
           <input
@@ -418,6 +452,19 @@ export default function BookingShortcut({ country, compact = false }: Props) {
                 <span className="inline-flex items-center gap-1.5 text-slate-500">
                   <span className="mx-1">·</span>
                   <strong>{payL.asTheCrowFlies}</strong> · {straightLineKm} km
+                </span>
+              )}
+              {/* Estimated CO₂e (Wave 33). 0.25 kg/km is a common
+                  industry figure for a 2.5-tonne panel van; the
+                  CarbonOffset section on the home page expands on
+                  the offset programme. */}
+              {(route?.distanceKm ?? straightLineKm) != null && (
+                <span
+                  className="inline-flex items-center gap-1.5 text-emerald-700 ml-auto"
+                  title="Estimated CO₂e for a 2.5-tonne panel van. Offset is included on every Elite-tier booking."
+                >
+                  <Leaf size={12} className="text-emerald-600" />
+                  ~{Math.round(((route?.distanceKm ?? straightLineKm)! * 0.25))} kg CO₂e
                 </span>
               )}
             </div>
