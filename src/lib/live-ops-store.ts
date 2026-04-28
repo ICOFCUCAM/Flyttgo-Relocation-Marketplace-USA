@@ -22,14 +22,22 @@ export type DeploymentStatus =
   | 'operational' | 'expanding' | 'pilot' | 'partner' | 'planned';
 
 export interface DeploymentRegionRow {
-  country_code:   string;
-  display_name:   string;
-  flag:           string | null;
-  status:         DeploymentStatus;
-  region:         string;
-  blurb:          string | null;
-  position:       number;
-  updated_at:     string;
+  country_code:      string;
+  display_name:      string;
+  flag:              string | null;
+  status:            DeploymentStatus;
+  region:            string;
+  blurb:             string | null;
+  position:          number;
+  /** Capital-city centroid — used by the SVG coverage map. Null
+   *  for any legacy row that hasn't been re-seeded yet. */
+  lat:               number | null;
+  lng:               number | null;
+  /** True for the Oslo HQ row. The map renders this distinctly. */
+  is_headquarters:   boolean;
+  /** Tooltip detail copy — shown on hover in the coverage map. */
+  upcoming_rollout:  string | null;
+  updated_at:        string;
 }
 
 export interface LiveOpsOverview {
