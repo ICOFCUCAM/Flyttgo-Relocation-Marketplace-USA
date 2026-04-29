@@ -133,7 +133,7 @@ ALTER TABLE public.provider_reputation
   ADD COLUMN IF NOT EXISTS on_time_rate        NUMERIC(4,3),     -- 0–1
   ADD COLUMN IF NOT EXISTS response_speed_score NUMERIC(4,3),    -- 0–1, derived
   ADD COLUMN IF NOT EXISTS verification_level  SMALLINT NOT NULL DEFAULT 1
-                          CHECK (verification_level BETWEEN 1 AND 4),
+                          CHECK (verification_level BETWEEN 1 AND 7),
   ADD COLUMN IF NOT EXISTS rank_score          SMALLINT,         -- 0–100
   ADD COLUMN IF NOT EXISTS last_active_at      TIMESTAMPTZ,
   ADD COLUMN IF NOT EXISTS warning_count_30d   INTEGER NOT NULL DEFAULT 0,

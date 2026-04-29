@@ -1,5 +1,7 @@
 /**
- * French (fr) translation stub. See nb.ts for the rationale.
+ * French (fr) — country-shopfront overlay. Intentionally partial; falls
+ * back to `en` for every undeclared key. See nb.ts for the rationale and
+ * the rule against advertising full French coverage in marketing copy.
  */
 export const fr = {
   header: {

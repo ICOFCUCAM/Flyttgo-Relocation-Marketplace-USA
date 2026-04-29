@@ -19,8 +19,8 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const SUPABASE_URL          = Deno.env.get("SUPABASE_URL")!;
-const SERVICE_ROLE_KEY      = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SUPABASE_URL     = Deno.env.get("SUPABASE_URL") ?? "";
+const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin":  "*",
@@ -49,6 +49,13 @@ Deno.serve(async (req) => {
   if (!EMAIL_RE.test(email)) {
     return new Response(JSON.stringify({ error: "valid email required" }), {
       status: 400,
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+    });
+  }
+
+  if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+    return new Response(JSON.stringify({ error: "function not configured: SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY missing" }), {
+      status: 500,
       headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
     });
   }

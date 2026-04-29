@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../lib/store';
+import { supabaseFunctionUrl } from '../lib/supabase';
 
 /* Channel icon paths kept here since they never change. Labels and
  * sublines are looked up from the translation bundle at render time. */
@@ -36,13 +37,29 @@ export default function ContactPage() {
     name: '', email: '', phone: '', reason: reasons[0], subject: '', message: '',
   });
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function submit() {
+  async function submit() {
     if (!form.name || !form.email || !form.message) return;
-    /* This is a client-stub until the send-contact-message Edge
-     * Function is wired up. For now we pretend it went out and
-     * let ops triage from the inbox at support@flyttgo.us. */
-    setSent(true);
+    setSending(true);
+    setError(null);
+    try {
+      const res = await fetch(supabaseFunctionUrl('send-contact-message'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || 'Could not send message');
+      }
+      setSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not send message');
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
@@ -157,10 +174,11 @@ export default function ContactPage() {
                     rows={5} placeholder={t('contact.messagePlaceholder')}
                     className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none resize-none"/>
                 </div>
-                <button onClick={submit}
-                  className="w-full py-3.5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition shadow-lg text-sm">
-                  {t('contact.sendBtn')}
+                <button onClick={submit} disabled={sending}
+                  className="w-full py-3.5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed transition shadow-lg text-sm">
+                  {sending ? '…' : t('contact.sendBtn')}
                 </button>
+                {error && <p className="text-xs text-red-600 text-center">{error}</p>}
                 <p className="text-[11px] text-gray-400 text-center">
                   {t('contact.privacyNote1')} <button onClick={() => setPage('privacy')} className="underline hover:text-gray-600">{t('contact.privacyNote2')}</button>.
                 </p>

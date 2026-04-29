@@ -1,14 +1,15 @@
 /**
- * Norwegian Bokmål (nb) translation stub.
+ * Norwegian Bokmål (nb) — country-shopfront overlay.
  *
- * Mirrors the shape of `en.ts` but only fills in the surfaces a customer
- * meets when they land on the Norwegian shopfront — header brand, the
- * Norwegian booking widget labels, and a few legal / footer strings.
+ * Intentionally partial: only covers the surfaces a customer meets when
+ * landing on the Norwegian shopfront (header brand, the booking widget,
+ * a few legal / footer strings). i18next falls back to `en` for every
+ * key not declared here, so the inner booking-flow stays readable while
+ * the hero, country landing, and booking shortcut read as native Norwegian.
  *
- * i18next falls back to `en` for every key not declared here, so the
- * inner booking-flow steps (which the Norwegian customer walks through
- * once they leave /norway) stay readable while the hero, the country
- * landing, and the booking shortcut all read as native Norwegian.
+ * NOT a full translation — do not advertise full Norwegian coverage in
+ * marketing copy. Extend by mirroring more keys from `en.ts` only when the
+ * corresponding flow has been validated by a Norwegian-speaking reviewer.
  */
 export const nb = {
   header: {

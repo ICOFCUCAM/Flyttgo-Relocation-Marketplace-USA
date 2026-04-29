@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import type { Database } from './database.types';
 
 // Read from environment variables — never hardcode credentials in source.
 // On Vercel, set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in the project's
@@ -47,7 +48,7 @@ export const SUPABASE_ANON_KEY = supabaseKey ?? '';
  *                           localStorage has no code_verifier and Supabase
  *                           returns otp_expired. Implicit survives that.
  */
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     persistSession:     true,
     autoRefreshToken:   true,

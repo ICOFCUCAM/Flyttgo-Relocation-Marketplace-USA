@@ -1,5 +1,7 @@
 /**
- * German (de) translation stub. See nb.ts for the rationale.
+ * German (de) — country-shopfront overlay. Intentionally partial; falls
+ * back to `en` for every undeclared key. See nb.ts for the rationale and
+ * the rule against advertising full German coverage in marketing copy.
  */
 export const de = {
   header: {
