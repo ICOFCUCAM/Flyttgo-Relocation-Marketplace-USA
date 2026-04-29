@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Star, ShieldCheck, Truck, Clock, BadgeCheck, MapPin, Users, MessageCircle } from 'lucide-react';
 import { useApp } from '../lib/store';
 import type { Page, BookingCountry } from '../lib/store';
@@ -75,30 +74,8 @@ const SHOPFRONTS: CountryShopfront[] = [
  * ────────────────────────────────────────────────────────────── */
 
 export default function HomePage() {
-  const { setPage, setBookingData } = useApp();
+  const { setPage } = useApp();
   const go = (p: Page) => setPage(p);
-
-  /* Quick-booking entry — three lightweight fields the visitor can
-   * fill before they've picked a country shopfront. We seed
-   * bookingData so the full BookingFlow opens with those values
-   * pre-populated and the customer doesn't retype anything. */
-  const [quickPickup,   setQuickPickup]   = useState('');
-  const [quickDropoff,  setQuickDropoff]  = useState('');
-  const [quickDate,     setQuickDate]     = useState('');
-
-  function startQuickBooking() {
-    track('home_quick_booking_submitted', {
-      hasPickup:  !!quickPickup,
-      hasDropoff: !!quickDropoff,
-      hasDate:    !!quickDate,
-    });
-    setBookingData({
-      pickupAddress:  quickPickup,
-      dropoffAddress: quickDropoff,
-      moveDate:       quickDate,
-    });
-    go('booking');
-  }
 
   return (
     <main className="bg-white text-slate-900">
@@ -194,55 +171,10 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Quick-booking entry — three fields and a CTA, the lowest-
-           *  friction path into the booking flow for visitors who
-           *  already know their pickup + drop-off cities. */}
-          <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-6 max-w-4xl">
-            <p className="text-sm font-bold text-slate-900 mb-3">
-              Start your move in 60 seconds
-            </p>
-
-            <div className="grid md:grid-cols-4 gap-2">
-              <input
-                value={quickPickup}
-                onChange={e => setQuickPickup(e.target.value)}
-                placeholder="Pickup city"
-                aria-label="Pickup city"
-                className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none"
-              />
-              <input
-                value={quickDropoff}
-                onChange={e => setQuickDropoff(e.target.value)}
-                placeholder="Delivery city"
-                aria-label="Delivery city"
-                className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none"
-              />
-              <input
-                type="date"
-                value={quickDate}
-                onChange={e => setQuickDate(e.target.value)}
-                aria-label="Move date"
-                className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none"
-              />
-              <button
-                onClick={startQuickBooking}
-                className="bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold rounded-lg px-4 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1f3a]"
-              >
-                Get instant price →
-              </button>
-            </div>
-
-            <p className="text-xs text-slate-500 mt-2">
-              No account required • price in under 60 seconds
-            </p>
-
-            {/* Indicative price example — wired to the live pricing
-             *  engine in a follow-up; for now it sets the customer
-             *  expectation that the quote includes labor + truck. */}
-            <p className="text-xs text-emerald-600 mt-2 font-medium">
-              Example: Austin → Dallas ≈ $620 · 3 movers · 1 truck
-            </p>
-          </div>
+          {/* Quick-booking entry removed — the formal country picker
+           *  above is the primary conversion path; the per-country
+           *  shopfronts host the full address widget with autocomplete
+           *  + OSRM distance preview. */}
 
           {/* Trust strip */}
           <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl">
