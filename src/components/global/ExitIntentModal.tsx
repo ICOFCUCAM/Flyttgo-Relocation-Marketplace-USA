@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { X, Mail, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { track } from '../../lib/analytics';
+import { supabaseFunctionUrl } from '../../lib/supabase';
 
 const STORAGE_KEY = 'flyttgo_exit_intent_seen';
 
@@ -57,18 +58,27 @@ export default function ExitIntentModal() {
     };
   }, []);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!email || !email.includes('@')) return;
-    /* Stub — wire to /functions/v1/subscribe-newsletter when ready.
-     * For now we just record locally and show the success state so
-     * the conversion path stays consistent during pre-launch. */
+    /* Show optimistic success — the network call is fire-and-forget so
+     * a slow / failing edge function doesn't block the conversion path. */
     setSubmitted(true);
     track('exit_intent_email_captured');
     toast.success("You're on the list", {
       description: 'Your £25 discount code lands in your inbox in a moment.',
     });
     setTimeout(() => setOpen(false), 1400);
+    try {
+      await fetch(supabaseFunctionUrl('subscribe-newsletter'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, source: 'exit-intent', locale: navigator.language }),
+      });
+    } catch {
+      /* Already showed success — silent retry is the responsibility
+       * of a future job, not the user. */
+    }
   }
 
   if (!open) return null;
