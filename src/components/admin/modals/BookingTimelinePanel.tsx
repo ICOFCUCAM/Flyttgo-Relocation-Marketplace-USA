@@ -1,4 +1,3 @@
-import React from 'react';
 import { useBookingTimeline } from '../../../hooks/queries/useAdminDashboard';
 
 export function BookingTimelinePanel({

@@ -11,13 +11,20 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
-    /* Loose mode for now — the codebase has 329 `any` usages and many
-     * implicit-null call sites that need a multi-session migration.
+    /* Incremental ratchet — full strict mode is the long-term goal.
+     * Flags flipped on as the codebase becomes ready:
+     *   ✅ noFallthroughCasesInSwitch
+     *   ✅ noUnusedLocals
+     *   ✅ noUnusedParameters
+     *   ✅ noImplicitReturns
+     *   ⏳ noImplicitAny  — 100+ usages left, needs Supabase generated types
+     *   ⏳ strictNullChecks — high blast radius, separate session
      * Use `npm run typecheck:strict` to preview the full-strict diff.
-     * Aim is to flip these to true incrementally, file by file. */
+     */
     "strict": false,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
     "noImplicitAny": false,
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",

@@ -1,12 +1,12 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Calculator, Users, Truck, Package, Clock, Sun, Snowflake, Building2,
-  AlertTriangle, ArrowDownRight, Wrench, TrendingUp, ShieldCheck,
+  AlertTriangle, ArrowDownRight, TrendingUp, ShieldCheck,
   type LucideIcon,
 } from 'lucide-react';
 import {
   calculateQuote, COUNTRY_BASELINES, CITY_MULTIPLIERS,
-  type QuoteInput, type ServiceType, type InsuranceTier, type PricingCountry,
+  type QuoteInput, type ServiceType, type InsuranceTier,
 } from '../../lib/pricing-engine';
 import { COUNTRY_PROFILES, formatPrice } from '../../lib/country-profiles';
 import { track } from '../../lib/analytics';

@@ -1,4 +1,3 @@
-import React from 'react';
 
 const MEMBERS = [
   { name: 'Ola Nordmann', role: 'Admin',   dept: 'Operations',   status: 'Active',  last: 'Now' },

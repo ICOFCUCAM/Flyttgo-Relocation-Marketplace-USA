@@ -1,4 +1,3 @@
-import React from 'react';
 import { useApp } from '../lib/store';
 import type { Page } from '../lib/store';
 import { SectionIndex } from '../components/global/CountryPage';

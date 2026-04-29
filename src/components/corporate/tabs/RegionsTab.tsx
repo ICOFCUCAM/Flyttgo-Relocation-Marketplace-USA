@@ -1,4 +1,3 @@
-import React from 'react';
 import { OrgPicker } from '../OrgPicker';
 import { useOrgRelocationRequests } from '../../../hooks/queries/useCorporateDashboard';
 import type { OrganizationRow } from '../../../lib/organizations-store';

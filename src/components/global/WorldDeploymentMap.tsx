@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useApp } from '../../lib/store';
 import type { Page } from '../../lib/store';
 

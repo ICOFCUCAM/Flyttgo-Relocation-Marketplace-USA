@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  ArrowRight, Star, Truck, ShieldCheck, MapPin, ArrowLeft, CheckCircle2, Award,
+  ArrowRight, Star, Truck, ShieldCheck, ArrowLeft, CheckCircle2, Award,
 } from 'lucide-react';
 import { useApp } from '../lib/store';
 import { findServiceCategory, SERVICE_CATEGORIES, type ServiceCategory } from '../lib/service-categories';

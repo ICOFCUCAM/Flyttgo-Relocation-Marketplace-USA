@@ -1,10 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   CreditCard, Smartphone, Building2, Banknote, ShieldCheck,
   type LucideIcon,
 } from 'lucide-react';
 import {
-  selectPaymentMethods, PAYMENT_GATEWAYS,
+  selectPaymentMethods,
   type PaymentMethodSlug, type PaymentGatewaySlug,
 } from '../../lib/payment-gateways';
 import type { PricingCountry } from '../../lib/pricing-engine';

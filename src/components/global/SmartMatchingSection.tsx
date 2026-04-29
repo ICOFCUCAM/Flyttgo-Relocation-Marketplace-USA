@@ -1,4 +1,3 @@
-import React from 'react';
 import { Sparkles, Brain, Zap, Target } from 'lucide-react';
 
 /**

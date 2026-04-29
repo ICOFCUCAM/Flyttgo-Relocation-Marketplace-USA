@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Star, ShieldCheck, Truck, BadgeCheck, MapPin } from 'lucide-react';
 import { useApp } from '../../lib/store';
 import type { Page, BookingCountry } from '../../lib/store';

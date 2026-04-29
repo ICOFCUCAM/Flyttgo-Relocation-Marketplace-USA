@@ -1,4 +1,3 @@
-import React from 'react';
 import CountryPage from '../../components/global/CountryPage';
 
 export default function GermanyPage() {

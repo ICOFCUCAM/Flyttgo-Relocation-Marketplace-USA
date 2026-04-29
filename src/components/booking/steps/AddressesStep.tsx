@@ -1,4 +1,3 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import NorwayAddressAutocomplete, { type USAddress, type CountryCode } from '../../NorwayAddressAutocomplete';
 import { formatNorwegianAddress } from '../../../utils/formatNorwegianAddress';

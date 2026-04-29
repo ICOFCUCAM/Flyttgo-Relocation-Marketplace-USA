@@ -43,13 +43,12 @@ function StripeIcon() {
 
 export default function PaymentPage() {
   const { setPage, bookingData } = useApp();
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const { t } = useTranslation();
   const [method, setMethod] = useState<PayMethod>('card');
   const [card, setCard] = useState({ number: '', expiry: '', cvc: '', name: '' });
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
-  const isCorporate = profile?.role === 'customer'; // extend when corporate role exists
 
   /* Read the handoff id once, on first render. The hook then resolves
    * the right booking — handoff first, fallback to most-recent-pending.

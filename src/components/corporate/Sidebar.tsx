@@ -1,4 +1,3 @@
-import React from 'react';
 import { NAV_ITEMS, type DashTab } from './types';
 
 export function Sidebar({

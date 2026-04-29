@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { SHIPMENTS, STATUS_COLORS } from '../types';
 
 export function ShipmentsTab() {

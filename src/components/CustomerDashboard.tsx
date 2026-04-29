@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from "react";
+import { lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../lib/auth";
 import { useApp } from "../lib/store";

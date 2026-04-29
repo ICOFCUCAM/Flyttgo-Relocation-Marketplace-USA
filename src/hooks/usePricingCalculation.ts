@@ -64,14 +64,14 @@ export function usePricingCalculation(input: PricingCalculationInput): PricingCa
     let cancelled = false;
     if (!pickupAddress.lat || !pickupAddress.lng || !dropoffAddress.lat || !dropoffAddress.lng) {
       setClientRoute(null);
-      return;
+      return undefined;
     }
     (async () => {
       const res = await getRouteDistance(
         { lat: pickupAddress.lat!, lng: pickupAddress.lng! },
         { lat: dropoffAddress.lat!, lng: dropoffAddress.lng! },
       );
-      if (cancelled || !res) return;
+      if (cancelled || !res) return undefined;
       setClientRoute(res);
     })();
     return () => { cancelled = true; };
@@ -83,7 +83,7 @@ export function usePricingCalculation(input: PricingCalculationInput): PricingCa
     if (!pickupAddress.lat || !pickupAddress.lng || !dropoffAddress.lat || !dropoffAddress.lng) {
       setServerPrice(null);
       setPricingError(null);
-      return;
+      return undefined;
     }
     setPricingLoading(true);
     setPricingError(null);

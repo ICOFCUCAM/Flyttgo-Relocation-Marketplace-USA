@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { adminListDisputes } from '../../../lib/admin-disputes-store';
 import type { DisputeRow as DisputeRowData } from '../../../lib/disputes-store';

@@ -1,10 +1,8 @@
-import React from 'react';
 import { Star, ShieldCheck, Truck, Clock, BadgeCheck, MapPin, Users, MessageCircle } from 'lucide-react';
 import { useApp } from '../lib/store';
 import type { Page, BookingCountry } from '../lib/store';
 import { AnimatedNumber } from './ds';
 import { track } from '../lib/analytics';
-import LiveBookingTicker from './global/LiveBookingTicker';
 import PressStrip from './global/PressStrip';
 import WhyFlyttGo from './global/WhyFlyttGo';
 import HomeFAQ from './global/HomeFAQ';

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Star, ShieldCheck, BadgeCheck, Truck, CreditCard, Cookie } from 'lucide-react';
 import { useApp, Page } from '../lib/store';
 import { reopenCookieConsent } from './CookieConsent';

@@ -1,4 +1,3 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { CustomerLegalAcceptance } from '../../LegalAcceptance';
 import { formatNorwegianAddress } from '../../../utils/formatNorwegianAddress';

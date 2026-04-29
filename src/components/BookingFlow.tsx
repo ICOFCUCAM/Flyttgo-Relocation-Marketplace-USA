@@ -1,4 +1,3 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { recommendVan } from '../lib/constants';
 import { formatNorwegianAddress } from '../utils/formatNorwegianAddress';
@@ -109,10 +108,6 @@ export default function BookingFlow() {
     s.setError('');
 
     try {
-      const totalVolume = Object.entries(s.inventory).reduce((sum, [name, qty]) => {
-        return sum + qty;
-      }, 0);
-      void totalVolume;
 
       await createBookingWithEscrow({
         customer: { id: s.user.id, email: s.email, name: s.name, phone: s.phone },

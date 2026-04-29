@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Gift, Copy, Check, MessageCircle, Mail, Twitter, QrCode, Share2,
   TrendingUp, Wallet, Users,
@@ -69,7 +69,7 @@ function buildQR(text: string): string {
 }
 
 export default function ReferPage() {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const { setPage, setShowAuthModal, setAuthMode } = useApp();
   const [copied, setCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);

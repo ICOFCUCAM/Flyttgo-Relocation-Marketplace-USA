@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../lib/store';
 import DeliveryMap from '../components/DeliveryMap';
@@ -65,7 +65,7 @@ export default function TrackingPage() {
 
   /* ETA countdown */
   useEffect(() => {
-    if (!searched) return;
+    if (!searched) return undefined;
     const timer = setInterval(() => setEta(p => Math.max(0, p - 1)), 15000);
     return () => clearInterval(timer);
   }, [searched]);
@@ -87,13 +87,13 @@ export default function TrackingPage() {
 
   function handleTrack() {
     const q = bookingId.trim();
-    if (!q) return;
+    if (!q) return undefined;
     setSearchTerm(q);
     setSearched(true);
   }
 
   function sendMessage() {
-    if (!message.trim()) return;
+    if (!message.trim()) return undefined;
     const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     setMessages(m => [...m, { text: message, from: 'you', time: now }]);
     setMessage('');

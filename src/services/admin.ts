@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { supabase } from '../lib/supabase';
 import { safeNumber, calculateRefundAmount, REQUIRED_DOCS, DOCUMENT_TYPE_LABELS } from '../components/admin/utils';
 import {
-  ZUuid, ZShortString, ZRefundPercent,
+  ZUuid, ZRefundPercent,
   ZDriverPlan, ZDriverStatus, ZApplicationDecision, ZDocumentVerification,
   parseOrThrow,
 } from './_schemas';

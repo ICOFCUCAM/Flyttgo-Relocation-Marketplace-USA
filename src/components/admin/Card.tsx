@@ -1,4 +1,3 @@
-import React from 'react';
 import { safeNumber } from './utils';
 
 /** Stat card used across Overview / Revenue tabs. */

@@ -1,4 +1,3 @@
-import React from 'react';
 import type { OrganizationRow } from '../../lib/organizations-store';
 
 /** Small dropdown shown above any real-data tab when the user belongs

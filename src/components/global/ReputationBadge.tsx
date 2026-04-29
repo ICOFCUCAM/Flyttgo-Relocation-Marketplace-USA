@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ShieldCheck, ShieldAlert, AlertTriangle, type LucideIcon } from 'lucide-react';
 import {
   loadProviderReputation, reputationTier,

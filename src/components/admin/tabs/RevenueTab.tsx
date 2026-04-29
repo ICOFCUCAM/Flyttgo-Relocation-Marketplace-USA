@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card } from '../Card';
 import type { RevenueStats } from '../../../services/admin';
 

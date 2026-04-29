@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card } from '../Card';
 import { daysLeft } from '../utils';
 import type { WalletRow, SubscriptionRow } from '../../../services/driver';

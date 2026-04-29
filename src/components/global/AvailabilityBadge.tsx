@@ -1,4 +1,3 @@
-import React from 'react';
 import { Zap, Flame, Clock, AlertCircle, type LucideIcon } from 'lucide-react';
 
 /* ─────────────────────────────────────────────────────────────────

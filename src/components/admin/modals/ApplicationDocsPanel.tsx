@@ -1,4 +1,3 @@
-import React from 'react';
 import { DOCUMENT_TYPE_LABELS } from '../utils';
 import {
   useApplicationDocuments,

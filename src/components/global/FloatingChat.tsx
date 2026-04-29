@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { MessageCircle, X } from 'lucide-react';
 import { useApp } from '../../lib/store';
 

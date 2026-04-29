@@ -1,4 +1,3 @@
-import React from 'react';
 
 /**
  * Press / "as featured in" logo strip.

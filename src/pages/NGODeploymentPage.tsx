@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Heart, Globe2, ShieldCheck, ArrowRight, Truck, FileCheck,
   type LucideIcon,

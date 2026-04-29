@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useApp } from '../lib/store';
 
 const CHECKLIST_SECTIONS = [

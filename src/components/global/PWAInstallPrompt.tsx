@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Download, X, Smartphone } from 'lucide-react';
 import { track } from '../../lib/analytics';
 
@@ -31,13 +31,13 @@ export default function PWAInstallPrompt() {
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return undefined;
     /* Already installed → never show. */
-    if (window.matchMedia('(display-mode: standalone)').matches) return;
+    if (window.matchMedia('(display-mode: standalone)').matches) return undefined;
 
     /* Honour the cooldown if recently dismissed. */
     const dismissedAt = Number(window.localStorage.getItem(STORAGE_KEY) ?? 0);
-    if (dismissedAt && Date.now() - dismissedAt < COOLDOWN_DAYS * 24 * 60 * 60 * 1000) return;
+    if (dismissedAt && Date.now() - dismissedAt < COOLDOWN_DAYS * 24 * 60 * 60 * 1000) return undefined;
 
     const onBefore = (e: Event) => {
       e.preventDefault();
@@ -69,7 +69,7 @@ export default function PWAInstallPrompt() {
   }
 
   async function install() {
-    if (!evt) return;
+    if (!evt) return undefined;
     track('pwa_install_prompted');
     await evt.prompt();
     const { outcome } = await evt.userChoice;

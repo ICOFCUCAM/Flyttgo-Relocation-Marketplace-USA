@@ -1,11 +1,6 @@
-import React from 'react';
-import { useApp } from '../lib/store';
-
 const LAST_UPDATED = 'March 31, 2026';
 
 export default function PrivacyPage() {
-  const { setPage } = useApp();
-
   return (
     <div className="min-h-screen bg-white">
       {/* Hero */}

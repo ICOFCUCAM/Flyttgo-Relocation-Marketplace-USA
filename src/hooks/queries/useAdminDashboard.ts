@@ -31,10 +31,10 @@ const APP_DOCS_KEY  = (id: string | null) => ['admin', 'app-docs', id ?? 'none']
 export function useAdminSnapshot(enabled: boolean) {
   const qc = useQueryClient();
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) return undefined;
     let timer: ReturnType<typeof setTimeout> | null = null;
     const unsubscribe = subscribeAdminTables(() => {
-      if (timer) return;
+      if (timer) return undefined;
       timer = setTimeout(() => {
         timer = null;
         qc.invalidateQueries({ queryKey: SNAPSHOT_KEY });

@@ -1,4 +1,3 @@
-import React from 'react';
 import { TOTAL_STEPS } from './types';
 
 export function ProgressBar({

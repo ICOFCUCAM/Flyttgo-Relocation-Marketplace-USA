@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SUBSCRIPTION_PLANS, calculateCommission, COMMISSION } from '../lib/constants';
 import { useApp } from '../lib/store';
 import { useAuth } from '../lib/auth';
 import { supabase } from '../lib/supabase';
 import {
-  SUBSCRIPTION_TIERS, findTier, localPriceForTier, PRIVILEGE_LABELS,
+  findTier, localPriceForTier, PRIVILEGE_LABELS,
   type SubscriptionTierSlug,
 } from '../lib/subscription-tiers';
 import { COUNTRY_PROFILES } from '../lib/country-profiles';
@@ -56,7 +56,7 @@ export default function SubscriptionPlans() {
   const [cipEligibility, setCipEligibility] = useState<ReturnType<typeof checkCipEligibilityFull> | null>(null);
 
   useEffect(() => {
-    if (!user?.id) { setCipEligibility(null); return; }
+    if (!user?.id) { setCipEligibility(null); return undefined; }
     let cancelled = false;
 
     async function loadEligibility() {
@@ -102,11 +102,11 @@ export default function SubscriptionPlans() {
     /* Signed-out visitors can browse plans freely — we still want
      * marketing value for them. They hit the gate only when they
      * click Subscribe, which opens the driver-signup auth modal. */
-    if (!user) { setGate('loading'); return; }
+    if (!user) { setGate('loading'); return undefined; }
 
     /* Admins always see the unrestricted UI (they shouldn't be
      * subscribing anyway, but we don't block them from looking). */
-    if (profile?.role === 'admin') { setGate('approved'); return; }
+    if (profile?.role === 'admin') { setGate('approved'); return undefined; }
 
     /* Existing drivers who already have an approved application get
      * straight through — no need to re-check on every mount. Fall
@@ -122,7 +122,7 @@ export default function SubscriptionPlans() {
         .limit(1)
         .maybeSingle();
 
-      if (cancelled) return;
+      if (cancelled) return undefined;
 
       /* On error (network, RLS denial, etc.) fail open to the
        * not-applied branch so the user sees an actionable CTA
@@ -131,7 +131,7 @@ export default function SubscriptionPlans() {
       if (error) {
         console.error('[SubscriptionPlans] gate query failed:', error);
         setGate('not-applied');
-        return;
+        return undefined;
       }
 
       if (!data)                       setGate('not-applied');
@@ -151,29 +151,29 @@ export default function SubscriptionPlans() {
     if (!user) {
       setAuthMode('driver-signup');
       setShowAuthModal(true);
-      return;
+      return undefined;
     }
 
     switch (gate) {
       case 'not-applied':
         setPage('driver-onboarding');
-        return;
+        return undefined;
       case 'pending':
       case 'rejected':
         setPage('driver-application-status');
-        return;
+        return undefined;
       case 'approved':
         /* Approved drivers: fall through to the existing in-portal
          * subscribe flow. DriverPortal's subscription tab is the
          * real purchase surface (it builds the Stripe / Apple Pay
          * checkout session with proration etc.). */
         setPage('driver-portal');
-        return;
+        return undefined;
       case 'loading':
       default:
         /* Still waiting on the gate query — do nothing, the button
          * will re-render once the gate resolves. */
-        return;
+        return undefined;
     }
   }
 

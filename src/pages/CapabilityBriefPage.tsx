@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   FileText, Download, ShieldCheck, Building2, Globe2, Database,
   type LucideIcon,

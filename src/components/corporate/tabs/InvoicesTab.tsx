@@ -1,4 +1,3 @@
-import React from 'react';
 import { OrgPicker } from '../OrgPicker';
 import { StatCard } from '../StatCard';
 import { useOrgInvoices } from '../../../hooks/queries/useCorporateDashboard';

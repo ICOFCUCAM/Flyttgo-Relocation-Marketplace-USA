@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, Sparkles } from 'lucide-react';
 import BookingShortcut from './BookingShortcut';
 import { useApp } from '../../lib/store';
@@ -63,7 +63,7 @@ export default function QuickQuoteDrawer() {
 
   /* Close on Esc. */
   useEffect(() => {
-    if (!open) return;
+    if (!open) return undefined;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { e.preventDefault(); setOpen(false); }
     };
@@ -80,7 +80,7 @@ export default function QuickQuoteDrawer() {
 
   /* Lock body scroll while open. */
   useEffect(() => {
-    if (typeof document === 'undefined') return;
+    if (typeof document === 'undefined') return undefined;
     document.body.style.overflow = open ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [open]);

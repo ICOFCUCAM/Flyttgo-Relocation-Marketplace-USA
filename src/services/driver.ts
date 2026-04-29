@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { supabase } from '../lib/supabase';
 import {
-  ZUuid, ZShortString, ZOptionalText, ZMoneyMajor, ZMoneyMinor,
+  ZUuid, ZShortString, ZMoneyMajor, ZMoneyMinor,
   ZDriverPlan, parseOrThrow,
 } from './_schemas';
 import { callEdgeFunction } from './_edge';

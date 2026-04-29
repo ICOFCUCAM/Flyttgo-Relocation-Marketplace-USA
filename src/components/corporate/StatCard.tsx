@@ -1,4 +1,3 @@
-import React from 'react';
 
 const COLORS: Record<string, string> = {
   emerald: 'bg-emerald-50 text-emerald-600',

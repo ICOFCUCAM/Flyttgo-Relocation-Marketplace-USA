@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
 /* ── Leaflet global (loaded via CDN in index.html) ── */

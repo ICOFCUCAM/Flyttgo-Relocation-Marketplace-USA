@@ -1,4 +1,3 @@
-import React from 'react';
 import { ADMIN_TABS, type AdminTab } from './types';
 
 export function AdminSidebar({

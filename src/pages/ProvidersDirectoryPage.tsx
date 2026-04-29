@@ -77,7 +77,7 @@ export default function ProvidersDirectoryPage() {
 
   /* Hydrate from URL on mount + persist on change. */
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return undefined;
     const sp = new URLSearchParams(window.location.search);
     if (sp.get('q'))         setText(sp.get('q') ?? '');
     if (sp.get('country'))   setCountries(sp.get('country')!.split(',').filter(Boolean) as BookingCountry[]);
@@ -88,7 +88,7 @@ export default function ProvidersDirectoryPage() {
   }, []);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return undefined;
     const sp = new URLSearchParams(window.location.search);
     if (text) sp.set('q', text); else sp.delete('q');
     if (countries.length) sp.set('country', countries.join(',')); else sp.delete('country');
@@ -160,7 +160,7 @@ export default function ProvidersDirectoryPage() {
 
   /* Click-outside closes the dropdown. */
   useEffect(() => {
-    if (!taOpen) return;
+    if (!taOpen) return undefined;
     const onDown = (e: MouseEvent) => {
       if (taRef.current && !taRef.current.contains(e.target as Node)) {
         setTaOpen(false);
@@ -230,7 +230,7 @@ export default function ProvidersDirectoryPage() {
               onChange={e => { setText(e.target.value); setTaOpen(true); }}
               onFocus={() => setTaOpen(true)}
               onKeyDown={e => {
-                if (!taOpen || typeaheadCandidates.length === 0) return;
+                if (!taOpen || typeaheadCandidates.length === 0) return undefined;
                 if (e.key === 'ArrowDown') {
                   e.preventDefault();
                   setTaActive(a => Math.min(a + 1, typeaheadCandidates.length - 1));

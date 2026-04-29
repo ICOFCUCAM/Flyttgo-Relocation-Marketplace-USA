@@ -1,11 +1,6 @@
-import React from 'react';
-import { useApp } from '../lib/store';
-
 const LAST_UPDATED = 'March 31, 2026';
 
 export default function DriverTermsPage() {
-  const { setPage } = useApp();
-
   return (
     <div className="min-h-screen bg-white">
       <div className="bg-gradient-to-br from-[#0B2E59] to-[#0B2E59]/90 py-16">

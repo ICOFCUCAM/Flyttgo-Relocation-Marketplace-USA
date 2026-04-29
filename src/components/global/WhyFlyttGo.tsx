@@ -1,4 +1,3 @@
-import React from 'react';
 import { ShieldCheck, BadgeCheck, Lock, Headphones } from 'lucide-react';
 import { Section, Eyebrow, SectionHeading } from '../ds';
 

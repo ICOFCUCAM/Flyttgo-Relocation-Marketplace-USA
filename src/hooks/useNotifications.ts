@@ -51,7 +51,7 @@ export function useNotifications(userId: string | null | undefined): Result {
   useEffect(() => {
     if (!userId) {
       setNotifications([]);
-      return;
+      return undefined;
     }
 
     let cancelled = false;
@@ -64,7 +64,7 @@ export function useNotifications(userId: string | null | undefined): Result {
       .order('created_at', { ascending: false })
       .limit(PAGE_SIZE)
       .then(({ data, error }) => {
-        if (cancelled) return;
+        if (cancelled) return undefined;
         if (error) {
           /* notifications table might not exist yet — that's fine,
            * the header will just show the empty state. */
@@ -101,10 +101,10 @@ export function useNotifications(userId: string | null | undefined): Result {
   }, [userId]);
 
   const markAllRead = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) return undefined;
     const now = new Date().toISOString();
     const unreadIds = notifications.filter((n) => !n.read_at).map((n) => n.id);
-    if (unreadIds.length === 0) return;
+    if (unreadIds.length === 0) return undefined;
 
     /* Optimistic UI */
     setNotifications((prev) => prev.map((n) => (n.read_at ? n : { ...n, read_at: now })));

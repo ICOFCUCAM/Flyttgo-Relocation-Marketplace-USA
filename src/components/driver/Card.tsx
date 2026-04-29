@@ -1,4 +1,3 @@
-import React from 'react';
 import { safeNumber } from './utils';
 
 export function Card({ title, value }: { title: string; value: number | null | undefined }) {

@@ -1,11 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../lib/auth';
 import { useApp } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import {
-  ONBOARDING_RULES, findOnboardingRules, applyConditions,
+  findOnboardingRules, applyConditions,
   COMPLIANCE_DISCLOSURE,
   type OnboardingCountryCode,
 } from '../lib/onboarding-rules';
@@ -342,7 +342,7 @@ export default function DriverOnboarding() {
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-10">
           {STEPS.map((s, i) => (
-            <React.Fragment key={s.id}>
+            <Fragment key={s.id}>
               {i > 0 && (
                 <div className={`flex-1 h-0.5 mx-2 ${step > s.id - 1 ? 'bg-emerald-500' : 'bg-gray-200'}`} />
               )}
@@ -360,7 +360,7 @@ export default function DriverOnboarding() {
                 </div>
                 <div className="text-xs font-medium text-gray-600 mt-1 hidden sm:block">{s.title}</div>
               </div>
-            </React.Fragment>
+            </Fragment>
           ))}
         </div>
 

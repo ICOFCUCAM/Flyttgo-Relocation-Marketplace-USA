@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DollarSign } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../lib/auth';
@@ -30,7 +30,7 @@ import { PORTAL_TABS, type PortalGate, type PortalTab } from './driver/types';
  * components under /driver/tabs, gate screens to PortalGateScreen.
  */
 export default function DriverPortal() {
-  const { profile, user } = useAuth();
+  const { user } = useAuth();
   const { setPage }       = useApp();
   const { t }             = useTranslation();
 

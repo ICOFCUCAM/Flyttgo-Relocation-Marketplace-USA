@@ -1,4 +1,3 @@
-import React from 'react';
 
 export function SignInBanner({ onSignIn }: { onSignIn: () => void }) {
   return (

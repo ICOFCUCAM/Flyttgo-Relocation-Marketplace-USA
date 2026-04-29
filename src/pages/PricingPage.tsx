@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import {
   DollarSign, Truck, Package, Building2, Users, Route, ArrowRight,
   CheckCircle2, ArrowDown, Lightbulb, type LucideIcon,

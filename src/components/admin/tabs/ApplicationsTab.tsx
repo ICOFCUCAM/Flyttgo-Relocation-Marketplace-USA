@@ -1,4 +1,3 @@
-import React from 'react';
 import { useAuth } from '../../../lib/auth';
 import { REQUIRED_DOCS } from '../utils';
 import { useReviewApplication } from '../../../hooks/queries/useAdminDashboard';

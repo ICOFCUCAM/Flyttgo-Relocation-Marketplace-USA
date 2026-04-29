@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { Banknote, CreditCard, MapPin, Clock, Info, Bookmark, Tag, Check, X as XIcon, ArrowDownUp, Leaf } from 'lucide-react';
 
 /* Lazy-loaded so the ~150 KB Leaflet bundle only ships once the
@@ -142,7 +142,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
   const [swapCount, setSwapCount] = useState(0);
 
   function swapAddresses() {
-    if (!pickup && !dropoff) return;
+    if (!pickup && !dropoff) return undefined;
     setPickup(dropoff);
     setDropoff(pickup);
     setSwapCount(c => c + 1);
@@ -174,7 +174,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
     let cancelled = false;
     if (pickup?.lat == null || pickup?.lng == null || dropoff?.lat == null || dropoff?.lng == null) {
       setRoute(null);
-      return;
+      return undefined;
     }
     setRouteLoading(true);
     (async () => {
@@ -182,7 +182,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
         { lat: pickup.lat!, lng: pickup.lng! },
         { lat: dropoff.lat!, lng: dropoff.lng! },
       );
-      if (cancelled) return;
+      if (cancelled) return undefined;
       setRoute(r);
       setRouteLoading(false);
     })();
@@ -212,7 +212,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
    * case is a country chip switch in the QuickQuoteDrawer — a
    * country-scoped code may no longer apply. */
   useEffect(() => {
-    if (!promoApplied) return;
+    if (!promoApplied) return undefined;
     const result = applyPromo(promoApplied.code, country, grossIndicative);
     if (result.ok === false) {
       setPromoApplied(null);
@@ -226,7 +226,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
       setPromoApplied(null);
       setPromoError(promoErrorMessage(result.reason));
       track('promo_code_rejected', { code: promoInput.toUpperCase(), reason: result.reason, country });
-      return;
+      return undefined;
     }
     setPromoApplied(result.code);
     setPromoError(null);
@@ -253,7 +253,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
   async function submit(method: PaymentMethod) {
     if (!pickup || !dropoff) {
       setSubmitError('Please pick a pickup and a drop-off address.');
-      return;
+      return undefined;
     }
     setSubmitError(null);
 
@@ -346,7 +346,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
       toast.error('Pick a pickup and a drop-off address first', {
         description: 'We need both ends of the route to save the quote.',
       });
-      return;
+      return undefined;
     }
     setSubmitError(null);
     saveQuote({

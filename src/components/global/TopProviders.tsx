@@ -1,4 +1,3 @@
-import React from 'react';
 import { Star, Truck, ShieldCheck, Award, ArrowRight } from 'lucide-react';
 import AddToCompareButton from './AddToCompareButton';
 import AvailabilityBadge from './AvailabilityBadge';

@@ -1,4 +1,3 @@
-import React from 'react';
 import { useApp } from '../lib/store';
 import { SectionIndex } from '../components/global/CountryPage';
 import EarningsSimulator from '../components/global/EarningsSimulator';

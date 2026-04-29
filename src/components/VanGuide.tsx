@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { VAN_TYPES, INVENTORY_ITEMS, PROPERTY_PRESETS, recommendVan } from '../lib/constants';
 import { useApp } from '../lib/store';
 

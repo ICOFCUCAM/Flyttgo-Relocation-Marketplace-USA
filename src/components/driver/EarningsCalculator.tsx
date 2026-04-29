@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 const RATES: Record<string, number> = { free: 0, basic: 0.2, pro_mini: 0.1, pro: 0.1, unlimited: 0 };
 
