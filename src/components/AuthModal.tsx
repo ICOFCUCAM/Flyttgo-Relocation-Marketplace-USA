@@ -103,7 +103,7 @@ export default function AuthModal() {
            * code lives at error.code in supabase-js v2; older
            * versions only set the message string, so we fall back
            * to a substring match. */
-          const code = (error as any)?.code ?? '';
+          const code = (error as { code?: string })?.code ?? '';
           const msg  = String(error.message ?? '').toLowerCase();
           if (code === 'email_not_confirmed' || msg.includes('not confirmed') || msg.includes('email not confirmed')) {
             setNeedsConfirmation(true);

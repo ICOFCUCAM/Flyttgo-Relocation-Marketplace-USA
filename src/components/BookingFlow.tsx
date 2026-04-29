@@ -139,7 +139,7 @@ export default function BookingFlow() {
       });
 
       s.setPage('payment');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[BookingFlow] Booking submission failed:', err, {
         pickupAddress:  s.pickupAddress,
         dropoffAddress: s.dropoffAddress,
@@ -149,8 +149,11 @@ export default function BookingFlow() {
         helpers:        s.helpers,
         estimatedHours: s.estimatedHours,
       });
+      /* Supabase / fetch error shapes can carry message / error_description /
+       * details — pull whichever the upstream surfaced into one string. */
+      const e = err as { message?: string; error_description?: string; details?: string };
       const message =
-        err?.message || err?.error_description || err?.details || 'Booking failed. Please try again.';
+        e?.message || e?.error_description || e?.details || 'Booking failed. Please try again.';
       s.setError(message);
       if (typeof window !== 'undefined') {
         window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });

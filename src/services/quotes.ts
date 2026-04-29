@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { supabase } from '../lib/supabase';
 import { ZShortString, parseOrThrow } from './_schemas';
 
-export type QuoteRow = Record<string, any> & { id: string };
+export type QuoteRow = Record<string, unknown> & { id: string };
 
 /** Minimum-trust schema for quote-request inserts. The table has many
  *  optional columns we don't want to over-constrain here, so we cap

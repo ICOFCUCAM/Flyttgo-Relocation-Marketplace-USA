@@ -15,7 +15,7 @@ import type { PayMethod } from '../services/payments';
  * falling back to the most-recent-pending query below. */
 const PAYMENT_HANDOFF_KEY = 'flyttgo:payment-booking-id';
 
-function safeNum(v: any) { const n = Number(v ?? 0); return isNaN(n) ? 0 : n; }
+function safeNum(v: unknown) { const n = Number(v ?? 0); return isNaN(n) ? 0 : n; }
 
 function CardIcon() {
   return (
@@ -66,7 +66,7 @@ export default function PaymentPage() {
   const markPaid          = useMarkBookingPaid(user?.id);
   const processing        = checkout.isPending || markPaid.isPending;
 
-  const price = safeNum(booking?.price_estimate ?? (bookingData as any)?.priceEstimate ?? 2450);
+  const price = safeNum(booking?.price_estimate ?? (bookingData as { priceEstimate?: number })?.priceEstimate ?? 2450);
   const vat = Math.round(price * 0.25);
   const total = price + vat;
 

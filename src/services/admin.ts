@@ -444,7 +444,7 @@ export async function reviewDriverApplication(
     .single();
   if (!app) throw new Error('Application not found');
 
-  const reviewPayload: Record<string, any> = {
+  const reviewPayload: Record<string, unknown> = {
     status:           input.action,
     reviewed_by:      input.reviewerUserId,
     reviewed_at:      new Date().toISOString(),

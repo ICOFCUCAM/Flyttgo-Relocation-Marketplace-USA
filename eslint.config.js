@@ -23,10 +23,14 @@ export default tseslint.config(
         "warn",
         { allowConstantExport: true },
       ],
-      /* Demoted from "off" → "warn" so we can ratchet the existing
-       * 329-`any` debt down without breaking CI today. Aim is to flip
-       * each one to "error" once the count reaches zero. */
-      "@typescript-eslint/no-explicit-any": "warn",
+      /* Promoted to "error" once the original 329-`any` debt was
+       * paid down to zero (see commit "any cleanup"). The rule now
+       * locks in the gains: any new explicit `any` blocks CI. Add
+       * a unit-tested service-layer type or use `unknown` instead. */
+      "@typescript-eslint/no-explicit-any": "error",
+      /* Unused vars stays at "warn" because TypeScript itself enforces
+       * noUnusedLocals + noUnusedParameters at the compiler level —
+       * ESLint here is the editor-time pre-flight, not the gate. */
       "@typescript-eslint/no-unused-vars": [
         "warn",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" },

@@ -267,8 +267,8 @@ export default function DriverOnboarding() {
        *    client-side role update that silently fails under RLS. */
 
       setSubmitted(true);
-    } catch (e: any) {
-      setError(e.message || 'Submission failed. Please try again.');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Submission failed. Please try again.');
     }
     setLoading(false);
   }

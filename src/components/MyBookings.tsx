@@ -28,7 +28,7 @@ const DriverTrackingMap = lazy(() => import("./DriverTrackingMap"));
  * booking id off to PaymentPage. See CustomerDashboard.tsx. */
 const PAYMENT_HANDOFF_KEY = "flyttgo:payment-booking-id";
 
-function safeNumber(value: any): number {
+function safeNumber(value: unknown): number {
   const n = Number(value ?? 0);
   return isNaN(n) ? 0 : n;
 }
