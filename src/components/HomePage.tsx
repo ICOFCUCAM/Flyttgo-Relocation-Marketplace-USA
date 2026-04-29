@@ -4,13 +4,13 @@ import type { Page, BookingCountry } from '../lib/store';
 import { AnimatedNumber } from './ds';
 import { track } from '../lib/analytics';
 import PressStrip from './global/PressStrip';
-import HomeFAQ from './global/HomeFAQ';
 import CarbonOffset from './global/CarbonOffset';
 import TopProviders from './global/TopProviders';
 import RecentlyViewedRail from './global/RecentlyViewedRail';
 import LiveBookingTicker from './global/LiveBookingTicker';
 import EarningsSimulator from './global/EarningsSimulator';
-import ReviewsCarousel from './global/ReviewsCarousel';
+import ReviewsAndFAQRow from './global/ReviewsAndFAQRow';
+import CategoryPreviewsRow from './global/CategoryPreviewsRow';
 
 /* ────────────────────────────────────────────────────────────
  *  COUNTRY SHOPFRONT METADATA
@@ -227,46 +227,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── LIVE MARKETPLACE KPIs ──────────────────────────
-       *   Promoted from the end of the page. Visitors should see
-       *   marketplace strength immediately — moves coordinated,
-       *   provider count, insurance coverage, quote speed. The
-       *   pulsing "Live" pill above the stats grid signals real-
-       *   time activity without faking numbers. */}
-      <section className="bg-ink-900 text-white py-12 sm:py-14 border-y border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
-            </span>
-            <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-300">
-              Live marketplace
-            </span>
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { icon: Truck,       n: 27000, format: (n: number) => `${Math.round(n).toLocaleString()}+`, label: 'Moves coordinated' },
-              { icon: Users,       n: 5400,  format: (n: number) => `${Math.round(n).toLocaleString()}+`, label: 'Verified licensed providers' },
-              { icon: ShieldCheck, n: 50,    format: (n: number) => `$${Math.round(n)}k`,                  label: 'Insurance per booking' },
-              { icon: Clock,       n: 60,    format: (n: number) => `< ${Math.round(n)}s`,                 label: 'Average quote time' },
-            ].map(({ icon: Icon, n, format, label }) => (
-              <div key={label} className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-brand-400/20 text-brand-400 flex items-center justify-center flex-shrink-0">
-                  <Icon size={20} />
-                </div>
-                <div>
-                  <p className="text-2xl sm:text-3xl font-extrabold tabular-nums">
-                    <AnimatedNumber value={n} format={format} />
-                  </p>
-                  <p className="text-sm text-white/70">{label}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ─── COUNTRY SHOPFRONTS ──────────────────────────── */}
       <section className="bg-[#fafaf7] py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -342,56 +302,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── HOW IT WORKS ──────────────────────────────────── */}
-      <section className="bg-white py-16 sm:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 max-w-2xl mx-auto">
-            <p className="text-amber-600 text-xs font-bold uppercase tracking-wider mb-3">How it works</p>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-              Three steps. One stress-free move.
-            </h2>
-          </div>
-
-          <div className="grid sm:grid-cols-3 gap-6">
-            {[
-              {
-                n: '1',
-                title: 'Tell us about your move',
-                body: 'Pickup, drop-off, date — country-scoped address search makes it easy.',
-                photo: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=900&q=70',
-              },
-              {
-                n: '2',
-                title: 'Compare verified providers',
-                body: 'Licensed movers, labour crews, packers — with prices, ratings, and real reviews.',
-                photo: 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=900&q=70',
-              },
-              {
-                n: '3',
-                title: 'Book in 60 seconds',
-                body: 'Pay under escrow, track your move live, and rate the team after delivery.',
-                photo: 'https://images.unsplash.com/photo-1591088398332-8a7791972843?auto=format&fit=crop&w=900&q=70',
-              },
-            ].map(s => (
-              <article key={s.n} className="group">
-                <div className="relative h-56 rounded-2xl overflow-hidden mb-5">
-                  <img src={s.photo} alt="" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-                  <div className="absolute top-4 left-4 w-10 h-10 rounded-full bg-amber-400 text-slate-900 flex items-center justify-center text-xl font-extrabold shadow-lg">
-                    {s.n}
-                  </div>
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">{s.title}</h3>
-                <p className="text-slate-600 leading-relaxed">{s.body}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── TOP-RATED PROVIDERS — trust-first ordering ─────
-       *   Surfaced directly after "How it works" so visitors see real
-       *   licensed operators before any platform claims. The pill
-       *   above signals "we have a real dispatcher, not a directory". */}
+      {/* ─── TOP-RATED PROVIDERS (position 3) ───────────────
+       *   Sits immediately after the country selector per the
+       *   marketplace narrative — visitors meet real licensed
+       *   operators before any platform claim. */}
       <div className="bg-white pt-12 pb-0 text-center">
         <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-50 to-fuchsia-50 border border-amber-200 text-[11px] font-bold uppercase tracking-[0.18em] text-amber-700">
           <span className="relative flex h-1.5 w-1.5">
@@ -402,6 +316,13 @@ export default function HomePage() {
         </span>
       </div>
       <TopProviders />
+
+      {/* ─── PROVIDER EARNINGS SIMULATOR (position 4) ───────
+       *   Pairs the demand-side TopProviders block with the
+       *   supply-side acquisition surface so customers see income
+       *   transparency right alongside the providers they're
+       *   considering. Same component the /providers page mounts. */}
+      <EarningsSimulator />
 
       {/* ─── SERVICE CATEGORIES ──────────────────────────── */}
       <section className="bg-[#fafaf7] py-16 sm:py-20">
@@ -414,20 +335,29 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { title: 'Local moves',           sub: 'Same-city',         photo: 'https://images.unsplash.com/photo-1568010967-7c3a4e0a59f7?auto=format&fit=crop&w=600&q=70' },
-              { title: 'Long-distance moves',   sub: 'Inter-state / Cross-country', photo: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=600&q=70' },
-              { title: 'International moves',   sub: 'Cross-border',      photo: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=600&q=70' },
-              { title: 'Office relocation',     sub: 'For businesses',    photo: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=70' },
-              { title: 'Packing services',      sub: 'Full / Partial',    photo: 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=600&q=70' },
-              { title: 'Storage solutions',     sub: 'Self & bonded',     photo: 'https://images.unsplash.com/photo-1591375372226-9aa92be1d6f4?auto=format&fit=crop&w=600&q=70' },
-              { title: 'Truck rental',          sub: 'DIY-friendly',      photo: 'https://images.unsplash.com/photo-1601581875309-fafbf2d3ed3a?auto=format&fit=crop&w=600&q=70' },
-              { title: 'Student moves',         sub: 'University corridors', photo: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=600&q=70' },
-            ].map(c => (
+            {([
+              { slug: 'local',         title: 'Local moves',           sub: 'Same-city',                   photo: 'https://images.unsplash.com/photo-1568010967-7c3a4e0a59f7?auto=format&fit=crop&w=600&q=70' },
+              { slug: 'long-distance', title: 'Long-distance moves',   sub: 'Inter-state / Cross-country', photo: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=600&q=70' },
+              { slug: 'international', title: 'International moves',   sub: 'Cross-border',                photo: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=600&q=70' },
+              { slug: 'office',        title: 'Office relocation',     sub: 'For businesses',              photo: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=70' },
+              { slug: 'packing',       title: 'Packing services',      sub: 'Full / Partial',              photo: 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=600&q=70' },
+              { slug: 'storage',       title: 'Storage solutions',     sub: 'Self & bonded',               photo: 'https://images.unsplash.com/photo-1591375372226-9aa92be1d6f4?auto=format&fit=crop&w=600&q=70' },
+              { slug: 'truck-rental',  title: 'Truck rental',          sub: 'DIY-friendly',                photo: 'https://images.unsplash.com/photo-1601581875309-fafbf2d3ed3a?auto=format&fit=crop&w=600&q=70' },
+              { slug: 'student',       title: 'Student moves',         sub: 'University corridors',        photo: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=600&q=70' },
+            ] as const).map(c => (
               <button
-                key={c.title}
+                key={c.slug}
                 type="button"
-                onClick={() => { track('home_category_clicked', { category: c.title }); go('booking'); }}
+                onClick={() => {
+                  track('home_category_clicked', { category: c.title, slug: c.slug });
+                  if (typeof window !== 'undefined') {
+                    window.history.pushState({}, '', `/services/${c.slug}`);
+                  }
+                  go('service-category');
+                  if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                  }
+                }}
                 className="relative h-48 rounded-2xl overflow-hidden group cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
               >
                 <img src={c.photo} alt="" className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
@@ -442,29 +372,61 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── SOCIAL PROOF SEQUENCE ──────────────────────────
-       *   Order is institutional → peer → personal → values → answers,
-       *   which is the strongest psychological order for a marketplace
-       *   that needs to overcome both trust and choice friction.
-       *
-       *   1. Press strip    — third-party institutional validation
-       *   2. Reviews        — peer voices, single-pane rotator
-       *   3. Recently viewed — self-suppressing personalisation rail
-       *   4. Carbon offset  — values / sustainability commitment
-       *   5. FAQ            — addresses last-mile objections */}
+      {/* ─── POSITION 6 ─ CATEGORY LANDING PAGE PREVIEWS ────
+       *   Featured /services/<slug> entry points, deeper than the
+       *   high-level tile grid above. */}
+      <CategoryPreviewsRow />
+
+      {/* ─── POSITION 7-9 ─ PRESS → RECENTLY VIEWED → CARBON */}
       <PressStrip />
-      <ReviewsCarousel />
       <RecentlyViewedRail />
       <CarbonOffset />
-      <HomeFAQ />
 
-      {/* ─── SUPPLY-SIDE BLOCK ──────────────────────────────
-       *   Earnings simulator + tier table + provider CTA grouped
-       *   together so the customer-facing narrative isn't broken
-       *   by a provider acquisition pitch in the middle of the page. */}
-      <EarningsSimulator />
+      {/* ─── POSITION 10 ─ REVIEWS + FAQ SAME ROW ───────────
+       *   Two parallel trust modules. Customer voices on the left
+       *   (RTL auto-scroll marquee), FAQ accordion on the right.
+       *   Stacks on mobile, side-by-side at lg+. */}
+      <ReviewsAndFAQRow />
 
-      {/* ─── PROVIDERS-SIDE CTA — balance the marketplace ─── */}
+      {/* ─── POSITION 11 ─ TRUST STATS STRIP ────────────────
+       *   Live KPI bar showing marketplace strength with a pulsing
+       *   "Live marketplace" indicator. */}
+      <section className="bg-ink-900 text-white py-12 sm:py-14 border-y border-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center gap-2 mb-6">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+            </span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-300">
+              Live marketplace
+            </span>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { icon: Truck,       n: 27000, format: (n: number) => `${Math.round(n).toLocaleString()}+`, label: 'Moves coordinated' },
+              { icon: Users,       n: 5400,  format: (n: number) => `${Math.round(n).toLocaleString()}+`, label: 'Verified licensed providers' },
+              { icon: ShieldCheck, n: 50,    format: (n: number) => `$${Math.round(n)}k`,                  label: 'Insurance per booking' },
+              { icon: Clock,       n: 60,    format: (n: number) => `< ${Math.round(n)}s`,                 label: 'Average quote time' },
+            ].map(({ icon: Icon, n, format, label }) => (
+              <div key={label} className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-brand-400/20 text-brand-400 flex items-center justify-center flex-shrink-0">
+                  <Icon size={20} />
+                </div>
+                <div>
+                  <p className="text-2xl sm:text-3xl font-extrabold tabular-nums">
+                    <AnimatedNumber value={n} format={format} />
+                  </p>
+                  <p className="text-sm text-white/70">{label}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── POSITION 12 ─ PROVIDER ONBOARDING CTA ──────────
+       *   Supply-side acquisition surface with subscription tiers. */}
       <section className="bg-[#0b1f3a] text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
           <div className="grid lg:grid-cols-12 gap-10 items-center">

@@ -46,8 +46,76 @@ export const HOME_FAQS: QA[] = [
   },
 ];
 
-export default function HomeFAQ() {
+interface HomeFAQProps {
+  /** When true, omits the outer <section> + page padding so the FAQ
+   *  can sit side-by-side with <ReviewsCarousel inline /> inside
+   *  <ReviewsAndFAQRow>. */
+  inline?: boolean;
+}
+
+export default function HomeFAQ({ inline = false }: HomeFAQProps) {
   const [openIdx, setOpenIdx] = useState<number | null>(0);
+
+  const accordion = (
+    <div className="space-y-3">
+      {HOME_FAQS.map((qa, i) => {
+        const isOpen = openIdx === i;
+        return (
+          <details
+            key={qa.question}
+            open={isOpen}
+            onClick={(e) => { e.preventDefault(); setOpenIdx(isOpen ? null : i); }}
+            className="bg-white border border-slate-200 rounded-xl overflow-hidden hover:border-amber-300 transition-colors"
+          >
+            <summary className="cursor-pointer list-none flex items-center justify-between gap-4 px-5 py-4">
+              <span className="font-semibold text-slate-900 text-base">{qa.question}</span>
+              <ChevronDown
+                size={18}
+                className={`text-slate-400 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+              />
+            </summary>
+            <div className="px-5 pb-4 text-sm text-slate-600 leading-relaxed">
+              {qa.answer}
+            </div>
+          </details>
+        );
+      })}
+    </div>
+  );
+
+  /* Same JSON-LD whether inline or full-width — Google rich-results
+   * doesn't care about layout, only the structured-data block. */
+  const jsonLd = (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type':    'FAQPage',
+          mainEntity: HOME_FAQS.map(qa => ({
+            '@type':         'Question',
+            name:            qa.question,
+            acceptedAnswer:  { '@type': 'Answer', text: qa.answer },
+          })),
+        }),
+      }}
+    />
+  );
+
+  if (inline) {
+    return (
+      <div>
+        <p className="text-amber-600 text-xs font-bold uppercase tracking-wider mb-2">
+          Frequently asked questions
+        </p>
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-6">
+          Everything you need to know before you book.
+        </h2>
+        {accordion}
+        {jsonLd}
+      </div>
+    );
+  }
 
   return (
     <section className="bg-[#fafaf7] py-16 sm:py-20">
@@ -60,47 +128,8 @@ export default function HomeFAQ() {
             Everything you need to know before you book.
           </h2>
         </div>
-
-        <div className="space-y-3">
-          {HOME_FAQS.map((qa, i) => {
-            const isOpen = openIdx === i;
-            return (
-              <details
-                key={qa.question}
-                open={isOpen}
-                onClick={(e) => { e.preventDefault(); setOpenIdx(isOpen ? null : i); }}
-                className="bg-white border border-slate-200 rounded-xl overflow-hidden hover:border-amber-300 transition-colors"
-              >
-                <summary className="cursor-pointer list-none flex items-center justify-between gap-4 px-5 py-4">
-                  <span className="font-semibold text-slate-900 text-base">{qa.question}</span>
-                  <ChevronDown
-                    size={18}
-                    className={`text-slate-400 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                  />
-                </summary>
-                <div className="px-5 pb-4 text-sm text-slate-600 leading-relaxed">
-                  {qa.answer}
-                </div>
-              </details>
-            );
-          })}
-        </div>
-
-        {/* JSON-LD FAQPage so Google can show the rich-result accordion */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type':    'FAQPage',
-              mainEntity: HOME_FAQS.map(qa => ({
-                '@type':         'Question',
-                name:            qa.question,
-                acceptedAnswer:  { '@type': 'Answer', text: qa.answer },
-              })),
-            }),
-          }}
-        />
+        {accordion}
+        {jsonLd}
       </div>
     </section>
   );
