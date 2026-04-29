@@ -35,3 +35,6 @@ pnpm-debug.log*
 # US Vercel project. The pulled .vercel/project.json holds the project
 # ID and must not be committed (it would point at the wrong project).
 .vercel/
+
+# Supabase CLI local state — project ref + pooler URL, machine-local.
+supabase/.temp/
