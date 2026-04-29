@@ -1,11 +1,16 @@
-import React, { useState, useEffect, lazy, Suspense } from "react";
+import React, { useState, lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { PackageSearch, Bookmark, MapPin, Calendar, X, Share2 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase, supabaseFunctionUrl } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
 import { useApp } from "../lib/store";
 import { EmptyState } from "./ds";
+import {
+  useMyBookings,
+  useCancelBooking,
+  useConfirmCompletion,
+  useApproveEscrowAdjustment,
+} from "../hooks/queries/useCustomerBookings";
 import {
   useSavedQuotesStore,
   removeSavedQuote,
@@ -36,82 +41,52 @@ function formatDuration(start?: string | null, end?: string | null) {
   return `${Math.floor(diff / 3600)}h ${Math.floor((diff % 3600) / 60)}m`;
 }
 
-interface Booking {
-  id: string; pickup_address: string | null; dropoff_address: string | null;
-  pickup_lat?: number | null; pickup_lng?: number | null;
-  dropoff_lat?: number | null; dropoff_lng?: number | null;
-  driver_id?: string | null;
-  van_type: string | null; status: string | null; payment_status: string | null;
-  price_estimate: number | null; original_price?: number | null; final_price?: number | null;
-  estimated_hours?: number | null; actual_hours?: number | null;
-  start_time?: string | null; end_time?: string | null;
-  price_adjusted?: boolean | null; move_date: string | null; created_at: string | null;
-  customer_confirmation?: boolean | null; driver_confirmation?: boolean | null;
-}
+/* Local Booking shape kept for documentation of the columns the UI
+ * actually reads. The hook returns BookingRow (loose Record-based)
+ * and the few helpers below take that wider type. */
+import type { BookingRow as Booking } from "../services/bookings";
 
 export default function MyBookings() {
   const { user } = useAuth();
   const { setPage, setBookingData } = useApp();
   const { t } = useTranslation();
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
-  const [escrowMap, setEscrowMap] = useState<any>({});
 
-  useEffect(() => { if (!user) return; fetchBookings(); }, [user]);
+  const { bookings, escrowMap, isLoading } = useMyBookings(user?.id);
+  const cancelMut             = useCancelBooking(user?.id);
+  const confirmCompletionMut  = useConfirmCompletion(user?.id);
+  const approveAdjustmentMut  = useApproveEscrowAdjustment(user?.id);
 
   if (!user) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><p className="text-gray-500">Please sign in to view your bookings.</p></div>;
 
-  async function fetchBookings() {
-    setLoading(true);
-    const { data } = await supabase.from("bookings").select("*").eq("customer_id", user?.id).order("created_at", { ascending: false });
-    const rows = (data as Booking[]) || [];
-    setBookings(rows);
-    const ids = rows.map(r => r.id);
-    if (ids.length > 0) {
-      const { data: escrow } = await supabase.from("escrow_payments").select("*").in("booking_id", ids);
-      const map: any = {};
-      escrow?.forEach(e => { map[e.booking_id] = e; });
-      setEscrowMap(map);
-    }
-    setLoading(false);
-  }
-
-  async function cancelBooking(id: string) {
+  function cancelBooking(id: string) {
     if (!confirm("Cancel this booking?")) return;
-    const { error } = await supabase.from("bookings").update({ status: "cancelled" }).eq("id", id);
-    if (error) {
-      toast.error('Could not cancel booking', { description: error.message });
-    } else {
-      toast.success('Booking cancelled', { description: 'Refund (if any) is processed by ops within 24 hours.' });
-    }
-    fetchBookings();
+    cancelMut.mutate(id, {
+      onSuccess: () => toast.success('Booking cancelled', { description: 'Refund (if any) is processed by ops within 24 hours.' }),
+      onError:   e => toast.error('Could not cancel booking', { description: e instanceof Error ? e.message : '' }),
+    });
   }
 
-  async function confirmCompletion(bookingId: string) {
-    // 'customer_confirmed' is not in the bookings.status CHECK constraint —
-    // rely on the customer_confirmation boolean + DB trigger instead.
-    const { error } = await supabase.from("bookings").update({ customer_confirmation: true }).eq("id", bookingId);
-    if (error) {
-      toast.error('Could not confirm completion', { description: error.message });
-      return;
-    }
-    const { data: booking } = await supabase.from("bookings").select("driver_confirmation").eq("id", bookingId).single();
-    if (booking?.driver_confirmation === true) {
-      await fetch(supabaseFunctionUrl("process-payment"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "release_escrow", bookingId }) });
-      toast.success('Job complete', { description: 'Payment released to your driver.' });
-    } else {
-      toast('Waiting for driver confirmation', {
-        description: 'We\'ll release payment as soon as both sides confirm.',
-        icon: '⏳',
-      });
-    }
-    fetchBookings();
+  function confirmCompletion(bookingId: string) {
+    confirmCompletionMut.mutate(bookingId, {
+      onSuccess: ({ driverDone }) => {
+        if (driverDone) {
+          toast.success('Job complete', { description: 'Payment released to your driver.' });
+        } else {
+          toast('Waiting for driver confirmation', {
+            description: "We'll release payment as soon as both sides confirm.",
+            icon: '⏳',
+          });
+        }
+      },
+      onError: e => toast.error('Could not confirm completion', { description: e instanceof Error ? e.message : '' }),
+    });
   }
 
-  async function approveAdjustment(escrowId: string) {
-    await supabase.from("escrow_payments").update({ adjustment_approved: true }).eq("id", escrowId);
-    fetchBookings();
+  function approveAdjustment(escrowId: string) {
+    approveAdjustmentMut.mutate(escrowId, {
+      onError: e => toast.error('Could not approve adjustment', { description: e instanceof Error ? e.message : '' }),
+    });
   }
 
   function repeatBooking(booking: Booking) {
@@ -175,7 +150,7 @@ export default function MyBookings() {
             <button key={f} onClick={() => setFilter(f)} className={`px-4 py-2 rounded text-sm ${filter === f ? "bg-emerald-600 text-white" : "bg-white border"}`}>{f.replace(/_/g, " ")}</button>
           ))}
         </div>
-        {loading ? (
+        {isLoading ? (
           <div className="space-y-4 animate-pulse">
             {[0, 1, 2].map(i => (
               <div key={i} className="bg-white p-6 rounded-xl border border-gray-100">

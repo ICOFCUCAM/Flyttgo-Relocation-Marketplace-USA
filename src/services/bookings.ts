@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { supabase, supabaseFunctionUrl } from '../lib/supabase';
 
 /* Domain row types. We keep these `any` for now because Supabase has no
@@ -7,39 +8,71 @@ import { supabase, supabaseFunctionUrl } from '../lib/supabase';
 export type BookingRow = Record<string, any> & { id: string };
 export type EscrowRow  = Record<string, any> & { id: string };
 
-export interface CreateBookingInput {
-  customer: { id: string; email: string; name: string; phone: string };
-  pickup:  {
-    address:  string;
-    postcode: string;
-    city:     string;
-    lat:      number | null;
-    lng:      number | null;
-  };
-  dropoff: {
-    address:  string;
-    postcode: string;
-    city:     string;
-    lat:      number | null;
-    lng:      number | null;
-  };
-  moveType:           string;
-  vanType:            string;
-  helpers:            number;
-  additionalServices: string[];
-  inventory:          Record<string, number>;
-  moveDate:           string | null;
-  moveTime:           string | null;
-  notes:              string;
-  distanceKm:         number;
-  estimatedHours:     number;
-  priceTotal:         number;
-}
+/**
+ * Zod schema for the booking-creation payload.
+ *
+ * Why a schema at the service boundary: this is the single
+ * customer-input mutation in the entire marketplace flow. The
+ * pre-refactor inline insert trusted whatever the React component
+ * sent — meaning a UI bug (or a malicious request from a tampered
+ * SDK consumer once we ship a public API) could write nonsense rows.
+ * Validating here means every caller — components, edge functions,
+ * future SDK — runs the same checks.
+ *
+ * Constraints mirror the bookings table CHECKs + sensible product
+ * floors (positive price, finite distance, valid email).
+ */
+export const CreateBookingInputSchema = z.object({
+  customer: z.object({
+    id:    z.string().uuid('Invalid customer id'),
+    email: z.string().email('Invalid email'),
+    name:  z.string().trim().min(1, 'Name required').max(120),
+    phone: z.string().trim().min(3, 'Phone required').max(40),
+  }),
+  pickup: z.object({
+    address:  z.string().trim().min(3, 'Pickup address required').max(500),
+    postcode: z.string().trim().max(20),
+    city:     z.string().trim().max(120),
+    lat:      z.number().min(-90).max(90).nullable(),
+    lng:      z.number().min(-180).max(180).nullable(),
+  }),
+  dropoff: z.object({
+    address:  z.string().trim().min(3, 'Drop-off address required').max(500),
+    postcode: z.string().trim().max(20),
+    city:     z.string().trim().max(120),
+    lat:      z.number().min(-90).max(90).nullable(),
+    lng:      z.number().min(-180).max(180).nullable(),
+  }),
+  moveType:           z.string().trim().min(1, 'Move type required').max(40),
+  vanType:            z.string().trim().min(1, 'Van type required').max(40),
+  helpers:            z.number().int().min(0).max(10),
+  additionalServices: z.array(z.string()).max(20),
+  inventory:          z.record(z.number().int().min(0)),
+  moveDate:           z.string().nullable(),
+  moveTime:           z.string().nullable(),
+  notes:              z.string().max(2000),
+  distanceKm:         z.number().nonnegative().finite(),
+  estimatedHours:     z.number().positive().max(48),
+  priceTotal:         z.number().positive().finite(),
+});
 
-/** Atomic-ish create: insert the booking row, then the escrow row. The
- *  escrow insert failing is logged but doesn't roll the booking back —
- *  matches the pre-refactor behaviour. */
-export async function createBookingWithEscrow(input: CreateBookingInput): Promise<BookingRow> {
+export type CreateBookingInput = z.infer<typeof CreateBookingInputSchema>;
+
+/** Atomic-ish create: validate the payload, insert the booking row,
+ *  then the escrow row. The escrow insert failing is logged but
+ *  doesn't roll the booking back — matches the pre-refactor behaviour. */
+export async function createBookingWithEscrow(rawInput: CreateBookingInput): Promise<BookingRow> {
+  /* Throw a single readable string when validation fails so the UI
+   * can surface it directly. ZodError formatting is preserved in the
+   * cause for debugging. */
+  const parsed = CreateBookingInputSchema.safeParse(rawInput);
+  if (!parsed.success) {
+    const first = parsed.error.issues[0];
+    const path  = first.path.join('.');
+    throw new Error(`${path ? `${path}: ` : ''}${first.message}`);
+  }
+  const input = parsed.data;
+
   const { data: booking, error: bookingError } = await supabase
     .from('bookings')
     .insert({
@@ -104,6 +137,21 @@ export async function listBookingsForCustomer(customerId: string): Promise<Booki
     .order('created_at', { ascending: false });
   if (error) throw error;
   return (data ?? []) as BookingRow[];
+}
+
+/** Escrow rows for many bookings, returned as a map keyed by booking_id.
+ *  Used by MyBookings to render the per-row "approve adjustment" CTA
+ *  without N+1 queries. */
+export async function getEscrowMapForBookings(bookingIds: string[]): Promise<Record<string, EscrowRow>> {
+  if (bookingIds.length === 0) return {};
+  const { data, error } = await supabase
+    .from('escrow_payments')
+    .select('*')
+    .in('booking_id', bookingIds);
+  if (error) throw error;
+  const map: Record<string, EscrowRow> = {};
+  (data ?? []).forEach(e => { map[e.booking_id as string] = e as EscrowRow; });
+  return map;
 }
 
 /** Escrow row tied to a booking, or null if none exists yet. */

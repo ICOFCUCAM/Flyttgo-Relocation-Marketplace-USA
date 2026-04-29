@@ -2,12 +2,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   listBookingsForCustomer,
   getEscrowForBooking,
+  getEscrowMapForBookings,
   setCustomerConfirmation,
   hasDriverConfirmed,
   releaseEscrow,
   approveEscrowAdjustment,
   cancelBooking,
   type BookingRow,
+  type EscrowRow,
 } from '../../services/bookings';
 
 /** Booking-status values where the trip is still live. */
@@ -19,6 +21,9 @@ const customerBookingsKey = (customerId: string | null | undefined) =>
 
 const escrowKey = (bookingId: string | null | undefined) =>
   ['escrow', bookingId ?? 'none'] as const;
+
+const escrowMapKey = (customerId: string | null | undefined) =>
+  ['escrow', 'map', customerId ?? 'anon'] as const;
 
 export interface CustomerBookingsView {
   bookings: BookingRow[];
@@ -64,6 +69,27 @@ export function useActiveBookingEscrow(bookingId: string | null | undefined) {
     enabled:  !!bookingId,
     queryFn:  () => getEscrowForBooking(bookingId as string),
   });
+}
+
+/** All bookings for a customer + an escrow-map keyed by booking_id.
+ *  Powers MyBookings without N+1 queries. */
+export function useMyBookings(customerId: string | null | undefined) {
+  const bookingsQuery = useQuery<BookingRow[]>({
+    queryKey: customerBookingsKey(customerId),
+    enabled:  !!customerId,
+    queryFn:  () => listBookingsForCustomer(customerId as string),
+  });
+  const ids = bookingsQuery.data?.map(b => b.id) ?? [];
+  const escrowQuery = useQuery<Record<string, EscrowRow>>({
+    queryKey: [...escrowMapKey(customerId), ids.join(',')],
+    enabled:  !!customerId && ids.length > 0,
+    queryFn:  () => getEscrowMapForBookings(ids),
+  });
+  return {
+    bookings:    bookingsQuery.data ?? [],
+    escrowMap:   escrowQuery.data ?? {},
+    isLoading:   bookingsQuery.isLoading,
+  };
 }
 
 export function useConfirmCompletion(customerId: string | null | undefined) {
