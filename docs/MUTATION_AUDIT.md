@@ -93,10 +93,14 @@ the SQL there is the server guard.
    `stripe-webhook` is a different beast (it's invoked by Stripe, not
    the customer) and should verify Stripe's signature header instead;
    that's the next follow-up.
-5. Verify Stripe's webhook signature in `stripe-webhook` so a
-   spoofed POST can't flip a booking to paid. Use the
-   `STRIPE_WEBHOOK_SECRET` already defined in the deploy notes.
-6. Add a service-layer test for `_edge.ts` that mocks `fetch` and
-   asserts the Authorization header is set when a session exists,
-   omitted under `allowAnonymous: true`, and that a 4xx body's
-   `error` field is surfaced to the thrown Error message.
+5. ~~Verify Stripe's webhook signature in `stripe-webhook` so a
+   spoofed POST can't flip a booking to paid.~~ Already implemented;
+   now extracted to `supabase/functions/stripe-webhook/stripe-signature.ts`
+   with 13 Vitest cases covering valid / invalid / tampered / expired /
+   rotated signatures + the constant-time equality primitive.
+   Event-level idempotency added via a new `processed_stripe_events`
+   table — see `docs/install-stripe-event-idempotency.sql`. The
+   webhook tolerates the table not existing yet so the migration can
+   be applied independently of the function deploy.
+6. ~~Add a service-layer test for `_edge.ts`~~ Done in commit
+   "Caller-identity gate on every edge-function action".
