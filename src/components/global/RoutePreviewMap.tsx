@@ -52,22 +52,26 @@ const dropoffIcon = L.divIcon({
 });
 
 export default function RoutePreviewMap({ pickup, dropoff, height = 'h-44' }: Props) {
-  if (!pickup || !dropoff) return null;
-
-  const center = useMemo<[number, number]>(
-    () => [(pickup.lat + dropoff.lat) / 2, (pickup.lng + dropoff.lng) / 2],
+  const center = useMemo<[number, number] | null>(
+    () => pickup && dropoff
+      ? [(pickup.lat + dropoff.lat) / 2, (pickup.lng + dropoff.lng) / 2]
+      : null,
     [pickup, dropoff],
   );
 
   /* Fit-to-bounds rather than a hard zoom, so a long-haul route and
    * a five-block move both look reasonable. */
-  const bounds = useMemo<LatLngBoundsLiteral>(
-    () => [
-      [pickup.lat,  pickup.lng],
-      [dropoff.lat, dropoff.lng],
-    ],
+  const bounds = useMemo<LatLngBoundsLiteral | null>(
+    () => pickup && dropoff
+      ? [
+          [pickup.lat,  pickup.lng],
+          [dropoff.lat, dropoff.lng],
+        ]
+      : null,
     [pickup, dropoff],
   );
+
+  if (!pickup || !dropoff || !center || !bounds) return null;
 
   return (
     <div className={`${height} rounded-xl overflow-hidden border border-slate-200 mt-4`}>

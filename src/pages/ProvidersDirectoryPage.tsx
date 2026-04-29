@@ -90,11 +90,11 @@ export default function ProvidersDirectoryPage() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const sp = new URLSearchParams(window.location.search);
-    text          ? sp.set('q', text)              : sp.delete('q');
-    countries.length ? sp.set('country', countries.join(',')) : sp.delete('country');
-    tiers.length     ? sp.set('tier',    tiers.join(','))     : sp.delete('tier');
-    services.length  ? sp.set('service', services.join(','))  : sp.delete('service');
-    sort !== 'rating' ? sp.set('sort', sort) : sp.delete('sort');
+    if (text) sp.set('q', text); else sp.delete('q');
+    if (countries.length) sp.set('country', countries.join(',')); else sp.delete('country');
+    if (tiers.length) sp.set('tier', tiers.join(',')); else sp.delete('tier');
+    if (services.length) sp.set('service', services.join(',')); else sp.delete('service');
+    if (sort !== 'rating') sp.set('sort', sort); else sp.delete('sort');
     const qs = sp.toString();
     const target = `${window.location.pathname}${qs ? `?${qs}` : ''}`;
     if (target !== window.location.pathname + window.location.search) {

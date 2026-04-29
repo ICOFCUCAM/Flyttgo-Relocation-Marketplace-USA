@@ -11,11 +11,15 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
+    /* Loose mode for now — the codebase has 329 `any` usages and many
+     * implicit-null call sites that need a multi-session migration.
+     * Use `npm run typecheck:strict` to preview the full-strict diff.
+     * Aim is to flip these to true incrementally, file by file. */
     "strict": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noImplicitAny": false,
-    "noFallthroughCasesInSwitch": false,
+    "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": { "@/*": ["./src/*"] }
   },

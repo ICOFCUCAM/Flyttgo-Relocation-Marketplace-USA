@@ -23,12 +23,18 @@ export default tseslint.config(
         "warn",
         { allowConstantExport: true },
       ],
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-unused-vars": "off",
-      "@typescript-eslint/no-empty-object-type": "off",
-      "no-empty-pattern": "off",
-      "no-case-declarations": "off",
-      "prefer-const": "off",
+      /* Demoted from "off" → "warn" so we can ratchet the existing
+       * 329-`any` debt down without breaking CI today. Aim is to flip
+       * each one to "error" once the count reaches zero. */
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" },
+      ],
+      "@typescript-eslint/no-empty-object-type": "warn",
+      "no-empty-pattern": "warn",
+      "no-case-declarations": "warn",
+      "prefer-const": "warn",
     },
   }
 );
