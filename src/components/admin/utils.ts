@@ -9,8 +9,17 @@ export function safeNumber(value: unknown): number {
 /** Refund amount derived from the booking's lifecycle stage, or from a
  *  manual override if the admin has applied one. Mirrors the rate card
  *  documented in docs/refund-policy.md — cancel before driver-assigned
- *  is full refund, mid-trip refunds slide to zero. */
-export function calculateRefundAmount(booking: Record<string, unknown>): number {
+ *  is full refund, mid-trip refunds slide to zero.
+ *
+ *  Accepts a minimal shape so any caller (full BookingRow, partial
+ *  pre-insert preview) can use it without an `as` cast. */
+export interface RefundableBooking {
+  price_estimate?:        unknown;
+  manual_refund_percent?: unknown;
+  status?:                unknown;
+}
+
+export function calculateRefundAmount(booking: RefundableBooking): number {
   const price = safeNumber(booking.price_estimate);
   const manualPct = booking.manual_refund_percent;
   if (manualPct != null) return price * (Number(manualPct) / 100);

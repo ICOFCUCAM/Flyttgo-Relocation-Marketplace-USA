@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { supabase } from '../lib/supabase';
 import { callEdgeFunction } from './_edge';
+import type { BookingRow, EscrowRow } from '../lib/database.types';
 
-/* Domain row types. We keep these `any` for now because Supabase has no
- * generated types in this repo — the migration to `generate_typescript_types`
- * is tracked separately. Once those land, swap `BookingRow` for the
- * generated `Tables<'bookings'>['Row']`. */
-export type BookingRow = Record<string, any> & { id: string };
-export type EscrowRow  = Record<string, any> & { id: string };
+/* Domain row types — re-exported from the curated database.types.ts so
+ * existing imports (`import { BookingRow } from 'services/bookings'`)
+ * keep working unchanged. Replace with the generated Supabase types
+ * the moment `npx supabase gen types` is wired into CI. */
+export type { BookingRow, EscrowRow };
 
 /**
  * Zod schema for the booking-creation payload.

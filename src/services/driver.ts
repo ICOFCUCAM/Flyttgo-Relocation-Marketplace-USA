@@ -14,12 +14,16 @@ import { callEdgeFunction } from './_edge';
  * src/hooks/queries/useDriverPortal.ts to consume these.
  * ───────────────────────────────────────────────────────────────── */
 
-export type ApplicationRow  = Record<string, any> & { id: string };
-export type DriverRow       = Record<string, any> & { id: string };
-export type WalletRow       = Record<string, any> & { driver_id: string };
-export type JobRow          = Record<string, any> & { id: string };
-export type SubscriptionRow = Record<string, any> & { id: string };
-export type TransactionRow  = Record<string, any> & { id: string };
+import type {
+  DriverApplicationRow as ApplicationRow,
+  DriverProfileRow as DriverRow,
+  DriverWalletRow as WalletRow,
+  BookingRow as JobRow,
+  DriverSubscriptionRow as SubscriptionRow,
+  DriverWalletTransactionRow as TransactionRow,
+} from '../lib/database.types';
+
+export type { ApplicationRow, DriverRow, WalletRow, JobRow, SubscriptionRow, TransactionRow };
 
 /* ── Application + driver profile ──────────────────────────────── */
 
@@ -132,7 +136,21 @@ export async function getDriverWallet(driverId: string): Promise<WalletRow> {
     .eq('driver_id', driverId)
     .maybeSingle();
   if (error) throw error;
-  return (data as WalletRow) ?? { driver_id: driverId, balance: 0, pending: 0, total_earned: 0 };
+  if (data) return data as WalletRow;
+  /* Brand-new driver — no wallet row yet. Return a synthetic empty
+   * shape so the UI can render zeros without optional-chaining every
+   * field. The fake `id` makes the row easy to spot if it ever leaks
+   * into a write path (which it shouldn't — service callers only
+   * read). */
+  return {
+    id:           '00000000-0000-0000-0000-000000000000',
+    driver_id:    driverId,
+    balance:      0,
+    pending:      0,
+    total_earned: 0,
+    created_at:   new Date(0).toISOString(),
+    updated_at:   null,
+  };
 }
 
 export async function listDriverTransactions(driverId: string): Promise<TransactionRow[]> {

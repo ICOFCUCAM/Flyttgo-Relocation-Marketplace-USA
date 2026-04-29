@@ -54,14 +54,20 @@ export interface ProrationResult {
 
 /** Pro → Unlimited proration. Returns null if the upgrade isn't a
  *  pro→unlimited transition or the current sub has no start_date.
- *  Accepts a permissive shape since the source row is the loose
- *  Record-based SubscriptionRow. */
+ *  Accepts a minimal structural shape so callers can pass either a
+ *  full DriverSubscriptionRow or a synthetic preview object without
+ *  casts. */
+export interface ProrationCurrentSub {
+  plan?:       string | null;
+  start_date?: string | null;
+}
+
 export function calculateProration(
-  currentSub: Record<string, unknown> | null | undefined,
+  currentSub: ProrationCurrentSub | null | undefined,
   newPlan: PlanOption,
 ): ProrationResult | null {
-  const plan       = currentSub?.plan as string | undefined;
-  const startDate  = currentSub?.start_date as string | null | undefined;
+  const plan       = currentSub?.plan;
+  const startDate  = currentSub?.start_date;
   if (plan !== 'pro' || newPlan.id !== 'unlimited') return null;
   if (!startDate) return null;
 

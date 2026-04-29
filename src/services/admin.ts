@@ -15,17 +15,20 @@ import {
  * (src/hooks/queries/useAdminDashboard.ts) wrap these for caching,
  * mutation tracking, and realtime invalidation.
  *
- * Rows are typed as `Record<string, any>` for now because we don't
- * yet generate Supabase types in this repo — once that lands, replace
- * each Row alias with the generated `Tables<'name'>['Row']`.
+ * Row types come from src/lib/database.types — hand-rolled today,
+ * swap for `supabase gen types` output when CI is wired.
  * ───────────────────────────────────────────────────────────────── */
 
-export type DriverRow      = Record<string, any> & { id: string };
-export type BookingRow     = Record<string, any> & { id: string };
-export type ApplicationRow = Record<string, any> & { id: string };
-export type DocumentRow    = Record<string, any> & { id: string };
-export type ActivityItem   = { id: string; message: string; created_at: string };
-export type TimelineEvent  = { time: string; message: string };
+import type {
+  DriverProfileRow as DriverRow,
+  BookingRow,
+  DriverApplicationRow as ApplicationRow,
+  DriverDocumentRow as DocumentRow,
+} from '../lib/database.types';
+
+export type { DriverRow, BookingRow, ApplicationRow, DocumentRow };
+export type ActivityItem  = { id: string; message: string; created_at: string };
+export type TimelineEvent = { time: string; message: string };
 
 export type FleetCapacity = 'HIGH' | 'MEDIUM' | 'LOW';
 
