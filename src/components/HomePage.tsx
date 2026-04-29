@@ -81,7 +81,12 @@ export default function HomePage() {
     <main className="bg-white text-slate-900">
       {/* ─── HERO ──────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
-        {/* Background photo with warm overlay */}
+        {/* Background photo with warm overlay + a soft amber/violet
+         *  gradient orb. The orb is purely decorative — sits behind
+         *  the headline, blurred to the point of being a glow rather
+         *  than a shape, and signals "next-gen" without competing
+         *  with the photo. Pointer-events disabled so it never
+         *  intercepts a click on the country picker. */}
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1600518464441-9154a4dea21b?auto=format&fit=crop&w=1920&q=70"
@@ -91,6 +96,14 @@ export default function HomePage() {
             fetchPriority="high"
           />
           <div className="absolute inset-0 bg-gradient-to-br from-[#0b1f3a]/95 via-[#0b1f3a]/85 to-[#0b1f3a]/70" />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-24 -left-24 h-[28rem] w-[28rem] rounded-full bg-gradient-to-br from-amber-400/30 via-fuchsia-500/15 to-transparent blur-3xl"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -bottom-32 -right-24 h-[34rem] w-[34rem] rounded-full bg-gradient-to-br from-sky-400/20 via-emerald-400/10 to-transparent blur-3xl"
+          />
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-28">
@@ -211,6 +224,46 @@ export default function HomePage() {
           <span>EU licensed movers</span>
           <span>Escrow protected payments</span>
           <span>$50,000 shipment coverage</span>
+        </div>
+      </section>
+
+      {/* ─── LIVE MARKETPLACE KPIs ──────────────────────────
+       *   Promoted from the end of the page. Visitors should see
+       *   marketplace strength immediately — moves coordinated,
+       *   provider count, insurance coverage, quote speed. The
+       *   pulsing "Live" pill above the stats grid signals real-
+       *   time activity without faking numbers. */}
+      <section className="bg-ink-900 text-white py-12 sm:py-14 border-y border-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center gap-2 mb-6">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+            </span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-300">
+              Live marketplace
+            </span>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { icon: Truck,       n: 27000, format: (n: number) => `${Math.round(n).toLocaleString()}+`, label: 'Moves coordinated' },
+              { icon: Users,       n: 5400,  format: (n: number) => `${Math.round(n).toLocaleString()}+`, label: 'Verified licensed providers' },
+              { icon: ShieldCheck, n: 50,    format: (n: number) => `$${Math.round(n)}k`,                  label: 'Insurance per booking' },
+              { icon: Clock,       n: 60,    format: (n: number) => `< ${Math.round(n)}s`,                 label: 'Average quote time' },
+            ].map(({ icon: Icon, n, format, label }) => (
+              <div key={label} className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-brand-400/20 text-brand-400 flex items-center justify-center flex-shrink-0">
+                  <Icon size={20} />
+                </div>
+                <div>
+                  <p className="text-2xl sm:text-3xl font-extrabold tabular-nums">
+                    <AnimatedNumber value={n} format={format} />
+                  </p>
+                  <p className="text-sm text-white/70">{label}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -337,15 +390,18 @@ export default function HomePage() {
 
       {/* ─── TOP-RATED PROVIDERS — trust-first ordering ─────
        *   Surfaced directly after "How it works" so visitors see real
-       *   licensed operators before any platform claims. */}
+       *   licensed operators before any platform claims. The pill
+       *   above signals "we have a real dispatcher, not a directory". */}
+      <div className="bg-white pt-12 pb-0 text-center">
+        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-50 to-fuchsia-50 border border-amber-200 text-[11px] font-bold uppercase tracking-[0.18em] text-amber-700">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75" />
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500" />
+          </span>
+          AI-routed dispatch · Live OSRM pricing
+        </span>
+      </div>
       <TopProviders />
-
-      {/* ─── PROVIDER EARNINGS SIMULATOR ────────────────────
-       *   Pairs the demand-side trust block (TopProviders) with a
-       *   supply-side acquisition lever — prospective providers see
-       *   projected earnings before they apply, customers see income
-       *   transparency. Same component the /providers page mounts. */}
-      <EarningsSimulator />
 
       {/* ─── SERVICE CATEGORIES ──────────────────────────── */}
       <section className="bg-[#fafaf7] py-16 sm:py-20">
@@ -386,50 +442,27 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── PRESS STRIP ───────────────────────────────────── */}
+      {/* ─── SOCIAL PROOF SEQUENCE ──────────────────────────
+       *   Order is institutional → peer → personal → values → answers,
+       *   which is the strongest psychological order for a marketplace
+       *   that needs to overcome both trust and choice friction.
+       *
+       *   1. Press strip    — third-party institutional validation
+       *   2. Reviews        — peer voices, single-pane rotator
+       *   3. Recently viewed — self-suppressing personalisation rail
+       *   4. Carbon offset  — values / sustainability commitment
+       *   5. FAQ            — addresses last-mile objections */}
       <PressStrip />
-
-      {/* ─── RECENTLY VIEWED (Wave 25) ───────────────────────
-          Renders only if the customer has opened a provider profile
-          before — otherwise self-suppresses, so first-time visitors
-          don't see an empty rail. */}
-      <RecentlyViewedRail />
-
-      {/* ─── CARBON OFFSET ─────────────────────────────────── */}
-      <CarbonOffset />
-
-      {/* ─── REVIEWS — single-pane carousel replaces the grid for a
-       *   tighter mobile scroll + a "live" testimonial that rotates. */}
       <ReviewsCarousel />
-
-      {/* ─── FAQ ───────────────────────────────────────────── */}
+      <RecentlyViewedRail />
+      <CarbonOffset />
       <HomeFAQ />
 
-      {/* ─── TRUST + STATS ───────────────────────────────── */}
-      <section className="bg-ink-900 text-white py-14">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { icon: Truck,       n: 27000, format: (n: number) => `${Math.round(n).toLocaleString()}+`, label: 'Moves coordinated' },
-              { icon: Users,       n: 5400,  format: (n: number) => `${Math.round(n).toLocaleString()}+`, label: 'Verified licensed providers' },
-              { icon: ShieldCheck, n: 50,    format: (n: number) => `$${Math.round(n)}k`,                  label: 'Insurance per booking' },
-              { icon: Clock,       n: 60,    format: (n: number) => `< ${Math.round(n)}s`,                 label: 'Average quote time' },
-            ].map(({ icon: Icon, n, format, label }) => (
-              <div key={label} className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-brand-400/20 text-brand-400 flex items-center justify-center flex-shrink-0">
-                  <Icon size={20} />
-                </div>
-                <div>
-                  <p className="text-2xl sm:text-3xl font-extrabold">
-                    <AnimatedNumber value={n} format={format} />
-                  </p>
-                  <p className="text-sm text-white/70">{label}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* ─── SUPPLY-SIDE BLOCK ──────────────────────────────
+       *   Earnings simulator + tier table + provider CTA grouped
+       *   together so the customer-facing narrative isn't broken
+       *   by a provider acquisition pitch in the middle of the page. */}
+      <EarningsSimulator />
 
       {/* ─── PROVIDERS-SIDE CTA — balance the marketplace ─── */}
       <section className="bg-[#0b1f3a] text-white">
