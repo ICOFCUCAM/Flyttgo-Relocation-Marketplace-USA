@@ -1,5 +1,11 @@
+import { z } from 'zod';
 import { supabase } from '../lib/supabase';
 import { safeNumber, calculateRefundAmount, REQUIRED_DOCS, DOCUMENT_TYPE_LABELS } from '../components/admin/utils';
+import {
+  ZUuid, ZShortString, ZRefundPercent,
+  ZDriverPlan, ZDriverStatus, ZApplicationDecision, ZDocumentVerification,
+  parseOrThrow,
+} from './_schemas';
 
 /* ─────────────────────────────────────────────────────────────────
  * Admin service layer
@@ -287,13 +293,25 @@ export async function updatePlatformSetting(key: string, value: string): Promise
 
 /* ── Driver mutations ──────────────────────────────────────────── */
 
+export const UpdateDriverStatusSchema = z.object({
+  id:     ZUuid,
+  status: ZDriverStatus,
+});
+
 export async function updateDriverStatus(id: string, status: string): Promise<void> {
-  const { error } = await supabase.from('driver_profiles').update({ status }).eq('id', id);
+  const v = parseOrThrow(UpdateDriverStatusSchema, { id, status });
+  const { error } = await supabase.from('driver_profiles').update({ status: v.status }).eq('id', v.id);
   if (error) throw error;
 }
 
+export const AssignDriverPlanSchema = z.object({
+  driverId: ZUuid,
+  plan:     ZDriverPlan,
+});
+
 export async function assignDriverPlan(driverId: string, plan: string): Promise<void> {
-  const { error } = await supabase.from('driver_subscriptions').insert({ driver_id: driverId, plan });
+  const v = parseOrThrow(AssignDriverPlanSchema, { driverId, plan });
+  const { error } = await supabase.from('driver_subscriptions').insert({ driver_id: v.driverId, plan: v.plan });
   if (error) throw error;
 }
 
@@ -339,21 +357,33 @@ export async function refundBookingPayment(booking: BookingRow): Promise<number>
   return refundAmount;
 }
 
+export const ApplyManualRefundSchema = z.object({
+  bookingId: ZUuid,
+  percent:   ZRefundPercent,
+});
+
 export async function applyManualRefundOverride(bookingId: string, percent: number): Promise<void> {
+  const v = parseOrThrow(ApplyManualRefundSchema, { bookingId, percent });
   const { error } = await supabase
     .from('bookings')
-    .update({ manual_refund_percent: percent })
-    .eq('id', bookingId);
+    .update({ manual_refund_percent: v.percent })
+    .eq('id', v.bookingId);
   if (error) throw error;
 }
 
 /* ── Dispatch ──────────────────────────────────────────────────── */
 
+export const ManualDispatchSchema = z.object({
+  bookingId: ZUuid,
+  driverId:  ZUuid,
+});
+
 export async function manualDispatchBooking(bookingId: string, driverId: string): Promise<void> {
+  const v = parseOrThrow(ManualDispatchSchema, { bookingId, driverId });
   const { error } = await supabase
     .from('bookings')
-    .update({ driver_id: driverId, status: 'driver_assigned' })
-    .eq('id', bookingId);
+    .update({ driver_id: v.driverId, status: 'driver_assigned' })
+    .eq('id', v.bookingId);
   if (error) throw error;
 }
 
@@ -381,12 +411,16 @@ export async function reclaimStaleDispatches(timeoutMinutes = 5): Promise<number
 
 /* ── Driver applications ───────────────────────────────────────── */
 
-export interface ReviewApplicationInput {
-  applicationId:    string;
-  action:           'approved' | 'rejected' | string;
-  reviewerUserId:   string;
-  rejectionReason?: string | null;
-}
+export const ReviewApplicationInputSchema = z.object({
+  applicationId:   ZUuid,
+  action:          ZApplicationDecision,
+  reviewerUserId:  ZUuid,
+  rejectionReason: z.string().trim().min(1, 'Rejection reason required').max(1000).nullable().optional(),
+}).refine(
+  v => v.action !== 'rejected' || (v.rejectionReason && v.rejectionReason.length > 0),
+  { message: 'Rejection reason required when action is rejected', path: ['rejectionReason'] },
+);
+export type ReviewApplicationInput = z.infer<typeof ReviewApplicationInputSchema>;
 
 export interface ReviewApplicationResult {
   activated:    boolean;
@@ -397,8 +431,9 @@ export interface ReviewApplicationResult {
  *  driver_profile if all REQUIRED_DOCS are approved; otherwise reports
  *  back which docs are missing so the UI can surface them. */
 export async function reviewDriverApplication(
-  input: ReviewApplicationInput,
+  rawInput: ReviewApplicationInput,
 ): Promise<ReviewApplicationResult> {
+  const input = parseOrThrow(ReviewApplicationInputSchema, rawInput);
   const { data: app } = await supabase
     .from('driver_applications')
     .select('*')
@@ -456,11 +491,17 @@ export function getDocumentPublicUrl(storagePath: string): string {
   return supabase.storage.from('driver-documents').getPublicUrl(storagePath).data.publicUrl;
 }
 
+export const SetDocumentVerificationSchema = z.object({
+  documentId: ZUuid,
+  status:     ZDocumentVerification,
+});
+
 export async function setDocumentVerification(documentId: string, status: 'approved' | 'rejected'): Promise<void> {
+  const v = parseOrThrow(SetDocumentVerificationSchema, { documentId, status });
   const { error } = await supabase
     .from('driver_documents')
-    .update({ verification_status: status })
-    .eq('id', documentId);
+    .update({ verification_status: v.status })
+    .eq('id', v.documentId);
   if (error) throw error;
 }
 

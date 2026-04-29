@@ -1,5 +1,7 @@
 /* Shared types and constants for the driver portal. */
 
+import type { DriverPlan } from '../../services/_schemas';
+
 /** Gate states the DriverPortal can land in. Drives the state-machine
  *  access control — checked in order so the earliest unmet
  *  precondition is what the user sees. */
@@ -18,7 +20,7 @@ export type PortalTab = 'overview' | 'jobs' | 'earnings' | 'wallet' | 'subscript
 export const VAT_RATE = 0; // US sales tax is calculated per-state at checkout
 
 export interface PlanOption {
-  id:          string;
+  id:          DriverPlan;
   label:       string;
   priceUSD:    number;
   billing:     string;

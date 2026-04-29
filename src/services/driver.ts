@@ -1,4 +1,9 @@
+import { z } from 'zod';
 import { supabase, supabaseFunctionUrl } from '../lib/supabase';
+import {
+  ZUuid, ZShortString, ZOptionalText, ZMoneyMajor, ZMoneyMinor,
+  ZDriverPlan, parseOrThrow,
+} from './_schemas';
 
 /* ─────────────────────────────────────────────────────────────────
  * Driver service layer
@@ -82,24 +87,37 @@ export async function enforceSubscriptionExpiry(userId: string): Promise<void> {
     });
 }
 
+export const ChangeDriverSubscriptionSchema = z.object({
+  userId: ZUuid,
+  planId: ZDriverPlan,
+});
+
 export async function changeDriverSubscription(userId: string, planId: string): Promise<void> {
+  const v = parseOrThrow(ChangeDriverSubscriptionSchema, { userId, planId });
   const { error } = await supabase.rpc('change_driver_subscription', {
-    p_driver_id: userId,
-    p_new_plan:  planId,
+    p_driver_id: v.userId,
+    p_new_plan:  v.planId,
   });
   if (error) throw error;
 }
+
+export const LogSubscriptionCreditSchema = z.object({
+  driverId:    ZUuid,
+  amount:      ZMoneyMajor,
+  description: ZShortString('description', 500),
+});
 
 export async function logSubscriptionCredit(
   driverId: string,
   amount: number,
   description: string,
 ): Promise<void> {
+  const v = parseOrThrow(LogSubscriptionCreditSchema, { driverId, amount, description });
   const { error } = await supabase.from('driver_wallet_transactions').insert({
-    driver_id:  driverId,
-    type:       'subscription_credit',
-    amount,
-    description,
+    driver_id:   v.driverId,
+    type:        'subscription_credit',
+    amount:      v.amount,
+    description: v.description,
   });
   if (error) throw error;
 }
@@ -126,8 +144,14 @@ export async function listDriverTransactions(driverId: string): Promise<Transact
   return (data ?? []) as TransactionRow[];
 }
 
+export const RequestPayoutSchema = z.object({
+  driverId: ZUuid,
+  amount:   ZMoneyMajor,
+});
+
 export async function requestPayout(driverId: string, amount: number): Promise<void> {
-  const { error } = await supabase.from('payout_requests').insert({ driver_id: driverId, amount });
+  const v = parseOrThrow(RequestPayoutSchema, { driverId, amount });
+  const { error } = await supabase.from('payout_requests').insert({ driver_id: v.driverId, amount: v.amount });
   if (error) throw error;
 }
 
@@ -208,22 +232,24 @@ export async function setDriverOnline(driverId: string, online: boolean): Promis
 
 /* ── Stripe checkout for paid plans ────────────────────────────── */
 
-export interface CheckoutPayload {
-  type:           'subscription';
-  planId:         string;
-  planLabel:      string;
-  driverId:       string;
-  userId:         string;
-  amount:         number;
-  amountExVat:    number;
-  vatAmount:      number;
-  billing:        string;
-  prorationNote:  string;
-  proration:      Record<string, any> | null;
-  description:    string;
-}
+export const SubscriptionCheckoutPayloadSchema = z.object({
+  type:           z.literal('subscription'),
+  planId:         ZDriverPlan,
+  planLabel:      ZShortString('planLabel', 80),
+  driverId:       ZUuid,
+  userId:         ZUuid,
+  amount:         z.number().nonnegative().finite(),
+  amountExVat:    z.number().nonnegative().finite(),
+  vatAmount:      ZMoneyMinor,
+  billing:        z.string().max(40),
+  prorationNote:  z.string().max(500),
+  proration:      z.record(z.unknown()).nullable(),
+  description:    ZShortString('description', 500),
+});
+export type CheckoutPayload = z.infer<typeof SubscriptionCheckoutPayloadSchema>;
 
-export async function createSubscriptionCheckout(payload: CheckoutPayload): Promise<{ url?: string; sessionId?: string }> {
+export async function createSubscriptionCheckout(rawPayload: CheckoutPayload): Promise<{ url?: string; sessionId?: string }> {
+  const payload = parseOrThrow(SubscriptionCheckoutPayloadSchema, rawPayload);
   const res = await fetch(supabaseFunctionUrl('create-checkout-session'), {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },

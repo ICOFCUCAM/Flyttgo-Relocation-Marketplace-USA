@@ -1,15 +1,25 @@
+import { z } from 'zod';
 import { supabaseFunctionUrl } from '../lib/supabase';
+import {
+  ZUuid, ZMoneyMajor, ZMoneyMinor, ZCurrencyCode, ZPayMethod,
+  parseOrThrow, type PayMethod,
+} from './_schemas';
 
-export interface CheckoutSessionInput {
-  bookingId:   string;
-  amountCents: number;
-  currency:    string;
-}
+export type { PayMethod };
 
-/** Generic Stripe Checkout session — used for the original API. */
+/* ── Generic Stripe Checkout payload (cents-based) ─────────────── */
+
+export const CheckoutSessionInputSchema = z.object({
+  bookingId:   ZUuid,
+  amountCents: ZMoneyMinor,
+  currency:    ZCurrencyCode,
+});
+export type CheckoutSessionInput = z.infer<typeof CheckoutSessionInputSchema>;
+
 export async function createCheckoutSession(
-  input: CheckoutSessionInput,
+  rawInput: CheckoutSessionInput,
 ): Promise<{ url: string; sessionId: string }> {
+  const input = parseOrThrow(CheckoutSessionInputSchema, rawInput);
   const res = await fetch(supabaseFunctionUrl('create-checkout-session'), {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -19,21 +29,22 @@ export async function createCheckoutSession(
   return res.json();
 }
 
-export type PayMethod = 'card' | 'apple_pay' | 'google_pay' | 'invoice';
+/* ── Booking checkout (PaymentPage) ────────────────────────────── */
 
-export interface BookingCheckoutInput {
-  bookingId: string;
-  amount:    number;
-  method:    PayMethod;
-}
+export const BookingCheckoutInputSchema = z.object({
+  bookingId: ZUuid,
+  amount:    ZMoneyMajor,
+  method:    ZPayMethod,
+});
+export type BookingCheckoutInput = z.infer<typeof BookingCheckoutInputSchema>;
 
-/** PaymentPage payload shape — the edge function reads bookingId,
- *  amount, and method to construct the Stripe session and route
- *  Apple/Google Pay through the same flow. Returns the redirect URL
- *  on success. */
+/** PaymentPage payload — the edge function reads bookingId, amount,
+ *  and method to construct the Stripe session and route Apple/Google
+ *  Pay through the same flow. Returns the redirect URL on success. */
 export async function createBookingCheckout(
-  input: BookingCheckoutInput,
+  rawInput: BookingCheckoutInput,
 ): Promise<{ url?: string; sessionId?: string }> {
+  const input = parseOrThrow(BookingCheckoutInputSchema, rawInput);
   const res = await fetch(supabaseFunctionUrl('create-checkout-session'), {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
