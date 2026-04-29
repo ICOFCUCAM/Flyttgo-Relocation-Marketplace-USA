@@ -3,6 +3,7 @@ import { SUBSCRIPTION_PLANS, calculateCommission, COMMISSION } from '../lib/cons
 import { useApp } from '../lib/store';
 import { useAuth } from '../lib/auth';
 import { supabase } from '../lib/supabase';
+import MarketplaceBanner from './banners/MarketplaceBanner';
 import {
   findTier, localPriceForTier, PRIVILEGE_LABELS,
   type SubscriptionTierSlug,
@@ -179,19 +180,24 @@ export default function SubscriptionPlans() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-br from-emerald-700 via-emerald-800 to-gray-900 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl sm:text-5xl font-bold mb-4">Provider Subscription Tiers</h1>
-          <p className="text-lg text-emerald-100 max-w-2xl mx-auto mb-6">
-            Five tiers from Silver entry to Certified Infrastructure Partner.
-            Country-aware pricing — pick your market below.
-          </p>
-          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full pl-4 pr-2 py-1.5">
-            <span className="text-xs uppercase tracking-wider text-emerald-100">Market</span>
+      <MarketplaceBanner
+        variant="inverse"
+        eyebrow="Provider Subscriptions"
+        breadcrumb={{ id: 'GLRM.05', label: 'Subscription tiers' }}
+        headline={<>Five tiers. Lower commission, higher dispatch&nbsp;priority.</>}
+        lead="Silver entry to Certified Infrastructure Partner. Country-aware pricing — pick your market and the per-tier monthly rate adjusts to local-currency norms."
+        compliancePills={[
+          { label: 'Escrow-protected payouts' },
+          { label: 'Country-licensed dispatch' },
+          { label: 'Verified provider tier' },
+        ]}
+        aside={
+          <div className="bg-white/5 border border-white/15 backdrop-blur rounded-2xl p-5">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-amber-300 mb-2">Market</p>
             <select
               value={country}
               onChange={e => setCountry(e.target.value as PricingCountry)}
-              className="bg-transparent text-white text-sm font-bold outline-none"
+              className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm font-bold outline-none focus:ring-2 focus:ring-amber-400"
             >
               {COUNTRY_PROFILES.map(p => (
                 <option key={p.code} value={p.code} className="text-slate-900">
@@ -199,9 +205,13 @@ export default function SubscriptionPlans() {
                 </option>
               ))}
             </select>
+            <p className="mt-3 text-xs text-white/60 leading-relaxed">
+              Tier rates render in {country.toUpperCase()} local currency below.
+              Switch markets at any time — your subscription does not migrate.
+            </p>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 

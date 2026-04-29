@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../lib/auth';
 import { useApp } from '../lib/store';
 import { supabase } from '../lib/supabase';
+import MarketplaceBanner from './banners/MarketplaceBanner';
 import {
   findOnboardingRules, applyConditions,
   COMPLIANCE_DISCLOSURE,
@@ -308,12 +309,25 @@ export default function DriverOnboarding() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-[#1A365D] to-[#2D4A7A] text-white py-10">
-        <div className="max-w-3xl mx-auto px-4 text-center">
-          <h1 className="text-3xl font-bold mb-2">{t('driverOnboarding.heroTitle')}</h1>
-          <p className="text-white/70 mb-5">{t('driverOnboarding.heroSubtitle')}</p>
-          <p className="text-white/70 text-sm leading-relaxed bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-left">
+      <MarketplaceBanner
+        variant="inverse"
+        eyebrow="Provider onboarding"
+        breadcrumb={{ id: 'GLRM.05', label: 'Apply as a provider' }}
+        headline={<>Drive for Flytt<span className="text-amber-300">Go</span>. Country-licensed dispatch.</>}
+        lead={t('driverOnboarding.heroSubtitle')}
+        compliancePills={[
+          { label: 'USDOT / GVOL / GüKG eligible' },
+          { label: 'Document-verified' },
+          { label: 'Escrow-protected payouts' },
+          { label: 'Tier-based commission' },
+        ]}
+      />
+
+      {/* Coordination-layer disclosure — sits below the banner so the
+          platform's posture is unambiguous before any field is touched. */}
+      <div className="border-b border-slate-200 bg-white">
+        <div className="max-w-3xl mx-auto px-4 py-5">
+          <p className="text-slate-600 text-sm leading-relaxed">
             FlyttGo Global Logistics &amp; Relocation Marketplace operates as a
             digital coordination platform connecting customers with independent
             licensed relocation providers across multiple jurisdictions worldwide.

@@ -21,64 +21,48 @@ interface LinkItem { label: string; page: Page; }
  * ───────────────────────────────────────────────────────────────── */
 
 const CUSTOMERS: LinkItem[] = [
-  { label: 'Marketplace',           page: 'marketplace' },
-  { label: 'Request a quote',       page: 'request-quote' },
-  { label: 'Browse providers',      page: 'providers-directory' },
-  { label: 'Compare providers',     page: 'compare' },
-  { label: 'Pricing',               page: 'pricing' },
-  { label: 'How It Works',          page: 'how-it-works' },
-  { label: 'My bookings',           page: 'my-bookings' },
+  { label: 'How booking works',     page: 'how-it-works' },
+  { label: 'Pricing guide',         page: 'pricing' },
+  { label: 'Insurance coverage',    page: 'liability' },
+  { label: 'Escrow protection',     page: 'safety' },
   { label: 'FAQ',                   page: 'faq' },
-  { label: 'Help & Safety',         page: 'safety' },
-  { label: 'Refer & earn',          page: 'refer' },
 ];
 
 const PROVIDERS: LinkItem[] = [
-  { label: 'Apply as a provider',   page: 'driver-onboarding' },
-  { label: 'Provider requirements', page: 'provider-requirements' },
-  { label: 'For providers',         page: 'providers' },
+  { label: 'Earnings simulator',    page: 'providers' },
+  { label: 'Join FlyttGo',          page: 'driver-onboarding' },
   { label: 'Subscription tiers',    page: 'subscriptions' },
-  { label: 'Provider portal',       page: 'driver-portal' },
+  { label: 'Provider dashboard',    page: 'driver-portal' },
 ];
 
 const ENTERPRISE: LinkItem[] = [
-  { label: 'Enterprise Relocation',  page: 'enterprise-relocation' },
-  { label: 'Corporate Workforce',    page: 'corporate' },
-  { label: 'University Mobility',    page: 'universities' },
-  { label: 'Government Programs',    page: 'government-programs' },
-  { label: 'NGO Deployment',         page: 'ngo-deployment' },
-  { label: 'Pilot Programs',         page: 'pilot-deployment-programs' },
-  { label: 'Deployment Regions',     page: 'deployment-regions' },
-  { label: 'Vendor Compliance Pack', page: 'vendor-pack' },
-  { label: 'Capability Brief',       page: 'capability-brief' },
-  { label: 'Submit RFP',             page: 'procurement-rfp' },
+  { label: 'Corporate relocation',   page: 'enterprise-relocation' },
+  { label: 'Universities',           page: 'universities' },
+  { label: 'Municipal relocation',   page: 'pilot-deployment-programs' },
+  { label: 'Government mobility',    page: 'government-programs' },
 ];
 
 const COUNTRIES: LinkItem[] = [
-  { label: 'United States',  page: 'market-us' },
-  { label: 'Canada',         page: 'market-canada' },
-  { label: 'United Kingdom', page: 'market-uk' },
-  { label: 'France',         page: 'market-france' },
-  { label: 'Germany',        page: 'market-germany' },
-  { label: 'Norway',         page: 'market-norway' },
-];
-
-const LEGAL: LinkItem[] = [
-  { label: 'Terms of Service',      page: 'terms' },
-  { label: 'Privacy Policy',        page: 'privacy' },
-  { label: 'Liability',             page: 'liability' },
-  { label: 'Provider Terms',        page: 'driver-terms' },
-  { label: 'Compliance',            page: 'compliance' },
-  { label: 'File a dispute',        page: 'dispute' },
+  { label: 'USA',     page: 'market-us' },
+  { label: 'Canada',  page: 'market-canada' },
+  { label: 'UK',      page: 'market-uk' },
+  { label: 'France',  page: 'market-france' },
+  { label: 'Germany', page: 'market-germany' },
+  { label: 'Norway',  page: 'market-norway' },
 ];
 
 const PLATFORM: LinkItem[] = [
-  { label: 'About',                 page: 'about' },
-  { label: 'Contact',               page: 'contact' },
-  { label: 'Press',                 page: 'press' },
-  { label: 'Careers',               page: 'careers' },
-  { label: 'Sustainability',        page: 'sustainability' },
-  { label: 'Partners',              page: 'partners' },
+  { label: 'About FlyttGo',  page: 'about' },
+  { label: 'Careers',        page: 'careers' },
+  { label: 'Press',          page: 'press' },
+  { label: 'Partners',       page: 'partners' },
+];
+
+const LEGAL: LinkItem[] = [
+  { label: 'Terms',            page: 'terms' },
+  { label: 'Privacy',          page: 'privacy' },
+  { label: 'Escrow policy',    page: 'safety' },
+  { label: 'Insurance terms',  page: 'liability' },
 ];
 
 export default function Footer() {
