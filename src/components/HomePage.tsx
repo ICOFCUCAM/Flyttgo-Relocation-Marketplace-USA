@@ -160,10 +160,43 @@ export default function HomePage() {
             </div>
           </div>
 
+          {/* Formal country picker — primary entry. Six flag chips
+           *  routing into each country's localised marketplace.
+           *  Sits above the quick-booking panel so the country
+           *  decision is the first thing the visitor makes; the
+           *  quick-booking below covers visitors who already know
+           *  pickup + drop-off cities. */}
+          <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-6 max-w-4xl mb-4">
+            <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+              <div>
+                <p className="text-sm font-bold text-slate-900">Pick the country you’re moving in</p>
+                <p className="text-xs text-slate-500">Each country opens its own booking portal in the local language.</p>
+              </div>
+              <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500">
+                <ShieldCheck size={14} className="text-emerald-500" />
+                Insured up to $50,000
+              </div>
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+              {SHOPFRONTS.map(s => (
+                <button
+                  key={s.iso}
+                  onClick={() => { track('country_tile_clicked', { country: s.iso, surface: 'home-hero' }); go(`market-${s.iso}` as Page); }}
+                  className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl hover:bg-amber-50 hover:ring-1 hover:ring-amber-300 transition group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                  aria-label={`Go to ${s.name} marketplace`}
+                >
+                  <span className="text-3xl leading-none">{s.flag}</span>
+                  <span className="text-[10px] sm:text-xs font-bold text-slate-700 group-hover:text-amber-700 uppercase tracking-wide">
+                    {s.iso.toUpperCase()}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Quick-booking entry — three fields and a CTA, the lowest-
-           *  friction path into the booking flow. The country picker
-           *  in the SHOPFRONTS section below remains the secondary path
-           *  for visitors who want to browse by market first. */}
+           *  friction path into the booking flow for visitors who
+           *  already know their pickup + drop-off cities. */}
           <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-6 max-w-4xl">
             <p className="text-sm font-bold text-slate-900 mb-3">
               Start your move in 60 seconds
