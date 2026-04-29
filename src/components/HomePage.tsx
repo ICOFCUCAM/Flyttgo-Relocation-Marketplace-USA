@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Star, ShieldCheck, Truck, Clock, BadgeCheck, MapPin, Users, MessageCircle } from 'lucide-react';
 import { useApp } from '../lib/store';
 import type { Page, BookingCountry } from '../lib/store';
@@ -10,6 +11,7 @@ import SmartMatchingSection from './global/SmartMatchingSection';
 import CarbonOffset from './global/CarbonOffset';
 import TopProviders from './global/TopProviders';
 import RecentlyViewedRail from './global/RecentlyViewedRail';
+import LiveBookingTicker from './global/LiveBookingTicker';
 
 /* ────────────────────────────────────────────────────────────
  *  COUNTRY SHOPFRONT METADATA
@@ -73,8 +75,30 @@ const SHOPFRONTS: CountryShopfront[] = [
  * ────────────────────────────────────────────────────────────── */
 
 export default function HomePage() {
-  const { setPage } = useApp();
+  const { setPage, setBookingData } = useApp();
   const go = (p: Page) => setPage(p);
+
+  /* Quick-booking entry — three lightweight fields the visitor can
+   * fill before they've picked a country shopfront. We seed
+   * bookingData so the full BookingFlow opens with those values
+   * pre-populated and the customer doesn't retype anything. */
+  const [quickPickup,   setQuickPickup]   = useState('');
+  const [quickDropoff,  setQuickDropoff]  = useState('');
+  const [quickDate,     setQuickDate]     = useState('');
+
+  function startQuickBooking() {
+    track('home_quick_booking_submitted', {
+      hasPickup:  !!quickPickup,
+      hasDropoff: !!quickDropoff,
+      hasDate:    !!quickDate,
+    });
+    setBookingData({
+      pickupAddress:  quickPickup,
+      dropoffAddress: quickDropoff,
+      moveDate:       quickDate,
+    });
+    go('booking');
+  }
 
   return (
     <main className="bg-white text-slate-900">
@@ -102,46 +126,89 @@ export default function HomePage() {
                 <Star size={12} className="fill-amber-400 text-amber-400" />
                 <Star size={12} className="fill-amber-400 text-amber-400" />
               </span>
-              <span>4.8 average · 27,000+ moves coordinated · 6 countries</span>
+              <span>
+                4.8 average ·{' '}
+                <AnimatedNumber value={27000} format={(n: number) => `${Math.round(n).toLocaleString()}+`} />
+                {' '}moves coordinated · 6 countries
+              </span>
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white leading-[1.05] tracking-tight mb-5">
               Move anywhere.<br />
               <span className="text-amber-300">Book a licensed mover in 60&nbsp;seconds.</span>
             </h1>
-            <p className="text-lg sm:text-xl text-white/85 leading-relaxed max-w-2xl mb-8">
+            <p className="text-lg sm:text-xl text-white/85 leading-relaxed max-w-2xl mb-6">
               Compare licensed movers, labour crews, packers, storage and rental
               partners in six countries. Transparent prices, escrow protection
               on every booking, real reviews from real customers.
             </p>
+
+            {/* Enterprise + university CTAs — activates the institutional
+             *  revenue channel directly from the hero. */}
+            <div className="flex flex-wrap gap-3 mb-8">
+              <button
+                onClick={() => { track('home_enterprise_cta_clicked'); go('enterprise-relocation'); }}
+                className="bg-white text-slate-900 px-5 py-3 rounded-xl font-bold hover:bg-slate-100 transition"
+              >
+                Enterprise relocation →
+              </button>
+              <button
+                onClick={() => { track('home_universities_cta_clicked'); go('universities'); }}
+                className="bg-white/10 border border-white/20 text-white px-5 py-3 rounded-xl font-bold hover:bg-white/20 transition"
+              >
+                Student moves →
+              </button>
+            </div>
           </div>
 
-          {/* Country picker — primary CTA */}
-          <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-6 max-w-3xl">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <p className="text-sm font-bold text-slate-900">Pick the country you’re moving in</p>
-                <p className="text-xs text-slate-500">Each country opens its own booking portal in the local language.</p>
-              </div>
-              <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500">
-                <ShieldCheck size={14} className="text-emerald-500" />
-                Insured up to $50,000
-              </div>
+          {/* Quick-booking entry — three fields and a CTA, the lowest-
+           *  friction path into the booking flow. The country picker
+           *  in the SHOPFRONTS section below remains the secondary path
+           *  for visitors who want to browse by market first. */}
+          <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-6 max-w-4xl">
+            <p className="text-sm font-bold text-slate-900 mb-3">
+              Start your move in 60 seconds
+            </p>
+
+            <div className="grid md:grid-cols-4 gap-2">
+              <input
+                value={quickPickup}
+                onChange={e => setQuickPickup(e.target.value)}
+                placeholder="Pickup city"
+                aria-label="Pickup city"
+                className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none"
+              />
+              <input
+                value={quickDropoff}
+                onChange={e => setQuickDropoff(e.target.value)}
+                placeholder="Delivery city"
+                aria-label="Delivery city"
+                className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none"
+              />
+              <input
+                type="date"
+                value={quickDate}
+                onChange={e => setQuickDate(e.target.value)}
+                aria-label="Move date"
+                className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none"
+              />
+              <button
+                onClick={startQuickBooking}
+                className="bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold rounded-lg px-4 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1f3a]"
+              >
+                Get instant price →
+              </button>
             </div>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-              {SHOPFRONTS.map(s => (
-                <button
-                  key={s.iso}
-                  onClick={() => { track('country_tile_clicked', { country: s.iso, surface: 'home' }); go(`market-${s.iso}` as Page); }}
-                  className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl hover:bg-amber-50 hover:ring-1 hover:ring-amber-300 transition group"
-                  aria-label={`Go to ${s.name} marketplace`}
-                >
-                  <span className="text-3xl leading-none">{s.flag}</span>
-                  <span className="text-[10px] sm:text-xs font-bold text-slate-700 group-hover:text-amber-700 uppercase tracking-wide">
-                    {s.iso.toUpperCase()}
-                  </span>
-                </button>
-              ))}
-            </div>
+
+            <p className="text-xs text-slate-500 mt-2">
+              No account required • price in under 60 seconds
+            </p>
+
+            {/* Indicative price example — wired to the live pricing
+             *  engine in a follow-up; for now it sets the customer
+             *  expectation that the quote includes labor + truck. */}
+            <p className="text-xs text-emerald-600 mt-2 font-medium">
+              Example: Austin → Dallas ≈ $620 · 3 movers · 1 truck
+            </p>
           </div>
 
           {/* Trust strip */}
@@ -158,6 +225,27 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+
+          {/* Live marketplace activity ticker — surfaces "someone in
+           *  Austin booked 3 minutes ago" social proof under the trust
+           *  strip. The component self-suppresses on touch devices and
+           *  in low-traffic windows. */}
+          <div className="mt-6 max-w-3xl">
+            <LiveBookingTicker />
+          </div>
+        </div>
+      </section>
+
+      {/* ─── CORPORATE CREDIBILITY RIBBON ─────────────────────
+       *   Compliance + insurance signals enterprise procurement
+       *   teams expect to see at the first scroll. */}
+      <section className="bg-slate-900 text-white py-6">
+        <div className="max-w-7xl mx-auto px-4 flex flex-wrap gap-6 justify-center text-sm font-semibold opacity-80">
+          <span>USDOT-compliant carriers</span>
+          <span>GVOL UK operators</span>
+          <span>EU licensed movers</span>
+          <span>Escrow protected payments</span>
+          <span>$50,000 shipment coverage</span>
         </div>
       </section>
 
@@ -200,6 +288,9 @@ export default function HomePage() {
                     )}
                   </div>
                   <div className="absolute bottom-3 left-4 right-4 text-white">
+                    <p className="text-xs font-bold text-amber-300">
+                      Instant price available
+                    </p>
                     <p className="text-xs font-medium uppercase tracking-wider opacity-90">
                       {s.iso.toUpperCase()} marketplace
                     </p>
@@ -279,6 +370,17 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ─── TOP-RATED PROVIDERS — trust-first ordering ─────
+       *   Surfaced directly after "How it works" so visitors see real
+       *   licensed operators before any platform claims. */}
+      <TopProviders />
+
+      {/* ─── SMART MATCHING (2030 AI angle) — moved up so the AI
+       *   positioning reaches visitors before they hit the category
+       *   grid; reinforces the "intelligent marketplace" framing
+       *   enterprise procurement teams care about. */}
+      <SmartMatchingSection />
+
       {/* ─── SERVICE CATEGORIES ──────────────────────────── */}
       <section className="bg-[#fafaf7] py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -300,14 +402,19 @@ export default function HomePage() {
               { title: 'Truck rental',          sub: 'DIY-friendly',      photo: 'https://images.unsplash.com/photo-1601581875309-fafbf2d3ed3a?auto=format&fit=crop&w=600&q=70' },
               { title: 'Student moves',         sub: 'University corridors', photo: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=600&q=70' },
             ].map(c => (
-              <div key={c.title} className="relative h-48 rounded-2xl overflow-hidden group cursor-pointer">
+              <button
+                key={c.title}
+                type="button"
+                onClick={() => { track('home_category_clicked', { category: c.title }); go('booking'); }}
+                className="relative h-48 rounded-2xl overflow-hidden group cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+              >
                 <img src={c.photo} alt="" className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
                 <div className="absolute bottom-4 left-4 right-4 text-white">
                   <p className="text-[10px] font-bold uppercase tracking-wider opacity-80">{c.sub}</p>
                   <h3 className="text-lg font-extrabold leading-tight">{c.title}</h3>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -315,9 +422,6 @@ export default function HomePage() {
 
       {/* ─── PRESS STRIP ───────────────────────────────────── */}
       <PressStrip />
-
-      {/* ─── SMART MATCHING (2030 AI angle) ────────────────── */}
-      <SmartMatchingSection />
 
       {/* ─── WHY FLYTTGO ───────────────────────────────────── */}
       <WhyFlyttGo />
@@ -327,9 +431,6 @@ export default function HomePage() {
           before — otherwise self-suppresses, so first-time visitors
           don't see an empty rail. */}
       <RecentlyViewedRail />
-
-      {/* ─── TOP-RATED PROVIDERS ───────────────────────────── */}
-      <TopProviders />
 
       {/* ─── CARBON OFFSET ─────────────────────────────────── */}
       <CarbonOffset />
