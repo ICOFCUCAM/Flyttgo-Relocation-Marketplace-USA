@@ -187,18 +187,33 @@ export async function findBookingByIdQuery(idQuery: string): Promise<BookingRow 
 
 /** Mark booking + matching escrow row as paid-into-escrow. Used as
  *  the fallback after the Stripe Checkout session closes (or when
- *  the dev flow runs without a real Stripe key). */
-export async function markBookingPaid(bookingId: string, driverEarning: number): Promise<void> {
-  const { error: bErr } = await supabase
-    .from('bookings')
-    .update({ payment_status: 'escrow' })
-    .eq('id', bookingId);
-  if (bErr) throw bErr;
-  const { error: eErr } = await supabase
-    .from('escrow_payments')
-    .update({ driver_earning: driverEarning, status: 'escrow' })
-    .eq('booking_id', bookingId);
-  if (eErr) throw eErr;
+ *  the dev flow runs without a real Stripe key).
+ *
+ *  Server-routed: the actual write happens inside the
+ *  `process-payment` edge function with the customer's auth token, so
+ *  ownership is checked against `bookings.customer_id` and the
+ *  payment_status column stays read-only at the RLS layer. The
+ *  `driverEarning` arg is kept for backwards compatibility but is
+ *  ignored — the edge function recomputes it from price_estimate so a
+ *  tampered client can't dictate the wallet amount. */
+export async function markBookingPaid(bookingId: string, _driverEarning?: number): Promise<void> {
+  const { data: { session } } = await supabase.auth.getSession();
+  const accessToken = session?.access_token;
+  if (!accessToken) throw new Error('Not signed in');
+
+  const res = await fetch(supabaseFunctionUrl('process-payment'), {
+    method:  'POST',
+    headers: {
+      'Content-Type':   'application/json',
+      'Authorization':  `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ action: 'mark_paid', bookingId }),
+  });
+  if (!res.ok) {
+    let detail = '';
+    try { detail = (await res.json())?.error ?? ''; } catch { /* ignore */ }
+    throw new Error(`mark_paid failed: ${res.status}${detail ? ` (${detail})` : ''}`);
+  }
 }
 
 /** Customer's bookings, newest first. Empty array if Supabase returns null. */

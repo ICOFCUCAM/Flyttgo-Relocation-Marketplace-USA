@@ -16,7 +16,7 @@ changed. Re-run the checklist after every new mutation function.
 | `createBookingWithEscrow` | `CreateBookingInputSchema` (uuid, email, lat/lng ranges, money) | `bookings_self_insert`: `auth.uid() = customer_id`. Escrow insert via SECURITY DEFINER trigger or a matching policy on `escrow_payments`. |
 | `cancelBooking` | needs schema | `bookings_self_update`: `auth.uid() = customer_id`. |
 | `setCustomerConfirmation` | needs schema | Same as above. |
-| `markBookingPaid` | needs schema | Should run from server only — flagged for follow-up. Ideally moved into the `process-payment` edge function. |
+| `markBookingPaid` | (server-routed; no client schema needed) | ✅ Now executes inside `process-payment` (action: `mark_paid`). The edge function decodes the bearer token, verifies `auth.uid() = bookings.customer_id`, asserts `payment_status === 'pending'`, and recomputes `driver_earning` server-side so a tampered client can't dictate the wallet amount. RLS on `bookings.payment_status` can stay read-only for end-users now. |
 | `getCustomerBookingById` | n/a (read) | `bookings_self_select`: `auth.uid() = customer_id`. |
 | `findBookingByIdQuery` | n/a (read) | Bypasses customer scoping intentionally so a partner can paste a partial id; RLS must still gate read access. Double-check the public-read policy is scoped to non-PII columns. |
 
@@ -72,15 +72,17 @@ the SQL there is the server guard.
    trivially uuid-only today but should still go through `parseOrThrow`
    so the boundary is consistent and the Audit row links to a real
    `Schema` symbol.
-2. Move `markBookingPaid` server-side. Letting the client flip
-   `payment_status` directly (even with RLS) means a sufficiently
-   motivated user could mark themselves paid without actually paying.
+2. ~~Move `markBookingPaid` server-side.~~ Done — see commit
+   "PaymentPage mark-paid → server-side via process-payment edge
+   function". The action enforces caller identity + the original
+   pending status + a server-computed driver earning.
 3. Confirm every `SECURITY DEFINER` RPC has a `revoke execute on
    function … from public` step in its install script. Spot-check
    `change_driver_subscription`, `dispatch_assign_best_driver`,
    `reclaim_stale_dispatches`, `increment_driver_wallet`,
    `decrement_driver_wallet`.
-4. Spot-check that the edge functions (`process-payment`,
-   `create-checkout-session`, `stripe-webhook`) verify the caller
-   identity against the `bookingId` they're acting on. Without that
-   the Zod schema is decoration.
+4. Apply the same caller-identity check (`resolveCallerUserId` in
+   `process-payment`) to `release_escrow` and `recalculate_price`
+   actions, then to the `create-checkout-session` and
+   `stripe-webhook` edge functions. Without it the Zod schemas at the
+   client are decoration.
