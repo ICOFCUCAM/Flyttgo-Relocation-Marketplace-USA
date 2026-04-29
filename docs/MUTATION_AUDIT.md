@@ -24,8 +24,11 @@ changed. Re-run the checklist after every new mutation function.
 
 | Function | Schema | Expected RLS / edge |
 |---|---|---|
-| `createCheckoutSession` | `CheckoutSessionInputSchema` (uuid + minor units + ISO-3 currency) | Edge function owns the check; policy on the booking row must let the caller read the row. |
-| `createBookingCheckout` | `BookingCheckoutInputSchema` (uuid + major units + method enum) | Same. |
+| `createCheckoutSession` | `CheckoutSessionInputSchema` (uuid + minor units + ISO-3 currency) | ✅ Edge function `create-checkout-session` now resolves the caller's `auth.uid()` from the bearer token and verifies it matches `bookings.customer_id` for booking checkouts (or `driverId`/`userId` for subscription checkouts). 401 on missing token, 403 on mismatch. |
+| `createBookingCheckout` | `BookingCheckoutInputSchema` (uuid + major units + method enum) | Same gate as above. |
+| `releaseEscrow` | (server-routed) | ✅ `process-payment` action `release_escrow` now requires the caller to be the booking's customer or driver. The dual-confirmation flag check still applies on top of this. |
+| `recalculatePrice` (driver-side via `finishJob`) | (server-routed) | ✅ `process-payment` action `recalculate_price` now requires the caller to be the booking's driver — only the assigned driver should be able to trigger a price recompute. |
+| `markBookingPaid` | (server-routed) | ✅ See bookings table; same identity gate. |
 
 ## Admin
 
@@ -81,8 +84,19 @@ the SQL there is the server guard.
    `change_driver_subscription`, `dispatch_assign_best_driver`,
    `reclaim_stale_dispatches`, `increment_driver_wallet`,
    `decrement_driver_wallet`.
-4. Apply the same caller-identity check (`resolveCallerUserId` in
+4. ~~Apply the same caller-identity check (`resolveCallerUserId` in
    `process-payment`) to `release_escrow` and `recalculate_price`
    actions, then to the `create-checkout-session` and
-   `stripe-webhook` edge functions. Without it the Zod schemas at the
-   client are decoration.
+   `stripe-webhook` edge functions.~~ Mostly done — `release_escrow`,
+   `recalculate_price`, `mark_paid`, and `create-checkout-session`
+   now all require an authenticated caller and verify ownership.
+   `stripe-webhook` is a different beast (it's invoked by Stripe, not
+   the customer) and should verify Stripe's signature header instead;
+   that's the next follow-up.
+5. Verify Stripe's webhook signature in `stripe-webhook` so a
+   spoofed POST can't flip a booking to paid. Use the
+   `STRIPE_WEBHOOK_SECRET` already defined in the deploy notes.
+6. Add a service-layer test for `_edge.ts` that mocks `fetch` and
+   asserts the Authorization header is set when a session exists,
+   omitted under `allowAnonymous: true`, and that a 4xx body's
+   `error` field is surfaced to the thrown Error message.

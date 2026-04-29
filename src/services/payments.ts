@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { supabaseFunctionUrl } from '../lib/supabase';
 import {
   ZUuid, ZMoneyMajor, ZMoneyMinor, ZCurrencyCode, ZPayMethod,
   parseOrThrow, type PayMethod,
 } from './_schemas';
+import { callEdgeFunction } from './_edge';
 
 export type { PayMethod };
 
@@ -20,13 +20,7 @@ export async function createCheckoutSession(
   rawInput: CheckoutSessionInput,
 ): Promise<{ url: string; sessionId: string }> {
   const input = parseOrThrow(CheckoutSessionInputSchema, rawInput);
-  const res = await fetch(supabaseFunctionUrl('create-checkout-session'), {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify(input),
-  });
-  if (!res.ok) throw new Error(`create-checkout-session failed: ${res.status}`);
-  return res.json();
+  return callEdgeFunction('create-checkout-session', input);
 }
 
 /* ── Booking checkout (PaymentPage) ────────────────────────────── */
@@ -45,11 +39,5 @@ export async function createBookingCheckout(
   rawInput: BookingCheckoutInput,
 ): Promise<{ url?: string; sessionId?: string }> {
   const input = parseOrThrow(BookingCheckoutInputSchema, rawInput);
-  const res = await fetch(supabaseFunctionUrl('create-checkout-session'), {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify(input),
-  });
-  if (!res.ok) throw new Error(`create-checkout-session failed: ${res.status}`);
-  return res.json();
+  return callEdgeFunction('create-checkout-session', input);
 }

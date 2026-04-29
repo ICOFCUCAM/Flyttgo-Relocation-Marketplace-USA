@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { supabase, supabaseFunctionUrl } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
+import { callEdgeFunction } from './_edge';
 
 /* Domain row types. We keep these `any` for now because Supabase has no
  * generated types in this repo — the migration to `generate_typescript_types`
@@ -197,23 +198,7 @@ export async function findBookingByIdQuery(idQuery: string): Promise<BookingRow 
  *  ignored — the edge function recomputes it from price_estimate so a
  *  tampered client can't dictate the wallet amount. */
 export async function markBookingPaid(bookingId: string, _driverEarning?: number): Promise<void> {
-  const { data: { session } } = await supabase.auth.getSession();
-  const accessToken = session?.access_token;
-  if (!accessToken) throw new Error('Not signed in');
-
-  const res = await fetch(supabaseFunctionUrl('process-payment'), {
-    method:  'POST',
-    headers: {
-      'Content-Type':   'application/json',
-      'Authorization':  `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify({ action: 'mark_paid', bookingId }),
-  });
-  if (!res.ok) {
-    let detail = '';
-    try { detail = (await res.json())?.error ?? ''; } catch { /* ignore */ }
-    throw new Error(`mark_paid failed: ${res.status}${detail ? ` (${detail})` : ''}`);
-  }
+  await callEdgeFunction('process-payment', { action: 'mark_paid', bookingId });
 }
 
 /** Customer's bookings, newest first. Empty array if Supabase returns null. */
@@ -292,12 +277,9 @@ export async function cancelBooking(bookingId: string): Promise<void> {
   if (error) throw error;
 }
 
-/** Trigger the `process-payment` edge function with a release-escrow action. */
+/** Trigger the `process-payment` edge function with a release-escrow
+ *  action. The function gates this on `auth.uid() === customer_id`
+ *  (or driver_id) AND the dual-confirmation flags. */
 export async function releaseEscrow(bookingId: string): Promise<void> {
-  const res = await fetch(supabaseFunctionUrl('process-payment'), {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ action: 'release_escrow', bookingId }),
-  });
-  if (!res.ok) throw new Error(`release_escrow failed: ${res.status}`);
+  await callEdgeFunction('process-payment', { action: 'release_escrow', bookingId });
 }

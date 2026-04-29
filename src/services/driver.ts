@@ -1,9 +1,10 @@
 import { z } from 'zod';
-import { supabase, supabaseFunctionUrl } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import {
   ZUuid, ZShortString, ZOptionalText, ZMoneyMajor, ZMoneyMinor,
   ZDriverPlan, parseOrThrow,
 } from './_schemas';
+import { callEdgeFunction } from './_edge';
 
 /* ─────────────────────────────────────────────────────────────────
  * Driver service layer
@@ -193,11 +194,9 @@ export async function finishJob(jobId: string): Promise<void> {
     .update({ status: 'completed', end_time: new Date().toISOString() })
     .eq('id', jobId);
   if (error) throw error;
-  await fetch(supabaseFunctionUrl('process-payment'), {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ action: 'recalculate_price', bookingId: jobId }),
-  });
+  /* recalculate_price runs server-side and is gated on
+   * auth.uid() === bookings.driver_id by the edge function. */
+  await callEdgeFunction('process-payment', { action: 'recalculate_price', bookingId: jobId });
 }
 
 export async function setDriverConfirmation(jobId: string): Promise<{ customerDone: boolean }> {
@@ -213,11 +212,9 @@ export async function setDriverConfirmation(jobId: string): Promise<{ customerDo
     .single();
   const customerDone = data?.customer_confirmation === true;
   if (customerDone) {
-    await fetch(supabaseFunctionUrl('process-payment'), {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ action: 'release_escrow', bookingId: jobId }),
-    });
+    /* release_escrow is gated on caller-identity inside the edge
+     * function — only the booking's customer or driver can fire it. */
+    await callEdgeFunction('process-payment', { action: 'release_escrow', bookingId: jobId });
   }
   return { customerDone };
 }
@@ -250,11 +247,5 @@ export type CheckoutPayload = z.infer<typeof SubscriptionCheckoutPayloadSchema>;
 
 export async function createSubscriptionCheckout(rawPayload: CheckoutPayload): Promise<{ url?: string; sessionId?: string }> {
   const payload = parseOrThrow(SubscriptionCheckoutPayloadSchema, rawPayload);
-  const res = await fetch(supabaseFunctionUrl('create-checkout-session'), {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify(payload),
-  });
-  if (!res.ok) throw new Error(`create-checkout-session failed: ${res.status}`);
-  return res.json();
+  return callEdgeFunction('create-checkout-session', payload);
 }

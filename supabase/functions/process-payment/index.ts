@@ -180,13 +180,16 @@ serve(async (req: Request) => {
   }
 
   try {
-    if (body.action === 'recalculate_price') return await recalculatePrice(body.bookingId);
-    if (body.action === 'release_escrow')    return await releaseEscrow(body.bookingId);
-    if (body.action === 'mark_paid') {
-      const callerId = await resolveCallerUserId(req);
-      if (!callerId) return json({ error: 'unauthenticated' }, 401);
-      return await markPaid(body.bookingId, callerId);
-    }
+    /* Every state-changing action now requires an authenticated
+     * caller. The functions themselves do the per-action ownership
+     * check (driver-only for recalculate, customer-or-driver for
+     * release, customer-only for mark_paid). */
+    const callerId = await resolveCallerUserId(req);
+    if (!callerId) return json({ error: 'unauthenticated' }, 401);
+
+    if (body.action === 'recalculate_price') return await recalculatePrice(body.bookingId, callerId);
+    if (body.action === 'release_escrow')    return await releaseEscrow(body.bookingId, callerId);
+    if (body.action === 'mark_paid')         return await markPaid(body.bookingId, callerId);
     return json({ error: `Unknown action: ${body.action}` }, 400);
   } catch (err) {
     console.error('process-payment error:', err);
@@ -196,13 +199,20 @@ serve(async (req: Request) => {
 
 /* ─── Action: recalculate_price ────────────────────────────────── */
 
-async function recalculatePrice(bookingId: string) {
+async function recalculatePrice(bookingId: string, callerUserId: string) {
   const { data: booking, error } = await supabase
     .from('bookings')
     .select('*')
     .eq('id', bookingId)
     .single();
   if (error || !booking) return json({ error: 'booking not found' }, 404);
+
+  /* Driver-only action — the price recalc fires from DriverPortal's
+   * "Finish Job" button, so only the assigned driver should be able
+   * to trigger it. Reject anyone else, even if they know the id. */
+  if (booking.driver_id !== callerUserId) {
+    return json({ error: 'forbidden' }, 403);
+  }
 
   /* Need start_time and end_time to compute actual_hours. DriverPortal
    * sets start_time on "Start Job" and end_time on "Finish Job". */
@@ -278,13 +288,21 @@ async function recalculatePrice(bookingId: string) {
 
 /* ─── Action: release_escrow ───────────────────────────────────── */
 
-async function releaseEscrow(bookingId: string) {
+async function releaseEscrow(bookingId: string, callerUserId: string) {
   const { data: booking, error: bookingErr } = await supabase
     .from('bookings')
     .select('*')
     .eq('id', bookingId)
     .single();
   if (bookingErr || !booking) return json({ error: 'booking not found' }, 404);
+
+  /* Either the booking's customer or its driver may trigger the
+   * release — it's the second of the two confirmations that flips
+   * the dual-confirmation gate below. Anyone else is forbidden,
+   * even if they know the booking id. */
+  if (booking.customer_id !== callerUserId && booking.driver_id !== callerUserId) {
+    return json({ error: 'forbidden' }, 403);
+  }
 
   /* Dual-confirmation guard — both sides must have clicked their
    * "Complete" button before money moves. */
