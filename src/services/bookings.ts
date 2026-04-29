@@ -128,6 +128,79 @@ export async function createBookingWithEscrow(rawInput: CreateBookingInput): Pro
   return booking as BookingRow;
 }
 
+/** Look up a booking by id, scoped to a customer for safety. RLS will
+ *  also enforce this — the .eq('customer_id') is a belt-and-braces
+ *  guard so a stale handoff id can't pull a different user's row. */
+export async function getCustomerBookingById(bookingId: string, customerId: string): Promise<BookingRow | null> {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .eq('id', bookingId)
+    .eq('customer_id', customerId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as BookingRow) ?? null;
+}
+
+/** Customer's most-recent payment-pending booking, or null. Used by
+ *  PaymentPage as the fallback when no specific id was handed off. */
+export async function getMostRecentPendingBooking(customerId: string): Promise<BookingRow | null> {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .eq('customer_id', customerId)
+    .eq('payment_status', 'pending')
+    .order('created_at', { ascending: false })
+    .limit(1);
+  if (error) throw error;
+  return (data?.[0] as BookingRow) ?? null;
+}
+
+/** Customer's most-recent in-flight booking — anything not completed
+ *  or cancelled. TrackingPage uses this on mount to pick up where the
+ *  user left off. */
+export async function getActiveBookingForCustomer(customerId: string): Promise<BookingRow | null> {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .eq('customer_id', customerId)
+    .not('status', 'in', '("completed","cancelled")')
+    .order('created_at', { ascending: false })
+    .limit(1);
+  if (error) throw error;
+  return (data?.[0] as BookingRow) ?? null;
+}
+
+/** Find a booking by id-prefix or full id — supports the tracking
+ *  search box that lets customers paste a partial id. */
+export async function findBookingByIdQuery(idQuery: string): Promise<BookingRow | null> {
+  const q = idQuery.trim();
+  if (!q) return null;
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .or(`id.eq.${q},id.ilike.%${q}%`)
+    .limit(1);
+  if (error) throw error;
+  return (data?.[0] as BookingRow) ?? null;
+}
+
+/** Mark booking + matching escrow row as paid-into-escrow. Used as
+ *  the fallback after the Stripe Checkout session closes (or when
+ *  the dev flow runs without a real Stripe key). */
+export async function markBookingPaid(bookingId: string, driverEarning: number): Promise<void> {
+  const { error: bErr } = await supabase
+    .from('bookings')
+    .update({ payment_status: 'escrow' })
+    .eq('id', bookingId);
+  if (bErr) throw bErr;
+  const { error: eErr } = await supabase
+    .from('escrow_payments')
+    .update({ driver_earning: driverEarning, status: 'escrow' })
+    .eq('booking_id', bookingId);
+  if (eErr) throw eErr;
+}
+
 /** Customer's bookings, newest first. Empty array if Supabase returns null. */
 export async function listBookingsForCustomer(customerId: string): Promise<BookingRow[]> {
   const { data, error } = await supabase

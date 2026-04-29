@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../lib/store';
 import { useAuth } from '../lib/auth';
-import { supabase, supabaseFunctionUrl } from '../lib/supabase';
-
-type PayMethod = 'card' | 'apple_pay' | 'google_pay' | 'invoice';
+import {
+  useBookingForPayment,
+  useCreateBookingCheckout,
+  useMarkBookingPaid,
+} from '../hooks/queries/useCustomerBookings';
+import type { PayMethod } from '../services/payments';
 
 /* Must match the key CustomerDashboard / MyBookings uses when
  * handing a specific booking id off to this page. If this page is
@@ -44,66 +47,25 @@ export default function PaymentPage() {
   const { t } = useTranslation();
   const [method, setMethod] = useState<PayMethod>('card');
   const [card, setCard] = useState({ number: '', expiry: '', cvc: '', name: '' });
-  const [processing, setProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
-  const [booking, setBooking] = useState<any>(null);
   const isCorporate = profile?.role === 'customer'; // extend when corporate role exists
 
-  /* Load the booking that's waiting for payment.
-   *
-   * BookingFlow inserts rows with payment_status='pending', and this
-   * page is the one that flips them to 'escrow' / 'paid' once a
-   * provider confirms. We have two sources for "which booking":
-   *
-   *   1. A specific id handed off via sessionStorage by Dashboard or
-   *      MyBookings when the user clicks "Complete Payment" on a
-   *      specific row. We prefer this because the user told us
-   *      exactly which draft they want to finish.
-   *   2. Fallback: the most-recent-pending row for this customer.
-   *      Used when the user arrives here directly from BookingFlow
-   *      (which doesn't set the handoff key because there's only
-   *      ever one draft at that point).
-   *
-   * The handoff key is cleared after we read it so a later direct
-   * visit to /payment doesn't accidentally reload the old draft. */
-  useEffect(() => {
-    if (!user) return;
+  /* Read the handoff id once, on first render. The hook then resolves
+   * the right booking — handoff first, fallback to most-recent-pending.
+   * We clear the key immediately so a later direct visit to /payment
+   * doesn't accidentally reload the same draft. */
+  const handoffId = useMemo<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const id = window.sessionStorage.getItem(PAYMENT_HANDOFF_KEY);
+    if (id) window.sessionStorage.removeItem(PAYMENT_HANDOFF_KEY);
+    return id;
+  }, []);
 
-    const handoffId =
-      typeof window !== 'undefined'
-        ? window.sessionStorage.getItem(PAYMENT_HANDOFF_KEY)
-        : null;
-
-    if (handoffId) {
-      window.sessionStorage.removeItem(PAYMENT_HANDOFF_KEY);
-      supabase.from('bookings').select('*')
-        .eq('id', handoffId)
-        .eq('customer_id', user.id)
-        .maybeSingle()
-        .then(({ data }) => {
-          if (data) {
-            setBooking(data);
-          } else {
-            /* The id was stale (cancelled, deleted, wrong user) —
-             * fall back to the most-recent-pending query below. */
-            loadMostRecentPending();
-          }
-        });
-      return;
-    }
-
-    loadMostRecentPending();
-
-    function loadMostRecentPending() {
-      supabase.from('bookings').select('*')
-        .eq('customer_id', user!.id)
-        .eq('payment_status', 'pending')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .then(({ data }) => { if (data?.[0]) setBooking(data[0]); });
-    }
-  }, [user]);
+  const { data: booking } = useBookingForPayment(handoffId, user?.id);
+  const checkout          = useCreateBookingCheckout();
+  const markPaid          = useMarkBookingPaid(user?.id);
+  const processing        = checkout.isPending || markPaid.isPending;
 
   const price = safeNum(booking?.price_estimate ?? (bookingData as any)?.priceEstimate ?? 2450);
   const vat = Math.round(price * 0.25);
@@ -123,35 +85,35 @@ export default function PaymentPage() {
     if (method === 'card' && (!card.number || !card.expiry || !card.cvc || !card.name)) {
       setError('Please complete all card fields.'); return;
     }
-    setProcessing(true);
     try {
       if (method === 'apple_pay' || method === 'google_pay' || method === 'card') {
-        const res = await fetch(supabaseFunctionUrl('create-checkout-session'), {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ bookingId: booking?.id, amount: total, method }),
-        });
-        const d = await res.json();
-        if (d.url) { window.location.href = d.url; return; }
+        if (booking?.id) {
+          const session = await checkout.mutateAsync({
+            bookingId: booking.id,
+            amount:    total,
+            method,
+          });
+          if (session.url) {
+            window.location.href = session.url;
+            return;
+          }
+        }
       }
       /* Fallback — mark the booking as paid-into-escrow directly.
        * BookingFlow already inserted a 'held' row in escrow_payments
        * when the booking was submitted, so we just update that row
        * (by booking_id) with the driver earning and flip it to
-       * 'escrow' once a provider has captured the funds. The
-       * bookings.payment_status goes to 'escrow' to match. */
+       * 'escrow' once a provider has captured the funds. */
       if (booking?.id) {
-        await supabase.from('bookings')
-          .update({ payment_status: 'escrow' })
-          .eq('id', booking.id);
-        await supabase.from('escrow_payments')
-          .update({ driver_earning: price * 0.8, status: 'escrow' })
-          .eq('booking_id', booking.id);
+        await markPaid.mutateAsync({
+          bookingId:     booking.id,
+          driverEarning: price * 0.8,
+        });
       }
       setSuccess(true);
-    } catch (e) {
+    } catch {
       setError('Payment could not be processed. Please try again.');
     }
-    setProcessing(false);
   }
 
   if (success) return (

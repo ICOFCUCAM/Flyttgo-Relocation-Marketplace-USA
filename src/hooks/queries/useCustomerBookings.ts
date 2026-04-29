@@ -3,6 +3,11 @@ import {
   listBookingsForCustomer,
   getEscrowForBooking,
   getEscrowMapForBookings,
+  getCustomerBookingById,
+  getMostRecentPendingBooking,
+  getActiveBookingForCustomer,
+  findBookingByIdQuery,
+  markBookingPaid,
   setCustomerConfirmation,
   hasDriverConfirmed,
   releaseEscrow,
@@ -11,6 +16,10 @@ import {
   type BookingRow,
   type EscrowRow,
 } from '../../services/bookings';
+import {
+  createBookingCheckout,
+  type BookingCheckoutInput,
+} from '../../services/payments';
 
 /** Booking-status values where the trip is still live. */
 const ACTIVE_STATUSES = (b: BookingRow) =>
@@ -115,6 +124,75 @@ export function useApproveEscrowAdjustment(customerId: string | null | undefined
       qc.invalidateQueries({ queryKey: customerBookingsKey(customerId) });
       qc.invalidateQueries({ queryKey: ['escrow'] });
     },
+  });
+}
+
+/* ── Tracking + payment surfaces ──────────────────────────────── */
+
+const activeBookingKey  = (uid: string | null | undefined) => ['bookings', 'active', uid ?? 'anon'] as const;
+const trackedBookingKey = (id: string | null) => ['bookings', 'tracked', id ?? 'none'] as const;
+const paymentBookingKey = (uid: string | null | undefined, handoffId: string | null) =>
+  ['bookings', 'payment', uid ?? 'anon', handoffId ?? 'recent'] as const;
+
+/** Currently in-flight booking for a customer (anything not completed
+ *  / cancelled). Used by TrackingPage to auto-load on mount. */
+export function useActiveBookingForCustomer(customerId: string | null | undefined) {
+  return useQuery({
+    queryKey: activeBookingKey(customerId),
+    enabled:  !!customerId,
+    queryFn:  () => getActiveBookingForCustomer(customerId as string),
+  });
+}
+
+/** Find a booking by id-prefix or full id. The query is paused until
+ *  it has a search term — call .refetch() (or pass a non-empty term)
+ *  when the user submits the form. */
+export function useTrackingBookingSearch(idQuery: string) {
+  return useQuery({
+    queryKey: trackedBookingKey(idQuery || null),
+    enabled:  !!idQuery,
+    queryFn:  () => findBookingByIdQuery(idQuery),
+  });
+}
+
+/** Booking the PaymentPage should render: a specific id from the
+ *  CustomerDashboard / MyBookings handoff, falling back to the
+ *  customer's most-recent pending row when no handoff was set. */
+export function useBookingForPayment(handoffId: string | null, customerId: string | null | undefined) {
+  return useQuery<BookingRow | null>({
+    queryKey: paymentBookingKey(customerId, handoffId),
+    enabled:  !!customerId,
+    queryFn: async () => {
+      if (handoffId) {
+        const direct = await getCustomerBookingById(handoffId, customerId as string);
+        if (direct) return direct;
+        /* Stale handoff id (cancelled, deleted, wrong user) — fall
+         * through to the most-recent-pending fallback. */
+      }
+      return getMostRecentPendingBooking(customerId as string);
+    },
+  });
+}
+
+/** Mark booking + matching escrow row as paid-into-escrow. Used as
+ *  the dev-mode fallback when the Stripe Checkout flow isn't wired. */
+export function useMarkBookingPaid(customerId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ bookingId, driverEarning }: { bookingId: string; driverEarning: number }) =>
+      markBookingPaid(bookingId, driverEarning),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: customerBookingsKey(customerId) });
+      qc.invalidateQueries({ queryKey: activeBookingKey(customerId) });
+    },
+  });
+}
+
+/** Wraps the create-checkout-session edge function. Returns the
+ *  Stripe redirect URL on success. */
+export function useCreateBookingCheckout() {
+  return useMutation({
+    mutationFn: (input: BookingCheckoutInput) => createBookingCheckout(input),
   });
 }
 
