@@ -48,13 +48,29 @@ export default function USPage() {
       propertyType,
     });
     setBookingData({
-      country:        'us',
-      pickupAddress:  pickupZip,
-      dropoffAddress: dropoffZip,
+      country:         'us',
+      pickupAddress:   pickupZip,
+      pickupPostcode:  pickupZip,
+      dropoffAddress:  dropoffZip,
+      dropoffPostcode: dropoffZip,
       moveDate,
       propertyType,
     });
     go('booking');
+  }
+
+  /* Stash ZIPs in the store on every keystroke so the homepage / hero
+   * provider cards can render dynamic dispatch-style pricing without
+   * waiting for the customer to click "Get price". Cheap (single
+   * setBookingData call per change) and tracked under the existing
+   * BookingData.{pickup,dropoff}Postcode fields. */
+  function syncPickupZip(z: string) {
+    setPickupZip(z);
+    setBookingData({ pickupPostcode: z, pickupAddress: z });
+  }
+  function syncDropoffZip(z: string) {
+    setDropoffZip(z);
+    setBookingData({ dropoffPostcode: z, dropoffAddress: z });
   }
 
   return (
@@ -72,7 +88,7 @@ export default function USPage() {
             <div className="grid md:grid-cols-5 gap-2">
               <input
                 value={pickupZip}
-                onChange={e => setPickupZip(e.target.value)}
+                onChange={e => syncPickupZip(e.target.value)}
                 placeholder="Pickup ZIP"
                 aria-label="Pickup ZIP"
                 inputMode="numeric"
@@ -80,7 +96,7 @@ export default function USPage() {
               />
               <input
                 value={dropoffZip}
-                onChange={e => setDropoffZip(e.target.value)}
+                onChange={e => syncDropoffZip(e.target.value)}
                 placeholder="Delivery ZIP"
                 aria-label="Delivery ZIP"
                 inputMode="numeric"

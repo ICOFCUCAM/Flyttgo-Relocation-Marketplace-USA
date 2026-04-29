@@ -1,9 +1,13 @@
-import { Star, Truck, ShieldCheck, Award, ArrowRight, Zap } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Star, Truck, ShieldCheck, Award, ArrowRight, Zap, Flame } from 'lucide-react';
 import AddToCompareButton from './AddToCompareButton';
 import AvailabilityBadge from './AvailabilityBadge';
 import { useApp } from '../../lib/store';
 import { PROVIDERS, type ProviderRecord } from '../../lib/providers-catalogue';
 import { track } from '../../lib/analytics';
+import { estimateRoutePrice, formatRoutePrice, type RoutePriceResult } from '../../lib/route-price-estimator';
+import { resolveRoute, kmToMiles, type ResolvedRoute } from '../../services/route-cache';
+import type { PricingCountry } from '../../lib/pricing-engine';
 
 /* ─────────────────────────────────────────────────────────────────
  * <TopProviders> — dispatch-style provider strip on the homepage +
@@ -26,20 +30,21 @@ import { track } from '../../lib/analytics';
  * with a useQuery({ queryKey: ['providers', ...] }) that calls
  * supabase.from('providers').select(...).order('tier desc, rating desc').
  *
- * Pickup-ZIP-based corridor filtering needs:
- *   1. lib/store.tsx to surface bookingData.pickupAddress as a ZIP
- *      (currently a structured USAddress).
- *   2. NorwayAddressAutocomplete to call setBookingData with a ZIP
- *      slice on every selection.
- *   3. service_zip_codes column on the providers view + a
- *      `.contains('service_zip_codes', [zip])` clause when set.
+ * Pickup-ZIP-based corridor filtering still needs a
+ * service_zip_codes column on the providers view + a
+ * `.contains('service_zip_codes', [zip])` clause when set.
+ * BookingShortcut now writes pickup/dropoff coords + postcodes
+ * to bookingData on every autocomplete selection so the strip
+ * can react without forcing the customer through the funnel.
  *
- * Route-aware pricing (e.g. "From $642 · 10001 → 02108") needs
- * deliveryZip + a metro / season multiplier resolver. The
- * src/lib/pricing-engine module already has the multiplier tables;
- * exposing a price preview helper is the missing piece.
- *
- * Tracked separately so the visual upgrade can ship today.
+ * Route-aware pricing IS now wired:
+ *   - estimateRoutePrice (lib/route-price-estimator) applies
+ *     country baseline × tier × metro surge × distance bucket
+ *   - resolveRoute (services/route-cache) prefers a Supabase
+ *     route_corridor_cache row, falls back to live OSRM, and
+ *     tolerates the cache table not existing.
+ *   - The OSRM call fires ONCE per route, shared across all
+ *     provider cards.
  * ───────────────────────────────────────────────────────────────── */
 
 /* Crude but transparent corridor picker — first sampleJob's route
@@ -76,7 +81,45 @@ const BADGE =
   'inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md';
 
 export default function TopProviders() {
-  const { setPage, setBookingData } = useApp();
+  const { setPage, setBookingData, bookingData } = useApp();
+
+  /* Resolve real driving distance ONCE per route, not once per
+   * provider card. Every card on the strip shares the same OSRM
+   * answer, fed in via `miles` to estimateRoutePrice. The hook
+   * fires on coord OR ZIP changes — coords win when present, ZIPs
+   * route through the corridor cache when applied. */
+  const [route, setRoute] = useState<ResolvedRoute | null>(null);
+
+  const pickupLat  = bookingData.pickupLat;
+  const pickupLng  = bookingData.pickupLng;
+  const dropoffLat = bookingData.dropoffLat;
+  const dropoffLng = bookingData.dropoffLng;
+  const pickupZip  = bookingData.pickupPostcode;
+  const dropoffZip = bookingData.dropoffPostcode;
+
+  useEffect(() => {
+    let cancelled = false;
+    const hasCoords = pickupLat != null && pickupLng != null
+                   && dropoffLat != null && dropoffLng != null;
+    const hasZips   = Boolean(pickupZip && dropoffZip);
+
+    if (!hasCoords && !hasZips) {
+      setRoute(null);
+      return undefined;
+    }
+
+    void (async () => {
+      const resolved = await resolveRoute({
+        from:    hasCoords ? { lat: pickupLat!,  lng: pickupLng!  } : null,
+        to:      hasCoords ? { lat: dropoffLat!, lng: dropoffLng! } : null,
+        fromZip: pickupZip,
+        toZip:   dropoffZip,
+      });
+      if (!cancelled) setRoute(resolved);
+    })();
+
+    return () => { cancelled = true; };
+  }, [pickupLat, pickupLng, dropoffLat, dropoffLng, pickupZip, dropoffZip]);
 
   function openProfile(slug: string) {
     track('top_provider_clicked', { slug });
@@ -115,6 +158,15 @@ export default function TopProviders() {
           <p className="mt-3 text-slate-600">
             Licensed carriers with corridor experience and escrow protection on every booking.
           </p>
+          {route && (
+            <p className="mt-2 inline-flex items-center gap-2 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-3 py-1">
+              <span>
+                Route resolved · {Math.round(route.distanceKm)} km
+                {route.durationMinutes > 0 ? ` · ${Math.floor(route.durationMinutes / 60)}h ${route.durationMinutes % 60}m` : ''}
+              </span>
+              <span className="uppercase tracking-wider text-[10px] text-emerald-600">{route.source}</span>
+            </p>
+          )}
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -123,6 +175,20 @@ export default function TopProviders() {
             const corridor    = primaryCorridor(p);
             const availLabel  = availabilityLabel(p.availability);
             const isInstant   = p.availability === 'available_now';
+
+            /* Dynamic price preview — real OSRM miles when we have
+             * coords, ZIP-prefix bucket when we don't, baseline
+             * day-rate when we have neither. estimateRoutePrice
+             * never throws so this is render-safe. */
+            const miles: number | null = route ? Math.round(kmToMiles(route.distanceKm)) : null;
+            const dynamic: RoutePriceResult = estimateRoutePrice({
+              miles,
+              fromZip: pickupZip,
+              toZip:   dropoffZip,
+              country: p.country as PricingCountry,
+              tier:    p.badge,
+            });
+            const showDynamic = dynamic.source === 'route';
 
             return (
               <article
@@ -177,16 +243,32 @@ export default function TopProviders() {
                   <p className="font-semibold text-slate-900 text-sm">{corridor}</p>
                 </div>
 
-                {/* PRICE PREVIEW — uses the catalogue's fromPrice for the
-                 *   "From $X" line and a static crew/time hint for the
-                 *   typical-job context line. The dynamic, route-aware
-                 *   price needs pickup + delivery ZIPs in the store —
-                 *   tracked in the TODO(supabase) block above. */}
+                {/* PRICE PREVIEW — when both pickup + drop-off resolve
+                 *  to coords or ZIPs the customer sees the route-aware
+                 *  number (OSRM distance × tier × metro surge). With no
+                 *  route data we fall back to the catalogue's "from"
+                 *  rate so the card always renders a price. */}
                 <div className="mb-3">
-                  <p className="text-base font-extrabold text-amber-700">{p.fromPrice}</p>
+                  <div className="flex items-baseline gap-2 flex-wrap">
+                    <p className="text-base font-extrabold text-amber-700">
+                      {showDynamic ? formatRoutePrice(dynamic) : p.fromPrice}
+                    </p>
+                    {dynamic.surgeApplied && (
+                      <span className={`${BADGE} bg-rose-50 text-rose-700`}>
+                        <Flame size={10} />
+                        {dynamic.metroCode ?? 'Surge'} demand
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-slate-500">
-                    2 movers · 1 truck · 4 hours typical
-                    {fromMajor > 0 ? ` · est. ${fromMajor * 2}+ for full day` : ''}
+                    {showDynamic
+                      ? `2 movers · 1 truck · ~${dynamic.hours}h${dynamic.miles != null ? ` · ${dynamic.miles} mi` : ''}`
+                      : (
+                        <>
+                          2 movers · 1 truck · 4 hours typical
+                          {fromMajor > 0 ? ` · est. ${fromMajor * 2}+ for full day` : ''}
+                        </>
+                      )}
                   </p>
                 </div>
 

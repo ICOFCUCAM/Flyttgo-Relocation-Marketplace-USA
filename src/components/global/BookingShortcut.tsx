@@ -175,10 +175,54 @@ export default function BookingShortcut({ country, compact = false }: Props) {
 
   function swapAddresses() {
     if (!pickup && !dropoff) return undefined;
-    setPickup(dropoff);
-    setDropoff(pickup);
+    const nextPickup  = dropoff;
+    const nextDropoff = pickup;
+    setPickup(nextPickup);
+    setDropoff(nextDropoff);
     setSwapCount(c => c + 1);
+    setBookingData({
+      country,
+      pickupAddress:   nextPickup?.formatted ?? '',
+      pickupLat:       nextPickup?.lat ?? null,
+      pickupLng:       nextPickup?.lng ?? null,
+      pickupPostcode:  nextPickup?.postcode ?? '',
+      pickupCity:      nextPickup?.city ?? '',
+      dropoffAddress:  nextDropoff?.formatted ?? '',
+      dropoffLat:      nextDropoff?.lat ?? null,
+      dropoffLng:      nextDropoff?.lng ?? null,
+      dropoffPostcode: nextDropoff?.postcode ?? '',
+      dropoffCity:     nextDropoff?.city ?? '',
+    });
     track('booking_shortcut_addresses_swapped', { country });
+  }
+
+  /* Push resolved coords + postcode into the global store on every
+   * autocomplete selection, not just on submit. TopProviders +
+   * country shopfronts read pickupLat/Lng + dropoffLat/Lng to drive
+   * route-aware pricing without forcing the customer through the
+   * funnel first. */
+  function handlePickupSelect(addr: USAddress) {
+    setPickup(addr);
+    setBookingData({
+      country,
+      pickupAddress:  addr.formatted,
+      pickupLat:      addr.lat,
+      pickupLng:      addr.lng,
+      pickupPostcode: addr.postcode,
+      pickupCity:     addr.city,
+    });
+  }
+
+  function handleDropoffSelect(addr: USAddress) {
+    setDropoff(addr);
+    setBookingData({
+      country,
+      dropoffAddress:  addr.formatted,
+      dropoffLat:      addr.lat,
+      dropoffLng:      addr.lng,
+      dropoffPostcode: addr.postcode,
+      dropoffCity:     addr.city,
+    });
   }
 
   /* Promo state. The applied code is the one we've validated; the
@@ -439,7 +483,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
             placeholder={COUNTRY_PLACEHOLDER_PICKUP[country]}
             countryCode={country}
             required
-            onSelect={setPickup}
+            onSelect={handlePickupSelect}
           />
 
           {/* Swap addresses (Wave 33). Disabled until at least one
@@ -465,7 +509,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
             placeholder={COUNTRY_PLACEHOLDER_DROPOFF[country]}
             countryCode={country}
             required
-            onSelect={setDropoff}
+            onSelect={handleDropoffSelect}
           />
         </div>
         <div className="grid sm:grid-cols-2 gap-3">
