@@ -5,6 +5,7 @@ import type { Page, BookingCountry } from '../../lib/store';
 import { applyCountryLanguage } from '../../lib/i18n';
 import BookingShortcut from './BookingShortcut';
 import CountrySchema from './CountrySchema';
+import EarningsSimulator from './EarningsSimulator';
 import {
   POPULAR_CORRIDORS, COUNTRY_COMPLIANCE_PILLS, PROVIDER_AVAILABILITY_THIS_WEEK,
 } from '../../lib/popular-cities';
@@ -283,6 +284,13 @@ export default function CountryPage(props: CountryPageProps) {
           </div>
         </div>
       </section>
+
+      {/* ─── PROVIDER EARNINGS SIMULATOR ─────────────────────
+       *   Sits directly under the hero (and its booking widget) so
+       *   prospective providers see projected earnings on the same
+       *   country page customers use to book. Pairs supply-side
+       *   acquisition with demand-side discovery on a single scroll. */}
+      <EarningsSimulator />
 
       {/* ─── STATS STRIP ────────────────────────────────── */}
       <section className="bg-white border-b border-slate-200">
