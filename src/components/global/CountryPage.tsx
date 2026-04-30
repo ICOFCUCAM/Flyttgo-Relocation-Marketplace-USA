@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { Star, ShieldCheck, Truck, BadgeCheck, MapPin } from 'lucide-react';
 import { useApp } from '../../lib/store';
 import type { Page, BookingCountry } from '../../lib/store';
@@ -66,6 +66,11 @@ export interface CountryPageProps {
   regions?: string[];
   /** Optional country-specific stats — defaults shown if absent. */
   stats?: { value: string; label: string }[];
+  /** Optional SEO slot rendered between the operator/compliance
+   *  block and the Final CTA. Country pages pass in
+   *  <CountrySEOSection countryCode="…" languageCode="…" /> to
+   *  surface localized corridor SEO. */
+  seoSlot?: ReactNode;
 }
 
 /* Default cityscape photo per country. Stable Unsplash CDN URLs. */
@@ -440,6 +445,13 @@ export default function CountryPage(props: CountryPageProps) {
           </div>
         </div>
       </section>
+
+      {/* ─── COUNTRY SEO SLOT ────────────────────────────────
+       *   Optional multilingual SEO + corridor block injected by
+       *   each country page. Sits just before the Final CTA so the
+       *   localized headline + corridor copy is the last thing
+       *   crawlers see before the closing conversion module. */}
+      {props.seoSlot}
 
       {/* ─── FINAL CTA ───────────────────────────────────── */}
       <section className="bg-gradient-to-br from-amber-400 to-amber-500 text-slate-900">

@@ -1,8 +1,10 @@
 import CountryPage from '../../components/global/CountryPage';
+import CountrySEOSection from '../../components/seo/CountrySEOSection';
 
 export default function GermanyPage() {
   return (
     <CountryPage
+      seoSlot={<CountrySEOSection countryCode="de" languageCode="de" />}
       iso2="de" flag="🇩🇪"
       name="Germany"
       localLabel="Deutschland-Knoten"

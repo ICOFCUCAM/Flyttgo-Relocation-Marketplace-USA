@@ -1,8 +1,10 @@
 import CountryPage from '../../components/global/CountryPage';
+import CountrySEOSection from '../../components/seo/CountrySEOSection';
 
 export default function NorwayPage() {
   return (
     <CountryPage
+      seoSlot={<CountrySEOSection countryCode="no" languageCode="nb" />}
       iso2="no" flag="🇳🇴"
       name="Norway"
       localLabel="Norge-distribusjonsnode"

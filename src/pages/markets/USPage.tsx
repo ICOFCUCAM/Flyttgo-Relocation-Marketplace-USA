@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Star, Truck } from 'lucide-react';
 import CountryPage from '../../components/global/CountryPage';
+import CountrySEOSection from '../../components/seo/CountrySEOSection';
 import LiveBookingTicker from '../../components/global/LiveBookingTicker';
 import { useApp } from '../../lib/store';
 import type { Page } from '../../lib/store';
@@ -175,6 +176,7 @@ export default function USPage() {
 
       {/* ─── Existing rich CountryPage hero + sections ─────────────── */}
       <CountryPage
+        seoSlot={<CountrySEOSection countryCode="us" languageCode="en" />}
         iso2="us" flag="🇺🇸"
         name="United States"
         localLabel="United States deployment node"
