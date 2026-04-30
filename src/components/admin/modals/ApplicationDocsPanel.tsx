@@ -7,7 +7,7 @@ import {
 } from '../../../hooks/queries/useAdminDashboard';
 import { getDocumentPublicUrl } from '../../../services/admin';
 import type { DocumentRow } from '../../../services/admin';
-import { parseVehicleField, complianceLabel } from '../../../lib/application-compliance';
+import { readApplicationCompliance, complianceLabel, type ApplicationComplianceInput } from '../../../lib/application-compliance';
 
 /* ─────────────────────────────────────────────────────────────────
  * <ApplicationDocsPanel>
@@ -45,8 +45,12 @@ interface DriverDocsContext {
    *  vehicle + compliance block at the top so the admin sees the
    *  same data the driver sees on /driver-application-status. */
   vehicleType?:  string | null;
-  vehicleField?: string | null;   // raw vehicle_model cram-string
   vehicleYear?:  number | null;
+  /** Structured + legacy compliance source. Carries vehicle_model
+   *  (legacy cram-string) AND the per-jurisdiction structured
+   *  columns. readApplicationCompliance prefers structured columns
+   *  and falls back to parsing the cram-string. */
+  compliance?:   ApplicationComplianceInput;
 }
 
 const STATUS_TONE: Record<string, { bg: string; text: string; label: string; icon: typeof Clock }> = {
@@ -162,12 +166,13 @@ export function ApplicationDocsPanel({
 
         {/* Body — scrolls inside the modal. */}
         <div className="flex-1 overflow-y-auto px-6 py-5">
-          {/* Vehicle + compliance block — parsed out of the legacy
-           *  cram-string format so the admin sees the same data the
-           *  driver sees on their /driver-application-status page,
-           *  cleanly formatted (no raw JSON leaking through). */}
-          {(context.vehicleField || context.vehicleType) && (() => {
-            const parsed = parseVehicleField(context.vehicleField);
+          {/* Vehicle + compliance block — structured-first reader.
+           *  Same data the driver sees on their /driver-application-
+           *  status page, cleanly formatted regardless of whether
+           *  the row was written before or after the structured-
+           *  columns migration. */}
+          {(context.compliance || context.vehicleType) && (() => {
+            const parsed = readApplicationCompliance(context.compliance ?? {});
             const vehicleType = context.vehicleType?.replace(/_/g, ' ');
             const headLine = [
               vehicleType,

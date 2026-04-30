@@ -24,7 +24,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../lib/auth';
 import { useApp }  from '../lib/store';
 import { supabase } from '../lib/supabase';
-import { parseVehicleField, complianceLabel } from '../lib/application-compliance';
+import { readApplicationCompliance, complianceLabel } from '../lib/application-compliance';
 
 type ApplicationStatus = 'pending' | 'approved' | 'rejected';
 
@@ -41,6 +41,19 @@ interface DriverApplication {
   rejection_reason?: string | null;
   reviewed_at?:      string | null;
   created_at?:       string | null;
+  /* Structured compliance columns (added by docs/install-
+   * application-compliance-columns.sql). Optional + nullable so
+   * pre-migration rows still type-check. */
+  provider_category?:    string | null;
+  usdot_number?:         string | null;
+  mc_number?:            string | null;
+  cargo_insurance?:      string | null;
+  gvol_number?:          string | null;
+  gukg_licence?:         string | null;
+  yrkestransport?:       string | null;
+  siret?:                string | null;
+  tva?:                  string | null;
+  ca_provincial_licence?: string | null;
 }
 
 interface DriverDocument {
@@ -251,13 +264,12 @@ export default function DriverApplicationStatusPage() {
                 <div className="col-span-2">
                   <p className="text-xs text-gray-500">{t('driverStatus.vehicle')}</p>
                   {(() => {
-                    /* Parse the legacy cram-string out of vehicle_model.
-                     * The onboarding flow concatenates category + make/
-                     * model + a JSON compliance suffix into one column
-                     * (see src/lib/application-compliance.ts for the
-                     * schema-migration follow-up). We split it back
-                     * apart for clean rendering. */
-                    const parsed = parseVehicleField(application.vehicle_model);
+                    /* Structured-first reader. Prefers the new
+                     * compliance columns (added by docs/install-
+                     * application-compliance-columns.sql) and falls
+                     * back to the legacy cram-string parser for
+                     * pre-migration rows. */
+                    const parsed = readApplicationCompliance(application);
                     const vehicleType = application.vehicle_type?.replace(/_/g, ' ');
                     const headLine = [
                       vehicleType,

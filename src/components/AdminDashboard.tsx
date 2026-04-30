@@ -53,11 +53,24 @@ export default function AdminDashboard() {
       applicationId: app.id,
       displayName:   [app.first_name, app.last_name].filter(Boolean).join(' ') || 'Unnamed applicant',
       contextLabel:  `Application · ${app.status}`,
-      /* Pass the raw vehicle cram-string + structured fields so the
-       * docs modal can show the parsed compliance block at the top. */
-      vehicleType:   (app as ApplicationRow & { vehicle_type?: string | null }).vehicle_type ?? null,
-      vehicleField:  (app as ApplicationRow & { vehicle_model?: string | null }).vehicle_model ?? null,
-      vehicleYear:   (app as ApplicationRow & { vehicle_year?: number | null }).vehicle_year ?? null,
+      vehicleType:   app.vehicle_type ?? null,
+      vehicleYear:   app.vehicle_year ?? null,
+      /* Hand the docs modal both the legacy cram-string and the
+       * structured columns; readApplicationCompliance prefers the
+       * structured ones when present. */
+      compliance: {
+        vehicle_model:         app.vehicle_model ?? null,
+        provider_category:     app.provider_category ?? null,
+        usdot_number:          app.usdot_number ?? null,
+        mc_number:             app.mc_number ?? null,
+        cargo_insurance:       app.cargo_insurance ?? null,
+        gvol_number:           app.gvol_number ?? null,
+        gukg_licence:          app.gukg_licence ?? null,
+        yrkestransport:        app.yrkestransport ?? null,
+        siret:                 app.siret ?? null,
+        tva:                   app.tva ?? null,
+        ca_provincial_licence: app.ca_provincial_licence ?? null,
+      },
     }),
     openDriverDocs:      (driver: DriverRow) => setDocsContext({
       userId:        driver.user_id ?? driver.id,

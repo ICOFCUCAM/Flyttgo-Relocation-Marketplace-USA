@@ -259,6 +259,19 @@ The spec's full ambition is a multi-week engagement. What's pending:
    migrations are drafted in `docs/install-route-corridor-cache.sql`
    and `docs/install-metro-demand-multipliers.sql`. Apply when you
    want to drop OSRM round-trip latency.
+3a. **`driver_applications` structured compliance columns** —
+    migration drafted in `docs/install-application-compliance-
+    columns.sql` adds `provider_category`, `usdot_number`,
+    `mc_number`, `cargo_insurance`, `gvol_number`, `gukg_licence`,
+    `yrkestransport`, `siret`, `tva`, `ca_provincial_licence` (all
+    nullable). DriverOnboarding writes both the new structured
+    columns AND the legacy `vehicle_model` cram-string today, with
+    a tolerant fallback insert that retries with legacy-only when
+    the migration hasn't been applied yet (PGRST204 / 42703).
+    `readApplicationCompliance()` prefers structured columns and
+    falls back to the parser for pre-migration rows. Once every
+    row has structured data, drop the cram-string suffix from
+    DriverOnboarding and remove the parser fallback.
 4. **Live reviews + Trustpilot ingestion** — the carousel uses six
    curated testimonials; replace with a fetch from a `reviews`
    Supabase view once external review data is wired.

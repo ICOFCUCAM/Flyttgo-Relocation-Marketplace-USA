@@ -106,3 +106,80 @@ const COMPLIANCE_LABELS: Record<string, string> = {
 export function complianceLabel(key: string): string {
   return COMPLIANCE_LABELS[key] ?? key.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
+
+/* ─────────────────────────────────────────────────────────────────
+ * Structured-first reader
+ *
+ * After the docs/install-application-compliance-columns.sql
+ * migration applies, new applications carry compliance data on
+ * dedicated columns (`usdot_number`, `gvol_number`, …) and the
+ * vehicle_model field is clean ("{make} {model}").
+ *
+ * Pre-migration applications still carry the cram-string format
+ * in vehicle_model. The reader prefers structured columns when
+ * they're present and falls back to parseVehicleField() for
+ * legacy rows. Either way the consumer gets the same shape:
+ *
+ *   { category, makeModel, compliance }
+ * ───────────────────────────────────────────────────────────────── */
+
+/* Maps structured-column names → display keys used in the
+ * compliance object. The display keys match the cram-string
+ * format so downstream UI doesn't care which path the data took. */
+const COL_TO_DISPLAY_KEY: Record<string, string> = {
+  usdot_number:          'usdot-number',
+  mc_number:             'mc-number',
+  cargo_insurance:       'cargo-insurance',
+  gvol_number:           'gvol-number',
+  gukg_licence:          'gukg-licence',
+  yrkestransport:        'yrkestransport',
+  siret:                 'siret',
+  tva:                   'tva',
+  ca_provincial_licence: 'ca-provincial-licence',
+};
+
+export interface ApplicationComplianceInput {
+  /** Raw cram-string from driver_applications.vehicle_model. */
+  vehicle_model?:        string | null;
+  /** Structured columns. All optional — pre-migration rows have
+   *  none; post-migration rows have one or more. */
+  provider_category?:    string | null;
+  usdot_number?:         string | null;
+  mc_number?:            string | null;
+  cargo_insurance?:      string | null;
+  gvol_number?:          string | null;
+  gukg_licence?:         string | null;
+  yrkestransport?:       string | null;
+  siret?:                string | null;
+  tva?:                  string | null;
+  ca_provincial_licence?: string | null;
+}
+
+export function readApplicationCompliance(row: ApplicationComplianceInput): ParsedVehicleField {
+  /* Always parse the cram-string first — it's the legacy fallback
+   * and may carry compliance fields the new schema doesn't have a
+   * column for yet (e.g. province, business-permit). */
+  const parsed = parseVehicleField(row.vehicle_model);
+
+  /* Structured columns override cram-string entries on collision —
+   * the structured value is canonical when present. */
+  const compliance = { ...parsed.compliance };
+  for (const [col, displayKey] of Object.entries(COL_TO_DISPLAY_KEY)) {
+    const v = (row as Record<string, string | null | undefined>)[col];
+    if (v && v.trim() !== '') {
+      compliance[displayKey] = v.trim();
+    }
+  }
+
+  /* Provider category column wins over the parsed cram-string
+   * category label when set. */
+  const category = row.provider_category && row.provider_category.trim() !== ''
+    ? row.provider_category.trim()
+    : parsed.category;
+
+  return {
+    category,
+    makeModel: parsed.makeModel,
+    compliance,
+  };
+}
