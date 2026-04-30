@@ -6,11 +6,9 @@ import { track } from '../lib/analytics';
 import PressStrip from './global/PressStrip';
 import CarbonOffset from './global/CarbonOffset';
 import TopProviders from './global/TopProviders';
-import RecentlyViewedRail from './global/RecentlyViewedRail';
 import LiveBookingTicker from './global/LiveBookingTicker';
 import EarningsSimulator from './global/EarningsSimulator';
 import ReviewsAndFAQRow from './global/ReviewsAndFAQRow';
-import CategoryPreviewsRow from './global/CategoryPreviewsRow';
 
 /* ────────────────────────────────────────────────────────────
  *  COUNTRY SHOPFRONT METADATA
@@ -150,17 +148,16 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Formal country picker — primary entry. Six flag chips
-           *  routing into each country's localised marketplace.
-           *  Sits above the quick-booking panel so the country
-           *  decision is the first thing the visitor makes; the
-           *  quick-booking below covers visitors who already know
-           *  pickup + drop-off cities. */}
+          {/* Formal country picker — primary entry per Section 2 of
+           *  the marketplace spec. Six large-flag chips routing into
+           *  each country's localised marketplace. Hover glow + fast
+           *  click targets (py-4 = 64-px touch surface) so the country
+           *  decision is friction-free on mobile. */}
           <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-6 max-w-4xl mb-4">
-            <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+            <div className="flex items-center justify-between mb-5 gap-3 flex-wrap">
               <div>
-                <p className="text-sm font-bold text-slate-900">Pick the country you’re moving in</p>
-                <p className="text-xs text-slate-500">Each country opens its own booking portal in the local language.</p>
+                <p className="text-base font-bold text-slate-900">Pick the country you’re moving in</p>
+                <p className="text-xs text-slate-500 mt-0.5">Each country opens its own booking portal.</p>
               </div>
               <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500">
                 <ShieldCheck size={14} className="text-emerald-500" />
@@ -172,10 +169,10 @@ export default function HomePage() {
                 <button
                   key={s.iso}
                   onClick={() => { track('country_tile_clicked', { country: s.iso, surface: 'home-hero' }); go(`market-${s.iso}` as Page); }}
-                  className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl hover:bg-amber-50 hover:ring-1 hover:ring-amber-300 transition group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                  className="group flex flex-col items-center justify-center gap-2 py-4 rounded-xl border border-transparent hover:border-amber-300 hover:bg-amber-50 hover:shadow-[0_8px_24px_-8px_rgba(245,158,11,0.55)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
                   aria-label={`Go to ${s.name} marketplace`}
                 >
-                  <span className="text-3xl leading-none">{s.flag}</span>
+                  <span className="text-4xl sm:text-5xl leading-none transition-transform group-hover:scale-110">{s.flag}</span>
                   <span className="text-[10px] sm:text-xs font-bold text-slate-700 group-hover:text-amber-700 uppercase tracking-wide">
                     {s.iso.toUpperCase()}
                   </span>
@@ -214,24 +211,91 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── CORPORATE CREDIBILITY RIBBON ─────────────────────
-       *   Compliance + insurance signals enterprise procurement
-       *   teams expect to see at the first scroll. */}
-      <section className="bg-slate-900 text-white py-6">
-        <div className="max-w-7xl mx-auto px-4 flex flex-wrap gap-6 justify-center text-sm font-semibold opacity-80">
-          <span>USDOT-compliant carriers</span>
-          <span>GVOL UK operators</span>
-          <span>EU licensed movers</span>
-          <span>Escrow protected payments</span>
-          <span>$50,000 shipment coverage</span>
+      {/* ─── SECTION 3 ─ TOP-RATED PROVIDERS ─────────────────
+       *   Sits immediately after the hero country selector per the
+       *   marketplace narrative — visitors meet real licensed
+       *   operators before any platform claim. The corporate
+       *   credibility ribbon (USDOT / GVOL / EU / escrow / $50k)
+       *   has been folded into the PressStrip authority pills at
+       *   Section 7 to match the spec. */}
+      <div className="bg-white pt-12 pb-0 text-center">
+        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-50 to-fuchsia-50 border border-amber-200 text-[11px] font-bold uppercase tracking-[0.18em] text-amber-700">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75" />
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500" />
+          </span>
+          AI-routed dispatch · Live OSRM pricing
+        </span>
+      </div>
+      <TopProviders />
+
+      {/* ─── PROVIDER EARNINGS SIMULATOR (position 4) ───────
+       *   Pairs the demand-side TopProviders block with the
+       *   supply-side acquisition surface so customers see income
+       *   transparency right alongside the providers they're
+       *   considering. Same component the /providers page mounts. */}
+      <EarningsSimulator />
+
+      {/* ─── SERVICE CATEGORIES ──────────────────────────── */}
+      <section className="bg-[#fafaf7] py-16 sm:py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-10 max-w-2xl">
+            <p className="text-amber-600 text-xs font-bold uppercase tracking-wider mb-3">What you can book</p>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+              Every kind of move, one marketplace.
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {([
+              { slug: 'local',         title: 'Local moves',           sub: 'Same-city',                   photo: 'https://images.unsplash.com/photo-1568010967-7c3a4e0a59f7?auto=format&fit=crop&w=600&q=70' },
+              { slug: 'long-distance', title: 'Long-distance moves',   sub: 'Inter-state / Cross-country', photo: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=600&q=70' },
+              { slug: 'international', title: 'International moves',   sub: 'Cross-border',                photo: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=600&q=70' },
+              { slug: 'office',        title: 'Office relocation',     sub: 'For businesses',              photo: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=70' },
+              { slug: 'packing',       title: 'Packing services',      sub: 'Full / Partial',              photo: 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=600&q=70' },
+              { slug: 'storage',       title: 'Storage solutions',     sub: 'Self & bonded',               photo: 'https://images.unsplash.com/photo-1591375372226-9aa92be1d6f4?auto=format&fit=crop&w=600&q=70' },
+              { slug: 'truck-rental',  title: 'Truck rental',          sub: 'DIY-friendly',                photo: 'https://images.unsplash.com/photo-1601581875309-fafbf2d3ed3a?auto=format&fit=crop&w=600&q=70' },
+              { slug: 'student',       title: 'Student moves',         sub: 'University corridors',        photo: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=600&q=70' },
+            ] as const).map(c => (
+              <button
+                key={c.slug}
+                type="button"
+                onClick={() => {
+                  track('home_category_clicked', { category: c.title, slug: c.slug });
+                  if (typeof window !== 'undefined') {
+                    window.history.pushState({}, '', `/services/${c.slug}`);
+                  }
+                  go('service-category');
+                  if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                  }
+                }}
+                className="relative h-48 rounded-2xl overflow-hidden group cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+              >
+                <img src={c.photo} alt="" className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+                <div className="absolute bottom-4 left-4 right-4 text-white">
+                  <p className="text-[10px] font-bold uppercase tracking-wider opacity-80">{c.sub}</p>
+                  <h3 className="text-lg font-extrabold leading-tight">{c.title}</h3>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ─── COUNTRY SHOPFRONTS ──────────────────────────── */}
+      {/* ─── SECTION 6 ─ COUNTRY MARKETPLACE CARDS ──────────
+       *   Photo-grid country shopfronts. Mirrors the Airbnb
+       *   geography UX — flag, cityscape photo, rating, moves
+       *   completed, "from" price. Tile click routes into the
+       *   localised /market-<iso> shopfront. */}
       <section className="bg-[#fafaf7] py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-10 gap-4 flex-wrap">
             <div>
+              <p className="text-amber-600 text-xs font-bold uppercase tracking-wider mb-2">
+                Country marketplaces
+              </p>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight">
                 Where are you moving?
               </h2>
@@ -302,84 +366,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── TOP-RATED PROVIDERS (position 3) ───────────────
-       *   Sits immediately after the country selector per the
-       *   marketplace narrative — visitors meet real licensed
-       *   operators before any platform claim. */}
-      <div className="bg-white pt-12 pb-0 text-center">
-        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-50 to-fuchsia-50 border border-amber-200 text-[11px] font-bold uppercase tracking-[0.18em] text-amber-700">
-          <span className="relative flex h-1.5 w-1.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75" />
-            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500" />
-          </span>
-          AI-routed dispatch · Live OSRM pricing
-        </span>
-      </div>
-      <TopProviders />
-
-      {/* ─── PROVIDER EARNINGS SIMULATOR (position 4) ───────
-       *   Pairs the demand-side TopProviders block with the
-       *   supply-side acquisition surface so customers see income
-       *   transparency right alongside the providers they're
-       *   considering. Same component the /providers page mounts. */}
-      <EarningsSimulator />
-
-      {/* ─── SERVICE CATEGORIES ──────────────────────────── */}
-      <section className="bg-[#fafaf7] py-16 sm:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-10 max-w-2xl">
-            <p className="text-amber-600 text-xs font-bold uppercase tracking-wider mb-3">What you can book</p>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-              Every kind of move, one marketplace.
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {([
-              { slug: 'local',         title: 'Local moves',           sub: 'Same-city',                   photo: 'https://images.unsplash.com/photo-1568010967-7c3a4e0a59f7?auto=format&fit=crop&w=600&q=70' },
-              { slug: 'long-distance', title: 'Long-distance moves',   sub: 'Inter-state / Cross-country', photo: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=600&q=70' },
-              { slug: 'international', title: 'International moves',   sub: 'Cross-border',                photo: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=600&q=70' },
-              { slug: 'office',        title: 'Office relocation',     sub: 'For businesses',              photo: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=70' },
-              { slug: 'packing',       title: 'Packing services',      sub: 'Full / Partial',              photo: 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=600&q=70' },
-              { slug: 'storage',       title: 'Storage solutions',     sub: 'Self & bonded',               photo: 'https://images.unsplash.com/photo-1591375372226-9aa92be1d6f4?auto=format&fit=crop&w=600&q=70' },
-              { slug: 'truck-rental',  title: 'Truck rental',          sub: 'DIY-friendly',                photo: 'https://images.unsplash.com/photo-1601581875309-fafbf2d3ed3a?auto=format&fit=crop&w=600&q=70' },
-              { slug: 'student',       title: 'Student moves',         sub: 'University corridors',        photo: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=600&q=70' },
-            ] as const).map(c => (
-              <button
-                key={c.slug}
-                type="button"
-                onClick={() => {
-                  track('home_category_clicked', { category: c.title, slug: c.slug });
-                  if (typeof window !== 'undefined') {
-                    window.history.pushState({}, '', `/services/${c.slug}`);
-                  }
-                  go('service-category');
-                  if (typeof window !== 'undefined') {
-                    window.dispatchEvent(new PopStateEvent('popstate'));
-                  }
-                }}
-                className="relative h-48 rounded-2xl overflow-hidden group cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
-              >
-                <img src={c.photo} alt="" className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-                <div className="absolute bottom-4 left-4 right-4 text-white">
-                  <p className="text-[10px] font-bold uppercase tracking-wider opacity-80">{c.sub}</p>
-                  <h3 className="text-lg font-extrabold leading-tight">{c.title}</h3>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── POSITION 6 ─ CATEGORY LANDING PAGE PREVIEWS ────
-       *   Featured /services/<slug> entry points, deeper than the
-       *   high-level tile grid above. */}
-      <CategoryPreviewsRow />
-
-      {/* ─── POSITION 7-9 ─ PRESS → RECENTLY VIEWED → CARBON */}
+      {/* ─── SECTION 7 ─ PRESS / TRUST STRIP ─────────────────
+       *   Authority pills (USDOT, GVOL, EU, escrow, $50k) +
+       *   "as featured in" press wordmarks. */}
       <PressStrip />
-      <RecentlyViewedRail />
+
+      {/* ─── SECTION 8 ─ CARBON OFFSET ─────────────────────── */}
       <CarbonOffset />
 
       {/* ─── POSITION 10 ─ REVIEWS + FAQ SAME ROW ───────────
