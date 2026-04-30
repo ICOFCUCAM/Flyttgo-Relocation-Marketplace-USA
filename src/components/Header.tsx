@@ -3,10 +3,89 @@ import { useTranslation } from 'react-i18next';
 import i18n, { LANG_STORAGE_KEY } from '../lib/i18n';
 import { useAuth } from '../lib/auth';
 import { useApp, Page } from '../lib/store';
-import { LogIn, Bell, User as UserIcon } from 'lucide-react';
+import { LogIn, Bell, User as UserIcon, ArrowRight } from 'lucide-react';
 import ThemeToggle from './global/ThemeToggle';
 import { useNotifications } from '../hooks/useNotifications';
 import type { Page as PageType } from '../lib/store';
+
+/* ─────────────────────────────────────────────────────────────────
+ * 2035 marketplace nav structure — four dropdowns + two plain links.
+ *
+ *   Countries   : where  · 6 localized marketplaces
+ *   Services    : what   · 8 category landing pages (/services/<slug>)
+ *   Providers   : supply · join, earnings, tiers, dashboard
+ *   Enterprise  : high-value contracts · corporate / universities /
+ *                 municipal / government / partners
+ *   Pricing     : transparency
+ *   How booking works : onboarding
+ *
+ * Dropdown items use either a Page id (in-app router) OR a path
+ * (window.history pushState + service-category routing). Items are
+ * plain data so the markup is purely presentational.
+ * ───────────────────────────────────────────────────────────────── */
+
+interface DropdownItem {
+  label:    string;
+  page?:    Page;
+  /** When set, navigates to /services/<slug> via service-category route. */
+  servicesSlug?: string;
+}
+
+interface NavDropdown {
+  key:    'countries' | 'services' | 'providers' | 'enterprise';
+  label:  string;
+  items:  DropdownItem[];
+}
+
+const NAV_DROPDOWNS: NavDropdown[] = [
+  {
+    key:   'countries',
+    label: 'Countries',
+    items: [
+      { label: 'United States',  page: 'market-us' },
+      { label: 'Canada',         page: 'market-canada' },
+      { label: 'United Kingdom', page: 'market-uk' },
+      { label: 'France',         page: 'market-france' },
+      { label: 'Germany',        page: 'market-germany' },
+      { label: 'Norway',         page: 'market-norway' },
+    ],
+  },
+  {
+    key:   'services',
+    label: 'Services',
+    items: [
+      { label: 'Local moves',             servicesSlug: 'local' },
+      { label: 'Long-distance moves',     servicesSlug: 'long-distance' },
+      { label: 'International relocation', servicesSlug: 'international' },
+      { label: 'Office relocation',       servicesSlug: 'office' },
+      { label: 'Packing services',        servicesSlug: 'packing' },
+      { label: 'Storage',                 servicesSlug: 'storage' },
+      { label: 'Truck rental',            servicesSlug: 'truck-rental' },
+      { label: 'Student moves',           servicesSlug: 'student' },
+    ],
+  },
+  {
+    key:   'providers',
+    label: 'Providers',
+    items: [
+      { label: 'Join FlyttGo',         page: 'driver-onboarding' },
+      { label: 'Earnings simulator',   page: 'providers' },
+      { label: 'Subscription tiers',   page: 'subscriptions' },
+      { label: 'Provider dashboard',   page: 'driver-portal' },
+    ],
+  },
+  {
+    key:   'enterprise',
+    label: 'Enterprise',
+    items: [
+      { label: 'Corporate relocation', page: 'enterprise-relocation' },
+      { label: 'Universities',         page: 'universities' },
+      { label: 'Municipal relocation', page: 'pilot-deployment-programs' },
+      { label: 'Government mobility',  page: 'government-programs' },
+      { label: 'Partner integrations', page: 'partners' },
+    ],
+  },
+];
 
 type Lang = 'en' | 'no';
 
@@ -33,7 +112,10 @@ export default function Header() {
   const { setPage, currentPage, setShowAuthModal, setAuthMode } = useApp();
   const { t, i18n: i18nInstance } = useTranslation();
   const [mobileOpen,    setMobileOpen]    = useState(false);
-  const [marketsOpen,   setMarketsOpen]   = useState(false);
+  /* Single open-nav-dropdown state — exclusive across the four
+   * Countries / Services / Providers / Enterprise dropdowns so only
+   * one is ever open at a time. */
+  const [openDropdown,  setOpenDropdown]  = useState<NavDropdown['key'] | null>(null);
   const [langOpen,      setLangOpen]      = useState(false);
   const [userMenuOpen,  setUserMenuOpen]  = useState(false);
   const [notifOpen,     setNotifOpen]     = useState(false);
@@ -88,17 +170,42 @@ export default function Header() {
 
   function closeAll() {
     setUserMenuOpen(false);
-    setMarketsOpen(false);
+    setOpenDropdown(null);
     setNotifOpen(false);
   }
 
-  function toggle(which: 'user' | 'notif' | 'markets') {
-    setMarketsOpen(which === 'markets'     ? (s) => !s : false);
+  function toggle(which: 'user' | 'notif') {
+    setOpenDropdown(null);
     setUserMenuOpen(which === 'user'       ? (s) => !s : false);
     setNotifOpen(which === 'notif'         ? (s) => !s : false);
   }
 
+  function toggleDropdown(key: NavDropdown['key']) {
+    setUserMenuOpen(false);
+    setNotifOpen(false);
+    setOpenDropdown(prev => prev === key ? null : key);
+  }
+
   function handleNav(page: Page) { setPage(page); setMobileOpen(false); closeAll(); }
+
+  /* Dropdown-item activation. Service-category items push a path so
+   * ServiceCategoryPage can read its slug from the URL; Page-id items
+   * route through the in-app store. */
+  function handleDropdownItem(item: DropdownItem) {
+    if (item.servicesSlug) {
+      if (typeof window !== 'undefined') {
+        window.history.pushState({}, '', `/services/${item.servicesSlug}`);
+      }
+      setPage('service-category');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      }
+    } else if (item.page) {
+      setPage(item.page);
+    }
+    setMobileOpen(false);
+    closeAll();
+  }
 
   function openSignIn() {
     setAuthMode('signin');
@@ -128,15 +235,6 @@ export default function Header() {
     <svg className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
     </svg>
-  );
-
-  const navBtn = (label: string, page: Page, onClick?: () => void) => (
-    <button
-      onClick={onClick ?? (() => handleNav(page))}
-      className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-        currentPage === page ? 'text-emerald-600 bg-emerald-50' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-      }`}
-    >{label}</button>
   );
 
   return (
@@ -214,10 +312,17 @@ export default function Header() {
         )}
       </div>
 
-      {/* MAIN NAV */}
-      <div className="bg-white border-b border-gray-100">
+      {/* MAIN NAV — glass + soft shadow, deeper navy text on a
+       *  translucent white wash. Backdrop blur kicks in once the
+       *  page has scrolled past the top bar so the nav reads as
+       *  floating over content. */}
+      <div className={`backdrop-blur-md border-b border-slate-200/60 transition-shadow ${
+        scrolled
+          ? 'bg-white/85 shadow-[0_4px_30px_rgba(15,23,42,0.08)]'
+          : 'bg-white shadow-[0_1px_0_rgba(15,23,42,0.04)]'
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-20">
 
             {/* Logo */}
             <button onClick={() => handleNav('home')} className="flex items-center gap-2.5 flex-shrink-0">
@@ -232,48 +337,65 @@ export default function Header() {
               </div>
             </button>
 
-            {/* Desktop nav — global marketplace architecture */}
-            <nav className="hidden lg:flex items-center gap-0.5">
-              {navBtn('Home',                  'home')}
-              <div className="relative">
-                <button
-                  onClick={() => toggle('markets')}
-                  className={`flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium transition ${
-                    marketsOpen ? 'text-emerald-600 bg-emerald-50' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-                >
-                  Markets{chevron(marketsOpen)}
-                </button>
-                {marketsOpen && (
-                  <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 p-2">
-                    {([
-                      { label: 'United States Moves & Logistics', page: 'market-us' as Page,      iso: 'US' },
-                      { label: 'Canada Moves & Logistics',         page: 'market-canada' as Page,  iso: 'CA' },
-                      { label: 'Germany Moves & Logistics',        page: 'market-germany' as Page, iso: 'DE' },
-                      { label: 'France Moves & Logistics',         page: 'market-france' as Page,  iso: 'FR' },
-                      { label: 'United Kingdom Moves & Logistics', page: 'market-uk' as Page,      iso: 'GB' },
-                      { label: 'Norway Moves & Logistics',         page: 'market-norway' as Page,  iso: 'NO' },
-                    ]).map((m) => (
-                      <button
-                        key={m.page}
-                        onClick={() => handleNav(m.page)}
-                        className="w-full flex items-baseline gap-3 px-3 py-2 rounded-lg text-left hover:bg-emerald-50 hover:text-emerald-700 transition"
-                      >
-                        <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-gray-400 w-6">{m.iso}</span>
-                        <span className="text-sm text-gray-700">{m.label}</span>
-                      </button>
-                    ))}
+            {/* Desktop nav — 2035 marketplace hierarchy.
+             *  Four dropdowns + two plain links. The dropdowns are
+             *  click-triggered (accessible without hover) and only
+             *  one can be open at a time. */}
+            <nav className="hidden lg:flex items-center gap-1" aria-label="Primary">
+              {NAV_DROPDOWNS.map(d => {
+                const isOpen = openDropdown === d.key;
+                return (
+                  <div key={d.key} className="relative">
+                    <button
+                      onClick={() => toggleDropdown(d.key)}
+                      aria-expanded={isOpen}
+                      aria-haspopup="true"
+                      className={`flex items-center gap-1 px-3.5 py-2 rounded-lg text-sm font-semibold transition ${
+                        isOpen
+                          ? 'text-amber-700 bg-amber-50'
+                          : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+                      }`}
+                    >
+                      {d.label}{chevron(isOpen)}
+                    </button>
+                    {isOpen && (
+                      <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-2xl shadow-[0_24px_60px_-20px_rgba(15,23,42,0.25)] border border-slate-200/70 z-50 p-2 backdrop-blur-md">
+                        {d.items.map(it => (
+                          <button
+                            key={it.label}
+                            onClick={() => handleDropdownItem(it)}
+                            className="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-700 font-medium hover:bg-amber-50 hover:text-amber-700 transition"
+                          >
+                            {it.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              {navBtn('Providers',             'providers')}
-              {navBtn('How It Works',          'how-it-works')}
-              {navBtn('Enterprise Relocation', 'enterprise-relocation')}
-              {navBtn('Universities',          'universities')}
-              {navBtn('Partners',              'partners')}
-              {navBtn('Compliance',            'compliance')}
-              {navBtn('About',                 'about')}
-              {navBtn('Contact',               'contact')}
+                );
+              })}
+
+              {/* Plain links — pricing + how booking works. */}
+              <button
+                onClick={() => handleNav('pricing')}
+                className={`px-3.5 py-2 rounded-lg text-sm font-semibold transition ${
+                  currentPage === 'pricing'
+                    ? 'text-amber-700 bg-amber-50'
+                    : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                Pricing
+              </button>
+              <button
+                onClick={() => handleNav('how-it-works')}
+                className={`px-3.5 py-2 rounded-lg text-sm font-semibold transition ${
+                  currentPage === 'how-it-works'
+                    ? 'text-amber-700 bg-amber-50'
+                    : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                How booking works
+              </button>
             </nav>
 
             {/* Right side */}
@@ -301,7 +423,17 @@ export default function Header() {
               <div className="hidden md:block">
                 <ThemeToggle compact />
               </div>
-              <button onClick={() => handleNav('booking')} className="hidden sm:flex items-center gap-1.5 px-5 py-2 bg-amber-500 text-slate-900 rounded-lg text-sm font-bold hover:bg-amber-600 transition shadow-sm shadow-amber-500/25">{t('header.bookNow')}</button>
+              {/* Primary CTA — "Get instant price →" replaces the
+               *  generic "Book now". Logistics-grade language; routes
+               *  into the booking flow with the country defaulted from
+               *  bookingData.country. */}
+              <button
+                onClick={() => handleNav('booking')}
+                className="hidden sm:inline-flex items-center gap-1.5 px-5 py-2.5 bg-amber-400 hover:bg-amber-500 text-slate-900 rounded-xl text-sm font-bold transition shadow-lg shadow-amber-500/30"
+              >
+                Get instant price
+                <ArrowRight size={14} />
+              </button>
 
               {/* Notifications bell — signed-in only. Subscribes to
                * the notifications table over Supabase Realtime; flips
@@ -440,69 +572,71 @@ export default function Header() {
           </div>
         </div>
 
-        {/* MOBILE MENU — slide down with dim backdrop */}
+        {/* MOBILE MENU — mirrors the desktop 2035 nav hierarchy:
+         *  four grouped sections (Countries / Services / Providers /
+         *  Enterprise) plus the two plain links. */}
         <div
-          className={`lg:hidden border-t border-gray-100 bg-white overflow-y-auto transition-[max-height,opacity] duration-300 ease-out ${
-            mobileOpen ? 'max-h-[42rem] opacity-100' : 'max-h-0 opacity-0'
+          className={`lg:hidden border-t border-slate-200 bg-white overflow-y-auto transition-[max-height,opacity] duration-300 ease-out ${
+            mobileOpen ? 'max-h-[48rem] opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
           <div className="max-w-7xl mx-auto px-4 pt-3 pb-4 space-y-1">
-            {([
-              ['Home',                  'home'],
-            ] as [string, Page][]).map(([label, page]) => (
-              <button key={page} onClick={() => handleNav(page)}
-                className={`block w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg ${currentPage === page ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700 hover:bg-gray-50'}`}>
-                {label}
-              </button>
+            {NAV_DROPDOWNS.map(d => (
+              <div key={d.key} className="pt-2">
+                <p className="px-4 pt-1 pb-2 text-[10px] uppercase tracking-[0.18em] text-slate-400 font-bold">
+                  {d.label}
+                </p>
+                {d.items.map(it => (
+                  <button
+                    key={it.label}
+                    onClick={() => handleDropdownItem(it)}
+                    className="block w-full text-left px-4 py-2 text-sm rounded-lg text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition"
+                  >
+                    {it.label}
+                  </button>
+                ))}
+              </div>
             ))}
-            <p className="px-4 pt-3 text-[10px] uppercase tracking-[0.18em] text-gray-400 font-mono">Markets</p>
-            {([
-              ['United States Moves & Logistics', 'market-us'],
-              ['Canada Moves & Logistics',         'market-canada'],
-              ['Germany Moves & Logistics',        'market-germany'],
-              ['France Moves & Logistics',         'market-france'],
-              ['United Kingdom Moves & Logistics', 'market-uk'],
-              ['Norway Moves & Logistics',         'market-norway'],
-            ] as [string, Page][]).map(([label, page]) => (
-              <button key={page} onClick={() => handleNav(page)}
-                className={`block w-full text-left px-4 py-2 text-sm rounded-lg ${currentPage === page ? 'bg-emerald-50 text-emerald-700' : 'text-gray-600 hover:bg-gray-50'}`}>
-                {label}
+
+            <div className="pt-3 border-t border-slate-100">
+              <button
+                onClick={() => handleNav('pricing')}
+                className={`block w-full text-left px-4 py-2.5 text-sm font-semibold rounded-lg ${currentPage === 'pricing' ? 'bg-amber-50 text-amber-700' : 'text-slate-700 hover:bg-slate-50'}`}
+              >
+                Pricing
               </button>
-            ))}
-            <p className="px-4 pt-3 text-[10px] uppercase tracking-[0.18em] text-gray-400 font-mono">Platform</p>
-            {([
-              ['Providers',             'providers'],
-              ['How It Works',          'how-it-works'],
-              ['Enterprise Relocation', 'enterprise-relocation'],
-              ['Universities',          'universities'],
-              ['Partners',              'partners'],
-              ['Compliance',            'compliance'],
-              ['About',                 'about'],
-              ['Contact',               'contact'],
-            ] as [string, Page][]).map(([label, page]) => (
-              <button key={page} onClick={() => handleNav(page)}
-                className={`block w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg ${currentPage === page ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700 hover:bg-gray-50'}`}>
-                {label}
+              <button
+                onClick={() => handleNav('how-it-works')}
+                className={`block w-full text-left px-4 py-2.5 text-sm font-semibold rounded-lg ${currentPage === 'how-it-works' ? 'bg-amber-50 text-amber-700' : 'text-slate-700 hover:bg-slate-50'}`}
+              >
+                How booking works
               </button>
-            ))}
+            </div>
+
             {!user && (
-              <>
+              <div className="pt-3 border-t border-slate-100 space-y-1">
                 <button
                   onClick={openSignIn}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 mt-2"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 border border-slate-200 rounded-lg text-sm font-medium text-slate-700"
                 >
                   <LogIn className="w-4 h-4" />
                   {t('header.signIn')}
                 </button>
                 <button
                   onClick={openSignUp}
-                  className="w-full py-2.5 border border-emerald-600 text-emerald-600 rounded-lg text-sm font-semibold mt-1 hover:bg-emerald-50 transition"
+                  className="w-full py-2.5 border border-slate-300 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-50 transition"
                 >
                   {t('header.signUp')}
                 </button>
-              </>
+              </div>
             )}
-            <button onClick={() => handleNav('booking')} className="block w-full py-2.5 bg-amber-500 text-slate-900 rounded-lg text-sm font-bold text-center mt-1 hover:bg-amber-600 transition shadow-sm shadow-amber-500/25">{t('header.bookNow')}</button>
+
+            <button
+              onClick={() => handleNav('booking')}
+              className="block w-full py-3 bg-amber-400 hover:bg-amber-500 text-slate-900 rounded-xl text-sm font-bold text-center mt-3 shadow-lg shadow-amber-500/30 transition"
+            >
+              Get instant price →
+            </button>
           </div>
         </div>
       </div>
