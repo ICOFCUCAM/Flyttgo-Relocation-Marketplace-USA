@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../lib/store';
 import { PROVIDERS, type ProviderRecord } from '../lib/providers-catalogue';
+import { getProviderPublicIdentity } from '../lib/provider-identity';
 import type { BookingCountry } from '../lib/store';
 import { Section, Eyebrow, Pill, EmptyState } from '../components/ds';
 import AddToCompareButton from '../components/global/AddToCompareButton';
@@ -118,9 +119,14 @@ export default function ProvidersDirectoryPage() {
       if (tiers.length     && (!p.badge || !tiers.includes(p.badge))) return false;
       if (services.length  && !services.every(s => p.services.includes(s))) return false;
       if (q) {
+        /* Search is over the public identity + structural data —
+         * customers can't search the underlying brand name because
+         * they never see it. about/services/fleet/verified stay
+         * indexable since they're factual non-brand content. */
+        const id = getProviderPublicIdentity(p);
         const hay = [
-          p.name, p.city, p.country, p.badge ?? '',
-          p.about, ...p.services, ...p.fleet, ...p.verified,
+          id.displayName, id.region, id.operatorId, id.tierLabel,
+          p.country, p.about, ...p.services, ...p.fleet, ...p.verified,
         ].join(' ').toLowerCase();
         if (!hay.includes(q)) return false;
       }
@@ -143,13 +149,16 @@ export default function ProvidersDirectoryPage() {
     if (q.length < 2) return [];
     return PROVIDERS
       .map(p => {
-        const hay = `${p.name} ${p.city} ${p.services.join(' ')}`.toLowerCase();
+        /* Suggest list ranks against the public identity — same
+         * masking rule as the main filter. */
+        const id  = getProviderPublicIdentity(p);
+        const hay = `${id.displayName} ${id.region} ${id.tierLabel} ${p.services.join(' ')}`.toLowerCase();
         const i   = hay.indexOf(q);
         if (i < 0) return null;
-        /* Earlier matches score higher; name-prefix beats city-prefix
-         * beats service-substring. */
-        const namePrefix = p.name.toLowerCase().startsWith(q) ? 100 : 0;
-        const cityPrefix = p.city.toLowerCase().startsWith(q) ? 50  : 0;
+        /* Earlier matches score higher; display-name prefix beats
+         * region prefix beats service substring. */
+        const namePrefix = id.displayName.toLowerCase().startsWith(q) ? 100 : 0;
+        const cityPrefix = id.region.toLowerCase().startsWith(q) ? 50  : 0;
         return { p, score: namePrefix + cityPrefix - i };
       })
       .filter((x): x is { p: ProviderRecord; score: number } => x !== null)
@@ -271,6 +280,7 @@ export default function ProvidersDirectoryPage() {
             >
               {typeaheadCandidates.map((p, i) => {
                 const isActive = i === taActive;
+                const id = getProviderPublicIdentity(p);
                 return (
                   <li
                     id={`ta-${p.slug}`}
@@ -292,9 +302,9 @@ export default function ProvidersDirectoryPage() {
                       <Truck size={14} className="text-brand-600" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-ink-900 truncate">{p.name}</p>
+                      <p className="text-sm font-bold text-ink-900 truncate">{id.displayName}</p>
                       <p className="text-xs text-slate-500 inline-flex items-center gap-1 truncate">
-                        <span aria-hidden>{p.flag}</span>{p.city}
+                        <span aria-hidden>{p.flag}</span>{id.region}
                       </p>
                     </div>
                     <div className="flex flex-col items-end flex-shrink-0">
@@ -464,6 +474,9 @@ function Chip({
 }
 
 function ProviderCard({ provider: p, onOpen }: { provider: ProviderRecord; onOpen: (slug: string) => void }) {
+  /* Public identity — masks the underlying brand. Same rule
+   * everywhere a customer sees a provider before booking. */
+  const id = getProviderPublicIdentity(p);
   return (
     <article
       onClick={() => onOpen(p.slug)}
@@ -475,13 +488,13 @@ function ProviderCard({ provider: p, onOpen }: { provider: ProviderRecord; onOpe
             <Truck size={20} className="text-brand-600" />
           </div>
           <div className="min-w-0">
-            <p className="font-extrabold text-ink-900 leading-tight truncate">{p.name}</p>
-            <p className="text-xs text-slate-500 flex items-center gap-1 truncate">
-              <span aria-hidden>{p.flag}</span>{p.city}
+            <p className="font-extrabold text-ink-900 leading-tight truncate">{id.displayName}</p>
+            <p className="text-xs text-slate-500 font-mono truncate">
+              <span aria-hidden className="mr-1">{p.flag}</span>{id.operatorId}
             </p>
           </div>
         </div>
-        {p.badge && <Pill tone="brand" size="sm"><Award size={10} />{p.badge}</Pill>}
+        <Pill tone="brand" size="sm"><Award size={10} />{id.tierLabel}</Pill>
       </div>
 
       <p className="text-xs text-slate-600 leading-relaxed line-clamp-2 mb-3">
@@ -532,13 +545,13 @@ function ProviderCard({ provider: p, onOpen }: { provider: ProviderRecord; onOpe
         <AddToCompareButton
           item={{
             id:        p.slug,
-            name:      p.name,
-            city:      p.city,
+            name:      id.displayName,
+            city:      id.region,
             flag:      p.flag,
             rating:    p.rating,
             reviews:   p.reviews,
             fromPrice: p.fromPrice,
-            badge:     p.badge,
+            badge:     id.tierLabel,
             verified:  p.verified,
           }}
         />

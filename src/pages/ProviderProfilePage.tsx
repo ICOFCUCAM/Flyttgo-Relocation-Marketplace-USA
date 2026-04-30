@@ -6,6 +6,7 @@ import {
 import { useApp } from '../lib/store';
 import type { Page } from '../lib/store';
 import { findProvider, PROVIDERS, type ProviderRecord } from '../lib/providers-catalogue';
+import { getProviderPublicIdentity } from '../lib/provider-identity';
 import { Section, Eyebrow, Pill, EmptyState } from '../components/ds';
 import AddToCompareButton from '../components/global/AddToCompareButton';
 import AvailabilityBadge from '../components/global/AvailabilityBadge';
@@ -47,15 +48,19 @@ export default function ProviderProfilePage() {
    * confirm the provider exists, to avoid persisting bad slugs. */
   useEffect(() => {
     if (!provider) return;
+    /* Recently-viewed rail also uses the white-label identity so
+     * the masking is consistent everywhere a customer sees the
+     * provider before booking. */
+    const id = getProviderPublicIdentity(provider);
     recordRecentlyViewed({
       slug:      provider.slug,
-      name:      provider.name,
-      city:      provider.city,
+      name:      id.displayName,
+      city:      id.region,
       flag:      provider.flag,
       rating:    provider.rating,
       reviews:   provider.reviews,
       fromPrice: provider.fromPrice,
-      badge:     provider.badge,
+      badge:     id.tierLabel,
     });
   }, [provider]);
 
@@ -97,6 +102,10 @@ export default function ProviderProfilePage() {
     setPage('booking' as Page);
   }
 
+  /* Public identity — the FlyttGo white-label display layer.
+   * Real provider name is hidden until booking confirmation. */
+  const identity = getProviderPublicIdentity(provider);
+
   return (
     <main className="bg-white text-ink-900">
       {/* HERO */}
@@ -110,20 +119,25 @@ export default function ProviderProfilePage() {
 
         <div className="grid lg:grid-cols-12 gap-10 items-start">
           <div className="lg:col-span-8">
-            <div className="flex items-center gap-3 mb-5">
+            <div className="flex items-center gap-3 mb-5 flex-wrap">
               <span className="text-3xl leading-none" aria-hidden>{provider.flag}</span>
               <Pill tone="brand">
-                {provider.country.toUpperCase()} · {provider.city}
+                {provider.country.toUpperCase()} · {identity.region}
               </Pill>
-              {provider.badge && (
-                <Pill tone="trust">
-                  <Award size={10} /> {provider.badge} tier
-                </Pill>
-              )}
+              <Pill tone="trust">
+                <Award size={10} /> {identity.tierLabel} tier
+              </Pill>
+              <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-white/60">
+                {identity.operatorId}
+              </span>
             </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.05] mb-5 text-white">
-              {provider.name}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.05] mb-3 text-white">
+              {identity.displayName}
             </h1>
+            <p className="text-amber-200 text-sm font-semibold mb-5 inline-flex items-center gap-2">
+              <ShieldCheck size={14} />
+              Operator identity revealed at booking confirmation
+            </p>
             <p className="text-lg text-white/75 leading-relaxed max-w-2xl mb-7">
               {provider.about}
             </p>
@@ -173,13 +187,13 @@ export default function ProviderProfilePage() {
               <AddToCompareButton
                 item={{
                   id:        provider.slug,
-                  name:      provider.name,
-                  city:      provider.city,
+                  name:      identity.displayName,
+                  city:      identity.region,
                   flag:      provider.flag,
                   rating:    provider.rating,
                   reviews:   provider.reviews,
                   fromPrice: provider.fromPrice,
-                  badge:     provider.badge,
+                  badge:     identity.tierLabel,
                   verified:  provider.verified,
                 }}
                 className="w-full justify-center py-2.5"
@@ -319,6 +333,8 @@ function ProviderTile({ provider }: { provider: ProviderRecord }) {
       window.dispatchEvent(new PopStateEvent('popstate'));
     }
   }
+  /* Sibling-provider card also masks identity. */
+  const id = getProviderPublicIdentity(provider);
   return (
     <button
       onClick={go}
@@ -326,9 +342,9 @@ function ProviderTile({ provider }: { provider: ProviderRecord }) {
     >
       <div className="flex items-center gap-2 mb-2">
         <span className="text-xl leading-none" aria-hidden>{provider.flag}</span>
-        <span className="font-extrabold text-ink-900 truncate">{provider.name}</span>
+        <span className="font-extrabold text-ink-900 truncate">{id.displayName}</span>
       </div>
-      <p className="text-xs text-slate-500 mb-2">{provider.city}</p>
+      <p className="text-xs text-slate-500 mb-2">{id.region}</p>
       <div className="flex items-center justify-between text-sm">
         <span className="inline-flex items-center gap-1">
           <Star size={12} className="fill-amber-400 text-amber-400" />

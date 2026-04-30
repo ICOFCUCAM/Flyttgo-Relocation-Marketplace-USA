@@ -4,6 +4,7 @@ import AddToCompareButton from './AddToCompareButton';
 import AvailabilityBadge from './AvailabilityBadge';
 import { useApp } from '../../lib/store';
 import { PROVIDERS, type ProviderRecord } from '../../lib/providers-catalogue';
+import { getProviderPublicIdentity } from '../../lib/provider-identity';
 import { track } from '../../lib/analytics';
 import { estimateRoutePrice, formatRoutePrice, type RoutePriceResult } from '../../lib/route-price-estimator';
 import { resolveRoute, kmToMiles, type ResolvedRoute } from '../../services/route-cache';
@@ -132,15 +133,18 @@ export default function TopProviders() {
     }
   }
 
-  /* "Book this mover" → primes the BookingFlow with the provider's
-   *  flag-derived country + city as the pickup hint, then opens the
-   *  funnel. Once the schema has a real provider_id we'll forward
-   *  that too so the matching engine pre-favours the chosen mover. */
+  /* "Book this operator" → primes the BookingFlow with the
+   *  provider's country as the pickup hint, then opens the funnel.
+   *  Notably, we do NOT pass a city / address pre-fill any more —
+   *  the whole point of the white-label model is that the customer's
+   *  intent is to book through FlyttGo, not against a specific
+   *  operator's home base. The matching engine still pre-favours
+   *  this provider via slug forwarding once the schema has a real
+   *  provider_id field. */
   function bookProvider(p: ProviderRecord) {
     track('top_provider_book_clicked', { slug: p.slug });
     setBookingData({
-      country:        p.country,
-      pickupAddress:  p.city,
+      country: p.country,
     });
     setPage('booking');
   }
@@ -178,6 +182,11 @@ export default function TopProviders() {
             const availLabel  = availabilityLabel(p.availability);
             const isInstant   = p.availability === 'available_now';
 
+            /* Public identity — the white-label display layer.
+             * Customer sees "FlyttGo Elite Carrier · NYC Metro"
+             * + opaque operator id, never the underlying brand. */
+            const identity    = getProviderPublicIdentity(p);
+
             /* Dynamic price preview — real OSRM miles when we have
              * coords, ZIP-prefix bucket when we don't, baseline
              * day-rate when we have neither. estimateRoutePrice
@@ -197,7 +206,10 @@ export default function TopProviders() {
                 key={p.slug}
                 className="group bg-[#fafaf7] hover:bg-white border border-slate-200 hover:border-amber-300 hover:shadow-xl rounded-2xl p-5 transition flex flex-col"
               >
-                {/* HEADER — logo / name + instant book pill */}
+                {/* HEADER — FlyttGo-fronted identity (white-label).
+                 *  Real provider name is hidden until booking
+                 *  confirmation per the marketplace model — see
+                 *  src/lib/provider-identity.ts. */}
                 <div className="flex items-start justify-between mb-3 gap-3">
                   <button
                     type="button"
@@ -208,10 +220,10 @@ export default function TopProviders() {
                       <Truck size={20} className="text-amber-700" />
                     </div>
                     <div className="min-w-0">
-                      <p className="font-extrabold text-slate-900 leading-tight truncate">{p.name}</p>
-                      <p className="text-xs text-slate-500 flex items-center gap-1">
-                        <span aria-hidden="true">{p.flag}</span>
-                        {p.city}
+                      <p className="font-extrabold text-slate-900 leading-tight truncate">{identity.displayName}</p>
+                      <p className="text-xs text-slate-500 font-mono">
+                        <span aria-hidden="true" className="mr-1">{p.flag}</span>
+                        {identity.operatorId}
                       </p>
                     </div>
                   </button>
@@ -286,12 +298,10 @@ export default function TopProviders() {
 
                 {/* TRUST + TIER BADGES */}
                 <div className="flex flex-wrap gap-1.5 mb-3 pt-3 border-t border-slate-200">
-                  {p.badge && (
-                    <span className={`${BADGE} bg-amber-400/15 text-amber-700`}>
-                      <Award size={10} />
-                      Tier · {p.badge}
-                    </span>
-                  )}
+                  <span className={`${BADGE} bg-amber-400/15 text-amber-700`}>
+                    <Award size={10} />
+                    Tier · {identity.tierLabel}
+                  </span>
                   {p.verified.slice(0, 3).map(v => (
                     <span key={v} className={`${BADGE} bg-emerald-50 text-emerald-700`}>
                       <ShieldCheck size={10} />
@@ -311,7 +321,7 @@ export default function TopProviders() {
                   onClick={() => bookProvider(p)}
                   className="mt-auto w-full bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold py-2.5 rounded-lg text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
                 >
-                  Book this mover →
+                  Book this operator →
                 </button>
 
                 <div className="mt-3 flex items-center justify-between gap-2">
@@ -326,13 +336,15 @@ export default function TopProviders() {
                   <AddToCompareButton
                     item={{
                       id:        p.slug,
-                      name:      p.name,
-                      city:      p.city,
+                      /* Compare list also uses the white-label
+                       * identity — every public surface is masked. */
+                      name:      identity.displayName,
+                      city:      identity.region,
                       flag:      p.flag,
                       rating:    p.rating,
                       reviews:   p.reviews,
                       fromPrice: p.fromPrice,
-                      badge:     p.badge,
+                      badge:     identity.tierLabel,
                       verified:  p.verified,
                     }}
                   />

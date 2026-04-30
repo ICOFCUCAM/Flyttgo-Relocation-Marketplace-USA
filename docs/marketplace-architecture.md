@@ -173,6 +173,64 @@ Every link is a real registered page in `lib/pageRoutes.ts`.
 | Distance-based estimate preview | `route-price-estimator` via `TopProviders` + `BookingShortcut` |
 | Metro demand surge | `route-price-estimator.METRO_DEMAND` (DB cutover spec'd in `docs/install-metro-demand-multipliers.sql`) |
 
+## 7B. Provider identity model — white-label (Uber-style)
+
+**Policy:** providers operate *under* the FlyttGo brand on every
+public surface. Customer relationship is with FlyttGo, not the
+individual operator. Real provider names and contact info are
+revealed only post-booking-confirmation (after escrow holds funds),
+when the customer needs the operator identity for the actual
+delivery.
+
+**Why:** masking phone / email alone doesn't prevent
+disintermediation — provider company names are public-record data,
+so a customer who sees "Atlas Interstate Movers" on the homepage
+can google their phone in seconds. The only way to genuinely close
+the leakage loop is to never expose the brand. Same model Uber,
+DoorDash, Instacart, and most gig-style logistics marketplaces use.
+
+**The display layer:** `src/lib/provider-identity.ts`
+`getProviderPublicIdentity(p)` returns:
+
+```ts
+{
+  displayName: 'FlyttGo Elite Carrier · NYC Metro',
+  operatorId:  'FG-US-AIM-4Q',           // stable, opaque
+  region:      'NYC Metro',
+  tierLabel:   'Elite',
+}
+```
+
+The underlying `ProviderRecord.name` is unchanged — used by
+dispatch, payouts, ops, and post-booking comms. The masking lives
+purely in the display layer.
+
+**Surfaces masked (no real brand visible):**
+
+- `TopProviders` (homepage card grid)
+- `ProviderProfilePage` (hero + sticky bar + sibling-providers card)
+- `ProvidersDirectoryPage` (card grid + typeahead + search index)
+- Recently-viewed rail (writes through `getProviderPublicIdentity`)
+- `AddToCompareButton` payloads (compare list also masked)
+- Search input over the directory uses `displayName` / `region` /
+  `operatorId` / `tierLabel` — real `name` is *not* in the index,
+  so a customer typing the underlying brand name finds nothing
+
+**Surfaces NOT masked:**
+
+- `DiscoveryProvidersSection` — these are non-onboarded
+  acquisition leads. Real names are required so the
+  "Are you {Brand}? Claim & onboard" CTA can target them.
+- Internal dispatch / admin / driver portal — every operational
+  surface still sees the real brand for ops correctness.
+
+**Pending: post-payment reveal.** When a booking confirmation
+fires (escrow held, dispatch assigned), the PaymentPage should
+read the assigned provider's real `ProviderRecord.name` + phone
+and surface them as the "Your operator: {Real Name}" block. That
+wire requires walking the booking → dispatch state machine and
+hasn't shipped — see the next-step list below.
+
 ## 8. Provider supply-side surfaces
 
 `<EarningsSimulator>` mounts on:
