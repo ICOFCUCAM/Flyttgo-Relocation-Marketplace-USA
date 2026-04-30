@@ -68,10 +68,11 @@ const NAV_DROPDOWNS: NavDropdown[] = [
     key:   'providers',
     label: 'Providers',
     items: [
-      { label: 'Join FlyttGo',         page: 'driver-onboarding' },
-      { label: 'Earnings simulator',   page: 'providers' },
-      { label: 'Subscription tiers',   page: 'subscriptions' },
-      { label: 'Provider dashboard',   page: 'driver-portal' },
+      { label: 'Join FlyttGo',                    page: 'driver-onboarding' },
+      { label: 'Earnings simulator',              page: 'providers' },
+      { label: 'Subscription tiers',              page: 'subscriptions' },
+      { label: 'Provider dashboard',              page: 'driver-portal' },
+      { label: 'Provider compliance requirements', page: 'provider-requirements' },
     ],
   },
   {
@@ -87,7 +88,35 @@ const NAV_DROPDOWNS: NavDropdown[] = [
   },
 ];
 
-type Lang = 'en' | 'no';
+/* Four-language switcher across the marketplace. The codebase
+ * supports EN / NB (Norwegian Bokmål) / DE / FR via locale files
+ * in src/lib/locales — each language is a real i18next bundle.
+ * The active language id stored here mirrors what i18next holds;
+ * the Header switcher writes through to i18n.changeLanguage() so
+ * the booking flow + country pages stay in sync.
+ *
+ * UI labels keep "NO" for Norwegian even though i18next stores
+ * 'nb' — the storefronts and customers think in country terms,
+ * not language codes. */
+type Lang = 'en' | 'nb' | 'de' | 'fr';
+
+interface LangOption {
+  /** i18next language id. */
+  code:  Lang;
+  /** Two-letter UI label shown next to the globe icon. */
+  short: string;
+  /** Full label inside the popover. */
+  label: string;
+  /** Flag emoji for the popover row. */
+  flag:  string;
+}
+
+const LANG_OPTIONS: LangOption[] = [
+  { code: 'en', short: 'EN', label: 'English',   flag: '🇬🇧' },
+  { code: 'fr', short: 'FR', label: 'Français',  flag: '🇫🇷' },
+  { code: 'de', short: 'DE', label: 'Deutsch',   flag: '🇩🇪' },
+  { code: 'nb', short: 'NO', label: 'Norsk',     flag: '🇳🇴' },
+];
 
 /* Moving tools + corporate links are built inside the component
  * body (via useMemo) so they have access to t() for translation.
@@ -120,7 +149,14 @@ export default function Header() {
   const [userMenuOpen,  setUserMenuOpen]  = useState(false);
   const [notifOpen,     setNotifOpen]     = useState(false);
   const [scrolled,      setScrolled]      = useState(false);
-  const lang: Lang = (i18nInstance.language === 'no' ? 'no' : 'en');
+  const lang: Lang = (() => {
+    const c = i18nInstance.language;
+    if (c === 'fr' || c === 'de' || c === 'nb') return c;
+    /* Legacy 'no' label maps to 'nb' (the actual locale id). */
+    if (c === 'no') return 'nb';
+    return 'en';
+  })();
+  const activeLang = LANG_OPTIONS.find(l => l.code === lang) ?? LANG_OPTIONS[0];
   const headerRef = useRef<HTMLElement>(null);
   /* Two refs for the language switcher: the button lives inside the
    * scroll-collapsing top bar (overflow-hidden), while the popover is
@@ -225,9 +261,11 @@ export default function Header() {
     void i18n.changeLanguage(l);
     setLangOpen(false);
     if (typeof window !== 'undefined') window.localStorage.setItem(LANG_STORAGE_KEY, l);
-    /* Sync <html lang="…"> for SEO + assistive tech */
+    /* Sync <html lang="…"> for SEO + assistive tech. We map the
+     * i18next code to a BCP-47 tag where it differs (nb → nb-NO). */
     if (typeof document !== 'undefined') {
-      document.documentElement.lang = l === 'no' ? 'en-US' : 'en';
+      const tag = l === 'nb' ? 'nb-NO' : l === 'fr' ? 'fr-FR' : l === 'de' ? 'de-DE' : 'en';
+      document.documentElement.lang = tag;
     }
   }
 
@@ -239,10 +277,12 @@ export default function Header() {
 
   return (
     <>
-    {/* Mobile menu backdrop — dims page beneath the header when menu is open */}
+    {/* Mobile drawer backdrop — full-viewport blur + dim layer behind
+     *  the slide-right drawer. Click-through to close. Sits at z-30
+     *  so it covers the page but stays under the drawer (z-40). */}
     {mobileOpen && (
       <div
-        className="lg:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-30 transition-opacity"
+        className="lg:hidden fixed inset-0 bg-slate-900/50 backdrop-blur-md z-30 animate-[fade-in_200ms_ease-out]"
         onClick={() => setMobileOpen(false)}
         aria-hidden="true"
       />
@@ -275,12 +315,15 @@ export default function Header() {
               <button
                 ref={langBtnRef}
                 onClick={() => setLangOpen((o) => !o)}
-                className="flex items-center gap-1 text-white/70 hover:text-white transition text-xs"
+                className="flex items-center gap-1.5 text-white/80 hover:text-white transition text-xs font-semibold"
+                aria-haspopup="true"
+                aria-expanded={langOpen}
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/>
                 </svg>
-                {lang === 'en' ? '🇬🇧 EN' : '🇳🇴 NO'}
+                <span aria-hidden="true">{activeLang.flag}</span>
+                {activeLang.short}
                 {chevron(langOpen)}
               </button>
             </div>
@@ -288,22 +331,24 @@ export default function Header() {
         </div>
 
         {/* Language popover — sibling of the collapsing bar so
-         * overflow-hidden can't clip it. We reuse the same
-         * max-w-7xl padding layout to right-align against the
-         * button on every viewport width. */}
+         * overflow-hidden can't clip it. Lists all four supported
+         * languages: EN / FR / DE / NO. */}
         {langOpen && !scrolled && (
           <div ref={langPopRef} className="absolute inset-x-0 top-9 z-50 pointer-events-none">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-end">
-              <div className="pointer-events-auto w-32 bg-white rounded-xl shadow-lg border border-gray-100 py-1 mt-1">
-                {(['en', 'no'] as Lang[]).map((l) => (
+              <div className="pointer-events-auto w-44 bg-white rounded-xl shadow-xl border border-slate-200 py-1 mt-1">
+                {LANG_OPTIONS.map(opt => (
                   <button
-                    key={l}
-                    onClick={() => chooseLang(l)}
-                    className={`w-full text-left px-4 py-2 text-sm transition ${
-                      lang === l ? 'text-emerald-600 font-semibold bg-emerald-50' : 'text-gray-700 hover:bg-gray-50'
+                    key={opt.code}
+                    onClick={() => chooseLang(opt.code)}
+                    className={`w-full text-left px-4 py-2 text-sm transition flex items-center gap-2 ${
+                      lang === opt.code
+                        ? 'text-amber-700 font-semibold bg-amber-50'
+                        : 'text-slate-700 hover:bg-slate-50'
                     }`}
                   >
-                    {l === 'en' ? '🇬🇧 English' : '🇳🇴 Norsk'}
+                    <span aria-hidden="true">{opt.flag}</span>
+                    {opt.label}
                   </button>
                 ))}
               </div>
@@ -426,12 +471,14 @@ export default function Header() {
               {/* Primary CTA — "Get instant price →" replaces the
                *  generic "Book now". Logistics-grade language; routes
                *  into the booking flow with the country defaulted from
-               *  bookingData.country. */}
+               *  bookingData.country. Visible on every breakpoint —
+               *  shorter "Get price →" label on mobile to save space. */}
               <button
                 onClick={() => handleNav('booking')}
-                className="hidden sm:inline-flex items-center gap-1.5 px-5 py-2.5 bg-amber-400 hover:bg-amber-500 text-slate-900 rounded-xl text-sm font-bold transition shadow-lg shadow-amber-500/30"
+                className="inline-flex items-center gap-1.5 px-3.5 sm:px-5 py-2 sm:py-2.5 bg-amber-400 hover:bg-amber-500 text-slate-900 rounded-xl text-xs sm:text-sm font-bold transition shadow-lg shadow-amber-500/30"
               >
-                Get instant price
+                <span className="hidden sm:inline">Get instant price</span>
+                <span className="sm:hidden">Get price</span>
                 <ArrowRight size={14} />
               </button>
 
@@ -572,74 +619,125 @@ export default function Header() {
           </div>
         </div>
 
-        {/* MOBILE MENU — mirrors the desktop 2035 nav hierarchy:
-         *  four grouped sections (Countries / Services / Providers /
-         *  Enterprise) plus the two plain links. */}
-        <div
-          className={`lg:hidden border-t border-slate-200 bg-white overflow-y-auto transition-[max-height,opacity] duration-300 ease-out ${
-            mobileOpen ? 'max-h-[48rem] opacity-100' : 'max-h-0 opacity-0'
-          }`}
-        >
-          <div className="max-w-7xl mx-auto px-4 pt-3 pb-4 space-y-1">
-            {NAV_DROPDOWNS.map(d => (
-              <div key={d.key} className="pt-2">
-                <p className="px-4 pt-1 pb-2 text-[10px] uppercase tracking-[0.18em] text-slate-400 font-bold">
-                  {d.label}
-                </p>
-                {d.items.map(it => (
-                  <button
-                    key={it.label}
-                    onClick={() => handleDropdownItem(it)}
-                    className="block w-full text-left px-4 py-2 text-sm rounded-lg text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition"
-                  >
-                    {it.label}
-                  </button>
-                ))}
-              </div>
-            ))}
+      </div>
 
-            <div className="pt-3 border-t border-slate-100">
-              <button
-                onClick={() => handleNav('pricing')}
-                className={`block w-full text-left px-4 py-2.5 text-sm font-semibold rounded-lg ${currentPage === 'pricing' ? 'bg-amber-50 text-amber-700' : 'text-slate-700 hover:bg-slate-50'}`}
-              >
-                Pricing
-              </button>
-              <button
-                onClick={() => handleNav('how-it-works')}
-                className={`block w-full text-left px-4 py-2.5 text-sm font-semibold rounded-lg ${currentPage === 'how-it-works' ? 'bg-amber-50 text-amber-700' : 'text-slate-700 hover:bg-slate-50'}`}
-              >
-                How booking works
-              </button>
+      {/* MOBILE DRAWER — slides in from the right, modern marketplace
+       *  pattern. Sits as a fixed-positioned aside outside the sticky
+       *  header flow so it can cover the viewport. The blur backdrop
+       *  declared at the top of this file dims the page beneath. */}
+      <aside
+        id="header-mobile-drawer"
+        className={`lg:hidden fixed top-0 right-0 z-40 h-full w-[88%] max-w-sm bg-white shadow-[0_0_60px_rgba(15,23,42,0.25)] flex flex-col transition-transform duration-300 ease-out ${
+          mobileOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+        aria-hidden={!mobileOpen}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Site navigation"
+      >
+        {/* Drawer header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+          <span className="text-sm font-bold text-slate-900 uppercase tracking-[0.18em]">Menu</span>
+          <button
+            type="button"
+            onClick={() => setMobileOpen(false)}
+            className="p-2 rounded-lg hover:bg-slate-100 transition"
+            aria-label="Close menu"
+          >
+            <svg className="w-5 h-5 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* Drawer content — scroll independently. */}
+        <div className="flex-1 overflow-y-auto px-2 py-3 space-y-1">
+          {NAV_DROPDOWNS.map(d => (
+            <div key={d.key} className="pt-2">
+              <p className="px-3 pt-1 pb-2 text-[10px] uppercase tracking-[0.18em] text-slate-400 font-bold">
+                {d.label}
+              </p>
+              {d.items.map(it => (
+                <button
+                  key={it.label}
+                  onClick={() => handleDropdownItem(it)}
+                  className="block w-full text-left px-3 py-2 text-sm rounded-lg text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition"
+                >
+                  {it.label}
+                </button>
+              ))}
             </div>
+          ))}
 
-            {!user && (
-              <div className="pt-3 border-t border-slate-100 space-y-1">
-                <button
-                  onClick={openSignIn}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 border border-slate-200 rounded-lg text-sm font-medium text-slate-700"
-                >
-                  <LogIn className="w-4 h-4" />
-                  {t('header.signIn')}
-                </button>
-                <button
-                  onClick={openSignUp}
-                  className="w-full py-2.5 border border-slate-300 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-50 transition"
-                >
-                  {t('header.signUp')}
-                </button>
-              </div>
-            )}
-
+          <div className="pt-3 border-t border-slate-100">
             <button
-              onClick={() => handleNav('booking')}
-              className="block w-full py-3 bg-amber-400 hover:bg-amber-500 text-slate-900 rounded-xl text-sm font-bold text-center mt-3 shadow-lg shadow-amber-500/30 transition"
+              onClick={() => handleNav('pricing')}
+              className={`block w-full text-left px-3 py-2.5 text-sm font-semibold rounded-lg ${currentPage === 'pricing' ? 'bg-amber-50 text-amber-700' : 'text-slate-700 hover:bg-slate-50'}`}
             >
-              Get instant price →
+              Pricing
+            </button>
+            <button
+              onClick={() => handleNav('how-it-works')}
+              className={`block w-full text-left px-3 py-2.5 text-sm font-semibold rounded-lg ${currentPage === 'how-it-works' ? 'bg-amber-50 text-amber-700' : 'text-slate-700 hover:bg-slate-50'}`}
+            >
+              How booking works
             </button>
           </div>
+
+          {/* Language switcher — surfaced inline in the drawer per spec.
+           *  Sticky-acts via i18n.changeLanguage so the booking flow
+           *  picks up the choice. */}
+          <div className="pt-3 border-t border-slate-100">
+            <p className="px-3 pt-1 pb-2 text-[10px] uppercase tracking-[0.18em] text-slate-400 font-bold">
+              Language
+            </p>
+            <div className="px-1 grid grid-cols-2 gap-1.5">
+              {LANG_OPTIONS.map(opt => (
+                <button
+                  key={opt.code}
+                  onClick={() => chooseLang(opt.code)}
+                  className={`inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border transition ${
+                    lang === opt.code
+                      ? 'bg-amber-50 border-amber-300 text-amber-700 font-semibold'
+                      : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <span aria-hidden="true">{opt.flag}</span>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {!user && (
+            <div className="pt-3 border-t border-slate-100 space-y-1.5 px-1">
+              <button
+                onClick={openSignIn}
+                className="w-full flex items-center justify-center gap-2 py-2.5 border border-slate-200 rounded-lg text-sm font-medium text-slate-700"
+              >
+                <LogIn className="w-4 h-4" />
+                {t('header.signIn')}
+              </button>
+              <button
+                onClick={openSignUp}
+                className="w-full py-2.5 border border-slate-300 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-50 transition"
+              >
+                {t('header.signUp')}
+              </button>
+            </div>
+          )}
         </div>
-      </div>
+
+        {/* Pinned CTA at the bottom of the drawer for thumb-reach. */}
+        <div className="border-t border-slate-200 p-4">
+          <button
+            onClick={() => handleNav('booking')}
+            className="block w-full py-3 bg-amber-400 hover:bg-amber-500 text-slate-900 rounded-xl text-sm font-bold text-center shadow-lg shadow-amber-500/30 transition"
+          >
+            Get instant price →
+          </button>
+        </div>
+      </aside>
 
     </header>
     </>
