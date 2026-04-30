@@ -12,6 +12,7 @@ import LiveBookingTicker from './global/LiveBookingTicker';
 import EarningsSimulator from './global/EarningsSimulator';
 import ReviewsCarousel from './global/ReviewsCarousel';
 import HomeFAQ from './global/HomeFAQ';
+import WorldDeploymentMap from './global/WorldDeploymentMap';
 
 /* ────────────────────────────────────────────────────────────
  *  COUNTRY SHOPFRONT METADATA
@@ -406,10 +407,36 @@ export default function HomePage() {
        *   the FAQ closing. Same component the /providers page mounts. */}
       <EarningsSimulator />
 
-      {/* ─── 11 · FAQ (standalone) ──────────────────────────
+      {/* ─── 11 · FAQ + DEPLOYMENT MAP ──────────────────────
        *   Last informational block before the closing trust /
-       *   provider / final-CTA stack. */}
-      <HomeFAQ />
+       *   provider / final-CTA stack. Two-column trust row at lg+:
+       *   global-deployment world map on the left exposes the
+       *   six country nodes as one visual; FAQ accordion sits
+       *   adjacent on the right. Stacks on mobile (map first). */}
+      <section className="bg-[#fafaf7] py-16 sm:py-20" aria-label="Global deployment and frequently asked questions">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
+            <div>
+              <p className="text-amber-700 text-xs font-bold uppercase tracking-[0.18em] mb-2">
+                Global deployment
+              </p>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-3">
+                Six active country nodes
+              </h2>
+              <p className="text-sm text-slate-600 leading-relaxed mb-6 max-w-md">
+                Each marker opens its country shopfront — country-licensed
+                providers, distance-priced quotes, escrow on every booking.
+                Dotted corridors trace the Phase 4 intercontinental routes
+                planned through 2030.
+              </p>
+              <WorldDeploymentMap />
+            </div>
+            <div>
+              <HomeFAQ inline />
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ─── POSITION 11 ─ TRUST STATS STRIP ────────────────
        *   Live KPI bar showing marketplace strength with a pulsing
