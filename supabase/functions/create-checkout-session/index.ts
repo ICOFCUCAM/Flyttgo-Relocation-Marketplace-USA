@@ -65,10 +65,33 @@
 // ============================================================================
 
 import { serve } from 'https://deno.land/std@0.208.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 /* ─── Env ──────────────────────────────────────────────────────── */
-const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY') ?? '';
-const FRONTEND_URL      = (Deno.env.get('FRONTEND_URL') ?? 'https://flyttgo.us').replace(/\/$/, '');
+const STRIPE_SECRET_KEY         = Deno.env.get('STRIPE_SECRET_KEY') ?? '';
+const FRONTEND_URL              = (Deno.env.get('FRONTEND_URL') ?? 'https://flyttgo.us').replace(/\/$/, '');
+const SUPABASE_URL              = Deno.env.get('SUPABASE_URL') ?? '';
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+
+/* Service-role client for the caller-identity + booking-ownership
+ * lookups. We never use this to write — it's read-only here. */
+const supabase = SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
+  : null;
+
+/* Resolve caller's auth.users.id from the bearer token. Returns null
+ * when no token is present or the token can't be resolved — handler
+ * decides whether to 401. */
+async function resolveCallerUserId(req: Request): Promise<string | null> {
+  if (!supabase) return null;
+  const auth = req.headers.get('Authorization') || req.headers.get('authorization');
+  if (!auth) return null;
+  const token = auth.replace(/^Bearer\s+/i, '').trim();
+  if (!token) return null;
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error || !data?.user?.id) return null;
+  return data.user.id;
+}
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin':  '*',
@@ -137,6 +160,41 @@ serve(async (req: Request) => {
     return json({ error: 'amount is required and must be a positive number (USD)' }, 400);
   }
 
+  /* Caller-identity gate.
+   *
+   * For BOOKING checkouts we look up the booking's customer_id and
+   * require the caller's auth.uid to match. This stops a tampered
+   * client from creating a Stripe Checkout session against a booking
+   * they don't own (which would also confuse the success URL flow
+   * that lands the user on /my-bookings).
+   *
+   * For SUBSCRIPTION checkouts we require the caller's auth.uid to
+   * match either driverId or userId on the payload — both are
+   * supplied by DriverPortal and either is a valid identifier for
+   * the same person. */
+  const callerId = await resolveCallerUserId(req);
+  if (!callerId) return json({ error: 'unauthenticated' }, 401);
+
+  if (isSubscription(body)) {
+    if (callerId !== body.driverId && callerId !== body.userId) {
+      return json({ error: 'forbidden' }, 403);
+    }
+  } else {
+    if (!body.bookingId) {
+      return json({ error: 'bookingId is required' }, 400);
+    }
+    if (!supabase) {
+      return json({ error: 'server misconfigured: SUPABASE_SERVICE_ROLE_KEY missing' }, 500);
+    }
+    const { data: booking, error: bErr } = await supabase
+      .from('bookings')
+      .select('customer_id')
+      .eq('id', body.bookingId)
+      .single();
+    if (bErr || !booking) return json({ error: 'booking not found' }, 404);
+    if (booking.customer_id !== callerId) return json({ error: 'forbidden' }, 403);
+  }
+
   /* Build the common pieces up-front and then branch on request type. */
   const amountOre = Math.round(amount * 100); // USD → cents (Stripe smallest currency unit)
 
@@ -156,9 +214,7 @@ serve(async (req: Request) => {
     if (body.userId)      metadata.userId   = body.userId;
     if (body.billing)     metadata.billing  = body.billing;
   } else {
-    if (!body.bookingId) {
-      return json({ error: 'bookingId is required' }, 400);
-    }
+    /* bookingId presence already checked in the caller-identity gate above. */
     reference   = `booking-${body.bookingId}-${Date.now()}`;
     productName = body.description?.slice(0, 80) ?? `FlyttGo booking ${body.bookingId.slice(0, 8)}`;
     metadata.type      = 'booking';

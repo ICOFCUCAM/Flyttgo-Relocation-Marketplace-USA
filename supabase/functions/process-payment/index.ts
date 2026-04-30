@@ -143,8 +143,25 @@ function json(body: unknown, status = 200) {
 }
 
 interface ProcessPaymentRequest {
-  action:    'recalculate_price' | 'release_escrow';
+  action:    'recalculate_price' | 'release_escrow' | 'mark_paid';
   bookingId: string;
+}
+
+/* Resolve the caller's auth.users.id by validating the bearer token
+ * against Supabase Auth. Returns null when no token is present or the
+ * token can't be resolved — callers decide whether to 401.
+ *
+ * The function is deployed with --no-verify-jwt so we still receive
+ * unauthenticated requests for the legacy actions; we just enforce
+ * identity per-action where it matters. */
+async function resolveCallerUserId(req: Request): Promise<string | null> {
+  const auth = req.headers.get('Authorization') || req.headers.get('authorization');
+  if (!auth) return null;
+  const token = auth.replace(/^Bearer\s+/i, '').trim();
+  if (!token) return null;
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error || !data?.user?.id) return null;
+  return data.user.id;
 }
 
 serve(async (req: Request) => {
@@ -163,8 +180,16 @@ serve(async (req: Request) => {
   }
 
   try {
-    if (body.action === 'recalculate_price') return await recalculatePrice(body.bookingId);
-    if (body.action === 'release_escrow')    return await releaseEscrow(body.bookingId);
+    /* Every state-changing action now requires an authenticated
+     * caller. The functions themselves do the per-action ownership
+     * check (driver-only for recalculate, customer-or-driver for
+     * release, customer-only for mark_paid). */
+    const callerId = await resolveCallerUserId(req);
+    if (!callerId) return json({ error: 'unauthenticated' }, 401);
+
+    if (body.action === 'recalculate_price') return await recalculatePrice(body.bookingId, callerId);
+    if (body.action === 'release_escrow')    return await releaseEscrow(body.bookingId, callerId);
+    if (body.action === 'mark_paid')         return await markPaid(body.bookingId, callerId);
     return json({ error: `Unknown action: ${body.action}` }, 400);
   } catch (err) {
     console.error('process-payment error:', err);
@@ -174,13 +199,20 @@ serve(async (req: Request) => {
 
 /* ─── Action: recalculate_price ────────────────────────────────── */
 
-async function recalculatePrice(bookingId: string) {
+async function recalculatePrice(bookingId: string, callerUserId: string) {
   const { data: booking, error } = await supabase
     .from('bookings')
     .select('*')
     .eq('id', bookingId)
     .single();
   if (error || !booking) return json({ error: 'booking not found' }, 404);
+
+  /* Driver-only action — the price recalc fires from DriverPortal's
+   * "Finish Job" button, so only the assigned driver should be able
+   * to trigger it. Reject anyone else, even if they know the id. */
+  if (booking.driver_id !== callerUserId) {
+    return json({ error: 'forbidden' }, 403);
+  }
 
   /* Need start_time and end_time to compute actual_hours. DriverPortal
    * sets start_time on "Start Job" and end_time on "Finish Job". */
@@ -256,13 +288,21 @@ async function recalculatePrice(bookingId: string) {
 
 /* ─── Action: release_escrow ───────────────────────────────────── */
 
-async function releaseEscrow(bookingId: string) {
+async function releaseEscrow(bookingId: string, callerUserId: string) {
   const { data: booking, error: bookingErr } = await supabase
     .from('bookings')
     .select('*')
     .eq('id', bookingId)
     .single();
   if (bookingErr || !booking) return json({ error: 'booking not found' }, 404);
+
+  /* Either the booking's customer or its driver may trigger the
+   * release — it's the second of the two confirmations that flips
+   * the dual-confirmation gate below. Anyone else is forbidden,
+   * even if they know the booking id. */
+  if (booking.customer_id !== callerUserId && booking.driver_id !== callerUserId) {
+    return json({ error: 'forbidden' }, 403);
+  }
 
   /* Dual-confirmation guard — both sides must have clicked their
    * "Complete" button before money moves. */
@@ -359,4 +399,70 @@ async function releaseEscrow(bookingId: string) {
     driverEarning:  earning,
     plan,
   });
+}
+
+/* ─── Action: mark_paid ────────────────────────────────────────────
+ *
+ * Customer-side fallback path used by PaymentPage when the Stripe
+ * Checkout session is unavailable in dev. Flips
+ * bookings.payment_status from 'pending' → 'escrow' and seeds the
+ * escrow row with the driver_earning. The check that the booking is
+ * still 'pending' makes the action idempotent and prevents replay-
+ * attack double-marking.
+ *
+ * Security model:
+ *   - The caller MUST be the customer who owns the booking. Verified
+ *     against booking.customer_id with the JWT-resolved auth.uid.
+ *   - The booking's existing payment_status must be 'pending'. Any
+ *     other state (already paid / refunded / released / cancelled) is
+ *     a noop with a 409.
+ *   - driverEarning is computed from booking.price_estimate × 0.8
+ *     server-side; the client doesn't get to dictate the amount.
+ *
+ * RLS note: this replaces the previous client-side
+ *   await supabase.from('bookings').update({ payment_status:'escrow' })
+ * which would have required a permissive RLS policy that lets a
+ * customer flip their own payment_status, which is itself a finance-
+ * sensitive column. By moving here we can keep RLS read-only for
+ * payment_status and let only the service-role key (this function)
+ * write it.
+ * ──────────────────────────────────────────────────────────────── */
+async function markPaid(bookingId: string, callerUserId: string) {
+  const { data: booking, error: bErr } = await supabase
+    .from('bookings')
+    .select('id, customer_id, payment_status, price_estimate, original_price')
+    .eq('id', bookingId)
+    .single();
+  if (bErr || !booking) return json({ error: 'booking not found' }, 404);
+
+  if (booking.customer_id !== callerUserId) {
+    return json({ error: 'forbidden' }, 403);
+  }
+  if (booking.payment_status && booking.payment_status !== 'pending') {
+    return json({ error: 'booking is not in pending state', payment_status: booking.payment_status }, 409);
+  }
+
+  const price = Number(booking.price_estimate ?? booking.original_price ?? 0);
+  if (!price || price <= 0) {
+    return json({ error: 'booking has no positive price' }, 400);
+  }
+
+  /* 80/20 split mirrors the PaymentPage fallback we replaced. The
+   * release_escrow action computes the actual commission later from
+   * the driver's plan; this is just a placeholder to seed the row. */
+  const driverEarning = Math.round(price * 0.8);
+
+  const { error: payErr } = await supabase
+    .from('bookings')
+    .update({ payment_status: 'escrow' })
+    .eq('id', bookingId);
+  if (payErr) return json({ error: 'booking payment_status update failed', detail: payErr.message }, 500);
+
+  const { error: escErr } = await supabase
+    .from('escrow_payments')
+    .update({ driver_earning: driverEarning, status: 'escrow' })
+    .eq('booking_id', bookingId);
+  if (escErr) return json({ error: 'escrow update failed', detail: escErr.message }, 500);
+
+  return json({ ok: true, bookingId, driverEarning });
 }

@@ -101,8 +101,8 @@ export default function DriverApplicationStatusPage() {
         .eq('driver_id', user.id);
 
       setDocuments((docs as DriverDocument[]) ?? []);
-    } catch (e: any) {
-      setError(e.message || 'Unable to load your application.');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Unable to load your application.');
     }
     setLoading(false);
   }

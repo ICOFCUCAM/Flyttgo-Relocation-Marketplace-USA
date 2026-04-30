@@ -130,6 +130,57 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
     ],
     pricingTier: 'labor-only',
   },
+  {
+    slug:    'international',
+    name:    'International relocation',
+    tagline: 'Cross-border relocations with customs + freight forwarding',
+    intro:   "Cross-border relocations coordinated through licensed international freight forwarders. Air, sea, and road consolidation; HS-code customs clearance; door-to-door insured transit; and a dedicated coordinator for every shipment.",
+    matches: ['international', 'cross-border', 'freight forwarding'],
+    howItWorks: [
+      { title: 'Customs-aware quote',  body: 'Quote includes export packing, customs clearance, and destination-country duties so the price you see is the price you pay.' },
+      { title: 'Mode + transit choice', body: 'Air for speed, sea container for volume, consolidated road for the EU. Side-by-side timeline and price.' },
+      { title: 'Door-to-door tracking', body: 'One coordinator from origin pickup to destination delivery; live status on every leg.' },
+    ],
+    faq: [
+      { q: 'Do you handle customs paperwork?',     a: 'Yes — every international provider on FlyttGo employs licensed customs brokers and submits the EAD/MRN, ENS, and destination clearance docs on your behalf.' },
+      { q: 'How is duty + tax calculated?',        a: "Duty is computed from the destination country's tariff schedule against the inventory HS-codes; the quote shows it as a separate line so you can budget accurately." },
+    ],
+    pricingTier: 'long-distance',
+  },
+  {
+    slug:    'truck-rental',
+    name:    'Truck rental',
+    tagline: 'DIY-friendly trucks with optional crew add-ons',
+    intro:   "Rent a truck, drive yourself, save the labour line on your quote. Box trucks, lutons, and panel vans across all six markets — partnered with U-Haul, Penske, Enterprise, Sixt, and Movecar so you book through one funnel.",
+    matches: ['truck rental', 'rental', 'self-drive'],
+    howItWorks: [
+      { title: 'Pick truck + window',  body: 'Same booking flow as a full-service move; pick "Truck rental only" for the truck on its own.' },
+      { title: 'Add a loading crew',   body: 'Most renters add a 2-helper labour-only crew at the pickup end — booking flow surfaces local crews automatically.' },
+      { title: 'One-way returns',      body: 'One-way drop-off at any partner depot in the destination city; hourly + daily mileage shown upfront.' },
+    ],
+    faq: [
+      { q: 'Do I need a special licence?',         a: 'For trucks under 3.5t / 7.5t (depending on market) a standard car licence is sufficient; the booking flow checks against the country licence rules at quote time.' },
+      { q: 'Is insurance included?',               a: 'Liability + damage waiver included; full goods-in-transit cover is an optional upsell at checkout.' },
+    ],
+    pricingTier: 'local',
+  },
+  {
+    slug:    'student',
+    name:    'Student relocation',
+    tagline: 'University-corridor moves, term-aware scheduling, summer-storage included',
+    intro:   "Relocations for students moving in / out of halls, between universities, or onto a year abroad. Term-aware scheduling, university-corridor pricing, summer-storage add-ons, and ID-verified providers around campus zones.",
+    matches: ['student', 'university', 'campus'],
+    howItWorks: [
+      { title: 'Term-aware date picker', body: 'Booking flow flags peak move-in / move-out windows so you avoid surge pricing during freshers week.' },
+      { title: 'Summer-storage option',  body: 'Pack out before exams, recall when term resumes — providers offer 3 / 6 / 12-week storage blocks at student rates.' },
+      { title: 'Verified campus crews',  body: 'Providers in the Student tier are ID-verified for halls of residence and follow university security check-in procedures.' },
+    ],
+    faq: [
+      { q: 'Do you have a student discount?',      a: 'Yes — verified .edu / .ac.uk / university email addresses unlock a 10% Welcome credit on the first booking.' },
+      { q: 'Can I pack a single room?',            a: 'Single-room moves are the typical student booking; the widget defaults to "1 room" so you get an indicative total in seconds.' },
+    ],
+    pricingTier: 'local',
+  },
 ];
 
 export function findServiceCategory(slug: string | null | undefined): ServiceCategory | undefined {

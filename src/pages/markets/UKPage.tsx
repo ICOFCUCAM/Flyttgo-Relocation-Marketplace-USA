@@ -1,9 +1,10 @@
-import React from 'react';
 import CountryPage from '../../components/global/CountryPage';
+import CountrySEOSection from '../../components/seo/CountrySEOSection';
 
 export default function UKPage() {
   return (
     <CountryPage
+      seoSlot={<CountrySEOSection countryCode="uk" languageCode="en" />}
       iso2="gb" flag="🇬🇧"
       name="United Kingdom"
       localLabel="UK deployment node"

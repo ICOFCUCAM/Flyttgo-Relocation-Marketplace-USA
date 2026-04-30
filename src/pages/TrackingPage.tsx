@@ -1,9 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../lib/store';
 import DeliveryMap from '../components/DeliveryMap';
 import { useAuth } from '../lib/auth';
-import { supabase } from '../lib/supabase';
+import {
+  useActiveBookingForCustomer,
+  useTrackingBookingSearch,
+} from '../hooks/queries/useCustomerBookings';
 
 interface Stage { label: string; time: string; done: boolean; icon: string; }
 
@@ -38,31 +41,31 @@ export default function TrackingPage() {
   const { setPage } = useApp();
   const { user } = useAuth();
   const [bookingId, setBookingId] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [searched, setSearched] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [booking, setBooking] = useState<any>(null);
   const [eta, setEta] = useState(12);
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<{ text: string; from: 'you' | 'driver'; time: string }[]>([]);
-  const [stages, setStages] = useState<Stage[]>(DEFAULT_STAGES);
   const chatRef = useRef<HTMLDivElement>(null);
 
-  /* Auto-load user's active booking */
+  /* Two sources for "which booking are we tracking":
+   *   1. Auto-load: the user's currently in-flight booking (if any).
+   *   2. Search: the user pasted a booking id and pressed Enter.
+   * We prefer the searched booking once searchTerm is non-empty so a
+   * customer who tracks a friend's booking doesn't keep getting
+   * bumped back to their own active row. */
+  const { data: activeBooking } = useActiveBookingForCustomer(user?.id);
+  const { data: searchedBooking, isFetching: searchLoading } = useTrackingBookingSearch(searchTerm);
+  const booking = searchTerm ? searchedBooking ?? null : activeBooking ?? null;
+
+  /* Mark "searched" for either source so the rest of the UI renders. */
   useEffect(() => {
-    if (!user) return;
-    supabase.from('bookings').select('*')
-      .eq('customer_id', user.id)
-      .not('status', 'in', '("completed","cancelled")')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .then(({ data }) => {
-        if (data?.[0]) { setBooking(data[0]); setSearched(true); applyStages(data[0].status); }
-      });
-  }, [user]);
+    if (booking) setSearched(true);
+  }, [booking]);
 
   /* ETA countdown */
   useEffect(() => {
-    if (!searched) return;
+    if (!searched) return undefined;
     const timer = setInterval(() => setEta(p => Math.max(0, p - 1)), 15000);
     return () => clearInterval(timer);
   }, [searched]);
@@ -72,29 +75,25 @@ export default function TrackingPage() {
     chatRef.current?.scrollTo({ top: chatRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
 
-  function applyStages(status: string) {
-    const idx = STATUS_TO_STAGE[status] ?? 0;
-    setStages(DEFAULT_STAGES.map((s, i) => ({
+  /* Derive stage timeline from the booking status. */
+  const stages: Stage[] = (() => {
+    const idx = STATUS_TO_STAGE[booking?.status ?? ''] ?? 0;
+    return DEFAULT_STAGES.map((s, i) => ({
       ...s,
       done: i <= idx,
-      time: i <= idx ? new Date(Date.now() - (idx - i) * 900000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
-    })));
-  }
+      time: i <= idx ? new Date(Date.now() - (idx - i) * 900_000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+    }));
+  })();
 
-  async function handleTrack() {
-    if (!bookingId.trim()) return;
-    setLoading(true);
-    const { data } = await supabase.from('bookings').select('*')
-      .or(`id.eq.${bookingId},id.ilike.%${bookingId}%`)
-      .limit(1);
-    setLoading(false);
-    if (data?.[0]) { setBooking(data[0]); applyStages(data[0].status); }
-    else setBooking(null);
+  function handleTrack() {
+    const q = bookingId.trim();
+    if (!q) return undefined;
+    setSearchTerm(q);
     setSearched(true);
   }
 
   function sendMessage() {
-    if (!message.trim()) return;
+    if (!message.trim()) return undefined;
     const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     setMessages(m => [...m, { text: message, from: 'you', time: now }]);
     setMessage('');
@@ -126,9 +125,9 @@ export default function TrackingPage() {
                 className="w-full pl-9 pr-4 py-3.5 rounded-xl text-sm shadow-lg focus:ring-2 focus:ring-[#F2B705] outline-none"
               />
             </div>
-            <button onClick={handleTrack} disabled={loading}
+            <button onClick={handleTrack} disabled={searchLoading}
               className="px-6 py-3.5 bg-[#F2B705] text-[#0B2E59] font-bold rounded-xl hover:bg-[#F2B705]/90 transition disabled:opacity-60 whitespace-nowrap">
-              {loading ? '...' : t('tracking.trackBtn')}
+              {searchLoading ? '...' : t('tracking.trackBtn')}
             </button>
           </div>
           {!user && (

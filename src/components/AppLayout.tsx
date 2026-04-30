@@ -60,6 +60,7 @@ const ProviderProfilePage = lazy(() => import('../pages/ProviderProfilePage'));
 const ProvidersDirectoryPage = lazy(() => import('../pages/ProvidersDirectoryPage'));
 const ComparePage = lazy(() => import('../pages/ComparePage'));
 const ServiceCategoryPage = lazy(() => import('../pages/ServiceCategoryPage'));
+const CorridorPage = lazy(() => import('../pages/CorridorPage'));
 const PricingPage = lazy(() => import('../pages/PricingPage'));
 const ProviderPricingSettingsPage = lazy(() => import('../pages/provider/PricingSettingsPage'));
 const ProviderRequirementsPage = lazy(() => import('../pages/ProviderRequirementsPage'));
@@ -114,19 +115,19 @@ export default function AppLayout() {
    * shopfront, and clean the URL so a refresh doesn't re-trigger.
    * Runs once at boot. */
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return undefined;
     const params = new URLSearchParams(window.location.search);
     const token  = params.get('q');
-    if (!token) return;
+    if (!token) return undefined;
 
     let cancelled = false;
     void Promise.all([
       import('../lib/saved-quotes-store'),
       import('../lib/analytics'),
     ]).then(([store, analytics]) => {
-      if (cancelled) return;
+      if (cancelled) return undefined;
       const payload = store.decodeSharedQuote(token);
-      if (!payload) return;
+      if (!payload) return undefined;
       store.saveQuote({ ...payload, label: payload.label ?? 'Shared with you' });
       analytics.track('shared_quote_received', { country: payload.country });
 
@@ -160,7 +161,6 @@ export default function AppLayout() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  const legalPages = ['terms', 'privacy', 'liability', 'driver-terms'];
   /* The auth callback page is a transient, full-screen landing surface
    * for Supabase email-confirmation / OAuth redirects — chrome would
    * just be visual noise during the ~100 ms session handoff. */
@@ -228,6 +228,7 @@ export default function AppLayout() {
       case 'providers-directory':    return <ProvidersDirectoryPage />;
       case 'compare':                return <ComparePage />;
       case 'service-category':       return <ServiceCategoryPage />;
+      case 'corridor':               return <CorridorPage />;
       case 'pricing':                return <PricingPage />;
       case 'provider-pricing-settings': return <ProviderPricingSettingsPage />;
       case 'provider-requirements':  return <ProviderRequirementsPage />;

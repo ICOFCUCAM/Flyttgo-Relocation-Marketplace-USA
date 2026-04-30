@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApp, Page } from '../lib/store';
+import MarketplaceBanner from '../components/banners/MarketplaceBanner';
 
 interface Topic {
   icon: string;
@@ -93,21 +94,24 @@ export default function HelpCenterPage() {
   return (
     <div className="min-h-screen bg-white">
 
-      {/* HERO */}
-      <section className="bg-gradient-to-br from-[#0B2E59] to-[#1a4a8a] text-white py-20">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 text-white/80 text-xs font-medium px-4 py-2 rounded-full mb-6">
-            📚 {t('help.heroBadge')}
-          </div>
-          <h1 className="text-5xl font-extrabold mb-5 leading-tight">{t('help.heroTitle')}</h1>
-          <p className="text-white/75 text-lg mb-8">{t('help.heroSubtitle')}</p>
-          <div className="relative max-w-xl mx-auto">
-            <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <MarketplaceBanner
+        variant="inverse"
+        eyebrow={t('help.heroBadge')}
+        breadcrumb={{ id: 'GLRM.HC', label: 'Help Center' }}
+        headline={t('help.heroTitle')}
+        lead={t('help.heroSubtitle')}
+      />
+
+      {/* Search bar — sits as its own band right under the banner */}
+      <section className="bg-white border-b border-slate-200 py-6">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative">
+            <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
             <input type="text" value={search} onChange={e => setSearch(e.target.value)}
               placeholder={t('help.searchPlaceholder')}
-              className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white text-gray-900 placeholder-gray-400 focus:ring-4 focus:ring-emerald-400 outline-none shadow-xl"/>
+              className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-white text-slate-900 placeholder-slate-400 border border-slate-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/40 outline-none shadow-sm"/>
           </div>
         </div>
       </section>

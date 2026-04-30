@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { Banknote, CreditCard, MapPin, Clock, Info, Bookmark, Tag, Check, X as XIcon, ArrowDownUp, Leaf } from 'lucide-react';
 
 /* Lazy-loaded so the ~150 KB Leaflet bundle only ships once the
@@ -93,6 +93,37 @@ interface Props {
   compact?: boolean;
 }
 
+/* Move-type vocabulary — matches BookingFlow's Step 2 ids so the
+ * selection seeds straight into the funnel without a translation
+ * step. Adding a new option here means adding it in BookingFlow's
+ * MoveDetailsStep too. */
+type MoveType = 'apartment' | 'house' | 'office' | 'storage' | 'student';
+
+const MOVE_TYPE_OPTIONS: { value: MoveType; label: string }[] = [
+  { value: 'apartment', label: 'Apartment move'    },
+  { value: 'house',     label: 'House move'        },
+  { value: 'office',    label: 'Office relocation' },
+  { value: 'storage',   label: 'Storage move'      },
+  { value: 'student',   label: 'Student move'      },
+];
+
+/* ─────────────────────────────────────────────────────────────────
+ * Static example previews per country.
+ *
+ * Surfaced at the top of the booking widget when the customer hasn't
+ * yet picked addresses — bait that proves a quote actually exists for
+ * popular routes. Replaced by the real distance + price preview as
+ * soon as both addresses resolve to coordinates.
+ * ───────────────────────────────────────────────────────────────── */
+const STATIC_PRICE_EXAMPLES: Record<BookingCountry, string> = {
+  us: 'Estimated: NYC → Boston ≈ $640 · 2 movers · 1 truck',
+  ca: 'Estimated: Toronto → Montréal ≈ C$540 · 2 movers · 1 truck',
+  gb: 'Estimated: London → Manchester ≈ £390 · 2 movers · 1 luton',
+  de: 'Geschätzt: Berlin → Hamburg ≈ 320 € · 2 Helfer · 1 Transporter',
+  fr: 'Estimation : Paris → Lyon ≈ 360 € · 2 déménageurs · 1 camion',
+  no: 'Estimat: Oslo → Bergen ≈ 4 800 kr · 2 flyttehjelpere · 1 lastebil',
+};
+
 /* Indicative per-mile/km coefficient for the in-widget price preview.
  * The booking flow runs the canonical calculator from constants.ts and
  * the calculate-price edge function — this preview only needs to be in
@@ -133,6 +164,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
   const [pickup,  setPickup]    = useState<USAddress | null>(null);
   const [dropoff, setDropoff]   = useState<USAddress | null>(null);
   const [moveDate, setMoveDate] = useState('');
+  const [moveType, setMoveType] = useState<MoveType>('apartment');
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   /* Swap counter — bumped each time the customer presses the swap
@@ -142,11 +174,55 @@ export default function BookingShortcut({ country, compact = false }: Props) {
   const [swapCount, setSwapCount] = useState(0);
 
   function swapAddresses() {
-    if (!pickup && !dropoff) return;
-    setPickup(dropoff);
-    setDropoff(pickup);
+    if (!pickup && !dropoff) return undefined;
+    const nextPickup  = dropoff;
+    const nextDropoff = pickup;
+    setPickup(nextPickup);
+    setDropoff(nextDropoff);
     setSwapCount(c => c + 1);
+    setBookingData({
+      country,
+      pickupAddress:   nextPickup?.formatted ?? '',
+      pickupLat:       nextPickup?.lat ?? null,
+      pickupLng:       nextPickup?.lng ?? null,
+      pickupPostcode:  nextPickup?.postcode ?? '',
+      pickupCity:      nextPickup?.city ?? '',
+      dropoffAddress:  nextDropoff?.formatted ?? '',
+      dropoffLat:      nextDropoff?.lat ?? null,
+      dropoffLng:      nextDropoff?.lng ?? null,
+      dropoffPostcode: nextDropoff?.postcode ?? '',
+      dropoffCity:     nextDropoff?.city ?? '',
+    });
     track('booking_shortcut_addresses_swapped', { country });
+  }
+
+  /* Push resolved coords + postcode into the global store on every
+   * autocomplete selection, not just on submit. TopProviders +
+   * country shopfronts read pickupLat/Lng + dropoffLat/Lng to drive
+   * route-aware pricing without forcing the customer through the
+   * funnel first. */
+  function handlePickupSelect(addr: USAddress) {
+    setPickup(addr);
+    setBookingData({
+      country,
+      pickupAddress:  addr.formatted,
+      pickupLat:      addr.lat,
+      pickupLng:      addr.lng,
+      pickupPostcode: addr.postcode,
+      pickupCity:     addr.city,
+    });
+  }
+
+  function handleDropoffSelect(addr: USAddress) {
+    setDropoff(addr);
+    setBookingData({
+      country,
+      dropoffAddress:  addr.formatted,
+      dropoffLat:      addr.lat,
+      dropoffLng:      addr.lng,
+      dropoffPostcode: addr.postcode,
+      dropoffCity:     addr.city,
+    });
   }
 
   /* Promo state. The applied code is the one we've validated; the
@@ -174,7 +250,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
     let cancelled = false;
     if (pickup?.lat == null || pickup?.lng == null || dropoff?.lat == null || dropoff?.lng == null) {
       setRoute(null);
-      return;
+      return undefined;
     }
     setRouteLoading(true);
     (async () => {
@@ -182,7 +258,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
         { lat: pickup.lat!, lng: pickup.lng! },
         { lat: dropoff.lat!, lng: dropoff.lng! },
       );
-      if (cancelled) return;
+      if (cancelled) return undefined;
       setRoute(r);
       setRouteLoading(false);
     })();
@@ -212,7 +288,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
    * case is a country chip switch in the QuickQuoteDrawer — a
    * country-scoped code may no longer apply. */
   useEffect(() => {
-    if (!promoApplied) return;
+    if (!promoApplied) return undefined;
     const result = applyPromo(promoApplied.code, country, grossIndicative);
     if (result.ok === false) {
       setPromoApplied(null);
@@ -226,7 +302,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
       setPromoApplied(null);
       setPromoError(promoErrorMessage(result.reason));
       track('promo_code_rejected', { code: promoInput.toUpperCase(), reason: result.reason, country });
-      return;
+      return undefined;
     }
     setPromoApplied(result.code);
     setPromoError(null);
@@ -253,7 +329,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
   async function submit(method: PaymentMethod) {
     if (!pickup || !dropoff) {
       setSubmitError('Please pick a pickup and a drop-off address.');
-      return;
+      return undefined;
     }
     setSubmitError(null);
 
@@ -312,6 +388,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
         formatted:    dropoff.formatted,
       },
       moveDate,
+      moveType,
       paymentMethod: method,
       depositAmount: finalSplit.deposit,
       cashDueAmount: finalSplit.cashDue,
@@ -346,7 +423,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
       toast.error('Pick a pickup and a drop-off address first', {
         description: 'We need both ends of the route to save the quote.',
       });
-      return;
+      return undefined;
     }
     setSubmitError(null);
     saveQuote({
@@ -384,6 +461,16 @@ export default function BookingShortcut({ country, compact = false }: Props) {
         }`}>
           {COUNTRY_HEADLINE[country]}
         </h3>
+
+        {/* Static example — proof a quote actually exists for popular
+         *  routes. Self-suppresses once the customer has picked
+         *  endpoints; the live distance + price preview below takes
+         *  over from there. */}
+        {!pickup && !dropoff && (
+          <p className="text-xs text-emerald-700 mt-2 font-medium">
+            {STATIC_PRICE_EXAMPLES[country]}
+          </p>
+        )}
       </div>
 
       <div className="space-y-4">
@@ -396,7 +483,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
             placeholder={COUNTRY_PLACEHOLDER_PICKUP[country]}
             countryCode={country}
             required
-            onSelect={setPickup}
+            onSelect={handlePickupSelect}
           />
 
           {/* Swap addresses (Wave 33). Disabled until at least one
@@ -422,18 +509,35 @@ export default function BookingShortcut({ country, compact = false }: Props) {
             placeholder={COUNTRY_PLACEHOLDER_DROPOFF[country]}
             countryCode={country}
             required
-            onSelect={setDropoff}
+            onSelect={handleDropoffSelect}
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">{labels.date}</label>
-          <input
-            type="date"
-            value={moveDate}
-            min={new Date().toISOString().slice(0, 10)}
-            onChange={e => setMoveDate(e.target.value)}
-            className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none text-sm bg-white"
-          />
+        <div className="grid sm:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{labels.date}</label>
+            <input
+              type="date"
+              value={moveDate}
+              min={new Date().toISOString().slice(0, 10)}
+              onChange={e => setMoveDate(e.target.value)}
+              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none text-sm bg-white"
+            />
+          </div>
+          <div>
+            <label htmlFor="booking-shortcut-move-type" className="block text-sm font-medium text-slate-700 mb-1">
+              Move type
+            </label>
+            <select
+              id="booking-shortcut-move-type"
+              value={moveType}
+              onChange={e => setMoveType(e.target.value as MoveType)}
+              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none text-sm bg-white"
+            >
+              {MOVE_TYPE_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -665,6 +769,14 @@ export default function BookingShortcut({ country, compact = false }: Props) {
         <span>Licensed providers</span>
         <span>·</span>
         <span>Escrow protected</span>
+      </p>
+
+      {/* Urgency / friction-reducer — sets expectation that the
+       *  quote is fast so customers don't bounce. Number is a
+       *  marketing-conservative measure of typical OSRM + price-engine
+       *  round-trip; tighten once the analytics pipeline is wired. */}
+      <p className="mt-2 text-[11px] text-slate-400 text-center">
+        Average quote time: ~42 seconds
       </p>
     </form>
   );

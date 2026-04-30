@@ -1,4 +1,3 @@
-import React from 'react';
 import { Home, Search, MessageCircle, User, type LucideIcon } from 'lucide-react';
 import { useApp, Page } from '../../lib/store';
 import { useAuth } from '../../lib/auth';

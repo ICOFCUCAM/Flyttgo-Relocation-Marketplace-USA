@@ -1,4 +1,3 @@
-import React from 'react';
 import { Clock, X, Star, ArrowRight, Truck } from 'lucide-react';
 import { useApp } from '../../lib/store';
 import {

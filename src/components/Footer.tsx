@@ -1,4 +1,3 @@
-import React from 'react';
 import { Star, ShieldCheck, BadgeCheck, Truck, CreditCard, Cookie } from 'lucide-react';
 import { useApp, Page } from '../lib/store';
 import { reopenCookieConsent } from './CookieConsent';
@@ -6,58 +5,64 @@ import { track } from '../lib/analytics';
 
 interface LinkItem { label: string; page: Page; }
 
-const MARKETS: LinkItem[] = [
-  { label: 'United States',  page: 'market-us' },
-  { label: 'Canada',         page: 'market-canada' },
-  { label: 'Germany',        page: 'market-germany' },
-  { label: 'France',         page: 'market-france' },
-  { label: 'United Kingdom', page: 'market-uk' },
-  { label: 'Norway',         page: 'market-norway' },
+/* ─────────────────────────────────────────────────────────────────
+ * Footer columns — 6 lanes per the marketplace navigation hub spec:
+ *
+ *   Customers  → demand-side: book, compare, request quotes
+ *   Providers  → supply-side: apply, requirements, subscriptions
+ *   Enterprise → institutional: corporate / universities / govt / NGO
+ *   Countries  → six localized marketplaces
+ *   Legal      → ToS, privacy, dispute, provider terms, compliance
+ *   Platform   → company + infrastructure: about, press, partners
+ *
+ * Each link routes through useApp().setPage so the in-app router
+ * picks it up; all destinations are real pages registered in
+ * lib/pageRoutes.ts.
+ * ───────────────────────────────────────────────────────────────── */
+
+const CUSTOMERS: LinkItem[] = [
+  { label: 'How booking works',     page: 'how-it-works' },
+  { label: 'Pricing guide',         page: 'pricing' },
+  { label: 'Insurance coverage',    page: 'liability' },
+  { label: 'Escrow protection',     page: 'safety' },
+  { label: 'FAQ',                   page: 'faq' },
+];
+
+const PROVIDERS: LinkItem[] = [
+  { label: 'Earnings simulator',    page: 'providers' },
+  { label: 'Join FlyttGo',          page: 'driver-onboarding' },
+  { label: 'Subscription tiers',    page: 'subscriptions' },
+  { label: 'Provider dashboard',    page: 'driver-portal' },
+];
+
+const ENTERPRISE: LinkItem[] = [
+  { label: 'Corporate relocation',   page: 'enterprise-relocation' },
+  { label: 'Universities',           page: 'universities' },
+  { label: 'Municipal relocation',   page: 'pilot-deployment-programs' },
+  { label: 'Government mobility',    page: 'government-programs' },
+];
+
+const COUNTRIES: LinkItem[] = [
+  { label: 'USA',     page: 'market-us' },
+  { label: 'Canada',  page: 'market-canada' },
+  { label: 'UK',      page: 'market-uk' },
+  { label: 'France',  page: 'market-france' },
+  { label: 'Germany', page: 'market-germany' },
+  { label: 'Norway',  page: 'market-norway' },
 ];
 
 const PLATFORM: LinkItem[] = [
-  { label: 'Marketplace',           page: 'marketplace' },
-  { label: 'Request quotes',        page: 'request-quote' },
-  { label: 'Providers',             page: 'providers' },
-  { label: 'Provider requirements', page: 'provider-requirements' },
-  { label: 'Browse providers',      page: 'providers-directory' },
-  { label: 'Compare providers',     page: 'compare' },
-  { label: 'Pricing',               page: 'pricing' },
-  { label: 'How It Works',          page: 'how-it-works' },
-  { label: 'Enterprise Relocation', page: 'enterprise-relocation' },
-  { label: 'Universities',          page: 'universities' },
-  { label: 'Partners',              page: 'partners' },
-  { label: 'Compliance',            page: 'compliance' },
-];
-
-const INSTITUTIONAL: LinkItem[] = [
-  { label: 'Enterprise Relocation',  page: 'enterprise-relocation' },
-  { label: 'Corporate Workforce',    page: 'corporate' },
-  { label: 'University Mobility',    page: 'universities' },
-  { label: 'Government Programs',    page: 'government-programs' },
-  { label: 'NGO Deployment',         page: 'ngo-deployment' },
-  { label: 'Pilot Programs',         page: 'pilot-deployment-programs' },
-  { label: 'Deployment Regions',     page: 'deployment-regions' },
-  { label: 'Vendor Compliance Pack', page: 'vendor-pack' },
-  { label: 'Capability Brief',       page: 'capability-brief' },
-  { label: 'Submit Procurement RFP', page: 'procurement-rfp' },
-];
-
-const COMPANY: LinkItem[] = [
-  { label: 'About',                 page: 'about' },
-  { label: 'Contact',               page: 'contact' },
-  { label: 'Careers',               page: 'careers' },
-  { label: 'Press',                 page: 'press' },
-  { label: 'Sustainability',        page: 'sustainability' },
-  { label: 'Refer & earn £25',      page: 'refer' },
+  { label: 'About FlyttGo',  page: 'about' },
+  { label: 'Careers',        page: 'careers' },
+  { label: 'Press',          page: 'press' },
+  { label: 'Partners',       page: 'partners' },
 ];
 
 const LEGAL: LinkItem[] = [
-  { label: 'Terms of Service',      page: 'terms' },
-  { label: 'Privacy Policy',        page: 'privacy' },
-  { label: 'Liability',             page: 'liability' },
-  { label: 'Provider Terms',        page: 'driver-terms' },
-  { label: 'File a dispute',        page: 'dispute' },
+  { label: 'Terms',            page: 'terms' },
+  { label: 'Privacy',          page: 'privacy' },
+  { label: 'Escrow policy',    page: 'safety' },
+  { label: 'Insurance terms',  page: 'liability' },
 ];
 
 export default function Footer() {
@@ -148,13 +153,14 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* ── Sitemap ───────────────────────────────────────────── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
-        <FooterColumn title="Markets" items={MARKETS} onNav={go} />
-        <FooterColumn title="Platform" items={PLATFORM} onNav={go} />
-        <FooterColumn title="Institutional" items={INSTITUTIONAL} onNav={go} />
-        <FooterColumn title="Company" items={COMPANY} onNav={go} />
-        <FooterColumn title="Legal" items={LEGAL} onNav={go} />
+      {/* ── Sitemap — 6-column platform navigation hub ─────────── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8">
+        <FooterColumn title="Customers"  items={CUSTOMERS}  onNav={go} />
+        <FooterColumn title="Providers"  items={PROVIDERS}  onNav={go} />
+        <FooterColumn title="Enterprise" items={ENTERPRISE} onNav={go} />
+        <FooterColumn title="Countries"  items={COUNTRIES}  onNav={go} />
+        <FooterColumn title="Legal"      items={LEGAL}      onNav={go} />
+        <FooterColumn title="Platform"   items={PLATFORM}   onNav={go} />
       </div>
 
       {/* ── Bottom band ───────────────────────────────────────── */}

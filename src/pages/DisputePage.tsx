@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft, ArrowRight, ShieldCheck, AlertTriangle, Send, Inbox,
   Loader2, Upload, Camera, FileText, MessageSquare,

@@ -1,6 +1,6 @@
-import React from 'react';
 import { useApp } from '../lib/store';
 import { SectionIndex } from '../components/global/CountryPage';
+import MarketplaceBanner from '../components/banners/MarketplaceBanner';
 
 const WORKFLOWS = [
   {
@@ -26,20 +26,22 @@ export default function EnterpriseRelocationPage() {
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
-      <section className="border-b border-slate-200 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-6 py-20">
-          <SectionIndex id="GLRM.01" label="Enterprise relocation" />
-          <h1 className="font-serif text-5xl lg:text-6xl leading-[1.05] tracking-tight">
-            Procurement-grade relocation coordination
-          </h1>
-          <p className="mt-6 text-lg leading-relaxed text-slate-700 max-w-3xl">
-            Enterprise, government, university, and project-based relocation
-            workflows — coordinated across the United States, Canada, Germany,
-            France, the United Kingdom, and Norway through one shared
-            platform and one consolidated invoicing surface.
-          </p>
-        </div>
-      </section>
+      <MarketplaceBanner
+        eyebrow="Enterprise Relocation"
+        breadcrumb={{ id: 'GLRM.01', label: 'Enterprise relocation' }}
+        headline="Procurement-grade relocation coordination"
+        lead="Enterprise, government, university, and project-based relocation workflows — coordinated across the United States, Canada, Germany, France, the United Kingdom, and Norway through one shared platform and one consolidated invoicing surface."
+        compliancePills={[
+          { label: 'Country-licensed providers' },
+          { label: 'Consolidated invoicing' },
+          { label: 'Audit-ready records' },
+          { label: 'ERP-friendly exports' },
+        ]}
+        ctas={[
+          { label: 'Submit an RFP →',     onClick: () => setPage('procurement-rfp'), primary: true },
+          { label: 'Capability brief',    onClick: () => setPage('capability-brief') },
+        ]}
+      />
 
       <section className="border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-6 py-20">

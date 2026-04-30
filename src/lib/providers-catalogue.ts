@@ -52,6 +52,12 @@ export interface ProviderRecord {
   availability?: 'available_now' | 'books_fast' | 'slots_left' | 'busy';
   /** Optional integer slot count, used when availability='slots_left'. */
   slotsLeft?:    number;
+  /** True for marketplace providers who have completed onboarding
+   *  and accept instant bookings. False for discovery-tier listings
+   *  that exist as acquisition signals only — see
+   *  src/lib/discovery-providers.ts. Defaults to true on every
+   *  curated catalogue entry. */
+  isOnboarded?:  boolean;
 }
 
 export const PROVIDERS: ProviderRecord[] = [

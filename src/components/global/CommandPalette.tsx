@@ -83,7 +83,7 @@ export default function CommandPalette({ open, onClose }: Props) {
 
   /* Esc closes; click-outside is handled by the backdrop element. */
   useEffect(() => {
-    if (!open) return;
+    if (!open) return undefined;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -230,7 +230,7 @@ export default function CommandPalette({ open, onClose }: Props) {
 
   /* Keyboard navigation inside the palette. */
   useEffect(() => {
-    if (!open) return;
+    if (!open) return undefined;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'ArrowDown') { e.preventDefault(); setActive(a => Math.min(a + 1, filtered.length - 1)); }
       else if (e.key === 'ArrowUp')   { e.preventDefault(); setActive(a => Math.max(a - 1, 0)); }
@@ -372,7 +372,7 @@ function readRecents(): string[] {
 }
 
 function rememberRecent(id: string): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') return undefined;
   const existing = readRecents().filter(x => x !== id);
   const next = [id, ...existing].slice(0, RECENTS_MAX);
   window.localStorage.setItem(RECENTS_KEY, JSON.stringify(next));

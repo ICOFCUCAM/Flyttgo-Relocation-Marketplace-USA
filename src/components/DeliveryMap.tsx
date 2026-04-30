@@ -1,8 +1,11 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import type * as Leaflet from 'leaflet';
 import { supabase } from '../lib/supabase';
 
-/* ── Leaflet global (loaded via CDN in index.html) ── */
-declare const L: any;
+/* ── Leaflet global (loaded via CDN in index.html) — typed against
+ *     the @types/leaflet shape so call sites get autocomplete + type
+ *     errors instead of any-soup. */
+declare const L: typeof Leaflet;
 
 interface LatLng { lat: number; lng: number; }
 
@@ -86,9 +89,9 @@ export default function DeliveryMap({
   driverLat, driverLng, className = '', compact = false,
 }: DeliveryMapProps) {
   const mapRef      = useRef<HTMLDivElement>(null);
-  const instanceRef = useRef<any>(null);
-  const markersRef  = useRef<any[]>([]);
-  const routeRef    = useRef<any>(null);
+  const instanceRef = useRef<Leaflet.Map | null>(null);
+  const markersRef  = useRef<Leaflet.Marker[]>([]);
+  const routeRef    = useRef<Leaflet.Polyline | null>(null);
 
   const [pickupCoords,   setPickupCoords]   = useState<LatLng | null>(null);
   const [deliveryCoords, setDeliveryCoords] = useState<LatLng | null>(null);

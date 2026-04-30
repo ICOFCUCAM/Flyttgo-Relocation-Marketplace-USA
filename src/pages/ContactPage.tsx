@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../lib/store';
+import MarketplaceBanner from '../components/banners/MarketplaceBanner';
 
 /* Channel icon paths kept here since they never change. Labels and
  * sublines are looked up from the translation bundle at render time. */
@@ -48,18 +49,18 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-white">
 
-      {/* HERO */}
-      <section className="bg-gradient-to-br from-[#0B2E59] to-[#1a4a8a] text-white py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 text-white/80 text-xs font-medium px-4 py-2 rounded-full mb-6">
-            💬 {t('contact.heroBadge')}
-          </div>
-          <h1 className="text-5xl font-extrabold mb-5 leading-tight">{t('contact.heroTitle')}</h1>
-          <p className="text-white/75 text-lg max-w-xl mx-auto">
-            {t('contact.heroSubtitle')}
-          </p>
-        </div>
-      </section>
+      <MarketplaceBanner
+        variant="inverse"
+        eyebrow={t('contact.heroBadge')}
+        breadcrumb={{ id: 'GLRM.CT', label: 'Contact' }}
+        headline={t('contact.heroTitle')}
+        lead={t('contact.heroSubtitle')}
+        compliancePills={[
+          { label: '24/7 customer support' },
+          { label: 'Provider escalations' },
+          { label: 'Press & partnerships' },
+        ]}
+      />
 
       {/* CHANNELS */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-10">

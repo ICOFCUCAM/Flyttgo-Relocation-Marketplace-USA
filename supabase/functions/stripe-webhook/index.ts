@@ -57,6 +57,7 @@
 
 import { serve } from 'https://deno.land/std@0.208.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { verifyStripeSignature } from './stripe-signature.ts';
 
 /* ─── Env ──────────────────────────────────────────────────────── */
 const SUPABASE_URL              = Deno.env.get('SUPABASE_URL')!;
@@ -80,78 +81,9 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-/* ─── Stripe signature verification ────────────────────────────── */
-
-/**
- * Stripe webhook verification. Stripe sends:
- *   Stripe-Signature: t=<unix_ts>,v1=<hex_sig>,v1=<another>,...
- *
- * We compute HMAC-SHA256 of `${timestamp}.${rawBody}` using the
- * webhook secret, compare to every v1 signature in the header. The
- * timestamp is also checked against the current clock (5 min
- * tolerance) to block replay attacks.
- *
- * We use the Web Crypto API (`crypto.subtle`) which is available in
- * Deno Edge runtime — same primitive Deno uses for TLS.
- */
-async function verifyStripeSignature(
-  rawBody:         string,
-  signatureHeader: string | null,
-  secret:          string,
-): Promise<{ valid: boolean; reason?: string }> {
-  if (!secret) return { valid: false, reason: 'STRIPE_WEBHOOK_SECRET not set' };
-  if (!signatureHeader) return { valid: false, reason: 'missing Stripe-Signature header' };
-
-  /* Parse the header into a timestamp and a list of v1 signatures.
-   * Stripe may include multiple v1 entries during secret rotation. */
-  let timestamp: string | null = null;
-  const v1Signatures: string[] = [];
-  for (const part of signatureHeader.split(',')) {
-    const [key, value] = part.split('=', 2);
-    if (key === 't')  timestamp = value ?? null;
-    if (key === 'v1') v1Signatures.push(value ?? '');
-  }
-  if (!timestamp || v1Signatures.length === 0) {
-    return { valid: false, reason: 'signature header malformed' };
-  }
-
-  /* Replay-attack defence — 5 minute tolerance like Stripe's own
-   * libraries. */
-  const nowSec = Math.floor(Date.now() / 1000);
-  const sigSec = Number(timestamp);
-  if (!Number.isFinite(sigSec) || Math.abs(nowSec - sigSec) > 300) {
-    return { valid: false, reason: 'signature timestamp outside 5-minute window' };
-  }
-
-  /* Compute expected HMAC-SHA256 over `${timestamp}.${body}`. */
-  const payload = `${timestamp}.${rawBody}`;
-  const key = await crypto.subtle.importKey(
-    'raw',
-    new TextEncoder().encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign'],
-  );
-  const sigBytes = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payload));
-  const expectedHex = Array.from(new Uint8Array(sigBytes))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-
-  /* Constant-time-ish comparison against every v1 in the header. */
-  for (const candidate of v1Signatures) {
-    if (candidate.length === expectedHex.length && constantTimeEquals(candidate, expectedHex)) {
-      return { valid: true };
-    }
-  }
-  return { valid: false, reason: 'no v1 signature matched' };
-}
-
-function constantTimeEquals(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
-}
+/* Stripe signature verification lives in ./stripe-signature.ts so it
+ * can be exercised by the Vitest suite. The edge function imports the
+ * pure helper and stays focused on side-effects. */
 
 /* ─── Booking paid path ────────────────────────────────────────── */
 
@@ -307,12 +239,55 @@ interface StripeEvent {
   data: { object: StripeCheckoutSession };
 }
 
+/**
+ * Event-level idempotency.
+ *
+ * Stripe delivers each event at-least-once; the same `event.id` may
+ * land twice on retry. The per-row idempotency in markBookingPaid /
+ * markSubscriptionPaid is enough today (we short-circuit on
+ * payment_status === 'paid'), but as soon as a future handler does
+ * MULTIPLE writes per event the partial-retry hazard reappears. The
+ * `processed_stripe_events` table makes that impossible by recording
+ * the event id atomically — INSERT with `id` as the primary key, and
+ * the duplicate INSERT fails with PG error 23505 (unique_violation),
+ * which we surface as "already processed".
+ *
+ * Schema lives in docs/install-stripe-event-idempotency.sql:
+ *
+ *   create table public.processed_stripe_events (
+ *     id          text primary key,
+ *     event_type  text not null,
+ *     processed_at timestamptz not null default now()
+ *   );
+ *
+ * If the table doesn't exist (migration not yet applied), we log a
+ * warning but DON'T block the event — the per-row idempotency takes
+ * over. This keeps deploy-order safety until ops applies the SQL.
+ */
+async function alreadyProcessed(eventId: string, eventType: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('processed_stripe_events')
+    .insert({ id: eventId, event_type: eventType });
+  if (!error) return false;                    // first time, proceed
+  if (error.code === '23505') return true;     // duplicate insert → seen this event before
+  /* Any other error (relation does not exist / permissions) — log
+   * once and fall through to the per-row idempotency. */
+  console.warn('processed_stripe_events insert failed:', error.code, error.message);
+  return false;
+}
+
 async function handleEvent(event: StripeEvent) {
   if (
     event.type !== 'checkout.session.completed' &&
     event.type !== 'checkout.session.async_payment_succeeded'
   ) {
     return { ok: true, ignored: true, reason: `event type ${event.type}` };
+  }
+
+  /* Event-level idempotency gate — short-circuits retried deliveries
+   * before any side effects fire. */
+  if (await alreadyProcessed(event.id, event.type)) {
+    return { ok: true, idempotent: true, reason: 'event already processed' };
   }
 
   const session   = event.data.object;

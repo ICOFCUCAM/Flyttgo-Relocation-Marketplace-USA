@@ -11,11 +11,22 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
+    /* Incremental ratchet — full strict mode is the long-term goal.
+     * Flags flipped on as the codebase becomes ready:
+     *   ✅ noFallthroughCasesInSwitch
+     *   ✅ noUnusedLocals
+     *   ✅ noUnusedParameters
+     *   ✅ noImplicitReturns
+     *   ⏳ noImplicitAny  — 100+ usages left, needs Supabase generated types
+     *   ⏳ strictNullChecks — high blast radius, separate session
+     * Use `npm run typecheck:strict` to preview the full-strict diff.
+     */
     "strict": false,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
     "noImplicitAny": false,
-    "noFallthroughCasesInSwitch": false,
+    "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": { "@/*": ["./src/*"] }
   },

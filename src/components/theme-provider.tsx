@@ -8,7 +8,7 @@ const ThemeContext = createContext<ThemeContextType | null>(null)
 interface ThemeProviderProps {
   children: React.ReactNode
   defaultTheme?: Theme
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export function ThemeProvider({ children, defaultTheme = "system", ...props }: ThemeProviderProps) {

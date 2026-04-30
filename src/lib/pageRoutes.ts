@@ -99,6 +99,11 @@ const PAGE_TO_PATH: Record<Page, string> = {
    * URL via history.pushState. */
   'service-category':        '/services',
 
+  /* Per-corridor landing page. PAGE_TO_PATH only stores the
+   * listing root; live navigations push the full
+   * /corridor/<country>/<slug> URL via history.pushState. */
+  'corridor':                '/corridor',
+
   /* US pricing transparency. */
   'pricing':                 '/pricing',
 
@@ -170,6 +175,7 @@ const PAGE_TITLES: Record<Page, string> = {
   'providers-directory':      'Browse verified providers · FlyttGo Global',
   'compare':                  'Compare providers side by side · FlyttGo Global',
   'service-category':         'Service category · FlyttGo Global',
+  'corridor':                 'Relocation corridor · FlyttGo Global',
   'pricing':                  'US relocation pricing · transparent rates · FlyttGo',
   'provider-pricing-settings': 'Pricing settings · FlyttGo Provider Dashboard',
   'provider-requirements':    'Provider onboarding requirements · FlyttGo',
@@ -266,6 +272,8 @@ const PAGE_DESCRIPTIONS: Record<Page, string> = {
     "Compare your shortlisted FlyttGo providers side by side — rating, reviews, starting price, services, fleet, verifications, and availability — in a single table.",
   'service-category':
     "FlyttGo service category — see the providers offering this service across our six markets, with verified credentials, ratings, and instant quotes.",
+  'corridor':
+    "City-to-city relocation corridor on FlyttGo — licensed movers, distance-priced quotes, and escrow protection on every booking. Compare options for your route.",
   'pricing':
     "Transparent US relocation pricing — labor-only $60–$120/hr, movers + truck $120–$250/hr, packing $40–$90/hr, corporate $150–$300/hr. See what drives the price and how FlyttGo's marketplace compares to national rates.",
   'provider-pricing-settings':
@@ -446,6 +454,13 @@ export function pathToPage(path: string): Page {
    * the existing services listing. */
   if (normalised.startsWith('/services/') && normalised.length > '/services/'.length) {
     return 'service-category';
+  }
+  /* Corridor pages: /corridor/<country>/<slug> resolves to the
+   * corridor page; CorridorPage reads country + slug from
+   * window.location.pathname. The bare /corridor falls through to
+   * not-found because there is no corridor index page. */
+  if (normalised.startsWith('/corridor/') && normalised.length > '/corridor/'.length) {
+    return 'corridor';
   }
   /* Unknown paths resolve to 'not-found' rather than silently
    * serving the homepage. NotFoundPage sets robots=noindex so

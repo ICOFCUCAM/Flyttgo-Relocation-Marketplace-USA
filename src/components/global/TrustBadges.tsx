@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Trophy, Zap, ShieldCheck, BadgeCheck, Sparkles, Building2,
   GraduationCap, Landmark, Award, type LucideIcon,
@@ -53,7 +53,7 @@ export default function TrustBadges({ userId, score, compact = false, max = 4, c
   );
 
   useEffect(() => {
-    if (score || !userId) return;
+    if (score || !userId) return undefined;
     let cancelled = false;
     loadProviderScore(userId)
       .then(r => { if (!cancelled) setResolved(r); })
