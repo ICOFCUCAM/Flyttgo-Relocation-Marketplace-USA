@@ -6,9 +6,12 @@ import { track } from '../lib/analytics';
 import PressStrip from './global/PressStrip';
 import CarbonOffset from './global/CarbonOffset';
 import TopProviders from './global/TopProviders';
+import DiscoveryProvidersSection from './global/DiscoveryProvidersSection';
+import PopularCorridorsSection from './global/PopularCorridorsSection';
 import LiveBookingTicker from './global/LiveBookingTicker';
 import EarningsSimulator from './global/EarningsSimulator';
-import ReviewsAndFAQRow from './global/ReviewsAndFAQRow';
+import ReviewsCarousel from './global/ReviewsCarousel';
+import HomeFAQ from './global/HomeFAQ';
 
 /* ────────────────────────────────────────────────────────────
  *  COUNTRY SHOPFRONT METADATA
@@ -211,36 +214,39 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── SECTION 3 ─ TOP-RATED PROVIDERS ─────────────────
-       *   Sits immediately after the hero country selector per the
-       *   marketplace narrative — visitors meet real licensed
-       *   operators before any platform claim. The corporate
-       *   credibility ribbon (USDOT / GVOL / EU / escrow / $50k)
-       *   has been folded into the PressStrip authority pills at
-       *   Section 7 to match the spec. */}
-      <div className="bg-white pt-12 pb-0 text-center">
-        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-50 to-fuchsia-50 border border-amber-200 text-[11px] font-bold uppercase tracking-[0.18em] text-amber-700">
-          <span className="relative flex h-1.5 w-1.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75" />
-            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500" />
-          </span>
-          AI-routed dispatch · Live OSRM pricing
-        </span>
-      </div>
-      <TopProviders />
+      {/* ─────────────────────────────────────────────────────────
+       *   The homepage now follows the marketplace-narrative spec:
+       *
+       *     1  Hero (with country selector chip grid above)
+       *     2  Categories — "What you can book"
+       *     3  Popular corridors — flagship per country, links to
+       *        /corridor/<country>/<slug> SEO landing pages
+       *     4  Top verified providers — onboarded, instant-bookable
+       *     5  Discovery providers — non-onboarded acquisition
+       *        signals with claim-listing CTAs
+       *     6  Country marketplace cards — photo-grid exploration
+       *        of the six country storefronts
+       *     7  Press / trust strip
+       *     8  Reviews carousel (standalone)
+       *     9  Carbon offset
+       *    10  Earnings simulator
+       *    11  FAQ (standalone)
+       *    12+ Trust stats · Provider CTA · Final CTA
+       *
+       *   Featured-providers tier (between Top + Discovery in the
+       *   spec) is held back as a future expansion — the curated
+       *   PROVIDERS catalogue is small enough that splitting it
+       *   into Top vs Featured today creates artificial scarcity.
+       *   The DiscoveryProvidersSection's "claim & onboard" CTAs
+       *   already serve the supply-acquisition role the Featured
+       *   tier was meant to occupy.
+       * ───────────────────────────────────────────────────────── */}
 
-      {/* ─── PROVIDER EARNINGS SIMULATOR (position 4) ───────
-       *   Pairs the demand-side TopProviders block with the
-       *   supply-side acquisition surface so customers see income
-       *   transparency right alongside the providers they're
-       *   considering. Same component the /providers page mounts. */}
-      <EarningsSimulator />
-
-      {/* ─── SERVICE CATEGORIES ──────────────────────────── */}
+      {/* ─── 2 · CATEGORIES ─ "What you can book" ───────────── */}
       <section className="bg-[#fafaf7] py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-10 max-w-2xl">
-            <p className="text-amber-600 text-xs font-bold uppercase tracking-wider mb-3">What you can book</p>
+            <p className="text-amber-600 text-xs font-bold uppercase tracking-[0.18em] mb-3">What you can book</p>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
               Every kind of move, one marketplace.
             </h2>
@@ -284,16 +290,35 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── SECTION 6 ─ COUNTRY MARKETPLACE CARDS ──────────
-       *   Photo-grid country shopfronts. Mirrors the Airbnb
-       *   geography UX — flag, cityscape photo, rating, moves
-       *   completed, "from" price. Tile click routes into the
-       *   localised /market-<iso> shopfront. */}
+      {/* ─── 3 · POPULAR CORRIDORS ─────────────────────────── */}
+      <PopularCorridorsSection />
+
+      {/* ─── 4 · TOP VERIFIED PROVIDERS ────────────────────── */}
+      <div className="bg-white pt-12 pb-0 text-center">
+        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-50 to-fuchsia-50 border border-amber-200 text-[11px] font-bold uppercase tracking-[0.18em] text-amber-700">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75" />
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500" />
+          </span>
+          AI-routed dispatch · Live OSRM pricing
+        </span>
+      </div>
+      <TopProviders />
+
+      {/* ─── 5 · DISCOVERY PROVIDERS (exploration tier) ─────
+       *   Non-onboarded movers surfaced as acquisition signals.
+       *   Every card carries the "Not yet onboarded" badge and a
+       *   provider-funnel CTA — never a booking action. */}
+      <DiscoveryProvidersSection />
+
+      {/* ─── 6 · COUNTRY MARKETPLACE CARDS ──────────────────
+       *   Photo-grid country shopfronts. Tile click routes into
+       *   the localised /market-<iso> shopfront. */}
       <section className="bg-[#fafaf7] py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-10 gap-4 flex-wrap">
             <div>
-              <p className="text-amber-600 text-xs font-bold uppercase tracking-wider mb-2">
+              <p className="text-amber-600 text-xs font-bold uppercase tracking-[0.18em] mb-2">
                 Country marketplaces
               </p>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight">
@@ -366,19 +391,25 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── SECTION 7 ─ PRESS / TRUST STRIP ─────────────────
-       *   Authority pills (USDOT, GVOL, EU, escrow, $50k) +
-       *   "as featured in" press wordmarks. */}
+      {/* ─── 7 · PRESS / TRUST STRIP ───────────────────────── */}
       <PressStrip />
 
-      {/* ─── SECTION 8 ─ CARBON OFFSET ─────────────────────── */}
+      {/* ─── 8 · REVIEWS CAROUSEL (standalone) ─────────────── */}
+      <ReviewsCarousel />
+
+      {/* ─── 9 · CARBON OFFSET ─────────────────────────────── */}
       <CarbonOffset />
 
-      {/* ─── POSITION 10 ─ REVIEWS + FAQ SAME ROW ───────────
-       *   Two parallel trust modules. Customer voices on the left
-       *   (RTL auto-scroll marquee), FAQ accordion on the right.
-       *   Stacks on mobile, side-by-side at lg+. */}
-      <ReviewsAndFAQRow />
+      {/* ─── 10 · EARNINGS SIMULATOR ────────────────────────
+       *   Supply-side acquisition lever sits below the social-proof
+       *   block so customers see income transparency right before
+       *   the FAQ closing. Same component the /providers page mounts. */}
+      <EarningsSimulator />
+
+      {/* ─── 11 · FAQ (standalone) ──────────────────────────
+       *   Last informational block before the closing trust /
+       *   provider / final-CTA stack. */}
+      <HomeFAQ />
 
       {/* ─── POSITION 11 ─ TRUST STATS STRIP ────────────────
        *   Live KPI bar showing marketplace strength with a pulsing

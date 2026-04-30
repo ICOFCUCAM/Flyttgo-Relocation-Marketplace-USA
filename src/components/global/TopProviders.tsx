@@ -149,14 +149,16 @@ export default function TopProviders() {
     <section className="bg-white py-16 sm:py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10 max-w-2xl mx-auto">
-          <p className="text-amber-600 text-xs font-bold uppercase tracking-wider mb-2">
-            Top-rated movers
+          <p className="text-amber-600 text-xs font-bold uppercase tracking-[0.18em] mb-2">
+            Top verified providers
           </p>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            Available providers near you
+            Top relocation companies operating in your corridor
           </h2>
           <p className="mt-3 text-slate-600">
-            Licensed carriers with corridor experience and escrow protection on every booking.
+            Onboarded providers with corridor experience, distance-priced
+            quotes, and escrow protection on every booking. Discovery-tier
+            (non-onboarded) movers appear in a separate section below.
           </p>
           {route && (
             <p className="mt-2 inline-flex items-center gap-2 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-3 py-1">
@@ -213,12 +215,22 @@ export default function TopProviders() {
                       </p>
                     </div>
                   </button>
-                  {isInstant && (
-                    <span className={`${BADGE} bg-emerald-100 text-emerald-700 flex-shrink-0`}>
-                      <Zap size={10} />
-                      Instant book
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    {/* Verified marketplace pill — present on every
+                     *  TopProviders card. Differentiates this tier
+                     *  from the Discovery (non-onboarded) tier
+                     *  rendered further down the homepage. */}
+                    <span className={`${BADGE} bg-emerald-50 text-emerald-700 border border-emerald-200`}>
+                      <ShieldCheck size={10} />
+                      Verified · Onboarded
                     </span>
-                  )}
+                    {isInstant && (
+                      <span className={`${BADGE} bg-emerald-100 text-emerald-700`}>
+                        <Zap size={10} />
+                        Instant book
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* RATING */}
