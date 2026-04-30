@@ -5,6 +5,8 @@ import {
   COUNTRY_LABEL, emptyAddress,
   type StructuredAddress, type AddressErrors,
 } from '../components/booking/types';
+import { getCountryFromRoute }   from '../lib/location/getCountryFromRoute';
+import { getCountryFromBrowser } from '../lib/location/getCountryFromBrowser';
 
 /**
  * useBookingFlowState — every form-field slot + setter for BookingFlow
@@ -16,12 +18,28 @@ import {
  * Pre-fills from the app store's `bookingData`, which the home page
  * Booking Widget populates so customers don't have to re-enter the
  * pickup address after clicking "Book Now".
+ *
+ * Country detection uses the chain:
+ *   1. bookingData.country         — set by every country shopfront
+ *   2. URL pathname                — /us, /canada, /book/uk, …
+ *   3. browser locale region       — Intl + navigator.languages
+ *   4. 'us' final default          — only when the customer has no
+ *                                    discoverable signal at all
+ *
+ * This means a customer who lands directly on /book without going
+ * through a country page still gets the right autocomplete +
+ * currency for their region instead of being silently US-defaulted.
  */
 export function useBookingFlowState() {
   const { profile, user } = useAuth();
   const { bookingData, setShowAuthModal, setAuthMode, setPage } = useApp();
 
-  const country = (bookingData.country ?? 'us') as string;
+  const country = (
+    bookingData.country
+      ?? getCountryFromRoute()
+      ?? getCountryFromBrowser()
+      ?? 'us'
+  ) as string;
   const countryLabel = COUNTRY_LABEL[country] ?? 'USA';
 
   const [step, setStep] = useState(1);

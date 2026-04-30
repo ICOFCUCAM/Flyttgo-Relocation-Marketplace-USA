@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import NorwayAddressAutocomplete, { type USAddress, type CountryCode } from '../../NorwayAddressAutocomplete';
 import { formatNorwegianAddress } from '../../../utils/formatNorwegianAddress';
+import { validatePostcode, postcodeFormatHint } from '../../../lib/location/postcode-validation';
 import type { StructuredAddress, AddressErrors } from '../types';
 import type { RouteResult } from '../../../lib/routing';
 import type { ServerPriceResult } from '../../../lib/calculatePrice';
@@ -36,7 +37,20 @@ export function AddressesStep({
 }) {
   const { t } = useTranslation();
 
-  const onPick = (addr: USAddress) => {
+  /* Country-aware postcode normaliser. Nominatim sometimes returns
+   * codes in mixed case (esp. Canada / UK) — we normalise to the
+   * national canonical form before storing so downstream services
+   * (pricing, dispatch matching) get consistent input. Falls back
+   * to the raw postcode when validation fails so we never silently
+   * drop a real-but-quirky address. */
+  const normaliseAddrPostcode = (addr: USAddress): USAddress => {
+    if (!addr.postcode) return addr;
+    const normalised = validatePostcode(country, addr.postcode);
+    return normalised ? { ...addr, postcode: normalised } : addr;
+  };
+
+  const onPick = (raw: USAddress) => {
+    const addr = normaliseAddrPostcode(raw);
     setPickupAddress({
       street_name:  addr.street_name,
       house_number: addr.house_number,
@@ -50,7 +64,8 @@ export function AddressesStep({
     setAddressErrors(prev => ({ ...prev, pickup: undefined }));
   };
 
-  const onDrop = (addr: USAddress) => {
+  const onDrop = (raw: USAddress) => {
+    const addr = normaliseAddrPostcode(raw);
     setDropoffAddress({
       street_name:  addr.street_name,
       house_number: addr.house_number,
@@ -63,6 +78,15 @@ export function AddressesStep({
     });
     setAddressErrors(prev => ({ ...prev, dropoff: undefined }));
   };
+
+  /* Country-aware placeholder for the dropoff field — replaces the
+   * hardcoded "e.g. Aker Brygge 1, New York" string that mixed Oslo
+   * and US examples. Falls back to a generic prompt for countries
+   * without a registered hint. */
+  const postcodeHint = postcodeFormatHint(country);
+  const dropoffPlaceholder = postcodeHint.example
+    ? `${t('booking.addrDropoffLabel')} · ${postcodeHint.format} (${postcodeHint.example})`
+    : t('booking.addrDropoffLabel');
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
@@ -100,7 +124,7 @@ export function AddressesStep({
             label={t('booking.addrDropoffLabel')}
             value={dropoffAddress.formatted}
             countryCode={country}
-            placeholder="e.g. Aker Brygge 1, New York"
+            placeholder={dropoffPlaceholder}
             required
             error={addressErrors.dropoff}
             onSelect={onDrop}
