@@ -60,6 +60,7 @@ const ProviderProfilePage = lazy(() => import('../pages/ProviderProfilePage'));
 const ProvidersDirectoryPage = lazy(() => import('../pages/ProvidersDirectoryPage'));
 const ComparePage = lazy(() => import('../pages/ComparePage'));
 const ServiceCategoryPage = lazy(() => import('../pages/ServiceCategoryPage'));
+const CorridorPage = lazy(() => import('../pages/CorridorPage'));
 const PricingPage = lazy(() => import('../pages/PricingPage'));
 const ProviderPricingSettingsPage = lazy(() => import('../pages/provider/PricingSettingsPage'));
 const ProviderRequirementsPage = lazy(() => import('../pages/ProviderRequirementsPage'));
@@ -227,6 +228,7 @@ export default function AppLayout() {
       case 'providers-directory':    return <ProvidersDirectoryPage />;
       case 'compare':                return <ComparePage />;
       case 'service-category':       return <ServiceCategoryPage />;
+      case 'corridor':               return <CorridorPage />;
       case 'pricing':                return <PricingPage />;
       case 'provider-pricing-settings': return <ProviderPricingSettingsPage />;
       case 'provider-requirements':  return <ProviderRequirementsPage />;

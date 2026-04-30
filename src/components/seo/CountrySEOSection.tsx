@@ -82,10 +82,14 @@ export default function CountrySEOSection({ countryCode, languageCode }: Props) 
           </aside>
         </div>
 
-        {/* Corridor expansion. */}
+        {/* Corridor expansion. Passes countryCode so each card links
+         *  to /corridor/<country>/<slug> — the per-corridor SEO
+         *  landing pages, which are the highest-converting search
+         *  intent surface in the marketplace. */}
         <CorridorExpansionSection
           headline={content.corridorsHeadline}
           corridors={content.corridors}
+          countryCode={countryCode}
         />
       </div>
     </section>

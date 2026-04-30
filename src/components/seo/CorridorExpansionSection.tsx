@@ -1,6 +1,6 @@
 import { useId, useState } from 'react';
-import { ChevronDown } from 'lucide-react';
-import type { CorridorEntry } from './seo-content';
+import { ArrowRight, ChevronDown } from 'lucide-react';
+import type { CorridorEntry, SEOCountryCode } from './seo-content';
 
 /* ─────────────────────────────────────────────────────────────────
  * <CorridorExpansionSection>
@@ -28,11 +28,24 @@ import type { CorridorEntry } from './seo-content';
 
 interface Props {
   /** Section subheading (h2) — e.g. "Popular U.S. relocation corridors". */
-  headline:  string;
-  corridors: CorridorEntry[];
+  headline:    string;
+  corridors:   CorridorEntry[];
+  /** Country the corridors belong to. When set, every corridor
+   *  becomes a deep link to /corridor/<countryCode>/<slug> — the
+   *  per-corridor SEO landing page. Without it the corridors
+   *  render as static read-only blocks (legacy behaviour). */
+  countryCode?: SEOCountryCode;
 }
 
-export default function CorridorExpansionSection({ headline, corridors }: Props) {
+function navigateToCorridor(countryCode: SEOCountryCode, slug: string) {
+  if (typeof window === 'undefined') return;
+  window.history.pushState({}, '', `/corridor/${countryCode}/${slug}`);
+  /* Notify the in-app router (store.tsx listens to popstate) so
+   * the SPA swaps to the corridor page without a full reload. */
+  window.dispatchEvent(new PopStateEvent('popstate'));
+}
+
+export default function CorridorExpansionSection({ headline, corridors, countryCode }: Props) {
   /* Unique panel id prefix per mounted instance — multiple
    * CorridorExpansionSection components on one page (rare but
    * possible) won't collide aria-controls ids. */
@@ -81,7 +94,17 @@ export default function CorridorExpansionSection({ headline, corridors }: Props)
                 hidden={!isOpen}
                 className="px-4 pb-4 text-sm text-slate-600 leading-relaxed"
               >
-                {c.body}
+                <p>{c.body}</p>
+                {countryCode && (
+                  <button
+                    type="button"
+                    onClick={() => navigateToCorridor(countryCode, c.slug)}
+                    className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-amber-700 hover:text-amber-800"
+                  >
+                    Open corridor
+                    <ArrowRight size={12} />
+                  </button>
+                )}
               </div>
             </li>
           );
@@ -90,12 +113,37 @@ export default function CorridorExpansionSection({ headline, corridors }: Props)
 
       {/* ─── Desktop: two-column grid ──────────────────────── */}
       <div className="hidden lg:grid grid-cols-2 gap-x-8 gap-y-6">
-        {corridors.map(c => (
-          <article key={c.heading} className="bg-white border border-slate-200 rounded-xl p-5 hover:border-amber-300 hover:shadow-sm transition">
-            <h3 className="text-base font-bold text-slate-900 mb-2">{c.heading}</h3>
-            <p className="text-sm text-slate-600 leading-relaxed">{c.body}</p>
-          </article>
-        ))}
+        {corridors.map(c => {
+          const cardClasses = 'bg-white border border-slate-200 rounded-xl p-5 hover:border-amber-300 hover:shadow-sm transition';
+          /* When a countryCode is supplied each card becomes a deep
+           *  link to the per-corridor SEO landing page. We render an
+           *  <article> wrapping a <button> so the heading hierarchy
+           *  stays semantic for crawlers (h3 inside an article) and
+           *  the keyboard activation lives on a real button element. */
+          if (countryCode) {
+            return (
+              <article key={c.heading} className={cardClasses}>
+                <button
+                  type="button"
+                  onClick={() => navigateToCorridor(countryCode, c.slug)}
+                  className="group w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded-lg"
+                >
+                  <h3 className="text-base font-bold text-slate-900 group-hover:text-amber-700 mb-2 flex items-center justify-between gap-2">
+                    {c.heading}
+                    <ArrowRight size={14} className="text-amber-600 flex-shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                  </h3>
+                  <p className="text-sm text-slate-600 leading-relaxed">{c.body}</p>
+                </button>
+              </article>
+            );
+          }
+          return (
+            <article key={c.heading} className={cardClasses}>
+              <h3 className="text-base font-bold text-slate-900 mb-2">{c.heading}</h3>
+              <p className="text-sm text-slate-600 leading-relaxed">{c.body}</p>
+            </article>
+          );
+        })}
       </div>
     </div>
   );

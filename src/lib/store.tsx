@@ -40,6 +40,12 @@ export type Page =
    * rather than a `?slug=` query param so the page reads as a real
    * SEO target. pathToPage prefix-matches /services/. */
   | 'service-category'
+  /* Per-corridor SEO landing page — /corridor/<country>/<slug>.
+   *
+   * Country + slug carried via URL path segments rather than a
+   * query string so each corridor reads as a real SEO target.
+   * pathToPage prefix-matches /corridor/. */
+  | 'corridor'
   /* US pricing transparency landing page. */
   | 'pricing'
   /* Provider-facing pricing settings (driver portal). */
