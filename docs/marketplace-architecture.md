@@ -195,20 +195,85 @@ The spec's full ambition is a multi-week engagement. What's pending:
    Deutsche Post / Posten / Canada Post via dedicated edge functions.
    Replace the Nominatim-with-country-bias autocomplete in
    `NorwayAddressAutocomplete`.
-2. **Persistent in-flow language switchers** — `lib/locales/` exists;
-   the booking flow needs to read + render a switcher in every step.
-3. **Banner system** — a shared `<MarketplaceBanner>` token that
-   renders consistent hero banners on country, category, enterprise,
-   provider, and subscription pages.
-4. **Per-country dedicated booking flows** — only if a market's flow
+2. **Per-country dedicated booking flows** — only if a market's flow
    genuinely diverges; today the country-prop pattern is sufficient.
-5. **`route_corridor_cache` + `metro_demand_multipliers` SQL apply** —
+3. **`route_corridor_cache` + `metro_demand_multipliers` SQL apply** —
    migrations are drafted in `docs/install-route-corridor-cache.sql`
    and `docs/install-metro-demand-multipliers.sql`. Apply when you
    want to drop OSRM round-trip latency.
-6. **Live reviews + Trustpilot ingestion** — the carousel uses six
+4. **Live reviews + Trustpilot ingestion** — the carousel uses six
    curated testimonials; replace with a fetch from a `reviews`
    Supabase view once external review data is wired.
+5. **Header route preview strip** ("Moving from: NY → Boston") —
+   spec'd as optional. Needs `bookingData.pickupCity`/`dropoffCity`
+   plumbing into a new `<HeaderRoutePreview>` with inline edit
+   popovers.
+6. **Locale parity** — i18next bundles for `en`, `fr`, `de`, `nb`
+   exist but coverage of FR/DE/NB vs EN is uneven. The Header
+   switcher is real (flips i18n.changeLanguage); full key-by-key
+   translation parity across booking flow + country pages is
+   pending a translator pass.
+
+## 10. Color sweep — emerald → amber/ink rebrand
+
+Emerald was the legacy "trust" color from before the amber + ink-navy
+brand was finalised. It now reads as off-brand wherever it does the
+work of a primary action color or active state.
+
+**Reskin policy (applied gradually):**
+
+- **Brand surfaces** (logos, primary CTAs, active nav states,
+  primary buttons, focus rings, link text, role badges) →
+  `amber-400/500/600/700` + `ink-900` for navy.
+- **Status surfaces** (verified pills, success toasts, "code sent"
+  confirmation banners, unread notification dots, online-status
+  indicators, completed-step ticks) → keep `emerald-500/600`.
+  Green is a legitimate status color and shouldn't be removed
+  from those legitimate uses.
+
+**Applied in this session:**
+
+- `CookieConsent` — full restyle: ink-navy header band + amber-400
+  icon tile + amber CTA + warm amber-tinted shadow + gradient orb.
+  Reads as a brand surface, not a generic GDPR banner.
+- `Header.tsx` — logo box → amber gradient on ink-navy ring;
+  user-menu avatar bg → amber-100/700; role badge → amber-50/700;
+  legacy emerald sign-up button removed (sign-in stays, sign-up is
+  reachable via the AuthModal).
+- `AuthModal.tsx` — full sweep: focus rings, primary CTAs, role
+  selection cards, role icons, link text → amber.
+- `SubscriptionPlans.tsx` — full sweep: "MOST POPULAR" badge,
+  primary CTAs, slider, earnings number → amber.
+- `MyBookings.tsx`, `CustomerDashboard.tsx`, `MovingChecklist.tsx`,
+  `VanGuide.tsx`, `LegalAcceptance.tsx` — bulk emerald → amber.
+
+**Remaining sweep (87 files still contain emerald hits):** most are
+legitimate status uses. Anything still rendering emerald as a
+brand-defining action surface should be re-skinned in a follow-up
+pass. Use `grep -rn "border-emerald-600\|bg-emerald-600\|bg-emerald-700\|text-emerald-600\|focus:ring-emerald" src/` to find the next worst offenders.
+
+## 11. Page upgrade backlog
+
+The spec's "perfect every page" ambition is genuinely multi-session.
+Below is the assessment of where the unevenness lives, in priority
+order.
+
+| Priority | Page(s) | Issue | Suggested upgrade |
+|----------|---------|-------|-------------------|
+| **High** | `AboutUsPage`, `ContactPage`, `HelpCenterPage` | Bespoke heros, no `<MarketplaceBanner>` | Apply the banner token; consolidate eyebrow + headline + lead per the 2035 typography spec |
+| **High** | `FaqPage`, `HowItWorksPage` | Same — bespoke heros | Banner token; pair with a corridor-pricing CTA to convert the read |
+| **High** | `LiabilityPage`, `PrivacyPage`, `DriverTermsPage` | Plain prose pages, no banner, mixed typography | Banner with `eyebrow="Legal"` + breadcrumb + last-revised-at date strip |
+| Med | `PricingPage` | Standalone, no banner alignment with the rest of the marketplace | Banner with corridor demo aside |
+| Med | `MarketplacePage`, `PartnersPage`, `CompliancePage` | Heavy `<Section tone="ink">` patterns — substantive but non-uniform | Wrap in `<MarketplaceBanner variant="inverse">` for header consistency; keep the section bodies |
+| Med | `CitiesPage`, `PressPage`, `CareersPage`, `SafetyPage`, `SustainabilityPage` | Mixed bespoke heros | Banner pass |
+| Low | `NotFoundPage`, `DisputePage`, `AcceptOrgInvitePage` | Utility pages | Light pass — eyebrow + heading only, no banner needed |
+| Low | `ProfilePage`, dashboards (`AdminDashboard`, `CorporateDashboard`, `DriverPortal`) | App-shell surfaces, intentionally not banner pages | Leave alone — they're product UI, not marketing surfaces |
+
+**Per-page upgrade pattern:**
+1. Replace bespoke hero `<section className="bg-slate-50 py-20">…</section>` with `<MarketplaceBanner eyebrow="…" breadcrumb={…} headline="…" lead="…" compliancePills={[…]} ctas={[…]} />`
+2. Drop the `<SectionIndex>` import (banner carries its own breadcrumb)
+3. Sweep emerald → amber/ink unless the use is a legitimate success/verified state
+4. Audit typography hierarchy against `<MarketplaceBanner>`'s heading sizes (5xl-7xl extrabold tracking-tight leading-[1.05]) so headings on body sections match or read as a deliberate step down
 
 ## 10. The seams to know about
 

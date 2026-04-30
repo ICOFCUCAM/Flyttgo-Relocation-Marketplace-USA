@@ -23,10 +23,10 @@ export default function MovingChecklist() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-br from-emerald-700 to-emerald-900 text-white py-16">
+      <div className="bg-gradient-to-br from-amber-700 to-amber-900 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h1 className="text-4xl sm:text-5xl font-bold mb-4">Ultimate Moving House Checklist</h1>
-          <p className="text-lg text-emerald-100 max-w-2xl mx-auto">The complete guide to a stress-free move. Track your progress with our interactive checklist.</p>
+          <p className="text-lg text-amber-100 max-w-2xl mx-auto">The complete guide to a stress-free move. Track your progress with our interactive checklist.</p>
         </div>
       </div>
 
@@ -34,10 +34,10 @@ export default function MovingChecklist() {
         <div className="bg-white rounded-xl p-6 border border-gray-100 mb-8 sticky top-16 z-10">
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-bold text-gray-900">Your Progress</h3>
-            <span className="text-sm font-medium text-emerald-600">{checked.size}/{totalItems} completed ({progress}%)</span>
+            <span className="text-sm font-medium text-amber-600">{checked.size}/{totalItems} completed ({progress}%)</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-3">
-            <div className="bg-emerald-500 h-3 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+            <div className="bg-amber-500 h-3 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
           </div>
         </div>
 
@@ -52,7 +52,7 @@ export default function MovingChecklist() {
                       <h2 className="text-xl font-bold text-gray-900">{section.title}</h2>
                       <p className="text-sm text-gray-600">{section.subtitle}</p>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${sectionChecked === section.items.length ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-600'}`}>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${sectionChecked === section.items.length ? 'bg-amber-100 text-amber-700' : 'bg-gray-200 text-gray-600'}`}>
                       {sectionChecked}/{section.items.length}
                     </span>
                   </div>
@@ -61,7 +61,7 @@ export default function MovingChecklist() {
                   {section.items.map(item => (
                     <label key={item} className="flex items-center gap-3 p-4 hover:bg-gray-50 cursor-pointer">
                       <input type="checkbox" checked={checked.has(item)} onChange={() => toggle(item)}
-                        className="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500 flex-shrink-0" />
+                        className="w-5 h-5 text-amber-600 rounded focus:ring-amber-500 flex-shrink-0" />
                       <span className={`text-sm ${checked.has(item) ? 'text-gray-400 line-through' : 'text-gray-700'}`}>{item}</span>
                     </label>
                   ))}
@@ -71,12 +71,12 @@ export default function MovingChecklist() {
           })}
         </div>
 
-        <div className="mt-12 bg-emerald-600 rounded-2xl p-8 text-center text-white">
+        <div className="mt-12 bg-amber-600 rounded-2xl p-8 text-center text-white">
           <h2 className="text-2xl font-bold mb-2">Ready to Move?</h2>
-          <p className="text-emerald-100 mb-6">Book a FlyttGo driver and make your move stress-free</p>
+          <p className="text-amber-100 mb-6">Book a FlyttGo driver and make your move stress-free</p>
           <div className="flex flex-wrap justify-center gap-4">
-            <button onClick={() => setPage('van-guide')} className="px-6 py-3 bg-white text-emerald-700 rounded-xl font-semibold hover:bg-emerald-50 transition">Van Size Calculator</button>
-            <button onClick={() => setPage('booking')} className="px-6 py-3 bg-emerald-700 text-white rounded-xl font-semibold hover:bg-emerald-800 transition border border-emerald-500">Book a Driver</button>
+            <button onClick={() => setPage('van-guide')} className="px-6 py-3 bg-white text-amber-700 rounded-xl font-semibold hover:bg-amber-50 transition">Van Size Calculator</button>
+            <button onClick={() => setPage('booking')} className="px-6 py-3 bg-amber-700 text-white rounded-xl font-semibold hover:bg-amber-800 transition border border-amber-500">Book a Driver</button>
           </div>
         </div>
       </div>

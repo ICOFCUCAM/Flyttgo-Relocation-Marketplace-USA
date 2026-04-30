@@ -274,7 +274,7 @@ export default function SubscriptionPlans() {
             return (
             <div key={plan.id} className={`bg-white rounded-2xl border-2 p-6 relative flex flex-col ${
               isCip      ? 'border-amber-500 shadow-2xl shadow-amber-500/20 ring-2 ring-amber-300/40' :
-              plan.popular ? 'border-emerald-500 shadow-xl shadow-emerald-500/10' : 'border-gray-100'
+              plan.popular ? 'border-amber-500 shadow-xl shadow-amber-500/10' : 'border-gray-100'
             }`}>
               {isCip && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-ink-900 text-amber-300 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
@@ -282,7 +282,7 @@ export default function SubscriptionPlans() {
                 </div>
               )}
               {plan.popular && !isCip && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-xs font-bold px-4 py-1 rounded-full">MOST POPULAR</div>
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-600 text-white text-xs font-bold px-4 py-1 rounded-full">MOST POPULAR</div>
               )}
               <h3 className="text-xl font-bold text-gray-900 leading-tight mb-1">{tier.displayName}</h3>
               <p className="text-xs text-gray-500 leading-relaxed mb-4 min-h-[2rem]">{tier.tagline}</p>
@@ -294,7 +294,7 @@ export default function SubscriptionPlans() {
                 <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
                   isCip ? 'bg-ink-900 text-amber-300' :
                   plan.priorityLevel >= 4 ? 'bg-purple-100 text-purple-700' :
-                  plan.priorityLevel >= 3 ? 'bg-emerald-100 text-emerald-700' :
+                  plan.priorityLevel >= 3 ? 'bg-amber-100 text-amber-700' :
                   plan.priorityLevel >= 2 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
                 }`}>
                   {Math.round(tier.commissionPct * 100)}% commission · {tier.privileges.includes('first-access-jobs')
@@ -307,7 +307,7 @@ export default function SubscriptionPlans() {
               <ul className="space-y-2 mb-4 flex-1">
                 {tier.privileges.map(p => (
                   <li key={p} className="flex items-start gap-2 text-sm">
-                    <svg className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/></svg>
+                    <svg className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/></svg>
                     <span className="text-gray-600">{PRIVILEGE_LABELS[p]}</span>
                   </li>
                 ))}
@@ -331,7 +331,7 @@ export default function SubscriptionPlans() {
                 onClick={handleSubscribeClick}
                 disabled={gate === 'loading'}
                 className={`w-full py-2.5 rounded-xl font-semibold text-sm transition disabled:opacity-50 disabled:cursor-not-allowed ${
-                  plan.popular ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                  plan.popular ? 'bg-amber-600 text-white hover:bg-amber-700'
                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -400,8 +400,8 @@ export default function SubscriptionPlans() {
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">Example Job Value</label>
             <div className="flex items-center gap-4">
-              <input type="range" min={300} max={10000} step={100} value={examplePrice} onChange={e => setExamplePrice(Number(e.target.value))} className="flex-1 accent-emerald-600"/>
-              <span className="text-xl font-bold text-emerald-600 w-32 text-right">{examplePrice} USD</span>
+              <input type="range" min={300} max={10000} step={100} value={examplePrice} onChange={e => setExamplePrice(Number(e.target.value))} className="flex-1 accent-amber-600"/>
+              <span className="text-xl font-bold text-amber-600 w-32 text-right">{examplePrice} USD</span>
             </div>
           </div>
           <div className="overflow-x-auto">
@@ -427,7 +427,7 @@ export default function SubscriptionPlans() {
                         {calc.rate === -1 ? '—' : `${Number(calc.commission ?? 0).toFixed(0)} USD`}
                       </td>
                       <td className="py-3 px-4">
-                        {calc.rate === -1 ? <span className="text-gray-400">—</span> : <span className="font-bold text-emerald-600">{Number(calc.earning ?? 0).toFixed(0)} USD</span>}
+                        {calc.rate === -1 ? <span className="text-gray-400">—</span> : <span className="font-bold text-amber-600">{Number(calc.earning ?? 0).toFixed(0)} USD</span>}
                       </td>
                     </tr>
                   );
@@ -448,7 +448,7 @@ export default function SubscriptionPlans() {
                   <div className={`h-full rounded-full transition-all ${
                     plan.priorityLevel >= 5 ? 'bg-amber-500' :
                     plan.priorityLevel >= 4 ? 'bg-purple-500' :
-                    plan.priorityLevel >= 3 ? 'bg-emerald-500' :
+                    plan.priorityLevel >= 3 ? 'bg-amber-500' :
                     plan.priorityLevel >= 2 ? 'bg-blue-500' : 'bg-gray-400'
                   }`} style={{ width: `${plan.priorityLevel * 20}%` }} />
                 </div>

@@ -369,16 +369,19 @@ export default function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
 
-            {/* Logo */}
-            <button onClick={() => handleNav('home')} className="flex items-center gap-2.5 flex-shrink-0">
-              <div className="w-9 h-9 bg-emerald-600 rounded-lg flex items-center justify-center shadow-sm">
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2-1 2 1 2-1 2 1 2-1zm0 0l2 1 2-1 2 1V6a1 1 0 00-1-1h-4"/>
+            {/* Logo — brand-aligned: amber icon-tile on ink-navy ring,
+             *  matches the marketplace banner palette so the logo
+             *  doesn't read as a different product than the rest of
+             *  the site. */}
+            <button onClick={() => handleNav('home')} className="flex items-center gap-2.5 flex-shrink-0 mr-4 lg:mr-10 group">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-300 to-amber-500 flex items-center justify-center shadow-md shadow-amber-500/30 ring-1 ring-amber-400/40">
+                <svg className="w-5 h-5 text-ink-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2-1 2 1 2-1 2 1 2-1zm0 0l2 1 2-1 2 1V6a1 1 0 00-1-1h-4"/>
                 </svg>
               </div>
               <div className="flex flex-col leading-none">
-                <span className="text-xl font-extrabold text-gray-900 tracking-tight">Flytt<span className="text-amber-500">Go</span></span>
-                <span className="hidden sm:inline text-[10px] uppercase tracking-wider text-gray-500 mt-0.5 font-semibold">Global moving marketplace</span>
+                <span className="text-xl font-extrabold text-slate-900 tracking-tight">Flytt<span className="text-amber-600">Go</span></span>
+                <span className="hidden sm:inline text-[10px] uppercase tracking-[0.18em] text-slate-500 mt-0.5 font-semibold">Global relocation marketplace</span>
               </div>
             </button>
 
@@ -551,8 +554,8 @@ export default function Header() {
 
               {user && profile ? (
                 <div className="relative">
-                  <button onClick={() => toggle('user')} className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-gray-50 transition">
-                    <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-semibold text-sm flex-shrink-0">
+                  <button onClick={() => toggle('user')} className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-slate-100 transition">
+                    <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center text-amber-700 font-semibold text-sm flex-shrink-0">
                       {(profile.first_name?.[0] || 'U').toUpperCase()}
                     </div>
                     <span className="hidden sm:block text-sm font-medium text-gray-700">
@@ -567,7 +570,7 @@ export default function Header() {
                           {profile.role === 'admin' ? 'FLYTTGO Dashboard' : `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'User'}
                         </p>
                         <p className="text-xs text-gray-500 truncate mt-0.5">{profile.email}</p>
-                        <span className="inline-block mt-1.5 px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-semibold rounded uppercase tracking-wide">
+                        <span className="inline-block mt-1.5 px-2 py-0.5 bg-amber-50 text-amber-700 text-[10px] font-semibold rounded uppercase tracking-wide">
                           {profile.role}
                         </span>
                       </div>
@@ -594,16 +597,10 @@ export default function Header() {
                 <>
                   <button
                     onClick={openSignIn}
-                    className="hidden sm:flex items-center gap-1.5 px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition shadow-sm"
+                    className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100 transition"
                   >
                     <LogIn className="w-4 h-4" />
                     {t('header.signIn')}
-                  </button>
-                  <button
-                    onClick={openSignUp}
-                    className="hidden sm:flex items-center gap-1.5 px-4 py-2 border border-emerald-600 text-emerald-600 rounded-lg text-sm font-semibold hover:bg-emerald-50 transition shadow-sm"
-                  >
-                    {t('header.signUp')}
                   </button>
                 </>
               )}

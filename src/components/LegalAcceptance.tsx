@@ -78,9 +78,9 @@ export function CustomerLegalAcceptance({ onAccepted, compact = false }: Custome
       {/* Positive reassurance banner — replaces the old amber
        * "WARNING" tone. The escrow mention is the most important
        * trust signal on the confirmation page. */}
-      <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
-        <p className="text-emerald-900 text-xs font-semibold mb-1">{t('legal.banner')}</p>
-        <p className="text-emerald-800 text-xs leading-relaxed">
+      <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+        <p className="text-amber-900 text-xs font-semibold mb-1">{t('legal.banner')}</p>
+        <p className="text-amber-800 text-xs leading-relaxed">
           {t('legal.bannerBody')}
         </p>
       </div>
@@ -89,7 +89,7 @@ export function CustomerLegalAcceptance({ onAccepted, compact = false }: Custome
       <label
         className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
           checks.accurateInfo
-            ? 'border-emerald-300 bg-emerald-50'
+            ? 'border-amber-300 bg-amber-50'
             : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
         }`}
       >
@@ -102,7 +102,7 @@ export function CustomerLegalAcceptance({ onAccepted, compact = false }: Custome
           />
           <div
             className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-              checks.accurateInfo ? 'bg-emerald-600 border-emerald-600' : 'border-gray-300 bg-white'
+              checks.accurateInfo ? 'bg-amber-600 border-amber-600' : 'border-gray-300 bg-white'
             }`}
           >
             {checks.accurateInfo && (
@@ -124,7 +124,7 @@ export function CustomerLegalAcceptance({ onAccepted, compact = false }: Custome
       <label
         className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
           checks.legalAccepted
-            ? 'border-emerald-300 bg-emerald-50'
+            ? 'border-amber-300 bg-amber-50'
             : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
         }`}
       >
@@ -137,7 +137,7 @@ export function CustomerLegalAcceptance({ onAccepted, compact = false }: Custome
           />
           <div
             className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-              checks.legalAccepted ? 'bg-emerald-600 border-emerald-600' : 'border-gray-300 bg-white'
+              checks.legalAccepted ? 'bg-amber-600 border-amber-600' : 'border-gray-300 bg-white'
             }`}
           >
             {checks.legalAccepted && (
@@ -165,7 +165,7 @@ export function CustomerLegalAcceptance({ onAccepted, compact = false }: Custome
         </p>
       )}
       {allAccepted && (
-        <p className="text-xs text-emerald-600 flex items-center gap-1.5 font-medium">
+        <p className="text-xs text-amber-600 flex items-center gap-1.5 font-medium">
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>

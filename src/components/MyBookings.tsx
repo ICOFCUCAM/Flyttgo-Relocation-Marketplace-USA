@@ -113,11 +113,11 @@ export default function MyBookings() {
     pending: "bg-yellow-100 text-yellow-700", confirmed: "bg-blue-100 text-blue-700",
     driver_assigned: "bg-indigo-100 text-indigo-700", pickup_arrived: "bg-sky-100 text-sky-700",
     loading: "bg-cyan-100 text-cyan-700", in_transit: "bg-purple-100 text-purple-700",
-    completed: "bg-emerald-100 text-emerald-700", cancelled: "bg-red-100 text-red-700",
+    completed: "bg-amber-100 text-amber-700", cancelled: "bg-red-100 text-red-700",
   };
   const paymentColors: Record<string, string> = {
     pending: "bg-gray-100 text-gray-600", paid: "bg-blue-100 text-blue-700", escrow: "bg-blue-100 text-blue-700",
-    released: "bg-emerald-100 text-emerald-700", refunded: "bg-red-100 text-red-700",
+    released: "bg-amber-100 text-amber-700", refunded: "bg-red-100 text-red-700",
   };
 
   return (
@@ -147,7 +147,7 @@ export default function MyBookings() {
         />
         <div className="flex flex-wrap gap-2 mb-6">
           {["all","pending","driver_assigned","in_transit","completed","cancelled"].map(f => (
-            <button key={f} onClick={() => setFilter(f)} className={`px-4 py-2 rounded text-sm ${filter === f ? "bg-emerald-600 text-white" : "bg-white border"}`}>{f.replace(/_/g, " ")}</button>
+            <button key={f} onClick={() => setFilter(f)} className={`px-4 py-2 rounded text-sm ${filter === f ? "bg-amber-600 text-white" : "bg-white border"}`}>{f.replace(/_/g, " ")}</button>
           ))}
         </div>
         {isLoading ? (
@@ -222,7 +222,7 @@ export default function MyBookings() {
               {booking.move_date && <p className="text-sm text-gray-500 mb-2">Move date: <span className="font-medium">{booking.move_date}</span></p>}
               <div className="text-sm text-gray-600 mb-1">Timer: {formatDuration(booking.start_time, booking.end_time)}</div>
               <div className="text-sm text-gray-600 mb-3">Estimated: {booking.estimated_hours ?? "-"} hrs | Actual: {booking.actual_hours ?? "Running"}</div>
-              <div className="text-xl font-bold text-emerald-600 mb-2">{safeNumber(price).toFixed(0)} USD</div>
+              <div className="text-xl font-bold text-amber-600 mb-2">{safeNumber(price).toFixed(0)} USD</div>
               {booking.price_adjusted && <div className="bg-orange-50 border border-orange-200 rounded p-3 mb-3"><p className="text-orange-700 text-sm font-semibold">Extra time added — price updated</p></div>}
               {escrow?.adjustment_required && !escrow.adjustment_approved && <button onClick={() => approveAdjustment(escrow.id)} className="mb-3 bg-orange-600 text-white px-4 py-2 rounded text-sm">Approve additional charge</button>}
               {/* Payment-required banner — a pending payment_status
@@ -243,13 +243,13 @@ export default function MyBookings() {
                 {booking.payment_status === "pending" && booking.status !== "cancelled" && (
                   <button
                     onClick={() => completePayment(booking.id)}
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm font-semibold"
+                    className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded text-sm font-semibold"
                   >
                     {t('myBookings.completePayment')}
                   </button>
                 )}
                 {booking.status === "pending" && <button onClick={() => cancelBooking(booking.id)} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">{t('myBookings.cancel')}</button>}
-                {booking.status === "completed" && !booking.customer_confirmation && <button onClick={() => confirmCompletion(booking.id)} className="px-4 py-2 bg-emerald-600 text-white rounded text-sm">{t('myBookings.confirmCompletion')}</button>}
+                {booking.status === "completed" && !booking.customer_confirmation && <button onClick={() => confirmCompletion(booking.id)} className="px-4 py-2 bg-amber-600 text-white rounded text-sm">{t('myBookings.confirmCompletion')}</button>}
                 <button onClick={() => repeatBooking(booking)} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">{t('myBookings.repeatBooking')}</button>
               </div>
               <div className="text-xs text-gray-400 mt-3">{t('myBookings.loyaltyPoints')}: {Math.floor(Number(price || 0) / 100)}</div>
@@ -309,7 +309,7 @@ function SavedQuotesPanel({ onResume }: { onResume: (q: SavedQuote) => void }) {
 
             <div className="text-sm space-y-1 mb-3">
               <p className="flex items-start gap-1.5 text-slate-700">
-                <MapPin size={12} className="text-emerald-500 mt-0.5 flex-shrink-0" />
+                <MapPin size={12} className="text-amber-500 mt-0.5 flex-shrink-0" />
                 <span className="truncate">{q.pickupAddress}</span>
               </p>
               <p className="flex items-start gap-1.5 text-slate-700">

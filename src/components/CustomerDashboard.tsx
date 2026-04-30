@@ -89,7 +89,7 @@ export default function CustomerDashboard() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="text-center">
         <p className="text-gray-700 font-semibold mb-2">Please sign in to view your dashboard</p>
-        <button onClick={() => setPage("home")} className="mt-4 px-6 py-2 bg-emerald-600 text-white rounded-xl">Go to Home</button>
+        <button onClick={() => setPage("home")} className="mt-4 px-6 py-2 bg-amber-600 text-white rounded-xl">Go to Home</button>
       </div>
     </div>
   );
@@ -153,7 +153,7 @@ export default function CustomerDashboard() {
                   </p>
                   <button
                     onClick={() => goToPayment(activeBooking.id)}
-                    className="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2"
+                    className="mt-3 bg-amber-600 hover:bg-amber-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
                   >
                     {t('dashboard.completePayment')}
                   </button>
@@ -220,7 +220,7 @@ export default function CustomerDashboard() {
                 <button
                   onClick={() => confirmCompletion(activeBooking.id)}
                   disabled={confirmCompletionMut.isPending}
-                  className="bg-emerald-600 text-white px-4 py-2 rounded text-sm font-semibold disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2"
+                  className="bg-amber-600 text-white px-4 py-2 rounded text-sm font-semibold disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
                 >
                   Confirm Completion
                 </button>
@@ -238,7 +238,7 @@ export default function CustomerDashboard() {
           </div>
         )}
         <div className="grid sm:grid-cols-3 gap-4 mb-8">
-          <button onClick={() => setPage("booking")} className="bg-emerald-600 text-white rounded-xl p-5 font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2">{t('dashboard.newBooking')}</button>
+          <button onClick={() => setPage("booking")} className="bg-amber-600 text-white rounded-xl p-5 font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2">{t('dashboard.newBooking')}</button>
           <button onClick={() => setPage("my-bookings")} className="bg-white rounded-xl p-5 border font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2">{t('dashboard.myBookings')}</button>
           <button onClick={() => setPage("van-guide")} className="bg-white rounded-xl p-5 border font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2">{t('dashboard.vanCalculator')}</button>
         </div>
@@ -254,11 +254,11 @@ export default function CustomerDashboard() {
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="font-bold">{fmt(b.final_price ?? b.original_price ?? b.price_estimate)} USD</p>
-                    <span className={`text-xs px-2 py-1 rounded ${b.status === "completed" ? "bg-emerald-100 text-emerald-700" : b.status === "cancelled" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>{b.status?.replace(/_/g, " ")}</span>
+                    <span className={`text-xs px-2 py-1 rounded ${b.status === "completed" ? "bg-amber-100 text-amber-700" : b.status === "cancelled" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>{b.status?.replace(/_/g, " ")}</span>
                     {b.payment_status === "pending" && b.status !== "cancelled" && (
                       <button
                         onClick={() => goToPayment(b.id)}
-                        className="block mt-2 text-xs font-semibold text-emerald-700 hover:text-emerald-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded"
+                        className="block mt-2 text-xs font-semibold text-amber-700 hover:text-amber-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded"
                       >
                         Complete Payment →
                       </button>

@@ -78,7 +78,7 @@ export default function VanGuide() {
                     <div className="mb-4">
                       <p className="text-xs text-gray-500 uppercase font-medium mb-2">Best For</p>
                       <div className="flex flex-wrap gap-1">
-                        {van.bestFor.map(b => (<span key={b} className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded text-xs">{b}</span>))}
+                        {van.bestFor.map(b => (<span key={b} className="bg-amber-50 text-amber-700 px-2 py-0.5 rounded text-xs">{b}</span>))}
                       </div>
                     </div>
                     <div className="mb-4">
@@ -89,9 +89,9 @@ export default function VanGuide() {
                       <p className="text-xs text-gray-500 uppercase font-medium mb-2">Vehicle Examples</p>
                       <p className="text-sm text-gray-600">{van.examples.join(', ')}</p>
                     </div>
-                    <p className="text-lg font-bold text-emerald-600 mb-3">From {van.pricePerHour} /hr USD</p>
+                    <p className="text-lg font-bold text-amber-600 mb-3">From {van.pricePerHour} /hr USD</p>
                     <button onClick={() => { setBookingData({ vanType: van.id }); setPage('booking'); }}
-                      className="w-full py-2.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition text-sm">
+                      className="w-full py-2.5 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition text-sm">
                       Book {van.name}
                     </button>
                   </div>
@@ -110,7 +110,7 @@ export default function VanGuide() {
                 <tbody className="divide-y divide-gray-100">
                   <tr><td className="py-3 px-4 text-gray-600">Capacity</td>{VAN_TYPES.map(v => <td key={v.id} className="text-center py-3 px-4 font-medium">{v.capacity}</td>)}</tr>
                   <tr><td className="py-3 px-4 text-gray-600">Payload</td>{VAN_TYPES.map(v => <td key={v.id} className="text-center py-3 px-4 font-medium">{v.payload}</td>)}</tr>
-                  <tr><td className="py-3 px-4 text-gray-600">Price/hr</td>{VAN_TYPES.map(v => <td key={v.id} className="text-center py-3 px-4 font-medium text-emerald-600">{v.pricePerHour} USD</td>)}</tr>
+                  <tr><td className="py-3 px-4 text-gray-600">Price/hr</td>{VAN_TYPES.map(v => <td key={v.id} className="text-center py-3 px-4 font-medium text-amber-600">{v.pricePerHour} USD</td>)}</tr>
                 </tbody>
               </table>
             </div>
@@ -125,7 +125,7 @@ export default function VanGuide() {
                 <div className="flex flex-wrap gap-2">
                   {Object.keys(PROPERTY_PRESETS).map(p => (
                     <button key={p} onClick={() => loadPreset(p)}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition ${selectedPreset === p ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>{p}</button>
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition ${selectedPreset === p ? 'bg-amber-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>{p}</button>
                   ))}
                 </div>
               </div>
@@ -133,7 +133,7 @@ export default function VanGuide() {
                 <h3 className="font-bold text-gray-900 mb-4">Add Items</h3>
                 {Object.entries(INVENTORY_ITEMS).map(([cat, items]) => (
                   <details key={cat} className="mb-3">
-                    <summary className="cursor-pointer font-medium text-gray-700 hover:text-emerald-600 py-2">{cat}</summary>
+                    <summary className="cursor-pointer font-medium text-gray-700 hover:text-amber-600 py-2">{cat}</summary>
                     <div className="grid sm:grid-cols-2 gap-2 mt-2 pl-4">
                       {items.map(item => (
                         <div key={item.name} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
@@ -144,7 +144,7 @@ export default function VanGuide() {
                           <div className="flex items-center gap-2">
                             <button onClick={() => updateItem(item.name, -1)} className="w-7 h-7 rounded bg-white border hover:bg-gray-100 flex items-center justify-center text-sm font-bold text-gray-600">-</button>
                             <span className="w-6 text-center text-sm font-medium">{inventory[item.name] || 0}</span>
-                            <button onClick={() => updateItem(item.name, 1)} className="w-7 h-7 rounded bg-emerald-100 hover:bg-emerald-200 flex items-center justify-center text-sm font-bold text-emerald-700">+</button>
+                            <button onClick={() => updateItem(item.name, 1)} className="w-7 h-7 rounded bg-amber-100 hover:bg-amber-200 flex items-center justify-center text-sm font-bold text-amber-700">+</button>
                           </div>
                         </div>
                       ))}
@@ -159,13 +159,13 @@ export default function VanGuide() {
                 {recVanData && (
                   <>
                     <img src={recVanData.image} alt={recVanData.name} width={600} height={450} loading="lazy" decoding="async" className="w-full rounded-lg mb-4" />
-                    <h4 className="text-xl font-bold text-emerald-600 mb-1">{recVanData.name}</h4>
+                    <h4 className="text-xl font-bold text-amber-600 mb-1">{recVanData.name}</h4>
                     <p className="text-sm text-gray-500 mb-4">Capacity: {recVanData.capacity}</p>
                     <div className="space-y-3 mb-4">
                       <div>
                         <div className="flex justify-between text-sm mb-1"><span className="text-gray-600">Volume</span><span className="font-medium">{totalVolume} m³</span></div>
                         <div className="w-full bg-gray-200 rounded-full h-4">
-                          <div className={`h-4 rounded-full transition-all ${totalVolume > parseFloat(recVanData.capacity) ? 'bg-red-500' : 'bg-emerald-500'}`}
+                          <div className={`h-4 rounded-full transition-all ${totalVolume > parseFloat(recVanData.capacity) ? 'bg-red-500' : 'bg-amber-500'}`}
                             style={{ width: `${Math.min(100, (totalVolume / parseFloat(recVanData.capacity)) * 100)}%` }} />
                         </div>
                       </div>
@@ -177,7 +177,7 @@ export default function VanGuide() {
                     )}
                     <p className="text-lg font-bold text-gray-900 mb-4">From {recVanData.pricePerHour} /hr USD</p>
                     <button onClick={() => { setBookingData({ vanType: recVan, inventory, estimatedVolume: totalVolume }); setPage('booking'); }}
-                      className="w-full py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition">Book This Van</button>
+                      className="w-full py-3 bg-amber-600 text-white rounded-xl font-semibold hover:bg-amber-700 transition">Book This Van</button>
                   </>
                 )}
               </div>

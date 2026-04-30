@@ -75,49 +75,72 @@ export default function CookieConsent() {
       aria-label="Cookie consent"
       className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:max-w-md z-50 animate-in slide-in-from-bottom-5"
     >
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-2xl p-5 sm:p-6">
-        <div className="flex items-start gap-3 mb-3">
-          <div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
-            <Cookie className="w-5 h-5 text-emerald-600" />
+      {/* Brand-aligned container — ink-navy header band sets the
+       *  marketplace tone, white body keeps the dialog readable.
+       *  Soft amber glow ring + warm shadow so the dialog reads as
+       *  "FlyttGo brand surface", not as a generic GDPR banner. */}
+      <div className="relative rounded-2xl shadow-[0_24px_60px_-20px_rgba(15,23,42,0.4)] ring-1 ring-amber-300/30 overflow-hidden bg-white">
+        {/* Ink-navy header band with the cookie icon as a brand
+         *  motif, gradient orb behind it for the next-gen sheen. */}
+        <div className="relative bg-ink-900 text-white px-5 sm:px-6 py-4 overflow-hidden">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-gradient-to-br from-amber-400/40 via-fuchsia-500/10 to-transparent blur-2xl"
+          />
+          <div className="relative flex items-start justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-amber-400 text-ink-900 flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-500/30">
+                <Cookie className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300">
+                  FlyttGo · GDPR
+                </p>
+                <h2 className="text-sm font-extrabold text-white truncate">
+                  We use cookies
+                </h2>
+              </div>
+            </div>
+            <button
+              type="button"
+              aria-label="Reject non-essential cookies"
+              onClick={() => save('essential')}
+              className="text-white/60 hover:text-white flex-shrink-0 transition"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
-          <div className="flex-1 min-w-0">
-            <h2 className="text-sm font-bold text-gray-900 mb-1">We use cookies</h2>
-            <p className="text-xs text-gray-600 leading-relaxed">
-              FlyttGo uses essential cookies to keep you signed in and your booking flow working.
-              We&apos;d also like to use analytics cookies to understand how customers use the site
-              so we can make it better. You can change your choice any time.
-            </p>
-          </div>
-          <button
-            type="button"
-            aria-label="Reject non-essential cookies"
-            onClick={() => save('essential')}
-            className="text-gray-400 hover:text-gray-600 flex-shrink-0"
-          >
-            <X className="w-4 h-4" />
-          </button>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2 mt-4">
-          <button
-            type="button"
-            onClick={() => save('essential')}
-            className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 transition"
-          >
-            Essential only
-          </button>
-          <button
-            type="button"
-            onClick={() => save('all')}
-            className="flex-1 px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition"
-          >
-            Accept all
-          </button>
-        </div>
+        {/* Body. */}
+        <div className="px-5 sm:px-6 py-4">
+          <p className="text-xs text-slate-600 leading-relaxed">
+            FlyttGo uses essential cookies to keep you signed in and your booking flow working.
+            We&apos;d also like to use analytics cookies to understand how customers use the site
+            so we can make it better. You can change your choice any time.
+          </p>
 
-        <p className="text-[10px] text-gray-400 mt-3 text-center">
-          See our <a href="/privacy" className="text-emerald-600 hover:underline">privacy policy</a> for details.
-        </p>
+          <div className="flex flex-col sm:flex-row gap-2 mt-4">
+            <button
+              type="button"
+              onClick={() => save('essential')}
+              className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-50 transition"
+            >
+              Essential only
+            </button>
+            <button
+              type="button"
+              onClick={() => save('all')}
+              className="flex-1 px-4 py-2.5 bg-amber-400 hover:bg-amber-500 text-slate-900 rounded-xl text-sm font-bold transition shadow-lg shadow-amber-500/30"
+            >
+              Accept all
+            </button>
+          </div>
+
+          <p className="text-[10px] text-slate-400 mt-3 text-center">
+            See our <a href="/privacy" className="text-amber-700 hover:underline font-semibold">privacy policy</a> for details.
+          </p>
+        </div>
       </div>
     </div>
   );
