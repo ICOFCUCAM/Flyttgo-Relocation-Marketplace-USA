@@ -104,7 +104,7 @@ export default function HomePage() {
           />
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -bottom-32 -right-24 h-[34rem] w-[34rem] rounded-full bg-gradient-to-br from-sky-400/20 via-emerald-400/10 to-transparent blur-3xl"
+            className="pointer-events-none absolute -bottom-32 -right-24 h-[34rem] w-[34rem] rounded-full bg-gradient-to-br from-sky-400/20 via-amber-400/10 to-transparent blur-3xl"
           />
         </div>
 
