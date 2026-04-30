@@ -100,23 +100,26 @@ export default function WorldDeploymentMap() {
                   geography={geo}
                   onClick={() => { if (route) setPage(route); }}
                   style={{
+                    /* Stroke widths bumped 3-4x from the original
+                     * defaults so country borders read as crisp
+                     * lines rather than near-invisible threads. */
                     default: {
                       fill:        isActive ? '#fde68a' : '#f1f5f9',  // amber-200 / slate-100
-                      stroke:      isActive ? '#f59e0b' : '#cbd5e1',  // amber-500 / slate-300
-                      strokeWidth: isActive ? 0.8 : 0.4,
+                      stroke:      isActive ? '#d97706' : '#94a3b8',  // amber-600 / slate-400
+                      strokeWidth: isActive ? 1.4 : 1.0,
                       outline:     'none',
                     },
                     hover: {
                       fill:        isActive ? '#fcd34d' : '#e2e8f0',  // amber-300 / slate-200
-                      stroke:      '#f59e0b',
-                      strokeWidth: 0.8,
+                      stroke:      '#d97706',
+                      strokeWidth: 1.6,
                       outline:     'none',
                       cursor:      route ? 'pointer' : 'default',
                     },
                     pressed: {
                       fill:        '#f59e0b',
-                      stroke:      '#d97706',
-                      strokeWidth: 0.8,
+                      stroke:      '#b45309',
+                      strokeWidth: 1.6,
                       outline:     'none',
                     },
                   }}

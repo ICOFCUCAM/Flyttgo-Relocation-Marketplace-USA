@@ -6,6 +6,7 @@ import { useApp } from '../lib/store';
 import { findServiceCategory, SERVICE_CATEGORIES, type ServiceCategory } from '../lib/service-categories';
 import { findPricingTier, formatPricingRange } from '../lib/us-pricing';
 import { PROVIDERS, type ProviderRecord } from '../lib/providers-catalogue';
+import { getProviderPublicIdentity } from '../lib/provider-identity';
 import { Section, Eyebrow, Pill, EmptyState } from '../components/ds';
 import MarketplaceBanner from '../components/banners/MarketplaceBanner';
 import AvailabilityBadge from '../components/global/AvailabilityBadge';
@@ -264,7 +265,13 @@ export default function ServiceCategoryPage() {
           />
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {matchingProviders.map(p => (
+            {matchingProviders.map(p => {
+              /* White-label public identity — same masking rule as
+               * every other public surface (TopProviders, profile,
+               * directory). Customer never sees the real brand
+               * before booking confirmation. */
+              const id = getProviderPublicIdentity(p);
+              return (
               <article
                 key={p.slug}
                 onClick={() => openProfile(p.slug)}
@@ -276,13 +283,13 @@ export default function ServiceCategoryPage() {
                       <Truck size={16} className="text-brand-600" />
                     </div>
                     <div className="min-w-0">
-                      <p className="font-extrabold text-ink-900 truncate">{p.name}</p>
-                      <p className="text-xs text-slate-500 inline-flex items-center gap-1 truncate">
-                        <span aria-hidden>{p.flag}</span>{p.city}
+                      <p className="font-extrabold text-ink-900 truncate">{id.displayName}</p>
+                      <p className="text-xs text-slate-500 font-mono truncate">
+                        <span aria-hidden className="mr-1">{p.flag}</span>{id.operatorId}
                       </p>
                     </div>
                   </div>
-                  {p.badge && <Pill tone="brand" size="sm">{p.badge}</Pill>}
+                  <Pill tone="brand" size="sm">{id.tierLabel}</Pill>
                 </div>
 
                 <div className="flex items-center gap-2 mb-3 text-sm flex-wrap">
@@ -328,19 +335,20 @@ export default function ServiceCategoryPage() {
                   <AddToCompareButton
                     item={{
                       id:        p.slug,
-                      name:      p.name,
-                      city:      p.city,
+                      name:      id.displayName,
+                      city:      id.region,
                       flag:      p.flag,
                       rating:    p.rating,
                       reviews:   p.reviews,
                       fromPrice: p.fromPrice,
-                      badge:     p.badge,
+                      badge:     id.tierLabel,
                       verified:  p.verified,
                     }}
                   />
                 </div>
               </article>
-            ))}
+              );
+            })}
           </div>
         )}
       </Section>
