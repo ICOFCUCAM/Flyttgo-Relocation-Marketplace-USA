@@ -71,17 +71,26 @@ export function downloadCsv(filename: string, rows: Record<string, unknown>[]): 
   URL.revokeObjectURL(url);
 }
 
+/* Friendly label per document_type. Must match the keys
+ * DriverOnboarding writes to driver_documents (and the
+ * driver-side status page DOC_LABEL) so a single doc never shows
+ * up under three different names across the platform. */
 export const DOCUMENT_TYPE_LABELS: Record<string, string> = {
-  driver_license:       'Driver License',
-  insurance:            'Insurance Document',
+  driver_license:       "Driver's License",
+  insurance:            'Vehicle Insurance',
   vehicle_registration: 'Vehicle Registration',
+  identity_document:    'ID / Passport',
   profile_photo:        'Profile Photo',
   background_check:     'Background Check',
 };
 
+/* The doc set DriverOnboarding actually uploads. Used by the
+ * Applications-tab progress bar — must match the onboarding
+ * DOCUMENT_TYPES list (src/components/DriverOnboarding.tsx) or the
+ * progress will under- or over-count. */
 export const REQUIRED_DOCS = [
   'driver_license',
   'insurance',
   'vehicle_registration',
-  'profile_photo',
+  'identity_document',
 ] as const;

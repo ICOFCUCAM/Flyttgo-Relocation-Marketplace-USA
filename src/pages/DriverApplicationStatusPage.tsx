@@ -24,6 +24,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../lib/auth';
 import { useApp }  from '../lib/store';
 import { supabase } from '../lib/supabase';
+import { parseVehicleField, complianceLabel } from '../lib/application-compliance';
 
 type ApplicationStatus = 'pending' | 'approved' | 'rejected';
 
@@ -249,11 +250,40 @@ export default function DriverApplicationStatusPage() {
                 </div>
                 <div className="col-span-2">
                   <p className="text-xs text-gray-500">{t('driverStatus.vehicle')}</p>
-                  <p className="font-medium text-gray-900">
-                    {application.vehicle_type?.replace(/_/g, ' ') ?? '—'}
-                    {application.vehicle_model ? ` · ${application.vehicle_model}` : ''}
-                    {application.vehicle_year ? ` (${application.vehicle_year})` : ''}
-                  </p>
+                  {(() => {
+                    /* Parse the legacy cram-string out of vehicle_model.
+                     * The onboarding flow concatenates category + make/
+                     * model + a JSON compliance suffix into one column
+                     * (see src/lib/application-compliance.ts for the
+                     * schema-migration follow-up). We split it back
+                     * apart for clean rendering. */
+                    const parsed = parseVehicleField(application.vehicle_model);
+                    const vehicleType = application.vehicle_type?.replace(/_/g, ' ');
+                    const headLine = [
+                      vehicleType,
+                      parsed.makeModel,
+                      application.vehicle_year ? `(${application.vehicle_year})` : null,
+                    ].filter(Boolean).join(' · ');
+                    const complianceEntries = Object.entries(parsed.compliance);
+                    return (
+                      <>
+                        <p className="font-medium text-gray-900">{headLine || '—'}</p>
+                        {parsed.category && (
+                          <p className="text-xs text-slate-500 mt-1">{parsed.category}</p>
+                        )}
+                        {complianceEntries.length > 0 && (
+                          <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                            {complianceEntries.map(([k, v]) => (
+                              <div key={k} className="flex items-baseline gap-2 min-w-0">
+                                <dt className="text-slate-500 flex-shrink-0">{complianceLabel(k)}</dt>
+                                <dd className="font-mono text-slate-700 truncate">{v}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             </div>

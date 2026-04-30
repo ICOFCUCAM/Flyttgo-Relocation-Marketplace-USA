@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CheckCircle2, XCircle, Clock, AlertTriangle, FileText, Eye, X, Download, Image as ImageIcon } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, AlertTriangle, FileText, Eye, X, Download, Image as ImageIcon, Truck } from 'lucide-react';
 import { DOCUMENT_TYPE_LABELS } from '../utils';
 import {
   useApplicationDocuments,
@@ -7,6 +7,7 @@ import {
 } from '../../../hooks/queries/useAdminDashboard';
 import { getDocumentPublicUrl } from '../../../services/admin';
 import type { DocumentRow } from '../../../services/admin';
+import { parseVehicleField, complianceLabel } from '../../../lib/application-compliance';
 
 /* ─────────────────────────────────────────────────────────────────
  * <ApplicationDocsPanel>
@@ -40,6 +41,12 @@ interface DriverDocsContext {
   /** Optional context badge text — e.g. "Application · Pending review"
    *  or "Active driver". */
   contextLabel?: string;
+  /** Optional applicant context — when present, the modal renders a
+   *  vehicle + compliance block at the top so the admin sees the
+   *  same data the driver sees on /driver-application-status. */
+  vehicleType?:  string | null;
+  vehicleField?: string | null;   // raw vehicle_model cram-string
+  vehicleYear?:  number | null;
 }
 
 const STATUS_TONE: Record<string, { bg: string; text: string; label: string; icon: typeof Clock }> = {
@@ -155,6 +162,49 @@ export function ApplicationDocsPanel({
 
         {/* Body — scrolls inside the modal. */}
         <div className="flex-1 overflow-y-auto px-6 py-5">
+          {/* Vehicle + compliance block — parsed out of the legacy
+           *  cram-string format so the admin sees the same data the
+           *  driver sees on their /driver-application-status page,
+           *  cleanly formatted (no raw JSON leaking through). */}
+          {(context.vehicleField || context.vehicleType) && (() => {
+            const parsed = parseVehicleField(context.vehicleField);
+            const vehicleType = context.vehicleType?.replace(/_/g, ' ');
+            const headLine = [
+              vehicleType,
+              parsed.makeModel,
+              context.vehicleYear ? `(${context.vehicleYear})` : null,
+            ].filter(Boolean).join(' · ');
+            const complianceEntries = Object.entries(parsed.compliance);
+            return (
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-5">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0">
+                    <Truck size={16} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-1">
+                      Vehicle &amp; compliance
+                    </p>
+                    <p className="font-bold text-slate-900">{headLine || '—'}</p>
+                    {parsed.category && (
+                      <p className="text-xs text-slate-500 mt-0.5">{parsed.category}</p>
+                    )}
+                  </div>
+                </div>
+                {complianceEntries.length > 0 && (
+                  <dl className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                    {complianceEntries.map(([k, v]) => (
+                      <div key={k} className="flex items-baseline gap-2 min-w-0">
+                        <dt className="text-slate-500 flex-shrink-0">{complianceLabel(k)}</dt>
+                        <dd className="font-mono text-slate-900 truncate">{v}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+              </div>
+            );
+          })()}
+
           {isLoading ? (
             <div className="text-center py-20 text-slate-500 text-sm">Loading documents…</div>
           ) : docs.length === 0 ? (

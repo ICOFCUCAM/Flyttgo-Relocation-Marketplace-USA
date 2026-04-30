@@ -53,6 +53,11 @@ export default function AdminDashboard() {
       applicationId: app.id,
       displayName:   [app.first_name, app.last_name].filter(Boolean).join(' ') || 'Unnamed applicant',
       contextLabel:  `Application · ${app.status}`,
+      /* Pass the raw vehicle cram-string + structured fields so the
+       * docs modal can show the parsed compliance block at the top. */
+      vehicleType:   (app as ApplicationRow & { vehicle_type?: string | null }).vehicle_type ?? null,
+      vehicleField:  (app as ApplicationRow & { vehicle_model?: string | null }).vehicle_model ?? null,
+      vehicleYear:   (app as ApplicationRow & { vehicle_year?: number | null }).vehicle_year ?? null,
     }),
     openDriverDocs:      (driver: DriverRow) => setDocsContext({
       userId:        driver.user_id ?? driver.id,
