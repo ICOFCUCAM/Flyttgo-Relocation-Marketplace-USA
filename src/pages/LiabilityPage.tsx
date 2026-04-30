@@ -1,21 +1,28 @@
+import MarketplaceBanner from '../components/banners/MarketplaceBanner';
+
 const LAST_UPDATED = 'March 31, 2026';
 
 export default function LiabilityPage() {
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero */}
-      <div className="bg-gradient-to-br from-[#0B2E59] to-[#0B2E59]/90 py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <div className="inline-flex items-center gap-2 bg-white/10 text-white/80 text-xs font-medium px-3 py-1.5 rounded-full mb-4">
-            Legal Document
-          </div>
-          <h1 className="text-4xl font-extrabold text-white mb-3">Liability & Insurance Policy</h1>
-          <p className="text-white/60 text-sm">Last updated: {LAST_UPDATED}</p>
-          <div className="mt-6 bg-red-500/20 border border-red-400/40 rounded-xl px-5 py-4">
-            <p className="text-red-200 text-sm font-bold">
-              🚨 CRITICAL: FlyttGo provides ZERO insurance coverage for transported goods. FlyttGo is NOT liable for any damage, loss, theft, or delay. ALL liability rests with the Transport Provider's registered company and their insurance policy.
-            </p>
-          </div>
+      <MarketplaceBanner
+        variant="inverse"
+        eyebrow="Legal · Insurance"
+        breadcrumb={{ id: 'GLRM.LEG', label: 'Liability & Insurance' }}
+        headline="Liability & Insurance Policy"
+        lead={`Platform-vs-provider liability separation, insurance coverage limits, and claim handling. Last updated: ${LAST_UPDATED}.`}
+        compliancePills={[
+          { label: 'Provider-held coverage' },
+          { label: 'Goods-in-transit insurance' },
+          { label: 'Claim handling SLAs' },
+        ]}
+      />
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-8">
+        <div className="bg-red-50 border border-red-300 rounded-2xl px-5 py-4 mb-6">
+          <p className="text-red-800 text-sm font-bold">
+            CRITICAL: FlyttGo provides ZERO insurance coverage for transported goods. FlyttGo is NOT liable for any damage, loss, theft, or delay. ALL liability rests with the Transport Provider&rsquo;s registered company and their insurance policy.
+          </p>
         </div>
       </div>
 

@@ -1,4 +1,5 @@
 import { Card } from '../Card';
+import { Inbox } from 'lucide-react';
 import type { AdminDashboardSnapshot } from '../../../services/admin';
 
 export function OverviewTab({ data }: { data: AdminDashboardSnapshot }) {
@@ -10,9 +11,31 @@ export function OverviewTab({ data }: { data: AdminDashboardSnapshot }) {
     driverStatusStats, revenueStats,
   } = data;
 
+  /* Pending applications = anything not yet approved or rejected.
+   * Promoted as a top-of-page alert so a queue forming during a
+   * busy week is impossible to miss from the overview tab. */
+  const pendingApplicationsCount = applications.filter(
+    a => a.status === 'pending' || a.status === 'submitted' || a.status === 'under_review',
+  ).length;
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6">FlyttGo Operations Control Center</h1>
+      {pendingApplicationsCount > 0 && (
+        <div role="alert" className="mb-4 bg-amber-50 border border-amber-300 text-amber-900 px-6 py-4 rounded-2xl flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-amber-400 text-ink-900 flex items-center justify-center flex-shrink-0 shadow shadow-amber-500/30">
+            <Inbox size={18} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-extrabold text-amber-900">
+              {pendingApplicationsCount} driver application{pendingApplicationsCount === 1 ? '' : 's'} awaiting review
+            </p>
+            <p className="text-xs text-amber-700">
+              Open the <span className="font-bold">Applications</span> tab in the rail to approve or reject.
+            </p>
+          </div>
+        </div>
+      )}
       {fleetCapacity === 'LOW' && (
         <div role="alert" className="mb-4 bg-red-50 border border-red-300 text-red-700 px-6 py-4 rounded-lg">
           <strong>⚠️ Driver shortage detected</strong>

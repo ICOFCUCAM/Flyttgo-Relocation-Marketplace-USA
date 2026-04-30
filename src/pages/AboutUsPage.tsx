@@ -1,5 +1,6 @@
 import { useApp } from '../lib/store';
 import { SectionIndex } from '../components/global/CountryPage';
+import MarketplaceBanner from '../components/banners/MarketplaceBanner';
 
 const PRINCIPLES = [
   { t: 'Coordination, not carriage', b: 'FlyttGo is a digital coordination marketplace. We do not operate as a moving company or a transportation carrier.' },
@@ -13,22 +14,22 @@ export default function AboutUsPage() {
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
-      <section className="border-b border-slate-200 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-6 py-20">
-          <SectionIndex id="GLRM.01" label="About FlyttGo" />
-          <h1 className="font-serif text-5xl lg:text-6xl leading-[1.05] tracking-tight">
-            FlyttGo Global Logistics &amp; Relocation Marketplace
-          </h1>
-          <p className="mt-6 text-lg leading-relaxed text-slate-700 max-w-3xl">
-            FlyttGo Global Logistics &amp; Relocation Marketplace operates as a
-            digital coordination platform connecting customers with independent
-            licensed relocation providers across multiple jurisdictions
-            worldwide. Service providers are responsible for compliance with
-            their national licensing, taxation, insurance, and regulatory
-            requirements.
-          </p>
-        </div>
-      </section>
+      <MarketplaceBanner
+        eyebrow="About FlyttGo"
+        breadcrumb={{ id: 'GLRM.01', label: 'About FlyttGo' }}
+        headline="Global Logistics & Relocation Marketplace"
+        lead="FlyttGo operates as a digital coordination platform connecting customers with independent licensed relocation providers across multiple jurisdictions worldwide. Service providers are responsible for compliance with their national licensing, taxation, insurance, and regulatory requirements."
+        compliancePills={[
+          { label: 'Coordination platform' },
+          { label: 'Country-licensed providers' },
+          { label: 'Procurement-grade records' },
+          { label: 'Multi-currency invoicing' },
+        ]}
+        ctas={[
+          { label: 'Read how it works →', onClick: () => setPage('how-it-works'), primary: true },
+          { label: 'Submit an RFP',       onClick: () => setPage('procurement-rfp') },
+        ]}
+      />
 
       <section className="border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-6 py-20">

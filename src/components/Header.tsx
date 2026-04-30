@@ -29,62 +29,163 @@ interface DropdownItem {
   page?:    Page;
   /** When set, navigates to /services/<slug> via service-category route. */
   servicesSlug?: string;
+  /** Optional flag emoji (countries) or symbol prefix shown left of the label. */
+  prefix?:  string;
+  /** Optional one-line subtitle — rendered smaller under the label
+   *  to give the mega menu the Stripe / Airbnb editorial density. */
+  description?: string;
+}
+
+interface NavSection {
+  /** Optional eyebrow above the column. */
+  eyebrow?: string;
+  items:    DropdownItem[];
 }
 
 interface NavDropdown {
-  key:    'countries' | 'services' | 'providers' | 'enterprise';
-  label:  string;
-  items:  DropdownItem[];
+  key:      'countries' | 'services' | 'providers' | 'enterprise';
+  label:    string;
+  /** Width of the popover. Defaults to a modest fixed width if absent. */
+  width?:   string;
+  /** Multi-column section layout. Each section becomes one column at lg+. */
+  sections: NavSection[];
+  /** Optional right-rail "feature" panel — a CTA card sitting to the
+   *  right of the columns. Stripe + Airbnb both anchor a featured
+   *  link this way to make the mega menu feel like a marketing
+   *  surface, not a sitemap. */
+  feature?: {
+    eyebrow:  string;
+    title:    string;
+    body:     string;
+    cta:      { label: string; page: Page };
+  };
 }
 
 const NAV_DROPDOWNS: NavDropdown[] = [
+  /* Countries — 6 markets, 2 × 3 grid with flag prefixes + corridor
+   *  context per country. Right-rail feature points at the country
+   *  index page. */
   {
     key:   'countries',
     label: 'Countries',
-    items: [
-      { label: 'United States',  page: 'market-us' },
-      { label: 'Canada',         page: 'market-canada' },
-      { label: 'United Kingdom', page: 'market-uk' },
-      { label: 'France',         page: 'market-france' },
-      { label: 'Germany',        page: 'market-germany' },
-      { label: 'Norway',         page: 'market-norway' },
+    width: 'w-[44rem]',
+    sections: [
+      {
+        eyebrow: 'North America',
+        items: [
+          { label: 'United States',  page: 'market-us',     prefix: '🇺🇸', description: 'NYC · LA · Austin · Atlanta' },
+          { label: 'Canada',         page: 'market-canada', prefix: '🇨🇦', description: 'Toronto · Montréal · Vancouver' },
+        ],
+      },
+      {
+        eyebrow: 'Europe',
+        items: [
+          { label: 'United Kingdom', page: 'market-uk',     prefix: '🇬🇧', description: 'London · Manchester · Edinburgh' },
+          { label: 'France',         page: 'market-france', prefix: '🇫🇷', description: 'Paris · Lyon · Marseille' },
+          { label: 'Germany',        page: 'market-germany',prefix: '🇩🇪', description: 'Berlin · München · Hamburg' },
+          { label: 'Norway',         page: 'market-norway', prefix: '🇳🇴', description: 'Oslo · Bergen · Trondheim' },
+        ],
+      },
     ],
+    feature: {
+      eyebrow: 'New countries',
+      title:   '6 active markets, more on deck',
+      body:    'Spain, Netherlands, UAE, Kenya, and Nigeria are next in our country expansion roadmap.',
+      cta:     { label: 'See all marketplaces →', page: 'cities' },
+    },
   },
+
+  /* Services — 8 categories grouped into two thematic columns. */
   {
     key:   'services',
     label: 'Services',
-    items: [
-      { label: 'Local moves',             servicesSlug: 'local' },
-      { label: 'Long-distance moves',     servicesSlug: 'long-distance' },
-      { label: 'International relocation', servicesSlug: 'international' },
-      { label: 'Office relocation',       servicesSlug: 'office' },
-      { label: 'Packing services',        servicesSlug: 'packing' },
-      { label: 'Storage',                 servicesSlug: 'storage' },
-      { label: 'Truck rental',            servicesSlug: 'truck-rental' },
-      { label: 'Student moves',           servicesSlug: 'student' },
+    width: 'w-[48rem]',
+    sections: [
+      {
+        eyebrow: 'Residential',
+        items: [
+          { label: 'Local moves',           servicesSlug: 'local',         description: 'Same-city, often same-day' },
+          { label: 'Long-distance moves',   servicesSlug: 'long-distance', description: 'Inter-state · cross-country' },
+          { label: 'International relocation', servicesSlug: 'international', description: 'Customs-aware, door-to-door' },
+          { label: 'Student moves',         servicesSlug: 'student',       description: 'Term-aware, campus-verified' },
+        ],
+      },
+      {
+        eyebrow: 'Commercial · Specialised',
+        items: [
+          { label: 'Office relocation',     servicesSlug: 'office',        description: 'Weekend windows · IT decommission' },
+          { label: 'Packing services',      servicesSlug: 'packing',       description: 'Full · partial · fragile crating' },
+          { label: 'Storage',               servicesSlug: 'storage',       description: 'Short-term + long-term staging' },
+          { label: 'Truck rental',          servicesSlug: 'truck-rental',  description: 'DIY-friendly with optional crew' },
+        ],
+      },
     ],
+    feature: {
+      eyebrow: 'Pricing engine',
+      title:   'Distance-priced, country-baselined',
+      body:    'Every category quote routes through the unified pricing engine. Real OSRM distance, metro surge, and tier multipliers — transparent before you confirm.',
+      cta:     { label: 'See the pricing engine →', page: 'pricing' },
+    },
   },
+
+  /* Providers — supply-side funnel. */
   {
     key:   'providers',
     label: 'Providers',
-    items: [
-      { label: 'Join FlyttGo',                    page: 'driver-onboarding' },
-      { label: 'Earnings simulator',              page: 'providers' },
-      { label: 'Subscription tiers',              page: 'subscriptions' },
-      { label: 'Provider dashboard',              page: 'driver-portal' },
-      { label: 'Provider compliance requirements', page: 'provider-requirements' },
+    width: 'w-[44rem]',
+    sections: [
+      {
+        eyebrow: 'Apply + earn',
+        items: [
+          { label: 'Join FlyttGo',         page: 'driver-onboarding', description: 'Apply in 5 minutes; document upload + tier choice' },
+          { label: 'Earnings simulator',   page: 'providers',         description: 'Project monthly income by country, tier, and corridor' },
+          { label: 'Subscription tiers',   page: 'subscriptions',     description: 'Silver → Elite · lower commission, higher dispatch priority' },
+        ],
+      },
+      {
+        eyebrow: 'Operate',
+        items: [
+          { label: 'Provider dashboard',   page: 'driver-portal',          description: 'Jobs · payouts · subscription · documents' },
+          { label: 'Compliance requirements', page: 'provider-requirements', description: 'Country-specific licensing, insurance, vehicle' },
+        ],
+      },
     ],
+    feature: {
+      eyebrow: 'For new applicants',
+      title:   'Approval typically in 24–48 hours',
+      body:    'Tier choice unlocks immediately on document approval. Cash and Stripe payouts available across all six markets.',
+      cta:     { label: 'Apply as a provider →', page: 'driver-onboarding' },
+    },
   },
+
+  /* Enterprise — institutional vertical. */
   {
     key:   'enterprise',
     label: 'Enterprise',
-    items: [
-      { label: 'Corporate relocation', page: 'enterprise-relocation' },
-      { label: 'Universities',         page: 'universities' },
-      { label: 'Municipal relocation', page: 'pilot-deployment-programs' },
-      { label: 'Government mobility',  page: 'government-programs' },
-      { label: 'Partner integrations', page: 'partners' },
+    width: 'w-[48rem]',
+    sections: [
+      {
+        eyebrow: 'Workforce + students',
+        items: [
+          { label: 'Corporate relocation', page: 'enterprise-relocation',     description: 'Talent mobility · multi-country packages · HRIS audit' },
+          { label: 'Universities',         page: 'universities',              description: 'Move-in · move-out · semester corridors' },
+        ],
+      },
+      {
+        eyebrow: 'Public sector',
+        items: [
+          { label: 'Municipal relocation', page: 'pilot-deployment-programs', description: 'Municipal workforce moves · framework agreements' },
+          { label: 'Government mobility',  page: 'government-programs',       description: 'CIP-vetted vendors · audit-ready logs · RFP-ready' },
+          { label: 'Partner integrations', page: 'partners',                  description: 'API access · embedded checkout · referral payouts' },
+        ],
+      },
     ],
+    feature: {
+      eyebrow: 'Procurement-ready',
+      title:   'Submit an RFP — vendor pack on request',
+      body:    'Capability brief, vendor compliance pack, and framework-pricing examples available before procurement starts.',
+      cta:     { label: 'Submit an RFP →', page: 'procurement-rfp' },
+    },
   },
 ];
 
@@ -392,6 +493,7 @@ export default function Header() {
             <nav className="hidden lg:flex items-center gap-1" aria-label="Primary">
               {NAV_DROPDOWNS.map(d => {
                 const isOpen = openDropdown === d.key;
+                const hasFeature = Boolean(d.feature);
                 return (
                   <div key={d.key} className="relative">
                     <button
@@ -407,16 +509,72 @@ export default function Header() {
                       {d.label}{chevron(isOpen)}
                     </button>
                     {isOpen && (
-                      <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-2xl shadow-[0_24px_60px_-20px_rgba(15,23,42,0.25)] border border-slate-200/70 z-50 p-2 backdrop-blur-md">
-                        {d.items.map(it => (
-                          <button
-                            key={it.label}
-                            onClick={() => handleDropdownItem(it)}
-                            className="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-700 font-medium hover:bg-amber-50 hover:text-amber-700 transition"
-                          >
-                            {it.label}
-                          </button>
-                        ))}
+                      <div
+                        className={`absolute top-full left-0 mt-2 ${d.width ?? 'w-72'} bg-white rounded-2xl shadow-[0_24px_60px_-20px_rgba(15,23,42,0.25)] border border-slate-200/70 z-50 backdrop-blur-md overflow-hidden`}
+                      >
+                        <div className={`grid ${hasFeature ? 'grid-cols-12' : 'grid-cols-1'} gap-0`}>
+                          {/* Section columns — 2/3 of the popover width
+                           *  when a feature panel is present, full
+                           *  width otherwise. Each section becomes one
+                           *  column at lg+. */}
+                          <div className={`${hasFeature ? 'col-span-8' : 'col-span-1'} p-4 grid ${d.sections.length > 1 ? 'grid-cols-2 gap-x-2' : 'grid-cols-1'}`}>
+                            {d.sections.map((s, si) => (
+                              <div key={si} className="space-y-0.5">
+                                {s.eyebrow && (
+                                  <p className="px-3 pt-1 pb-2 text-[10px] uppercase tracking-[0.18em] text-slate-400 font-bold">
+                                    {s.eyebrow}
+                                  </p>
+                                )}
+                                {s.items.map(it => (
+                                  <button
+                                    key={it.label}
+                                    onClick={() => handleDropdownItem(it)}
+                                    className="group w-full text-left px-3 py-2 rounded-lg hover:bg-amber-50 transition flex items-start gap-2.5"
+                                  >
+                                    {it.prefix && (
+                                      <span className="text-xl leading-none flex-shrink-0 mt-0.5" aria-hidden="true">
+                                        {it.prefix}
+                                      </span>
+                                    )}
+                                    <span className="min-w-0 flex-1">
+                                      <span className="block text-sm font-semibold text-slate-800 group-hover:text-amber-700 truncate">
+                                        {it.label}
+                                      </span>
+                                      {it.description && (
+                                        <span className="block text-[11px] text-slate-500 mt-0.5 leading-snug">
+                                          {it.description}
+                                        </span>
+                                      )}
+                                    </span>
+                                  </button>
+                                ))}
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Feature panel — Stripe-style anchored CTA
+                           *  card on the right rail. Brand-aligned amber
+                           *  + ink-navy. */}
+                          {hasFeature && d.feature && (
+                            <div className="col-span-4 bg-gradient-to-br from-amber-50 to-white border-l border-slate-100 p-5 flex flex-col">
+                              <p className="text-[10px] uppercase tracking-[0.18em] text-amber-700 font-bold mb-2">
+                                {d.feature.eyebrow}
+                              </p>
+                              <p className="text-sm font-extrabold text-slate-900 leading-snug mb-2">
+                                {d.feature.title}
+                              </p>
+                              <p className="text-xs text-slate-600 leading-relaxed flex-1">
+                                {d.feature.body}
+                              </p>
+                              <button
+                                onClick={() => { handleNav(d.feature!.cta.page); }}
+                                className="mt-4 inline-flex items-center gap-1 px-3 py-2 bg-amber-400 hover:bg-amber-500 text-slate-900 rounded-lg text-xs font-bold shadow-sm transition self-start"
+                              >
+                                {d.feature.cta.label}
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -654,12 +812,13 @@ export default function Header() {
               <p className="px-3 pt-1 pb-2 text-[10px] uppercase tracking-[0.18em] text-slate-400 font-bold">
                 {d.label}
               </p>
-              {d.items.map(it => (
+              {d.sections.flatMap(s => s.items).map(it => (
                 <button
                   key={it.label}
                   onClick={() => handleDropdownItem(it)}
                   className="block w-full text-left px-3 py-2 text-sm rounded-lg text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition"
                 >
+                  {it.prefix && <span className="mr-2" aria-hidden="true">{it.prefix}</span>}
                   {it.label}
                 </button>
               ))}

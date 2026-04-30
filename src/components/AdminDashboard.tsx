@@ -49,6 +49,18 @@ export default function AdminDashboard() {
 
   const { data: snapshot } = useAdminSnapshot(isAdmin);
 
+  /* Sidebar badges — drives the at-a-glance counters next to each
+   * tab in the rail. Pending applications = anything not yet
+   * approved or rejected. Computed defensively so a missing
+   * snapshot field doesn't crash the rail. */
+  const sidebarBadges = useMemo(() => {
+    if (!snapshot) return {};
+    const pendingApps = snapshot.applications.filter(
+      a => a.status === 'pending' || a.status === 'submitted' || a.status === 'under_review',
+    ).length;
+    return { applications: pendingApps };
+  }, [snapshot]);
+
   if (loading || !isAdmin) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -62,7 +74,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen flex bg-gray-50">
-      <AdminSidebar current={tab} onSelect={setTab} />
+      <AdminSidebar current={tab} onSelect={setTab} badges={sidebarBadges} />
 
       <main className="flex-1 p-6 overflow-auto" aria-live="polite">
         {!snapshot ? (
