@@ -73,7 +73,7 @@ export default function WorldDeploymentMap() {
         {/* Corridor connectors — Phase 4 intercontinental routes */}
         <g
           fill="none"
-          stroke="rgba(16,185,129,0.45)"
+          stroke="rgba(245,158,11,0.55)"
           strokeWidth="1"
           strokeDasharray="3 4"
         >
@@ -94,9 +94,9 @@ export default function WorldDeploymentMap() {
             onClick={() => setPage(n.route)}
             style={{ cursor: 'pointer' }}
           >
-            <circle r="14" fill="rgba(16,185,129,0.18)" />
-            <circle r="7"  fill="rgba(16,185,129,0.5)" />
-            <circle r="3"  fill="#10B981">
+            <circle r="14" fill="rgba(245,158,11,0.18)" />
+            <circle r="7"  fill="rgba(245,158,11,0.55)" />
+            <circle r="3"  fill="#f59e0b">
               <animate attributeName="r" values="3;5;3" dur="2.6s" repeatCount="indefinite" />
             </circle>
             <text

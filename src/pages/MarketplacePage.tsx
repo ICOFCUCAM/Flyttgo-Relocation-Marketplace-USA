@@ -2,6 +2,8 @@ import { useApp } from '../lib/store';
 import type { Page } from '../lib/store';
 import { SectionIndex } from '../components/global/CountryPage';
 import MarketplaceBanner from '../components/banners/MarketplaceBanner';
+import WorldDeploymentMap from '../components/global/WorldDeploymentMap';
+import HomeFAQ from '../components/global/HomeFAQ';
 import {
   GLOBAL_SERVICES,
   GLOBAL_MARKETS,
@@ -77,7 +79,7 @@ export default function MarketplacePage() {
         </div>
       </section>
 
-      <section>
+      <section className="border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-6 py-20">
           <SectionIndex id="GLRM.04" label="Provider categories" />
           <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-3 font-mono text-sm">
@@ -91,6 +93,38 @@ export default function MarketplacePage() {
               </li>
             ))}
           </ul>
+        </div>
+      </section>
+
+      {/* ─── Global deployment map + FAQ ────────────────────
+       *   Two-column trust row: the world map exposes the
+       *   country deployment nodes as a single visual on the
+       *   left, and frequently-asked questions sit adjacent on
+       *   the right. Stacks on mobile (map first), side-by-side
+       *   at lg+. */}
+      <section className="bg-[#fafaf7] py-20">
+        <div className="max-w-7xl mx-auto px-6">
+          <SectionIndex id="GLRM.05" label="Deployment & FAQ" />
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+            <div>
+              <p className="text-amber-700 text-xs font-bold uppercase tracking-[0.18em] mb-2">
+                Global deployment
+              </p>
+              <h2 className="font-serif text-3xl lg:text-4xl leading-tight text-slate-900 mb-3">
+                Six active country nodes
+              </h2>
+              <p className="text-sm text-slate-600 leading-relaxed mb-6 max-w-md">
+                Each marker opens its country shopfront — country-licensed
+                providers, distance-priced quotes, escrow on every booking.
+                Dotted corridors trace the Phase 4 intercontinental routes
+                planned through 2030.
+              </p>
+              <WorldDeploymentMap />
+            </div>
+            <div>
+              <HomeFAQ inline />
+            </div>
+          </div>
         </div>
       </section>
     </main>
