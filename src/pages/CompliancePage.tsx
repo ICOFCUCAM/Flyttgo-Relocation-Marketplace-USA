@@ -1,5 +1,6 @@
 import { useApp } from '../lib/store';
 import { SectionIndex } from '../components/global/CountryPage';
+import MarketplaceBanner from '../components/banners/MarketplaceBanner';
 
 const JURISDICTIONS = [
   {
@@ -35,23 +36,22 @@ export default function CompliancePage() {
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
-      <section className="border-b border-slate-200 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-6 py-20">
-          <SectionIndex id="GLRM.01" label="Compliance positioning" />
-          <h1 className="font-serif text-5xl lg:text-6xl leading-[1.05] tracking-tight">
-            Compliance &amp; jurisdictional awareness
-          </h1>
-          <p className="mt-6 text-lg leading-relaxed text-slate-700 max-w-3xl">
-            FlyttGo Global Logistics &amp; Relocation Marketplace operates as a
-            digital coordination platform connecting customers with independent
-            licensed relocation providers across multiple jurisdictions
-            worldwide. <strong>FlyttGo does not operate as a transportation
-            carrier.</strong> Service providers are responsible for compliance
-            with their national licensing, taxation, insurance, and regulatory
-            requirements.
-          </p>
-        </div>
-      </section>
+      <MarketplaceBanner
+        eyebrow="Compliance positioning"
+        breadcrumb={{ id: 'GLRM.01', label: 'Compliance & jurisdictional awareness' }}
+        headline="Compliance & jurisdictional awareness"
+        lead="FlyttGo operates as a digital coordination platform connecting customers with independent licensed relocation providers across multiple jurisdictions worldwide. FlyttGo does not operate as a transportation carrier. Service providers are responsible for compliance with their national licensing, taxation, insurance, and regulatory requirements."
+        compliancePills={[
+          { label: 'USDOT / FMCSA · USA' },
+          { label: 'GVOL · UK' },
+          { label: 'GüKG · Germany' },
+          { label: 'Yrkestransport · NO' },
+        ]}
+        ctas={[
+          { label: 'Vendor compliance pack →', onClick: () => setPage('vendor-pack'), primary: true },
+          { label: 'Capability brief',         onClick: () => setPage('capability-brief') },
+        ]}
+      />
 
       <section className="border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-6 py-20">

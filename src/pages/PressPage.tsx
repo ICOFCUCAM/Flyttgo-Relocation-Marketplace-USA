@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../lib/store';
+import MarketplaceBanner from '../components/banners/MarketplaceBanner';
 
 const COVERAGE = [
   { outlet: 'E24',            title: 'FlyttGo hits 25,000 completed jobs across the USA',             date: 'Mar 2026', url: '#' },
@@ -25,18 +26,13 @@ export default function PressPage() {
   return (
     <div className="min-h-screen bg-white">
 
-      {/* HERO */}
-      <section className="bg-gradient-to-br from-[#0B2E59] to-[#1a4a8a] text-white py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 text-white/80 text-xs font-medium px-4 py-2 rounded-full mb-6">
-            📰 {t('press.heroBadge')}
-          </div>
-          <h1 className="text-5xl font-extrabold mb-5 leading-tight">{t('press.heroTitle')}</h1>
-          <p className="text-white/75 text-lg max-w-2xl mx-auto">
-            {t('press.heroSubtitle')}
-          </p>
-        </div>
-      </section>
+      <MarketplaceBanner
+        variant="inverse"
+        eyebrow={t('press.heroBadge')}
+        breadcrumb={{ id: 'GLRM.PR', label: 'Press' }}
+        headline={t('press.heroTitle')}
+        lead={t('press.heroSubtitle')}
+      />
 
       {/* QUICK FACTS */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-10">

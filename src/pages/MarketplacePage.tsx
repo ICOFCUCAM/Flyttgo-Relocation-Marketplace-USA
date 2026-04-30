@@ -1,6 +1,7 @@
 import { useApp } from '../lib/store';
 import type { Page } from '../lib/store';
 import { SectionIndex } from '../components/global/CountryPage';
+import MarketplaceBanner from '../components/banners/MarketplaceBanner';
 import {
   GLOBAL_SERVICES,
   GLOBAL_MARKETS,
@@ -13,35 +14,22 @@ export default function MarketplacePage() {
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
-      <section className="border-b border-slate-200 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-6 py-20">
-          <SectionIndex id="GLRM.01" label="Marketplace surface" />
-          <h1 className="font-serif text-5xl lg:text-6xl leading-[1.05] tracking-tight">
-            Browse the FlyttGo global marketplace
-          </h1>
-          <p className="mt-6 text-lg leading-relaxed text-slate-700 max-w-3xl">
-            FlyttGo Global Logistics &amp; Relocation Marketplace operates as a
-            digital coordination platform connecting customers with independent
-            licensed relocation providers across multiple jurisdictions worldwide.
-            Service providers are responsible for compliance with their national
-            licensing, taxation, insurance, and regulatory requirements.
-          </p>
-          <div className="flex flex-wrap gap-4 mt-10">
-            <button
-              onClick={() => go('booking')}
-              className="px-6 py-3 bg-slate-900 text-white font-mono text-xs uppercase tracking-[0.2em] hover:bg-slate-700 transition"
-            >
-              Start a coordination
-            </button>
-            <button
-              onClick={() => go('how-it-works')}
-              className="px-6 py-3 border border-slate-900 text-slate-900 font-mono text-xs uppercase tracking-[0.2em] hover:bg-slate-100 transition"
-            >
-              How it works
-            </button>
-          </div>
-        </div>
-      </section>
+      <MarketplaceBanner
+        eyebrow="Marketplace surface"
+        breadcrumb={{ id: 'GLRM.01', label: 'Marketplace surface' }}
+        headline="Browse the FlyttGo global marketplace"
+        lead="FlyttGo operates as a digital coordination platform connecting customers with independent licensed relocation providers across multiple jurisdictions worldwide. Service providers are responsible for compliance with their national licensing, taxation, insurance, and regulatory requirements."
+        compliancePills={[
+          { label: 'Country-licensed providers' },
+          { label: 'Distance-priced quotes' },
+          { label: 'Escrow on every booking' },
+          { label: 'Audit-ready records' },
+        ]}
+        ctas={[
+          { label: 'Get an instant price →', onClick: () => go('booking'), primary: true },
+          { label: 'How it works',            onClick: () => go('how-it-works') },
+        ]}
+      />
 
       <section className="border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-6 py-20">
