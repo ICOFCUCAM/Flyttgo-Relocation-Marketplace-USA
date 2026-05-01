@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Phone, MessageCircle, Truck, FileCheck, UserCheck, Timer, CheckCircle, Loader2 } from 'lucide-react';
 import { useApp } from '../lib/store';
 import DeliveryMap from '../components/DeliveryMap';
 import { useAuth } from '../lib/auth';
 import {
   useActiveBookingForCustomer,
   useTrackingBookingSearch,
+  useTrackingDriver,
 } from '../hooks/queries/useCustomerBookings';
 
 interface Stage { label: string; time: string; done: boolean; icon: string; }
@@ -58,6 +60,17 @@ export default function TrackingPage() {
   const { data: searchedBooking, isFetching: searchLoading } = useTrackingBookingSearch(searchTerm);
   const booking = searchTerm ? searchedBooking ?? null : activeBooking ?? null;
 
+  /* Pull real driver context for the tracking card. driver_id is
+   * populated when dispatch has matched a booking; while it's null
+   * the card renders the "awaiting assignment" empty state. */
+  const { data: driver } = useTrackingDriver(booking?.driver_id ?? null);
+
+  /* Status helpers — power the LIVE / DELIVERED badges on the
+   * active-state header. */
+  const status = booking?.status ?? '';
+  const isLive       = status === 'in_progress' || status === 'in_transit' || status === 'driver_assigned';
+  const isDelivered  = status === 'completed' || status === 'customer_confirmed';
+
   /* Mark "searched" for either source so the rest of the UI renders. */
   useEffect(() => {
     if (booking) setSearched(true);
@@ -106,14 +119,42 @@ export default function TrackingPage() {
   return (
     <div className="min-h-screen bg-gray-50">
 
-      {/* HERO / SEARCH */}
-      <section className="bg-gradient-to-br from-[#0B2E59] to-[#1a4a8a] pt-8 pb-12">
-        <div className="max-w-3xl mx-auto px-4 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 text-white/80 text-xs px-4 py-2 rounded-full mb-5">
-            📍 {t('tracking.badge')}
+      {/* HERO / SEARCH — background photo + brand-aligned scrim,
+       *   matches the MarketplaceBanner inverse variant used on the
+       *   rest of the platform. */}
+      <section className="relative pt-12 pb-14 overflow-hidden">
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=1920&q=70"
+            alt=""
+            className="h-full w-full object-cover"
+            loading="eager"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0b1f3a]/95 via-[#0b1f3a]/85 to-[#0b1f3a]/75" />
+        </div>
+        <div className="relative max-w-3xl mx-auto px-4 text-center">
+          {/* Status pill row — LIVE / DELIVERED / standby. Shown
+           *  prominently above the title so the customer sees the
+           *  current state of their move at a glance. */}
+          <div className="flex justify-center mb-4">
+            {isLive ? (
+              <span className="inline-flex items-center gap-2 bg-emerald-500/15 border border-emerald-400/30 text-emerald-200 text-xs font-bold uppercase tracking-[0.18em] px-3.5 py-1.5 rounded-full">
+                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                Live
+              </span>
+            ) : isDelivered ? (
+              <span className="inline-flex items-center gap-2 bg-amber-400/15 border border-amber-400/30 text-amber-200 text-xs font-bold uppercase tracking-[0.18em] px-3.5 py-1.5 rounded-full">
+                <CheckCircle className="w-3 h-3" />
+                Delivered
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 text-xs font-bold uppercase tracking-[0.18em] px-3.5 py-1.5 rounded-full">
+                📍 {t('tracking.badge')}
+              </span>
+            )}
           </div>
-          <h1 className="text-4xl font-extrabold text-white mb-3">{t('tracking.title')}</h1>
-          <p className="text-white/60 mb-8">{t('tracking.subtitle')}</p>
+          <h1 className="text-4xl font-extrabold text-white mb-3 tracking-tight">{t('tracking.title')}</h1>
+          <p className="text-white/70 mb-8">{t('tracking.subtitle')}</p>
           <div className="flex gap-2 max-w-lg mx-auto">
             <div className="relative flex-1">
               <span className="absolute left-3.5 top-3.5 text-gray-400 text-sm">🔍</span>
@@ -122,11 +163,12 @@ export default function TrackingPage() {
                 onChange={e => setBookingId(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleTrack()}
                 placeholder={t('tracking.searchPlaceholder')}
-                className="w-full pl-9 pr-4 py-3.5 rounded-xl text-sm shadow-lg focus:ring-2 focus:ring-[#F2B705] outline-none"
+                className="w-full pl-9 pr-4 py-3.5 rounded-xl text-sm shadow-lg focus:ring-2 focus:ring-amber-400 outline-none"
               />
             </div>
             <button onClick={handleTrack} disabled={searchLoading}
-              className="px-6 py-3.5 bg-[#F2B705] text-[#0B2E59] font-bold rounded-xl hover:bg-[#F2B705]/90 transition disabled:opacity-60 whitespace-nowrap">
+              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold rounded-xl transition disabled:opacity-60 whitespace-nowrap shadow-lg shadow-amber-500/30">
+              {searchLoading && <Loader2 className="w-4 h-4 animate-spin" />}
               {searchLoading ? '...' : t('tracking.trackBtn')}
             </button>
           </div>
@@ -182,15 +224,90 @@ export default function TrackingPage() {
                 className="shadow-sm"
               />
 
-              {/* CHAT */}
+              {/* DRIVER CARD — real driver_profiles + most-recent
+               *   driver_application data when dispatch has matched
+               *   a driver to this booking. Falls back to an
+               *   "awaiting assignment" state when driver_id is
+               *   still null. */}
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
-                  <div className="w-8 h-8 bg-[#0B2E59] rounded-full flex items-center justify-center text-white text-xs font-bold">L</div>
-                  <div>
-                    <div className="font-semibold text-gray-900 text-sm">Lars Olsen</div>
-                    <div className="flex items-center gap-1.5 text-xs text-emerald-500"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"/>{t('tracking.driverOnline')}</div>
+                <div className="bg-gradient-to-r from-[#0B2E59] to-[#1a4a8a] px-5 py-4">
+                  <p className="text-white/40 text-[10px] font-bold tracking-[0.18em] uppercase mb-1">Your driver</p>
+                  <div className="flex items-center gap-1.5">
+                    {driver?.fullName ? (
+                      <>
+                        <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                        <p className="text-emerald-300 text-xs font-semibold">
+                          {driver.online ? 'Online · en route' : 'Assigned'}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <span className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-pulse" />
+                        <p className="text-amber-300 text-xs font-semibold">Awaiting assignment</p>
+                      </>
+                    )}
                   </div>
-                  <a href="tel:+4791234567" className="ml-auto px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-semibold flex items-center gap-1">📞 {t('tracking.callDriver')}</a>
+                </div>
+                {driver?.fullName ? (
+                  <div className="p-5">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-lg flex-shrink-0">
+                        {driver.fullName.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-slate-900 truncate">{driver.fullName}</p>
+                        {(driver.vehicleMake || driver.vehicleModel) && (
+                          <p className="text-xs text-slate-500 truncate">
+                            {[driver.vehicleMake, driver.vehicleModel, driver.vehicleYear ? `(${driver.vehicleYear})` : null]
+                              .filter(Boolean).join(' ')}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {driver.vehicleRegistration && (
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 mb-3 flex items-center justify-between">
+                        <span className="text-slate-500 text-[11px] font-medium uppercase tracking-wider">Plate</span>
+                        <span className="font-bold text-slate-900 text-sm font-mono tracking-widest">{driver.vehicleRegistration}</span>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2">
+                      {driver.phone && (
+                        <a
+                          href={`tel:${driver.phone}`}
+                          className="flex-1 inline-flex items-center justify-center gap-1.5 bg-[#0B2E59] hover:bg-[#0F3558] text-white py-2.5 rounded-xl text-sm font-bold transition"
+                        >
+                          <Phone className="w-4 h-4" />
+                          Call
+                        </a>
+                      )}
+                      <a
+                        href="https://wa.me/447432112438"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 py-2.5 rounded-xl text-sm font-bold transition"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        Support
+                      </a>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="px-5 py-6 text-center">
+                    <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                      <Truck className="w-6 h-6 text-amber-500" />
+                    </div>
+                    <p className="text-slate-700 font-semibold text-sm mb-1">Matching your driver</p>
+                    <p className="text-slate-500 text-xs">A verified operator will be assigned to your booking shortly. You&apos;ll get a notification when matched.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* CHAT — collapsed below the driver card. */}
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-5 py-3 border-b border-gray-100">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Chat with your driver</p>
                 </div>
                 <div ref={chatRef} className="h-40 overflow-y-auto p-4 space-y-3 bg-gray-50">
                   <div className="flex justify-start">
@@ -291,21 +408,62 @@ export default function TrackingPage() {
 
       {/* EMPTY STATE — not searched yet */}
       {!searched && (
-        <section className="max-w-4xl mx-auto px-4 py-16">
-          <div className="grid sm:grid-cols-3 gap-4">
-            {[
-              { icon: '📍', titleKey: 'tracking.featureGps', descKey: 'tracking.featureGpsDesc' },
-              { icon: '💬', titleKey: 'tracking.featureChat', descKey: 'tracking.featureChatDesc' },
-              { icon: '🔒', titleKey: 'tracking.featureEscrow', descKey: 'tracking.featureEscrowDesc' },
-            ].map(f => (
-              <div key={f.titleKey} className="bg-white rounded-2xl border border-gray-100 p-6 text-center shadow-sm">
-                <div className="text-4xl mb-3">{f.icon}</div>
-                <h3 className="font-bold text-gray-900 mb-2">{t(f.titleKey)}</h3>
-                <p className="text-gray-500 text-sm">{t(f.descKey)}</p>
+        <>
+          {/* STAGES PREVIEW — visual outline of what live tracking
+           *   will show once the customer enters their booking ref.
+           *   Mirrors the Active-state Timeline so the empty state
+           *   reads as "here's what you'll see", not a stub. */}
+          <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-14 text-center">
+            <p className="text-amber-700 text-[10px] font-bold uppercase tracking-[0.18em] mb-2">Delivery progress</p>
+            <h2 className="text-2xl font-extrabold text-slate-900 mb-10">Track every stage of your delivery</h2>
+            <div className="relative">
+              {/* Gradient connector line — only visible at sm+. */}
+              <div
+                className="absolute top-7 left-[10%] right-[10%] h-0.5 hidden sm:block"
+                style={{ background: 'linear-gradient(90deg, #cbd5e1 0%, #0b1f3a 50%, #f59e0b 100%)' }}
+                aria-hidden="true"
+              />
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-4 relative">
+                {[
+                  { label: 'Booking confirmed', Icon: FileCheck,   bg: '#fef3c7', iconColor: '#b45309', numColor: '#b45309' },
+                  { label: 'Driver assigned',   Icon: UserCheck,   bg: '#fde68a', iconColor: '#92400e', numColor: '#92400e' },
+                  { label: 'Driver en route',   Icon: Truck,       bg: '#0b1f3a', iconColor: '#ffffff', numColor: '#ffffff' },
+                  { label: 'Arriving soon',     Icon: Timer,       bg: '#fef3c7', iconColor: '#b45309', numColor: '#b45309' },
+                  { label: 'Delivered',         Icon: CheckCircle, bg: '#f59e0b', iconColor: '#0b1f3a', numColor: '#0b1f3a' },
+                ].map(({ label, Icon, bg, iconColor, numColor }, i) => (
+                  <div key={i} className="flex flex-col items-center">
+                    <div
+                      className="w-14 h-14 rounded-2xl flex flex-col items-center justify-center mb-3 shadow-sm border border-slate-200"
+                      style={{ background: bg }}
+                    >
+                      <Icon style={{ color: iconColor }} className="w-5 h-5 mb-0.5" />
+                      <span className="font-extrabold text-[10px] leading-none" style={{ color: numColor }}>{i + 1}</span>
+                    </div>
+                    <p className="text-slate-600 text-xs font-semibold leading-snug">{label}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </section>
+            </div>
+            <p className="text-slate-400 text-xs mt-10">Timeline activates once tracking begins.</p>
+          </section>
+
+          {/* FEATURE CARDS — translation-keyed marketing strip. */}
+          <section className="max-w-4xl mx-auto px-4 pb-16">
+            <div className="grid sm:grid-cols-3 gap-4">
+              {[
+                { icon: '📍', titleKey: 'tracking.featureGps', descKey: 'tracking.featureGpsDesc' },
+                { icon: '💬', titleKey: 'tracking.featureChat', descKey: 'tracking.featureChatDesc' },
+                { icon: '🔒', titleKey: 'tracking.featureEscrow', descKey: 'tracking.featureEscrowDesc' },
+              ].map(f => (
+                <div key={f.titleKey} className="bg-white rounded-2xl border border-gray-100 p-6 text-center shadow-sm">
+                  <div className="text-4xl mb-3">{f.icon}</div>
+                  <h3 className="font-bold text-gray-900 mb-2">{t(f.titleKey)}</h3>
+                  <p className="text-gray-500 text-sm">{t(f.descKey)}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        </>
       )}
     </div>
   );
