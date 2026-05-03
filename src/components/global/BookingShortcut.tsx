@@ -7,7 +7,7 @@ const RoutePreviewMap = lazy(() => import('./RoutePreviewMap'));
 import { toast } from 'sonner';
 import { useApp } from '../../lib/store';
 import type { BookingCountry, PaymentMethod } from '../../lib/store';
-import NorwayAddressAutocomplete, { USAddress } from '../NorwayAddressAutocomplete';
+import GlobalAddressAutocomplete from '../GlobalAddressAutocomplete';
 import { COUNTRY_PAYMENT, formatCurrency, splitPayment } from '../../lib/constants';
 import { getRouteDistance, haversineKm, RouteResult } from '../../lib/routing';
 import { track } from '../../lib/analytics';
