@@ -691,7 +691,7 @@ export const en = {
     stepSummary:    'Summary',
     stepConfirm:    'Confirm',
     addrTitle:      'Where are you moving?',
-    addrSubtitle:   'Start typing to search the official US address registry',
+    addrSubtitle:   'Start typing to search the official address database',
     addrPickupLabel:'Pickup Address',
     addrDropoffLabel:'Delivery Address',
     addrPickupPlaceholder:'e.g. 350 5th Ave, New York',
