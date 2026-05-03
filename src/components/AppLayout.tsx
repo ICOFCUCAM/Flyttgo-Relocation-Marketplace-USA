@@ -106,6 +106,7 @@ export default function AppLayout() {
       .replace(/\/$/, '');
 
     const routeMap: Record<string, string> = {
+      '/': 'home',
       '/us': 'market-us',
       '/ca': 'market-canada',
       '/de': 'market-germany',
@@ -116,10 +117,11 @@ export default function AppLayout() {
 
     const mapped = routeMap[path];
 
-    if (mapped && mapped !== currentPage) {
+    if (mapped) {
       setPage(mapped as typeof currentPage);
     }
-  }, [currentPage, setPage]);
+
+  }, []); // ← MUST run only once at boot
 
   /* Scroll to top when navigating between internal pages */
   useEffect(() => {
