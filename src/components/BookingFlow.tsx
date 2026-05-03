@@ -617,7 +617,7 @@ return Object.keys(errs).length === 0;
             <div className="space-y-6">
               {/* PICKUP */}
               <div>
-                <NorwayAddressAutocomplete
+                <GlobalAddressAutocomplete
                   id="pickup-address"
                   label={t('booking.addrPickupLabel')}
                   value={pickupAddress.formatted}
@@ -643,7 +643,7 @@ return Object.keys(errs).length === 0;
                 {pickupAddress.street_name && (
                   <div className="mt-2 bg-blue-50 rounded-lg px-3 py-2 text-xs text-blue-700">
                     <span className="font-semibold">Stored:</span>{' '}
-                    {formatNorwegianAddress(pickupAddress).oneLine}
+                    {formatAddress(pickupAddress).oneLine}
                     {pickupAddress.lat && (
                       <span className="text-blue-400 ml-2 font-mono">
                         [{pickupAddress.lat.toFixed(5)}, {pickupAddress.lng?.toFixed(5)}]
@@ -652,10 +652,10 @@ return Object.keys(errs).length === 0;
                   </div>
                 )}
               </div>
-
+               
               {/* DROPOFF */}
-              <div>
-                <NorwayAddressAutocomplete
+                <div>
+                 <GlobalAddressAutocomplete
                   id="dropoff-address"
                   label={t('booking.addrDropoffLabel')}
                   value={dropoffAddress.formatted}
@@ -680,7 +680,7 @@ return Object.keys(errs).length === 0;
                 {dropoffAddress.street_name && (
                   <div className="mt-2 bg-blue-50 rounded-lg px-3 py-2 text-xs text-blue-700">
                     <span className="font-semibold">Stored:</span>{' '}
-                    {formatNorwegianAddress(dropoffAddress).oneLine}
+                    {formatAddress(dropoffAddress).line1}
                     {dropoffAddress.lat && (
                       <span className="text-blue-400 ml-2 font-mono">
                         [{dropoffAddress.lat.toFixed(5)}, {dropoffAddress.lng?.toFixed(5)}]
@@ -960,25 +960,36 @@ return Object.keys(errs).length === 0;
                   <div className="flex gap-3 mb-3">
                     <div className="w-2 h-2 bg-emerald-500 rounded-full mt-1.5 flex-shrink-0" />
                     <div>
-                      <p className="text-xs text-gray-400 mb-0.5">{t('booking.summaryPickup')}</p>
-                      {formatNorwegianAddress(pickupAddress).line1 && (
-                        <p className="font-medium text-gray-800">{formatNorwegianAddress(pickupAddress).line1}</p>
-                      )}
-                      {formatNorwegianAddress(pickupAddress).line2 && (
-                        <p className="text-gray-600">{formatNorwegianAddress(pickupAddress).line2}</p>
-                      )}
-                      <p className="text-gray-400 text-xs">the USA</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <div className="w-2 h-2 bg-red-500 rounded-full mt-1.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-xs text-gray-400 mb-0.5">{t('booking.summaryDelivery')}</p>
-                      {formatNorwegianAddress(dropoffAddress).line1 && (
-                        <p className="font-medium text-gray-800">{formatNorwegianAddress(dropoffAddress).line1}</p>
-                      )}
-                      {formatNorwegianAddress(dropoffAddress).line2 && (
-                        <p className="text-gray-600">{formatNorwegianAddress(dropoffAddress).line2}</p>
+                     <p className="text-xs text-gray-400 mb-0.5">{t('booking.summaryPickup')}</p>
+{formatAddress(pickupAddress).line1 && (
+  <p className="font-medium text-gray-800">
+    {formatAddress(pickupAddress).line1}
+  </p>
+)}
+{formatAddress(pickupAddress).line2 && (
+  <p className="text-gray-600">
+    {formatAddress(pickupAddress).line2}
+  </p>
+)}
+<p className="text-gray-400 text-xs">{pickupAddress.country}</p>
+</div>
+</div>
+
+<div className="flex gap-3">
+  <div className="w-2 h-2 bg-red-500 rounded-full mt-1.5 flex-shrink-0" />
+  <div>
+    <p className="text-xs text-gray-400 mb-0.5">{t('booking.summaryDelivery')}</p>
+    {formatAddress(dropoffAddress).line1 && (
+      <p className="font-medium text-gray-800">
+        {formatAddress(dropoffAddress).line1}
+      </p>
+    )}
+    {formatAddress(dropoffAddress).line2 && (
+      <p className="text-gray-600">
+        {formatAddress(dropoffAddress).line2}
+      </p>
+    )}
+    <p className="text-gray-400 text-xs">{dropoffAddress.country}</p>
                       )}
                       <p className="text-gray-400 text-xs">the USA</p>
                     </div>
