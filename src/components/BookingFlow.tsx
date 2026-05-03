@@ -294,40 +294,37 @@ const validateAddresses = (): boolean => {
 
   /* PICKUP validation */
 
-  if (!pickupAddress.formatted && !pickupAddress.street_name) {
-    errs.pickup = 'Pickup address is required';
-  }
-  else if (
-    pickupAddress.postcode &&
-    !validatePostcode(pickupAddress.postcode, country)
-  ) {
-    errs.pickup = 'Invalid postcode format';
-  }
-  else if (!pickupAddress.city && pickupAddress.street_name) {
-    errs.pickup = 'City is required';
-  }
+if (!pickupAddress.formatted && !pickupAddress.street_name) {
+  errs.pickup = 'Pickup address is required';
+}
+else if (
+  pickupAddress.postcode &&
+  !validatePostcode(pickupAddress.postcode, country)
+) {
+  errs.pickup = 'Invalid postcode format';
+}
+else if (!pickupAddress.city && pickupAddress.street_name) {
+  errs.pickup = 'City is required';
+}
 
-  /* DROPOFF validation */
+/* DROPOFF validation */
 
-  if (!dropoffAddress.formatted && !dropoffAddress.street_name) {
-    errs.dropoff = 'Delivery address is required';
-  }
-  else if (
-    dropoffAddress.postcode &&
-    !validatePostcode(dropoffAddress.postcode, country)
-  ) {
-    errs.dropoff = 'Invalid postcode format';
-  }
-  else if (!dropoffAddress.city && dropoffAddress.street_name) {
-    errs.dropoff = 'City is required';
-  }
+if (!dropoffAddress.formatted && !dropoffAddress.street_name) {
+  errs.dropoff = 'Delivery address is required';
+}
+else if (
+  dropoffAddress.postcode &&
+  !validatePostcode(dropoffAddress.postcode, country)
+) {
+  errs.dropoff = 'Invalid postcode format';
+}
+else if (!dropoffAddress.city && dropoffAddress.street_name) {
+  errs.dropoff = 'City is required';
+}
 
-  setAddressErrors(errs);
-  return Object.keys(errs).length === 0;
+setAddressErrors(errs);
+return Object.keys(errs).length === 0;
 };
-    setAddressErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
 
   /* ── STEP NAVIGATION ── */
   const goNext = () => {
