@@ -51,7 +51,7 @@ export interface FormattedAddress {
   oneLine: string;  // "350 5th Ave, New York, NY 10118"
 }
 
-export function formatNorwegianAddress(
+export function formatAddress(
   address: AddressInput | string | null | undefined,
   prefix: 'pickup' | 'delivery' | '' = ''
 ): FormattedAddress {
@@ -65,6 +65,8 @@ export function formatNorwegianAddress(
       oneLine: 'Address not provided',
     };
   }
+
+ // existing logic continues here...
 
   if (typeof address === 'string') {
     return {
@@ -120,7 +122,7 @@ export function formatNorwegianAddress(
     ? rawCity.charAt(0).toUpperCase() + rawCity.slice(1).toLowerCase()
     : '';
 
-  // US convention: house number first, then street name (e.g. "350 5th Ave").
+  // US convention: house number first, then street name
   const line1Parts = [houseNumber, streetName].filter(Boolean);
   const line1 = line1Parts.join(' ') || 'Address not provided';
 
@@ -137,11 +139,14 @@ export function formatNorwegianAddress(
   return { line1, line2, line3, full, short, oneLine };
 }
 
+/* Backward compatibility export (temporary safety layer) */
+export const formatNorwegianAddress = formatAddress;
+
 export function formatAddressLines(
   address: AddressInput | string | null | undefined,
   prefix: 'pickup' | 'delivery' | '' = ''
 ): string[] {
-  const f = formatNorwegianAddress(address, prefix);
+  const f = formatAddress(address, prefix);
   return [f.line1, f.line2, f.line3].filter(Boolean);
 }
 
