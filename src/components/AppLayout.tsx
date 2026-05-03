@@ -93,34 +93,35 @@ function Loading() {
   );
 }
 
-useEffect(() => {
-  if (typeof window === 'undefined') return;
+export default function AppLayout() {
+  const { currentPage, setPage } = useApp();
+  const [paletteOpen, setPaletteOpen] = React.useState(false);
 
-  const path = window.location.pathname
-    .toLowerCase()
-    .replace(/\/$/, ''); // removes trailing slash
+  /* Map URL paths like /us → internal store routes like market-us */
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
 
-  const routeMap: Record<string, string> = {
-    '/us': 'market-us',
-    '/ca': 'market-canada',
-    '/de': 'market-germany',
-    '/fr': 'market-france',
-    '/gb': 'market-uk',
-    '/no': 'market-norway',
-  };
+    const path = window.location.pathname
+      .toLowerCase()
+      .replace(/\/$/, '');
 
-  const mapped = routeMap[path];
+    const routeMap: Record<string, string> = {
+      '/us': 'market-us',
+      '/ca': 'market-canada',
+      '/de': 'market-germany',
+      '/fr': 'market-france',
+      '/gb': 'market-uk',
+      '/no': 'market-norway',
+    };
 
-  if (mapped && mapped !== currentPage) {
-    setPage(mapped as typeof currentPage);
-  }
-}, [currentPage, setPage]);
+    const mapped = routeMap[path];
 
-  /* Scroll to the top of the viewport whenever the current page
-   * changes. Without this, clicking a link from deep down the page
-   * (e.g. anything in the footer) renders the new page but leaves
-   * the scroll position where it was, so the customer lands on the
-   * bottom of the new page instead of its hero. */
+    if (mapped && mapped !== currentPage) {
+      setPage(mapped as typeof currentPage);
+    }
+  }, [currentPage, setPage]);
+
+  /* Scroll to top when navigating between internal pages */
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, [currentPage]);
