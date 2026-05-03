@@ -97,36 +97,48 @@ export default function AppLayout() {
   const { currentPage, setPage } = useApp();
   const [paletteOpen, setPaletteOpen] = React.useState(false);
 
-  /* Map URL paths like /us → internal store routes like market-us */
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
+  /* Sync browser URL ↔ internal store routes */
+useEffect(() => {
+  if (typeof window === 'undefined') return;
 
-    const path = window.location.pathname
-      .toLowerCase()
-      .replace(/\/$/, '');
+  const path = window.location.pathname
+    .toLowerCase()
+    .replace(/\/$/, '');
 
-    const routeMap: Record<string, string> = {
-      '/': 'home',
-      '/us': 'market-us',
-      '/ca': 'market-canada',
-      '/de': 'market-germany',
-      '/fr': 'market-france',
-      '/gb': 'market-uk',
-      '/no': 'market-norway',
-    };
+  const routeMap: Record<string, string> = {
+    '/': 'home',
+    '/us': 'market-us',
+    '/ca': 'market-canada',
+    '/de': 'market-germany',
+    '/fr': 'market-france',
+    '/gb': 'market-uk',
+    '/no': 'market-norway',
+  };
 
-    const mapped = routeMap[path];
+  const mapped = routeMap[path];
 
-    if (mapped) {
-      setPage(mapped as typeof currentPage);
-    }
+  if (mapped) {
+    setPage(mapped as typeof currentPage);
+  }
 
-  }, []); // ← MUST run only once at boot
+  /* keep URL updated when navigating internally */
+  const reverseMap: Record<string, string> = {
+    home: '/',
+    'market-us': '/us',
+    'market-canada': '/ca',
+    'market-germany': '/de',
+    'market-france': '/fr',
+    'market-uk': '/gb',
+    'market-norway': '/no',
+  };
 
-  /* Scroll to top when navigating between internal pages */
-  useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-  }, [currentPage]);
+  const expectedPath = reverseMap[currentPage];
+
+  if (expectedPath && expectedPath !== path) {
+    window.history.replaceState({}, '', expectedPath);
+  }
+
+}, [currentPage, setPage]);
 
   /* ── Inbound shared-quote handler (Wave 19) ────────────────
    * If a customer arrives with `?q=<token>` in the URL — typically
