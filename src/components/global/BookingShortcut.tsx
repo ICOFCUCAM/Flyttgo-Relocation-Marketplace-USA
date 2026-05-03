@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { useApp } from '../../lib/store';
 import type { BookingCountry, PaymentMethod } from '../../lib/store';
 import GlobalAddressAutocomplete from '../GlobalAddressAutocomplete';
+import type { USAddress } from '../GlobalAddressAutocomplete';
 import { COUNTRY_PAYMENT, formatCurrency, splitPayment } from '../../lib/constants';
 import { getRouteDistance, haversineKm, RouteResult } from '../../lib/routing';
 import { track } from '../../lib/analytics';
@@ -136,9 +137,9 @@ export default function BookingShortcut({ country, compact = false }: Props) {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   /* Swap counter — bumped each time the customer presses the swap
-   * button. We use it as part of the autocomplete key so the inputs
-   * re-mount with the swapped initial values (NorwayAddressAutocomplete
-   * only seeds query from `value` on mount). */
+ * button. We use it as part of the autocomplete key so the inputs
+ * re-mount with the swapped initial values (GlobalAddressAutocomplete
+ * only seeds query from `value` on mount). */
   const [swapCount, setSwapCount] = useState(0);
 
   function swapAddresses() {
@@ -388,8 +389,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <NorwayAddressAutocomplete
-            key={`pickup-${country}-${swapCount}`}
+          <GlobalAddressAutocomplete
             id={`shortcut-pickup-${country}`}
             label={labels.pickup}
             value={pickup?.formatted ?? ''}
@@ -414,8 +414,8 @@ export default function BookingShortcut({ country, compact = false }: Props) {
             </button>
           </div>
 
-          <NorwayAddressAutocomplete
-            key={`dropoff-${country}-${swapCount}`}
+          <GlobalAddressAutocomplete
+  key={`dropoff-${country}-${swapCount}`}
             id={`shortcut-dropoff-${country}`}
             label={labels.dropoff}
             value={dropoff?.formatted ?? ''}
