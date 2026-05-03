@@ -985,11 +985,11 @@ return Object.keys(errs).length === 0;
       </p>
     )}
     {formatAddress(dropoffAddress).line2 && (
-      <p className="text-gray-600">
-        {formatAddress(dropoffAddress).line2}
-      </p>
-    )}
-    <p className="text-gray-400 text-xs">{dropoffAddress.country}</p>
+  <p className="text-gray-600">
+    {formatAddress(dropoffAddress).line2}
+  </p>
+)}
+<p className="text-gray-400 text-xs">{dropoffAddress.country}</p>
                       )}
                       <p className="text-gray-400 text-xs">the USA</p>
                     </div>
