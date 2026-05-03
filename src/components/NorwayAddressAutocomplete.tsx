@@ -81,6 +81,15 @@ const COUNTRY_LABEL: Record<CountryCode, string> = {
   no: 'Norway',
 };
 
+const COUNTRY_VIEWBOX: Record<CountryCode, string> = {
+  no: '&viewbox=4.5,58,31.5,71.5&bounded=1',
+  us: '&viewbox=-125,24,-66,49&bounded=1',
+  ca: '&viewbox=-141,41,-52,83&bounded=1',
+  gb: '&viewbox=-8,49,2,61&bounded=1',
+  de: '&viewbox=5.8,47.2,15.1,55.1&bounded=1',
+  fr: '&viewbox=-5,41,9,51&bounded=1'
+};
+
 /* ─── US state code map for compact display ─── */
 const STATE_CODES: Record<string, string> = {
   'Alabama':'AL','Alaska':'AK','Arizona':'AZ','Arkansas':'AR','California':'CA','Colorado':'CO',
@@ -182,9 +191,9 @@ export default function NorwayAddressAutocomplete({
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  /* ── FETCH from Nominatim (OpenStreetMap), restricted to the USA ── */
+  /* ── FETCH from Nominatim (OpenStreetMap), restricted to selected country ── */
   const fetchSuggestions = useCallback(async (q: string) => {
-    if (q.length < 3) {
+    if (q.length < 2) {
       setSuggestions([]);
       setOpen(false);
       return;
@@ -194,7 +203,18 @@ export default function NorwayAddressAutocomplete({
     setApiError(false);
 
     try {
-      const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&countrycodes=${countryCode}&limit=8&q=${encodeURIComponent(q)}`;
+      const url =
+  `https://nominatim.openstreetmap.org/search?` +
+  `format=jsonv2` +
+  `&addressdetails=1` +
+  `&extratags=1` +
+  `&namedetails=1` +
+  `&countrycodes=${countryCode}` +
+  `${COUNTRY_VIEWBOX[countryCode] ?? ''}` +
+  `&limit=8` +
+  `&dedupe=0` +
+  `&q=${encodeURIComponent(q)}`;
+       
       const res = await fetch(url, {
         signal: AbortSignal.timeout(5000),
         headers: { 'Accept-Language': COUNTRY_LANG[countryCode] },
@@ -344,14 +364,14 @@ export default function NorwayAddressAutocomplete({
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          Verified US address
+          Verified {COUNTRY_LABEL[countryCode]} address
         </p>
       )}
 
       {open && suggestions.length > 0 && (
         <div className="absolute z-50 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
           <div className="px-3 py-2 border-b border-gray-100 flex items-center justify-between">
-            <span className="text-xs text-gray-400 font-medium">OpenStreetMap — US Address Lookup</span>
+            <span className="text-xs text-gray-400 font-medium">OpenStreetMap — {COUNTRY_LABEL[countryCode]} Address Lookup</span>
           </div>
           <ul className="max-h-64 overflow-y-auto">
             {suggestions.map((result, idx) => {
@@ -376,7 +396,7 @@ export default function NorwayAddressAutocomplete({
                         {highlightMatch(line1, query)}
                       </div>
                       <div className="text-xs text-gray-500 mt-0.5">
-                        {highlightMatch(line2, query)} · USA
+                        {highlightMatch(line2, query)} · {COUNTRY_LABEL[countryCode]}
                       </div>
                     </div>
                     {result.lat && result.lon && (
