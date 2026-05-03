@@ -10,29 +10,45 @@
  * once they leave /norway) stay readable while the hero, the country
  * landing, and the booking shortcut all read as native Norwegian.
  */
+
 export const nb = {
   header: {
-    home:         'Hjem',
-    services:     'Tjenester',
+    home: 'Hjem',
+    services: 'Tjenester',
     becomeDriver: 'Bli leverandør',
-    bookNow:      'Bestill nå',
-    signIn:       'Logg inn',
-    signUp:       'Opprett konto',
-    dashboard:    'Min side',
-    myBookings:   'Mine flyttinger',
-    profile:      'Profil',
-    signOut:      'Logg ut',
+    bookNow: 'Bestill nå',
+    signIn: 'Logg inn',
+    signUp: 'Opprett konto',
+    dashboard: 'Min side',
+    myBookings: 'Mine flyttinger',
+    profile: 'Profil',
+    signOut: 'Logg ut',
     notifications: 'Varsler',
     notificationsEmpty: 'Ingen nye varsler',
-    notificationsHint:  'Nye flyttingsoppdateringer kommer hit.',
-    tagline:      'Norges flyttemarkedsplass — koordinert',
+    notificationsHint: 'Nye flyttingsoppdateringer kommer hit.',
+    tagline: 'Norges flyttemarkedsplass — koordinert',
   },
+
   booking: {
-    addrPickupLabel:       'Henteadresse',
+    addrTitle: 'Hvor flytter du?',
+    addrSubtitle: 'Begynn å skrive for å søke i den offisielle adressdatabasen',
+
+    addrPickupLabel: 'Henteadresse',
     addrPickupPlaceholder: 'F.eks. Karl Johans gate 22, Oslo',
-    addrDropoffLabel:      'Leveringsadresse',
+
+    addrDropoffLabel: 'Leveringsadresse',
+    addrDropoffPlaceholder: 'F.eks. Strandgata 15, Bergen',
+
+    continue: 'Fortsett',
+    moveDetails: 'Flyttedetaljer',
+    inventory: 'Inventar',
+    schedule: 'Planlegging',
+    summary: 'Sammendrag',
+    confirm: 'Bekreft',
   },
+
   footer: {
-    rights: '© 2026 FlyttGo Technologies Group · FlyttGo Global Logistics & Relocation Marketplace. Med enerett.',
+    rights:
+      '© 2026 FlyttGo Technologies Group · FlyttGo Global Logistics & Relocation Marketplace. Med enerett.',
   },
 };
