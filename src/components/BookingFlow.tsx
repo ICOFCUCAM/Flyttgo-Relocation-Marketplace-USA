@@ -255,25 +255,76 @@ export default function BookingFlow() {
   };
 
   /* ── VALIDATION ── */
-  const validateAddresses = (): boolean => {
-    const errs: { pickup?: string; dropoff?: string } = {};
+const validateAddresses = (): boolean => {
+  const errs: { pickup?: string; dropoff?: string } = {};
 
-    if (!pickupAddress.formatted && !pickupAddress.street_name) {
-      errs.pickup = 'Pickup address is required';
-    } else if (pickupAddress.postcode && !/^\d{4}$/.test(pickupAddress.postcode)) {
-      errs.pickup = 'US postcode must be 4 digits';
-    } else if (!pickupAddress.city && pickupAddress.street_name) {
-      errs.pickup = 'City is required';
+  const validatePostcode = (postcode: string, country: string): boolean => {
+    if (!postcode) return false;
+
+    switch (country.toLowerCase()) {
+      case 'us':
+        // 12345 or 12345-6789
+        return /^\d{5}(-\d{4})?$/.test(postcode);
+
+      case 'ca':
+        // A1A 1A1
+        return /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/.test(postcode);
+
+      case 'no':
+        // 0150
+        return /^\d{4}$/.test(postcode);
+
+      case 'gb':
+        // SW1A 1AA
+        return /^[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}$/i.test(postcode);
+
+      case 'de':
+        // 10115
+        return /^\d{5}$/.test(postcode);
+
+      case 'fr':
+        // 75001
+        return /^\d{5}$/.test(postcode);
+
+      default:
+        // fallback validation for other countries
+        return postcode.length >= 3;
     }
+  };
 
-    if (!dropoffAddress.formatted && !dropoffAddress.street_name) {
-      errs.dropoff = 'Delivery address is required';
-    } else if (dropoffAddress.postcode && !/^\d{4}$/.test(dropoffAddress.postcode)) {
-      errs.dropoff = 'US postcode must be 4 digits';
-    } else if (!dropoffAddress.city && dropoffAddress.street_name) {
-      errs.dropoff = 'City is required';
-    }
+  /* PICKUP validation */
 
+  if (!pickupAddress.formatted && !pickupAddress.street_name) {
+    errs.pickup = 'Pickup address is required';
+  }
+  else if (
+    pickupAddress.postcode &&
+    !validatePostcode(pickupAddress.postcode, country)
+  ) {
+    errs.pickup = 'Invalid postcode format';
+  }
+  else if (!pickupAddress.city && pickupAddress.street_name) {
+    errs.pickup = 'City is required';
+  }
+
+  /* DROPOFF validation */
+
+  if (!dropoffAddress.formatted && !dropoffAddress.street_name) {
+    errs.dropoff = 'Delivery address is required';
+  }
+  else if (
+    dropoffAddress.postcode &&
+    !validatePostcode(dropoffAddress.postcode, country)
+  ) {
+    errs.dropoff = 'Invalid postcode format';
+  }
+  else if (!dropoffAddress.city && dropoffAddress.street_name) {
+    errs.dropoff = 'City is required';
+  }
+
+  setAddressErrors(errs);
+  return Object.keys(errs).length === 0;
+};
     setAddressErrors(errs);
     return Object.keys(errs).length === 0;
   };
