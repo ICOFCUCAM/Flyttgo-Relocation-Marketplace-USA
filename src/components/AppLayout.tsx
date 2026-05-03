@@ -93,9 +93,28 @@ function Loading() {
   );
 }
 
-export default function AppLayout() {
-  const { currentPage, setPage } = useApp();
-  const [paletteOpen, setPaletteOpen] = React.useState(false);
+useEffect(() => {
+  if (typeof window === 'undefined') return;
+
+  const path = window.location.pathname
+    .toLowerCase()
+    .replace(/\/$/, ''); // removes trailing slash
+
+  const routeMap: Record<string, string> = {
+    '/us': 'market-us',
+    '/ca': 'market-canada',
+    '/de': 'market-germany',
+    '/fr': 'market-france',
+    '/gb': 'market-uk',
+    '/no': 'market-norway',
+  };
+
+  const mapped = routeMap[path];
+
+  if (mapped && mapped !== currentPage) {
+    setPage(mapped as typeof currentPage);
+  }
+}, [currentPage, setPage]);
 
   /* Scroll to the top of the viewport whenever the current page
    * changes. Without this, clicking a link from deep down the page
