@@ -990,8 +990,6 @@ return Object.keys(errs).length === 0;
   </p>
 )}
 <p className="text-gray-400 text-xs">{dropoffAddress.country}</p>
-                      )}
-                      <p className="text-gray-400 text-xs">the USA</p>
                     </div>
                   </div>
                 </div>
