@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
+import { FileText } from 'lucide-react';
 import { downloadCsv } from '../utils';
 import {
   useUpdateDriverStatus,
   useAssignDriverPlan,
 } from '../../../hooks/queries/useAdminDashboard';
 import type { DriverRow } from '../../../services/admin';
+import type { AdminPanelHandlers } from '../types';
 
 type StatusFilter = 'all' | 'approved' | 'pending' | 'suspended';
 type OnlineFilter = 'all' | 'online' | 'offline';
@@ -12,9 +14,11 @@ type OnlineFilter = 'all' | 'online' | 'offline';
 export function DriversTab({
   drivers,
   driverSubExpiry,
+  handlers,
 }: {
   drivers: DriverRow[];
   driverSubExpiry: Record<string, string | null>;
+  handlers: AdminPanelHandlers;
 }) {
   const updateStatus = useUpdateDriverStatus();
   const assignPlan   = useAssignDriverPlan();
@@ -152,6 +156,14 @@ export function DriversTab({
                   )}
                 </td>
                 <td className="p-3 flex gap-2 flex-wrap">
+                  <button
+                    onClick={() => handlers.openDriverDocs(d)}
+                    className="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 text-xs font-bold rounded transition"
+                    title="View driver documents"
+                  >
+                    <FileText size={11} />
+                    Docs
+                  </button>
                   <button
                     onClick={() => updateStatus.mutate({ id: d.id, status: 'approved' })}
                     className="bg-emerald-600 text-white px-2 py-1 text-xs rounded"

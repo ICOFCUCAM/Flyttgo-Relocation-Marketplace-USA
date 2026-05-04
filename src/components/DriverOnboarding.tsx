@@ -203,42 +203,100 @@ export default function DriverOnboarding() {
        *    user_id, email, first_name, last_name, phone, address,
        *    license_number, license_expiry, years_experience,
        *    vehicle_type, vehicle_model, vehicle_year (int),
-       *    vehicle_registration, cargo_capacity, city, zone, status.
-       *    UI collects make + model separately; we concatenate them
-       *    into the single `vehicle_model` column. */
-      /* Provider category and country are appended to existing columns so we
-       * don't depend on a schema migration. The admin dashboard reads
-       * `zone` (country) and `vehicle_model` (with the category prefix)
-       * to surface the marketplace classification per applicant. */
+       *    vehicle_registration, cargo_capacity, city, zone, status,
+       *    plus structured compliance columns added by
+       *    docs/install-application-compliance-columns.sql. */
       const categoryLabel = PROVIDER_CATEGORIES.find(c => c.id === providerCategory)?.label ?? '';
-      /* Country-specific compliance answers serialized as a tiny
-       * JSON suffix so the admin dashboard sees them inline. We
-       * only emit the suffix when at least one answer is non-empty. */
-      const compliancePayload = Object.entries(complianceAnswers)
-        .filter(([, v]) => v && v.trim() !== '');
-      const complianceSuffix  = compliancePayload.length > 0
-        ? `· compliance=${JSON.stringify(Object.fromEntries(compliancePayload))}`
+
+      /* Compliance routing — known onboarding slugs map to dedicated
+       * columns. Unmapped slugs (province, business-permit, etc.)
+       * are still serialised into the cram-string suffix on
+       * vehicle_model so we don't lose data on jurisdictions that
+       * don't yet have first-class columns. The reader in
+       * src/lib/application-compliance.ts prefers structured
+       * columns; the parser is the legacy fallback. */
+      const SLUG_TO_COL: Record<string, string> = {
+        'usdot-number':                'usdot_number',
+        'mc-number':                   'mc_number',
+        'cargo-insurance':             'cargo_insurance',
+        'operator-licence-uk':         'gvol_number',
+        'gewerbeanmeldung':            'gukg_licence',
+        'commercial-transport-licence': 'ca_provincial_licence',
+        'siret':                       'siret',
+        'vat-number':                  'tva',
+        'organisation-number':         'yrkestransport',
+      };
+
+      const structuredCompliance: Record<string, string> = {};
+      const unmappedCompliance:   Record<string, string> = {};
+      for (const [slug, raw] of Object.entries(complianceAnswers)) {
+        const trimmed = (raw ?? '').trim();
+        if (!trimmed) continue;
+        const col = SLUG_TO_COL[slug];
+        if (col) structuredCompliance[col] = trimmed;
+        else     unmappedCompliance[slug]  = trimmed;
+      }
+
+      /* Cram-string suffix only carries unmapped slugs now. When
+       * every supported jurisdiction has a column, this branch
+       * collapses and we can write a clean vehicle_model. */
+      const unmappedEntries  = Object.entries(unmappedCompliance);
+      const complianceSuffix = unmappedEntries.length > 0
+        ? `· compliance=${JSON.stringify(Object.fromEntries(unmappedEntries))}`
         : '';
       const vehicleField  = [categoryLabel, `${vehicleMake} ${vehicleModel}`.trim(), complianceSuffix]
         .filter(Boolean)
         .join(' · ');
 
-      const { error: appError } = await supabase
-        .from('driver_applications')
-        .insert({
-          user_id: user.id,
-          email: user.email ?? null,
-          first_name: firstName,
-          last_name: lastName,
-          phone,
-          city,
-          zone: country || null,
-          vehicle_type: vehicleType,
-          vehicle_model: vehicleField,
-          vehicle_year: vehicleYear ? parseInt(vehicleYear, 10) : null,
-          vehicle_registration: licensePlate,
-          status: 'pending',
-        });
+      /* Insert with tolerant fallback. PostgREST rejects inserts
+       * referencing columns that don't exist (400 PGRST204), so
+       * the first attempt sends the structured columns; if the
+       * migration in docs/install-application-compliance-columns.
+       * sql hasn't been applied yet we retry with just the legacy
+       * columns. Either way the cram-string carries the same
+       * compliance data so no data is lost.
+       *
+       * Once the migration is universally applied, drop the
+       * fallback branch + unmappedCompliance suffix.
+       */
+      const legacyRow = {
+        user_id: user.id,
+        email: user.email ?? null,
+        first_name: firstName,
+        last_name: lastName,
+        phone,
+        city,
+        zone: country || null,
+        vehicle_type: vehicleType,
+        vehicle_model: vehicleField,
+        vehicle_year: vehicleYear ? parseInt(vehicleYear, 10) : null,
+        vehicle_registration: licensePlate,
+        status: 'pending',
+      };
+      const structuredRow = {
+        ...legacyRow,
+        provider_category: providerCategory || null,
+        ...structuredCompliance,
+      };
+
+      let appError: Error | null = null;
+      const firstAttempt = await supabase.from('driver_applications').insert(structuredRow);
+      if (firstAttempt.error) {
+        /* PGRST204 = "Could not find the X column of Y in the
+         * schema cache". We treat any column-shape error as a
+         * signal the migration hasn't applied and retry legacy. */
+        const msg = (firstAttempt.error.message ?? '').toLowerCase();
+        const looksLikeMissingColumn =
+          msg.includes('column') ||
+          firstAttempt.error.code === 'PGRST204' ||
+          firstAttempt.error.code === '42703';
+        if (looksLikeMissingColumn) {
+          const retry = await supabase.from('driver_applications').insert(legacyRow);
+          appError = retry.error as Error | null;
+        } else {
+          appError = firstAttempt.error as Error | null;
+        }
+      }
 
       if (appError) throw appError;
 

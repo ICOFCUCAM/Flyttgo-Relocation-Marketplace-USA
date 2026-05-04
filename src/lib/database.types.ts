@@ -255,6 +255,33 @@ export interface DriverApplicationRow {
   reviewed_by:       UUID | null;
   reviewed_at:       Timestamptz | null;
   created_at:        Timestamptz;
+  /* Vehicle metadata. vehicle_model historically stored a
+   * cram-string ("category · make model · compliance=JSON"); after
+   * the install-application-compliance-columns.sql migration
+   * applies, new rows store clean "{make} {model}" and the
+   * structured columns below. The legacy parser in
+   * src/lib/application-compliance.ts handles both formats. */
+  vehicle_type?:        string | null;
+  vehicle_model?:       string | null;
+  vehicle_year?:        number | null;
+  vehicle_registration?: string | null;
+  /* Structured compliance columns (added by docs/install-
+   * application-compliance-columns.sql). All optional + nullable
+   * so the type works against both pre- and post-migration rows. */
+  provider_category?:    string | null;
+  usdot_number?:         string | null;
+  mc_number?:            string | null;
+  cargo_insurance?:      string | null;
+  gvol_number?:          string | null;
+  gukg_licence?:         string | null;
+  yrkestransport?:       string | null;
+  siret?:                string | null;
+  tva?:                  string | null;
+  ca_provincial_licence?: string | null;
+  /* Customer email captured at apply time. */
+  email?:                string | null;
+  city?:                 string | null;
+  zone?:                 string | null;
 }
 
 export type DriverApplicationUpdate = Partial<DriverApplicationRow>;

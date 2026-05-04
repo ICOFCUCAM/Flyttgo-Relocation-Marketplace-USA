@@ -67,8 +67,13 @@ export interface SubscriptionTier {
   shortName:      string;
   /** Marketing tagline. */
   tagline:        string;
-  /** USD monthly baseline. */
+  /** USD baseline for the cadence below. Lower-cost tiers bill
+   *  daily so casual providers can opt in for a single peak day;
+   *  higher-tier commitments stay monthly. */
   baselineUSD:    number;
+  /** Billing cadence. Drives both the price suffix ("/ day" vs
+   *  "/ month") and the eventual Stripe-subscription interval. */
+  cadence:        'daily' | 'monthly';
   /** Platform commission percentage at this tier. */
   commissionPct:  number;
   /** Privileges unlocked. */
@@ -86,6 +91,7 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
     shortName:   'Silver',
     tagline:     'Entry tier · all standard jobs',
     baselineUSD: 0,
+    cadence:     'daily',
     commissionPct: 0.30,
     privileges:  ['standard-queue'],
     badge:       'registered-provider',
@@ -96,7 +102,10 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
     displayName: 'Silver Plus',
     shortName:   'Silver+',
     tagline:     'Visibility unlock — moderate dispatch priority',
+    /* $29/day — daily cadence keeps the tier accessible for a
+     * single peak-day opt-in without committing to a full month. */
     baselineUSD: 29,
+    cadence:     'daily',
     commissionPct: 0.25,
     privileges:  ['standard-queue', 'moderate-dispatch'],
     badge:       'verified-provider',
@@ -107,7 +116,11 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
     displayName: 'Gold',
     shortName:   'Gold',
     tagline:     'Growth acceleration · high-priority dispatch + dedicated AM',
+    /* $79/day — daily cadence so corridor specialists can opt in
+     * for peak weeks (Memorial Day, end-of-month, university
+     * intake) without a multi-month commitment. */
     baselineUSD: 79,
+    cadence:     'daily',
     commissionPct: 0.20,
     privileges:  ['standard-queue', 'high-dispatch', 'dedicated-account-manager'],
     badge:       'verified-provider',
@@ -119,6 +132,7 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
     shortName:   'Gold Pro',
     tagline:     'Commercial-grade — top placement + corporate eligibility',
     baselineUSD: 199,
+    cadence:     'monthly',
     commissionPct: 0.15,
     privileges: [
       'standard-queue', 'priority-dispatch', 'top-of-marketplace',
@@ -135,6 +149,7 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
     shortName:   'CIP',
     tagline:     'Institutional gateway · government + enterprise + university procurement',
     baselineUSD: 499,
+    cadence:     'monthly',
     commissionPct: 0.10,
     privileges: [
       'first-access-jobs',
@@ -189,6 +204,13 @@ export interface LocalizedTierPrice {
   formatted:  string;        // 'kr 599' / '$199' / '60,00 €'
   /** True when the tier is free (renders as 'Free' instead of currency). */
   isFree:     boolean;
+  /** Billing cadence — propagated from the tier definition for
+   *  rendering convenience. */
+  cadence:    'daily' | 'monthly';
+  /** Localized cadence suffix the UI appends after the formatted
+   *  amount, e.g. " / day", " / Tag", " / dag". Already includes
+   *  the leading space. Empty string when isFree. */
+  cadenceLabel: string;
 }
 
 const FORMATTER_CACHE = new Map<string, Intl.NumberFormat>();
@@ -211,6 +233,27 @@ const LOCALE_BY_CURRENCY: Record<string, string> = {
   NOK: 'nb-NO', NGN: 'en-NG', KES: 'en-KE', AED: 'en-AE',
 };
 
+/* Per-locale "/ day" and "/ month" suffix (with leading space).
+ * Falls back to English when the locale isn't registered. */
+const CADENCE_SUFFIXES: Record<string, { daily: string; monthly: string }> = {
+  'en-US': { daily: ' / day',     monthly: ' / month' },
+  'en-CA': { daily: ' / day',     monthly: ' / month' },
+  'en-GB': { daily: ' / day',     monthly: ' / month' },
+  'en-IE': { daily: ' / day',     monthly: ' / month' },
+  'fr-FR': { daily: ' / jour',    monthly: ' / mois' },
+  'fr-CA': { daily: ' / jour',    monthly: ' / mois' },
+  'de-DE': { daily: ' / Tag',     monthly: ' / Monat' },
+  'nb-NO': { daily: ' / dag',     monthly: ' / måned' },
+  'en-NG': { daily: ' / day',     monthly: ' / month' },
+  'en-KE': { daily: ' / day',     monthly: ' / month' },
+  'en-AE': { daily: ' / day',     monthly: ' / month' },
+};
+
+function cadenceSuffix(locale: string, cadence: 'daily' | 'monthly'): string {
+  const entry = CADENCE_SUFFIXES[locale] ?? CADENCE_SUFFIXES['en-US'];
+  return cadence === 'daily' ? entry.daily : entry.monthly;
+}
+
 export function localPriceForTier(
   tier:    SubscriptionTier | SubscriptionTierSlug,
   country: PricingCountry,
@@ -220,13 +263,22 @@ export function localPriceForTier(
     : tier;
   const profile    = findCountryProfile(country);
   const multiplier = multiplierForCountry(country);
-  /* USD baseline → local-currency amount. We assume the USD price is
-   * an anchoring number, not literal — so we multiply by the
-   * country multiplier AND divide by the country's USD rate to get
-   * the local-currency amount. */
+  const locale     = LOCALE_BY_CURRENCY[profile.currency] ?? 'en-US';
+
+  /* USD baseline → local-currency amount. The baseline is the
+   * cadence-specific USD price (daily for tiers with cadence='daily',
+   * monthly for cadence='monthly'). We multiply by the country
+   * multiplier AND the country's USD rate to land on the
+   * local-currency value, then round to whole units (sub-unit
+   * pricing reads as noise on a marketing surface). */
+  const rawAmount = t.baselineUSD * multiplier * profile.usdRate;
+  /* Daily prices in low-multiplier markets can round to 0 (e.g.
+   * $1.49 × 0.25 = $0.37 in NGN/KES baseline) which would render
+   * as "Free" and confuse providers. Floor at 1 unit when the tier
+   * isn't actually free. */
   const localAmount = t.baselineUSD === 0
     ? 0
-    : Math.round(t.baselineUSD * multiplier * profile.usdRate);
+    : Math.max(1, Math.round(rawAmount));
   const isFree = localAmount === 0;
   return {
     amount:     localAmount,
@@ -234,9 +286,10 @@ export function localPriceForTier(
     symbol:     profile.symbol,
     formatted:  isFree
       ? 'Free'
-      : priceFormatter(profile.currency, LOCALE_BY_CURRENCY[profile.currency] ?? 'en-US')
-          .format(localAmount),
+      : priceFormatter(profile.currency, locale).format(localAmount),
     isFree,
+    cadence:    t.cadence,
+    cadenceLabel: isFree ? '' : cadenceSuffix(locale, t.cadence),
   };
 }
 

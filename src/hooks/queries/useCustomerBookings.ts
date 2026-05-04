@@ -155,6 +155,92 @@ export function useTrackingBookingSearch(idQuery: string) {
   });
 }
 
+/* ── Driver lookup for the tracking page ───────────────────────── */
+
+export interface TrackingDriverInfo {
+  fullName:  string | null;
+  phone:     string | null;
+  status:    string | null;
+  online:    boolean;
+  /* Vehicle fields pulled from the driver's most-recent application
+   * (driver_profiles doesn't carry vehicle data today). */
+  vehicleType:         string | null;
+  vehicleMake:         string | null;
+  vehicleModel:        string | null;
+  vehicleYear:         number | null;
+  vehicleRegistration: string | null;
+}
+
+async function fetchTrackingDriver(driverUserId: string): Promise<TrackingDriverInfo | null> {
+  const { supabase } = await import('../../lib/supabase');
+
+  /* Two parallel reads: profile (live status / phone) + the most
+   * recent application (vehicle info). Either can be missing — the
+   * tracking page is robust to nulls. */
+  const [profileRes, appRes] = await Promise.all([
+    supabase.from('driver_profiles')
+      .select('full_name, phone, status, online')
+      .eq('user_id', driverUserId)
+      .maybeSingle(),
+    supabase.from('driver_applications')
+      .select('vehicle_type, vehicle_model, vehicle_year, vehicle_registration')
+      .eq('user_id', driverUserId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  if (!profileRes.data && !appRes.data) return null;
+
+  /* vehicle_model from old applications is the legacy cram-string
+   * ({category} · {make} {model} · compliance=JSON). Strip the
+   * leading "{category} · " segment and the compliance suffix so
+   * we can show a clean make/model. */
+  let vehicleMake: string | null = null;
+  let vehicleModel: string | null = null;
+  if (appRes.data?.vehicle_model) {
+    const cleaned = String(appRes.data.vehicle_model)
+      .replace(/\s*·\s*compliance=\{[^}]*\}\s*$/, '')   // drop compliance suffix
+      .split('·')                                          // split parts
+      .map((s: string) => s.trim())
+      .filter(Boolean);
+    /* If 2+ parts, last is make/model (first is category). If 1
+     * part, that's already make/model. */
+    const last = cleaned[cleaned.length - 1] ?? '';
+    const tokens = last.split(/\s+/);
+    if (tokens.length >= 2) {
+      vehicleMake  = tokens[0];
+      vehicleModel = tokens.slice(1).join(' ');
+    } else if (tokens.length === 1) {
+      vehicleModel = tokens[0];
+    }
+  }
+
+  return {
+    fullName: profileRes.data?.full_name ?? null,
+    phone:    profileRes.data?.phone ?? null,
+    status:   profileRes.data?.status ?? null,
+    online:   profileRes.data?.online ?? false,
+    vehicleType:         appRes.data?.vehicle_type ?? null,
+    vehicleMake,
+    vehicleModel,
+    vehicleYear:         appRes.data?.vehicle_year ?? null,
+    vehicleRegistration: appRes.data?.vehicle_registration ?? null,
+  };
+}
+
+/** Returns the driver attached to a booking, joined ad-hoc from
+ *  driver_profiles + the driver's most-recent application. Used by
+ *  the TrackingPage driver card. */
+export function useTrackingDriver(driverUserId: string | null | undefined) {
+  return useQuery<TrackingDriverInfo | null>({
+    queryKey: ['tracking-driver', driverUserId],
+    enabled:  !!driverUserId,
+    queryFn:  () => fetchTrackingDriver(driverUserId as string),
+    staleTime: 30_000,   // refetch every 30s while tracking is open
+  });
+}
+
 /** Booking the PaymentPage should render: a specific id from the
  *  CustomerDashboard / MyBookings handoff, falling back to the
  *  customer's most-recent pending row when no handoff was set. */

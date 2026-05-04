@@ -16,7 +16,8 @@ import { ApplicationDocsPanel }   from './admin/modals/ApplicationDocsPanel';
 import { ManualRefundPanel }      from './admin/modals/ManualRefundPanel';
 import { BookingTimelinePanel }   from './admin/modals/BookingTimelinePanel';
 import { ManualDispatchModal }    from './admin/modals/ManualDispatchModal';
-import type { BookingRow, ApplicationRow } from '../services/admin';
+import type { BookingRow, ApplicationRow, DriverRow } from '../services/admin';
+import type { DriverDocsContext } from './admin/modals/ApplicationDocsPanel';
 
 /**
  * AdminDashboard — orchestration shell.
@@ -38,13 +39,45 @@ export default function AdminDashboard() {
   const [refundBooking,     setRefundBooking]     = useState<BookingRow | null>(null);
   const [dispatchBooking,   setDispatchBooking]   = useState<BookingRow | null>(null);
   const [timelineBookingId, setTimelineBookingId] = useState<string | null>(null);
-  const [docsApplication,   setDocsApplication]   = useState<ApplicationRow | null>(null);
+  /* Single docs-modal state that handles both surfaces:
+   *   Applications tab → context.applicationId is set
+   *   Drivers tab      → context.applicationId is null */
+  const [docsContext,       setDocsContext]       = useState<DriverDocsContext | null>(null);
 
   const handlers: AdminPanelHandlers = useMemo(() => ({
     openManualRefund:    setRefundBooking,
     openManualDispatch:  setDispatchBooking,
     openTimeline:        setTimelineBookingId,
-    openApplicationDocs: setDocsApplication,
+    openApplicationDocs: (app: ApplicationRow) => setDocsContext({
+      userId:        app.user_id ?? '',
+      applicationId: app.id,
+      displayName:   [app.first_name, app.last_name].filter(Boolean).join(' ') || 'Unnamed applicant',
+      contextLabel:  `Application · ${app.status}`,
+      vehicleType:   app.vehicle_type ?? null,
+      vehicleYear:   app.vehicle_year ?? null,
+      /* Hand the docs modal both the legacy cram-string and the
+       * structured columns; readApplicationCompliance prefers the
+       * structured ones when present. */
+      compliance: {
+        vehicle_model:         app.vehicle_model ?? null,
+        provider_category:     app.provider_category ?? null,
+        usdot_number:          app.usdot_number ?? null,
+        mc_number:             app.mc_number ?? null,
+        cargo_insurance:       app.cargo_insurance ?? null,
+        gvol_number:           app.gvol_number ?? null,
+        gukg_licence:          app.gukg_licence ?? null,
+        yrkestransport:        app.yrkestransport ?? null,
+        siret:                 app.siret ?? null,
+        tva:                   app.tva ?? null,
+        ca_provincial_licence: app.ca_provincial_licence ?? null,
+      },
+    }),
+    openDriverDocs:      (driver: DriverRow) => setDocsContext({
+      userId:        driver.user_id ?? driver.id,
+      applicationId: null,
+      displayName:   driver.full_name || 'Unnamed driver',
+      contextLabel:  `Active driver · ${driver.status ?? 'unknown'}`,
+    }),
   }), []);
 
   const { data: snapshot } = useAdminSnapshot(isAdmin);
@@ -87,6 +120,7 @@ export default function AdminDashboard() {
               <DriversTab
                 drivers={snapshot.drivers}
                 driverSubExpiry={snapshot.driverSubExpiry}
+                handlers={handlers}
               />
             )}
             {tab === 'bookings'     && (
@@ -108,10 +142,10 @@ export default function AdminDashboard() {
       </main>
 
       {/* Modals + side panels */}
-      {docsApplication && (
+      {docsContext && (
         <ApplicationDocsPanel
-          application={docsApplication}
-          onClose={() => setDocsApplication(null)}
+          context={docsContext}
+          onClose={() => setDocsContext(null)}
         />
       )}
       {refundBooking && (

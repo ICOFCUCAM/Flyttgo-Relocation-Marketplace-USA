@@ -71,9 +71,13 @@ export function useBookingTimeline(bookingId: string | null) {
 
 export function useApplicationDocuments(applicationId: string | null, userId: string | null) {
   return useQuery({
-    queryKey: APP_DOCS_KEY(applicationId),
-    queryFn:  () => fetchApplicationDocuments(applicationId as string, userId as string),
-    enabled:  !!applicationId && !!userId,
+    queryKey: APP_DOCS_KEY(applicationId ?? userId),
+    queryFn:  () => fetchApplicationDocuments(applicationId ?? userId ?? '', userId ?? ''),
+    /* userId is the real key (driver_documents.driver_id);
+     * applicationId is optional context. The cache key uses
+     * whichever id is present so the same panel can be opened
+     * from Applications (with appId) or Drivers (without). */
+    enabled:  !!userId,
   });
 }
 

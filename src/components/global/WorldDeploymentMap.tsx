@@ -1,123 +1,178 @@
 import { useState } from 'react';
+import { ComposableMap, Geographies, Geography, Marker } from 'react-simple-maps';
 import { useApp } from '../../lib/store';
-import type { Page } from '../../lib/store';
+import type { Page, BookingCountry } from '../../lib/store';
 
-/**
- * Deployment node positions on a 1000×500 equirectangular projection.
- * Lat/lon → x/y is approximated to keep the file dependency-free.
- */
-const NODES: { id: string; iso: string; name: string; x: number; y: number; route: Page }[] = [
-  { id: 'us', iso: 'US', name: 'United States',  x: 230, y: 198, route: 'market-us' },
-  { id: 'ca', iso: 'CA', name: 'Canada',         x: 240, y: 162, route: 'market-canada' },
-  { id: 'gb', iso: 'GB', name: 'United Kingdom', x: 478, y: 168, route: 'market-uk' },
-  { id: 'no', iso: 'NO', name: 'Norway',         x: 510, y: 138, route: 'market-norway' },
-  { id: 'de', iso: 'DE', name: 'Germany',        x: 510, y: 178, route: 'market-germany' },
-  { id: 'fr', iso: 'FR', name: 'France',         x: 488, y: 188, route: 'market-france' },
+/* ─────────────────────────────────────────────────────────────────
+ * <WorldDeploymentMap>
+ *
+ * Real-geometry SVG world map (TopoJSON via world-atlas, projected
+ * with d3-geo) with the 6 FlyttGo deployment-country pins on top.
+ * Replaces the prior hand-drawn polygon approximation that read as
+ * faint triangles rather than continents.
+ *
+ * Visual model:
+ *   - Background: every country in slate-100 with subtle slate-300
+ *     borders
+ *   - Active deployment countries (US / CA / UK / FR / DE / NO):
+ *     amber-200 fill with amber-500 stroke so the marketplace
+ *     footprint reads at a glance
+ *   - Pins: pulsing amber dot + 2-letter ISO label per country,
+ *     each clickable into its market shopfront
+ *
+ * TopoJSON source: world-atlas/countries-110m.json — 110m resolution
+ * which is the right balance for a decorative trust surface
+ * (recognisable continents without bloating the bundle).
+ *
+ * Click target: each highlighted country group binds onClick to the
+ * market shopfront route so the map doubles as a country selector.
+ * ───────────────────────────────────────────────────────────────── */
+
+/* TopoJSON id (ISO 3166-1 numeric) → internal BookingCountry code.
+ * world-atlas exposes numeric ids on each Geography (e.g. United
+ * States = '840'); we map them to the marketplace country codes
+ * so the active-country highlight picks the right shapes. */
+const ISO_NUM_TO_COUNTRY: Record<string, BookingCountry> = {
+  '840': 'us',  // United States
+  '124': 'ca',  // Canada
+  '826': 'gb',  // United Kingdom
+  '250': 'fr',  // France
+  '276': 'de',  // Germany
+  '578': 'no',  // Norway
+};
+
+interface DeploymentNode {
+  iso:    string;
+  name:   string;
+  /** [longitude, latitude] — projected by d3-geo at render time. */
+  coords: [number, number];
+  route:  Page;
+}
+
+const NODES: DeploymentNode[] = [
+  { iso: 'US', name: 'United States',  coords: [-95.7129, 37.0902],  route: 'market-us' },
+  { iso: 'CA', name: 'Canada',         coords: [-106.3468, 56.1304], route: 'market-canada' },
+  { iso: 'GB', name: 'United Kingdom', coords: [-3.4360, 55.3781],   route: 'market-uk' },
+  { iso: 'FR', name: 'France',         coords: [2.2137, 46.2276],    route: 'market-france' },
+  { iso: 'DE', name: 'Germany',        coords: [10.4515, 51.1657],   route: 'market-germany' },
+  { iso: 'NO', name: 'Norway',         coords: [8.4689, 60.4720],    route: 'market-norway' },
 ];
 
-/* Dotted continent silhouettes — each path drawn as a coarse outline.
- * Hand-tuned to read as an infrastructure-style world map rather than a
- * detailed cartographic surface. */
-const CONTINENTS = [
-  // North America
-  'M120,135 L220,110 L330,150 L320,260 L210,290 L155,250 Z',
-  // South America
-  'M260,310 L320,300 L335,400 L290,450 L255,420 L240,360 Z',
-  // Europe
-  'M460,135 L535,140 L555,200 L495,210 L450,180 Z',
-  // Africa
-  'M470,235 L560,230 L590,330 L535,420 L495,400 L470,330 Z',
-  // Asia
-  'M555,135 L780,150 L820,225 L740,290 L640,270 L580,225 Z',
-  // Australia
-  'M780,360 L880,355 L900,415 L820,425 L780,400 Z',
-  // Greenland
-  'M380,90 L430,85 L440,130 L395,135 Z',
-];
+/* CDN-hosted TopoJSON. Cached aggressively by jsDelivr so the file
+ * lands in the browser cache after the first load and re-renders
+ * cost nothing. ~120kb gzipped on first load. */
+const TOPO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
+
+/* Quick lookup: alpha-2 ISO → marketplace route. */
+const ISO_TO_ROUTE: Record<string, Page> = NODES.reduce((acc, n) => {
+  acc[n.iso] = n.route;
+  return acc;
+}, {} as Record<string, Page>);
 
 export default function WorldDeploymentMap() {
   const { setPage } = useApp();
-  const [hoverId, setHoverId] = useState<string | null>(null);
-  const hoverNode = hoverId ? NODES.find(n => n.id === hoverId) : null;
+  const [hoverIso, setHoverIso] = useState<string | null>(null);
+  const hoverLabel = hoverIso
+    ? NODES.find(n => n.iso === hoverIso)?.name ?? null
+    : null;
+
+  const activeNumIds = new Set(Object.keys(ISO_NUM_TO_COUNTRY));
 
   return (
     <div className="relative w-full">
-      <svg
-        viewBox="0 0 1000 500"
-        role="img"
+      <ComposableMap
+        projection="geoEqualEarth"
+        projectionConfig={{ scale: 150, center: [10, 30] }}
+        style={{ width: '100%', height: 'auto' }}
         aria-label="FlyttGo Global Logistics & Relocation Marketplace deployment map"
-        className="w-full h-auto"
       >
-        {/* Lat/lon grid */}
-        <g stroke="rgba(148,163,184,0.15)" strokeWidth="1">
-          {[0, 100, 200, 300, 400, 500].map(y => (
-            <line key={`h-${y}`} x1="0" y1={y} x2="1000" y2={y} />
-          ))}
-          {[0, 200, 400, 600, 800, 1000].map(x => (
-            <line key={`v-${x}`} x1={x} y1="0" x2={x} y2="500" />
-          ))}
-        </g>
+        <Geographies geography={TOPO_URL}>
+          {({ geographies }: { geographies: Array<{ rsmKey: string; id: string; properties: { name: string } }> }) =>
+            geographies.map(geo => {
+              const isActive = activeNumIds.has(String(geo.id));
+              const country  = ISO_NUM_TO_COUNTRY[String(geo.id)];
+              const route    = country
+                ? NODES.find(n => n.iso.toLowerCase() === country)?.route
+                : undefined;
+              return (
+                <Geography
+                  key={geo.rsmKey}
+                  geography={geo}
+                  onClick={() => { if (route) setPage(route); }}
+                  style={{
+                    /* Stroke widths bumped 3-4x from the original
+                     * defaults so country borders read as crisp
+                     * lines rather than near-invisible threads. */
+                    default: {
+                      fill:        isActive ? '#fde68a' : '#f1f5f9',  // amber-200 / slate-100
+                      stroke:      isActive ? '#d97706' : '#94a3b8',  // amber-600 / slate-400
+                      strokeWidth: isActive ? 1.4 : 1.0,
+                      outline:     'none',
+                    },
+                    hover: {
+                      fill:        isActive ? '#fcd34d' : '#e2e8f0',  // amber-300 / slate-200
+                      stroke:      '#d97706',
+                      strokeWidth: 1.6,
+                      outline:     'none',
+                      cursor:      route ? 'pointer' : 'default',
+                    },
+                    pressed: {
+                      fill:        '#f59e0b',
+                      stroke:      '#b45309',
+                      strokeWidth: 1.6,
+                      outline:     'none',
+                    },
+                  }}
+                />
+              );
+            })
+          }
+        </Geographies>
 
-        {/* Continent silhouettes — dotted infrastructure styling */}
-        <g
-          fill="none"
-          stroke="rgba(148,163,184,0.55)"
-          strokeWidth="1.2"
-          strokeDasharray="2 3"
-        >
-          {CONTINENTS.map((d, i) => (
-            <path key={i} d={d} />
-          ))}
-        </g>
-
-        {/* Corridor connectors — Phase 4 intercontinental routes */}
-        <g
-          fill="none"
-          stroke="rgba(245,158,11,0.55)"
-          strokeWidth="1"
-          strokeDasharray="3 4"
-        >
-          <path d="M230,198 Q360,160 510,138" />
-          <path d="M230,198 Q360,180 510,178" />
-          <path d="M230,198 Q360,260 510,330" />
-          <path d="M510,138 Q540,250 535,420" />
-          <path d="M510,178 Q540,275 535,420" />
-        </g>
-
-        {/* Deployment nodes */}
+        {/* Deployment pins — pulsing amber dot + 2-letter ISO label
+         *  per country. Marker projects lat/lon into the same
+         *  coordinate space as the geographies so the dot always
+         *  lands on the right country shape. */}
         {NODES.map(n => (
-          <g
-            key={n.id}
-            transform={`translate(${n.x}, ${n.y})`}
-            onMouseEnter={() => setHoverId(n.id)}
-            onMouseLeave={() => setHoverId(null)}
-            onClick={() => setPage(n.route)}
-            style={{ cursor: 'pointer' }}
+          <Marker
+            key={n.iso}
+            coordinates={n.coords}
+            onMouseEnter={() => setHoverIso(n.iso)}
+            onMouseLeave={() => setHoverIso(null)}
+            onClick={() => setPage(ISO_TO_ROUTE[n.iso])}
+            style={{ default: { cursor: 'pointer' } }}
           >
-            <circle r="14" fill="rgba(245,158,11,0.18)" />
-            <circle r="7"  fill="rgba(245,158,11,0.55)" />
-            <circle r="3"  fill="#f59e0b">
-              <animate attributeName="r" values="3;5;3" dur="2.6s" repeatCount="indefinite" />
+            {/* Outer halo. */}
+            <circle r={10} fill="rgba(245,158,11,0.18)" />
+            {/* Solid dot with subtle pulse. */}
+            <circle r={4.5} fill="#f59e0b" stroke="#fff" strokeWidth={1.2}>
+              <animate
+                attributeName="r"
+                values="3.5;5.5;3.5"
+                dur="2.6s"
+                repeatCount="indefinite"
+              />
             </circle>
+            {/* ISO label to the right of the dot. */}
             <text
-              x="14"
-              y="4"
-              fontSize="11"
+              x={11}
+              y={3}
+              fontSize={9}
               fontFamily="JetBrains Mono, ui-monospace, monospace"
               fill="rgba(15,23,42,0.85)"
-              fontWeight="600"
+              fontWeight={700}
+              style={{ pointerEvents: 'none' }}
             >
               {n.iso}
             </text>
-          </g>
+          </Marker>
         ))}
-      </svg>
+      </ComposableMap>
 
-      {/* Hover label */}
-      <div
-        className="absolute top-3 right-3 font-mono text-xs uppercase tracking-[0.18em] text-slate-500"
-      >
-        {hoverNode ? `${hoverNode.iso} · ${hoverNode.name}` : '6 deployment nodes · 4-phase rollout'}
+      {/* Hover label — sits in the corner so the cursor doesn't have
+       *  to read the tiny pin text on hover. */}
+      <div className="absolute top-3 right-3 font-mono text-xs uppercase tracking-[0.18em] text-slate-500 pointer-events-none">
+        {hoverLabel ?? '6 deployment nodes · 4-phase rollout'}
       </div>
     </div>
   );
