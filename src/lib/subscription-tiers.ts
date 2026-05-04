@@ -71,19 +71,30 @@ export interface SubscriptionTier {
    *  daily so casual providers can opt in for a single peak day;
    *  higher-tier commitments stay monthly. */
   baselineUSD:    number;
-  /** Optional per-country USD override. When set for a country,
-   *  localPriceForTier() uses this value verbatim (× usdRate for
-   *  currency conversion) and SKIPS the country multiplier — so the
-   *  override is the canonical US-dollar price for that market.
+  /** Per-country LOCAL-currency price override.
    *
-   *  Use this when the multiplier model isn't precise enough — e.g.
-   *  a Norwegian Silver Plus that needs to sit at exactly $35 USD
-   *  rather than the 29 × 1.20 = $34.8 the multiplier produces, or a
-   *  market with regulatory price ceilings that don't line up with a
-   *  flat percentage.
+   * Each value is the price in that country's currency (NOT USD) —
+   * e.g. `no: 299` means kr 299 / day in Norway, `de: 29` means
+   * € 29 / day in Germany. When present, localPriceForTier() uses
+   * this value verbatim and SKIPS the multiplier + USD-rate
+   * conversion entirely. Only the locale-aware currency formatter
+   * runs.
    *
-   *  Leave blank for countries that should follow the multiplier. */
+   * This is the canonical pricing surface — subscription pricing is
+   * a market-by-market decision tied to dispatch priority and
+   * commission rates, not a flat percentage off a USD baseline.
+   *
+   * Leave a country blank to fall back to the legacy multiplier
+   * model (only relevant for non-spec markets). */
   pricesByCountry?: Partial<Record<PricingCountry, number>>;
+  /** Per-country display-name override for the tier label.
+   *
+   * The slug stays canonical ('elite' for the Infrastructure
+   * Partner tier), but markets can show different names — e.g. US
+   * "Infrastructure Partner", NO "Elite Partner", DE "Unbegrenzt".
+   * Falls back to the global `displayName` when a country is not
+   * listed. */
+  displayNameByCountry?: Partial<Record<PricingCountry, string>>;
   /** Billing cadence. Drives both the price suffix ("/ day" vs
    *  "/ month") and the eventual Stripe-subscription interval. */
   cadence:        'daily' | 'monthly';
@@ -115,9 +126,17 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
     displayName: 'Silver Plus',
     shortName:   'Silver+',
     tagline:     'Visibility unlock — moderate dispatch priority',
-    /* $29/day — daily cadence keeps the tier accessible for a
-     * single peak-day opt-in without committing to a full month. */
+    /* baselineUSD is the legacy fallback for markets without an
+     * explicit price; every spec'd country has its own row in
+     * pricesByCountry below (LOCAL currency, no conversion). */
     baselineUSD: 29,
+    /* Per-country LOCAL-currency prices — global rollout spec.
+     * Currency follows country_profiles.currency for that code. */
+    pricesByCountry: {
+      us: 29, ca: 35, gb: 25, no: 299, de: 29, fr: 29, nl: 29,
+      se: 299, dk: 199, at: 25, be: 25, es: 19, it: 19,
+      pl: 15, cz: 15, cy: 15,
+    },
     cadence:     'daily',
     commissionPct: 0.25,
     privileges:  ['standard-queue', 'moderate-dispatch'],
@@ -129,10 +148,12 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
     displayName: 'Gold',
     shortName:   'Gold',
     tagline:     'Growth acceleration · high-priority dispatch + dedicated AM',
-    /* $79/day — daily cadence so corridor specialists can opt in
-     * for peak weeks (Memorial Day, end-of-month, university
-     * intake) without a multi-month commitment. */
     baselineUSD: 79,
+    pricesByCountry: {
+      us: 79, ca: 69, gb: 59, no: 699, de: 59, fr: 59, nl: 69,
+      se: 649, dk: 499, at: 55, be: 55, es: 45, it: 45,
+      pl: 39, cz: 39, cy: 35,
+    },
     cadence:     'daily',
     commissionPct: 0.20,
     privileges:  ['standard-queue', 'high-dispatch', 'dedicated-account-manager'],
@@ -145,6 +166,11 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
     shortName:   'Gold Pro',
     tagline:     'Commercial-grade — top placement + corporate eligibility',
     baselineUSD: 199,
+    pricesByCountry: {
+      us: 199, ca: 179, gb: 149, no: 1499, de: 149, fr: 149, nl: 159,
+      se: 1499, dk: 1299, at: 139, be: 139, es: 119, it: 119,
+      pl: 99, cz: 99, cy: 89,
+    },
     cadence:     'monthly',
     commissionPct: 0.15,
     privileges: [
@@ -157,11 +183,25 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
     popular:  false,
   },
   {
+    /* Slug stays 'elite' since driver_subscriptions.plan everywhere
+     * references it. The displayed label is "Infrastructure Partner"
+     * per the rollout spec; markets can override the label via
+     * displayNameByCountry (e.g. NO using "Elite Partner"). */
     slug:        'elite',
-    displayName: 'Certified Infrastructure Partner',
-    shortName:   'CIP',
+    displayName: 'Infrastructure Partner',
+    shortName:   'Infrastructure',
+    displayNameByCountry: {
+      us: 'Infrastructure Partner',
+      /* Other markets default to displayName above; populate this
+       * map to localise (e.g. de: 'Infrastruktur-Partner'). */
+    },
     tagline:     'Institutional gateway · government + enterprise + university procurement',
     baselineUSD: 499,
+    pricesByCountry: {
+      us: 499, ca: 399, gb: 399, no: 3999, de: 349, fr: 349, nl: 399,
+      se: 3499, dk: 2999, at: 329, be: 329, es: 299, it: 299,
+      pl: 249, cz: 249, cy: 199,
+    },
     cadence:     'monthly',
     commissionPct: 0.10,
     privileges: [
@@ -178,6 +218,16 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
     popular:  false,
   },
 ];
+
+/** Resolve the localised tier label for a given country, falling
+ *  back to the global displayName when no country-specific override
+ *  exists. Use this everywhere a tier name is rendered. */
+export function tierLabelForCountry(
+  tier: SubscriptionTier,
+  country: PricingCountry,
+): string {
+  return tier.displayNameByCountry?.[country] ?? tier.displayName;
+}
 
 /* ── Country multipliers — applied to the USD baseline ────────────
  *
@@ -244,6 +294,7 @@ function priceFormatter(currency: string, locale: string): Intl.NumberFormat {
 const LOCALE_BY_CURRENCY: Record<string, string> = {
   USD: 'en-US', CAD: 'en-CA', GBP: 'en-GB', EUR: 'en-IE',
   NOK: 'nb-NO', NGN: 'en-NG', KES: 'en-KE', AED: 'en-AE',
+  SEK: 'sv-SE', DKK: 'da-DK',
 };
 
 /* Per-locale "/ day" and "/ month" suffix (with leading space).
@@ -278,22 +329,20 @@ export function localPriceForTier(
   const multiplier = multiplierForCountry(country);
   const locale     = LOCALE_BY_CURRENCY[profile.currency] ?? 'en-US';
 
-  /* USD baseline → local-currency amount. Two paths:
+  /* Two paths to the local amount:
    *
-   *   1. Per-country USD override (t.pricesByCountry[country]) is the
-   *      canonical price in USD for that market. We treat it as
-   *      already country-specific and SKIP the multiplier — only the
-   *      local-currency conversion via usdRate runs.
+   *   1. Per-country LOCAL-currency override is the canonical price
+   *      for that market. Use it verbatim — no multiplier, no USD
+   *      conversion. This is the path the spec defines; the
+   *      `${baselineUSD} × multiplier × usdRate` formula is the
+   *      legacy fallback for markets that haven't been priced yet.
    *
-   *   2. No override → fall back to the historical multiplier model:
-   *      baselineUSD × countryMultiplier × usdRate.
-   *
-   * Either way we round to whole units; sub-unit pricing reads as
-   * noise on a marketing surface. */
-  const overrideUSD = t.pricesByCountry?.[country];
-  const baselineUSD = overrideUSD ?? t.baselineUSD;
-  const effectiveMultiplier = overrideUSD !== undefined ? 1 : multiplier;
-  const rawAmount = baselineUSD * effectiveMultiplier * profile.usdRate;
+   *   2. No override → legacy formula. Rounded to whole units; sub-
+   *      unit pricing reads as noise on a marketing surface. */
+  const overrideLocal = t.pricesByCountry?.[country];
+  const rawAmount     = overrideLocal !== undefined
+    ? overrideLocal
+    : t.baselineUSD * multiplier * profile.usdRate;
   /* Daily prices in low-multiplier markets can round to 0 (e.g.
    * $1.49 × 0.25 = $0.37 in NGN/KES baseline) which would render
    * as "Free" and confuse providers. Floor at 1 unit when the tier

@@ -56,7 +56,12 @@ export type PricingCountry =
   | BookingCountry           // 'us' | 'ca' | 'gb' | 'de' | 'fr' | 'no'
   | 'ng'                     // Nigeria
   | 'ke'                     // Kenya
-  | 'ae';                    // United Arab Emirates
+  | 'ae'                     // United Arab Emirates
+  /* ── Wave-1 / Wave-2 expansion markets ────────────────────────
+   * Subscription pricing is set explicitly per country in
+   * SUBSCRIPTION_TIERS pricesByCountry (no multiplier applied for
+   * these markets — see spec in install-subscription-tier-pricing.sql). */
+  | 'nl' | 'se' | 'dk' | 'at' | 'be' | 'es' | 'it' | 'pl' | 'cz' | 'cy';
 
 export type ServiceType =
   | 'labor-only'
