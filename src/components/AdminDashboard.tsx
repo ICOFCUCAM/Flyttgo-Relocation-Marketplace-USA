@@ -29,6 +29,7 @@ type AdminTab =
   | "revenue"
   | "disputes"
   | "matcher"
+  | "geography"
   | "settings";
 
 /* ── CSV export helper ──────────────────────────────────────────
@@ -205,6 +206,7 @@ export default function AdminDashboard() {
     "revenue",
     "disputes",
     "matcher",
+    "geography",
     "settings",
   ];
 
@@ -217,12 +219,42 @@ export default function AdminDashboard() {
   const [dispatchBooking, setDispatchBooking] = useState<any | null>(null);
   const [dispatchDriverId, setDispatchDriverId] = useState<string>("");
 
+  /* ── Geography tab data (backed by SQL views in
+   *    docs/install-admin-geography-views.sql) ─────────────── */
+  const [geoDrivers, setGeoDrivers] = useState<any[]>([]);
+  const [geoApplications, setGeoApplications] = useState<any[]>([]);
+  const [geoDocuments, setGeoDocuments] = useState<any[]>([]);
+  const [geoBookings, setGeoBookings] = useState<any[]>([]);
+  const [geoLoading, setGeoLoading] = useState(false);
+
   /* Refresh real-disputes list when the tab opens. */
   useEffect(() => {
     if (tab === 'disputes' && profile?.role === 'admin') {
       void refreshDisputes();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, profile?.role]);
+
+  /* Load geography stats from the SQL views when that tab opens. */
+  useEffect(() => {
+    if (tab !== 'geography' || profile?.role !== 'admin') return;
+    let cancelled = false;
+    (async () => {
+      setGeoLoading(true);
+      const [d, a, doc, b] = await Promise.all([
+        supabase.from('admin_country_driver_stats').select('*'),
+        supabase.from('admin_country_application_stats').select('*'),
+        supabase.from('admin_country_document_stats').select('*'),
+        supabase.from('admin_country_booking_stats').select('*'),
+      ]);
+      if (cancelled) return;
+      setGeoDrivers(d.data ?? []);
+      setGeoApplications(a.data ?? []);
+      setGeoDocuments(doc.data ?? []);
+      setGeoBookings(b.data ?? []);
+      setGeoLoading(false);
+    })();
+    return () => { cancelled = true; };
   }, [tab, profile?.role]);
 
   useEffect(() => {
@@ -1187,6 +1219,165 @@ export default function AdminDashboard() {
                 </table>
               </div>
             )}
+          </div>
+        )}
+
+        {tab === "geography" && (
+          <div>
+            <h1 className="text-2xl font-bold mb-6">Geography</h1>
+            <p className="text-sm text-gray-500 mb-6">
+              Aggregations grouped by country, sourced from the
+              <code className="mx-1 px-1 bg-gray-100 rounded">admin_country_*</code> views.
+              Numbers update on every visit to this tab.
+            </p>
+
+            {geoLoading && <div className="text-sm text-gray-500 mb-4">Loading…</div>}
+
+            {/* Drivers per country */}
+            <h2 className="font-bold text-gray-700 mb-2">Drivers</h2>
+            <div className="bg-white rounded shadow-sm overflow-x-auto mb-8">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-gray-600 text-xs uppercase">
+                  <tr>
+                    <th className="text-left px-4 py-2">Country</th>
+                    <th className="text-right px-4 py-2">Total</th>
+                    <th className="text-right px-4 py-2">Online</th>
+                    <th className="text-right px-4 py-2">Approved</th>
+                    <th className="text-right px-4 py-2">Suspended</th>
+                    <th className="text-right px-4 py-2">Subscribed</th>
+                    <th className="text-right px-4 py-2">Avg Rating</th>
+                    <th className="text-right px-4 py-2">Avg Acceptance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {geoDrivers.length === 0 ? (
+                    <tr><td colSpan={8} className="px-4 py-6 text-center text-gray-400">No drivers yet.</td></tr>
+                  ) : geoDrivers.map((r: any) => (
+                    <tr key={r.country} className="border-t border-gray-100">
+                      <td className="px-4 py-2 font-medium">{r.country}</td>
+                      <td className="px-4 py-2 text-right">{r.drivers_total}</td>
+                      <td className="px-4 py-2 text-right text-emerald-700">{r.drivers_online}</td>
+                      <td className="px-4 py-2 text-right">{r.drivers_approved}</td>
+                      <td className="px-4 py-2 text-right text-red-700">{r.drivers_suspended}</td>
+                      <td className="px-4 py-2 text-right">{r.drivers_subscribed}</td>
+                      <td className="px-4 py-2 text-right">{r.avg_rating ?? "—"}</td>
+                      <td className="px-4 py-2 text-right">{r.avg_acceptance_rate ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Applications per country × status */}
+            <h2 className="font-bold text-gray-700 mb-2">Applications</h2>
+            <div className="bg-white rounded shadow-sm overflow-x-auto mb-8">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-gray-600 text-xs uppercase">
+                  <tr>
+                    <th className="text-left px-4 py-2">Country</th>
+                    <th className="text-right px-4 py-2">Total</th>
+                    <th className="text-right px-4 py-2">Pending</th>
+                    <th className="text-right px-4 py-2">Approved</th>
+                    <th className="text-right px-4 py-2">Rejected</th>
+                    <th className="text-right px-4 py-2">Last 30d</th>
+                    <th className="text-right px-4 py-2">Approval %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {geoApplications.length === 0 ? (
+                    <tr><td colSpan={7} className="px-4 py-6 text-center text-gray-400">No applications yet.</td></tr>
+                  ) : geoApplications.map((r: any) => {
+                    const decided = (r.approved ?? 0) + (r.rejected ?? 0);
+                    const approvalPct = decided > 0 ? Math.round(((r.approved ?? 0) / decided) * 100) : null;
+                    return (
+                      <tr key={r.country} className="border-t border-gray-100">
+                        <td className="px-4 py-2 font-medium">{r.country}</td>
+                        <td className="px-4 py-2 text-right">{r.applications_total}</td>
+                        <td className="px-4 py-2 text-right text-yellow-700">{r.pending}</td>
+                        <td className="px-4 py-2 text-right text-emerald-700">{r.approved}</td>
+                        <td className="px-4 py-2 text-right text-red-700">{r.rejected}</td>
+                        <td className="px-4 py-2 text-right">{r.last_30d}</td>
+                        <td className="px-4 py-2 text-right">{approvalPct == null ? "—" : `${approvalPct}%`}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Documents per country × type */}
+            <h2 className="font-bold text-gray-700 mb-2">Documents</h2>
+            <div className="bg-white rounded shadow-sm overflow-x-auto mb-8">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-gray-600 text-xs uppercase">
+                  <tr>
+                    <th className="text-left px-4 py-2">Country</th>
+                    <th className="text-left px-4 py-2">Type</th>
+                    <th className="text-right px-4 py-2">Total</th>
+                    <th className="text-right px-4 py-2">Approved</th>
+                    <th className="text-right px-4 py-2">Pending</th>
+                    <th className="text-right px-4 py-2">Rejected</th>
+                    <th className="text-right px-4 py-2">Approval %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {geoDocuments.length === 0 ? (
+                    <tr><td colSpan={7} className="px-4 py-6 text-center text-gray-400">No documents yet.</td></tr>
+                  ) : geoDocuments.map((r: any, i: number) => {
+                    const decided = (r.approved ?? 0) + (r.rejected ?? 0);
+                    const approvalPct = decided > 0 ? Math.round(((r.approved ?? 0) / decided) * 100) : null;
+                    return (
+                      <tr key={`${r.country}-${r.document_type}-${i}`} className="border-t border-gray-100">
+                        <td className="px-4 py-2 font-medium">{r.country}</td>
+                        <td className="px-4 py-2">{DOCUMENT_TYPE_LABELS[r.document_type] ?? r.document_type}</td>
+                        <td className="px-4 py-2 text-right">{r.docs_total}</td>
+                        <td className="px-4 py-2 text-right text-emerald-700">{r.approved}</td>
+                        <td className="px-4 py-2 text-right text-yellow-700">{r.pending}</td>
+                        <td className="px-4 py-2 text-right text-red-700">{r.rejected}</td>
+                        <td className="px-4 py-2 text-right">{approvalPct == null ? "—" : `${approvalPct}%`}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Bookings + revenue per country */}
+            <h2 className="font-bold text-gray-700 mb-2">Bookings &amp; Revenue</h2>
+            <div className="bg-white rounded shadow-sm overflow-x-auto mb-8">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-gray-600 text-xs uppercase">
+                  <tr>
+                    <th className="text-left px-4 py-2">Country</th>
+                    <th className="text-right px-4 py-2">Total</th>
+                    <th className="text-right px-4 py-2">In flight</th>
+                    <th className="text-right px-4 py-2">Completed</th>
+                    <th className="text-right px-4 py-2">Cancelled</th>
+                    <th className="text-right px-4 py-2">Last 30d</th>
+                    <th className="text-right px-4 py-2">Gross Revenue</th>
+                    <th className="text-right px-4 py-2">Commission</th>
+                    <th className="text-right px-4 py-2">Driver Payouts</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {geoBookings.length === 0 ? (
+                    <tr><td colSpan={9} className="px-4 py-6 text-center text-gray-400">No bookings yet.</td></tr>
+                  ) : geoBookings.map((r: any) => (
+                    <tr key={r.country} className="border-t border-gray-100">
+                      <td className="px-4 py-2 font-medium">{r.country}</td>
+                      <td className="px-4 py-2 text-right">{r.bookings_total}</td>
+                      <td className="px-4 py-2 text-right">{r.in_flight}</td>
+                      <td className="px-4 py-2 text-right text-emerald-700">{r.completed}</td>
+                      <td className="px-4 py-2 text-right text-red-700">{r.cancelled}</td>
+                      <td className="px-4 py-2 text-right">{r.last_30d}</td>
+                      <td className="px-4 py-2 text-right">{Number(r.gross_revenue ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td className="px-4 py-2 text-right">{Number(r.platform_commission ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td className="px-4 py-2 text-right">{Number(r.driver_payouts ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
