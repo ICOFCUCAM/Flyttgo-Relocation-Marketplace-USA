@@ -42,14 +42,13 @@ const PROVIDER_CATEGORIES = [
  * Each key is the canonical document_type value we write to
  * driver_documents. The admin dashboard approval flow already reads
  * those exact strings (see AdminDashboard REQUIRED_DOCS), so we stay
- * aligned by not renaming them. The fourth type (identity_document)
- * is new — admin doesn't currently require it, but uploading it
- * costs nothing and matches the spec. */
+ * aligned by not renaming them. */
 const DOCUMENT_TYPES = [
   { key: 'driver_license',       label: "Driver's License",   desc: 'Valid US or EU/EEA driver\u2019s license (front + back)' },
   { key: 'insurance',             label: 'Vehicle Insurance',  desc: 'Comprehensive insurance covering commercial use' },
   { key: 'vehicle_registration', label: 'Vehicle Registration', desc: 'Current vehicle registration document' },
   { key: 'identity_document',    label: 'ID / Passport',      desc: 'Government-issued photo ID or passport' },
+  { key: 'vehicle_photo',        label: 'Vehicle Photo',      desc: 'Clear exterior photo of the vehicle you will use for jobs' },
 ] as const;
 type DocumentType = typeof DOCUMENT_TYPES[number]['key'];
 

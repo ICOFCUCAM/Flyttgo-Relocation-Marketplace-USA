@@ -189,10 +189,10 @@ export default function AdminDashboard() {
 
   const DOCUMENT_TYPE_LABELS: Record<string, string> = {
     driver_license: "Driver License", insurance: "Insurance Document",
-    vehicle_registration: "Vehicle Registration", profile_photo: "Profile Photo",
-    background_check: "Background Check",
+    vehicle_registration: "Vehicle Registration", identity_document: "ID / Passport",
+    vehicle_photo: "Vehicle Photo", background_check: "Background Check",
   };
-  const REQUIRED_DOCS = ["driver_license", "insurance", "vehicle_registration", "profile_photo"];
+  const REQUIRED_DOCS = ["driver_license", "insurance", "vehicle_registration", "identity_document", "vehicle_photo"];
   const tabs: AdminTab[] = [
     "overview",
     "fleet-map",
