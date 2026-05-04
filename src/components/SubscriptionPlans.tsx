@@ -15,6 +15,8 @@ import {
 } from '../lib/cip-eligibility';
 import { loadProviderScore } from '../lib/provider-scoring-store';
 import type { PricingCountry } from '../lib/pricing-engine';
+import { getCountryFromRoute }   from '../lib/location/getCountryFromRoute';
+import { getCountryFromBrowser } from '../lib/location/getCountryFromBrowser';
 
 /** The application states we care about for gating. 'approved' → plans
  *  are actionable. Anything else → we redirect or warn. */
@@ -44,13 +46,25 @@ function mapDocTypeToCipSlug(raw: string | null | undefined): CipDocumentSlug | 
 }
 
 export default function SubscriptionPlans() {
-  const { setShowAuthModal, setAuthMode, setPage } = useApp();
+  const { setShowAuthModal, setAuthMode, setPage, bookingData } = useApp();
   const { user, profile } = useAuth();
   const [examplePrice, setExamplePrice] = useState(1000);
   /* Country picker for the country-multiplier pricing engine.
-   * Defaults to US benchmark; provider lands here with their saved
-   * country once we surface it from the dashboard. */
-  const [country, setCountry] = useState<PricingCountry>('us');
+   * Resolved on first render from the chain:
+   *   1. bookingData.country  (set when the user clicks through
+   *                            from a country shopfront / hero
+   *                            country selector)
+   *   2. URL pathname          (e.g. /us, /canada, /uk)
+   *   3. Browser locale region (Intl + navigator.languages)
+   *   4. 'us' fallback
+   * Same chain the booking flow uses — no surprise jumps when a
+   * customer who landed on /uk goes from "Apply" → "Subscribe". */
+  const [country, setCountry] = useState<PricingCountry>(() => (
+    (bookingData.country as PricingCountry | undefined)
+      ?? (getCountryFromRoute() as PricingCountry | null)
+      ?? (getCountryFromBrowser() as PricingCountry | null)
+      ?? 'us'
+  ));
   /* CIP eligibility — fetched for signed-in approved providers so
    * the gating panel reads the real numbers from provider_reputation
    * + the document statuses from driver_documents. */
@@ -288,7 +302,9 @@ export default function SubscriptionPlans() {
               <p className="text-xs text-gray-500 leading-relaxed mb-4 min-h-[2rem]">{tier.tagline}</p>
               <div className="mb-4">
                 <span className="text-3xl font-bold text-gray-900">{localPrice.formatted}</span>
-                {!localPrice.isFree && <span className="text-gray-500 text-sm"> / month</span>}
+                {!localPrice.isFree && (
+                  <span className="text-gray-500 text-sm">{localPrice.cadenceLabel}</span>
+                )}
               </div>
               <div className="mb-4">
                 <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
