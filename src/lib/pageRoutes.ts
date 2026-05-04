@@ -153,6 +153,7 @@ const PAGE_TO_PATH: Record<Page, string> = {
    * via window.location.pathname; pathToPage prefix-matches /backoffice
    * so any BOS URL resolves to the same Page id. */
   'backoffice':              '/backoffice',
+  'brand':                   '/brand',
 
   /* Fallback for unknown routes. No real path — pathToPage() returns
    * this id for anything it can't match. setPage('not-found') still
@@ -226,6 +227,7 @@ const PAGE_TITLES: Record<Page, string> = {
   'deployment-regions':       'Deployment regions · FlyttGo',
   'capability-brief':         'Capability brief · FlyttGo',
   'backoffice':               'FlyttGo Back Office',
+  'brand':                    'FlyttGo brand · logo · downloads',
   'booking':                  'Book a Move · FlyttGo Global',
   'payment':                  'Secure Payment · FlyttGo Global',
   'tracking':                 'Track Your Coordination · FlyttGo Global',
@@ -361,6 +363,8 @@ const PAGE_DESCRIPTIONS: Record<Page, string> = {
     "FlyttGo capability brief — operator governance, geographic deployment readiness, compliance + provider verification, architecture, and procurement integration patterns. Delivered tailored to your procurement context.",
   'backoffice':
     "FlyttGo Back Office — operator-only console for market rollout, central payments, accounting, invoices, audit, and feature flags. Permission-gated.",
+  'brand':
+    "FlyttGo brand showcase — logo lockup, color variants, mark + wordmark composition flags, and standalone favicon / Apple touch icon downloads.",
   'booking':
     'Book your next move in under 3 minutes. Get an instant quote, pick a verified driver, and track your delivery live — all with escrow payment built in.',
   'payment':

@@ -85,6 +85,10 @@ export type Page =
    * the slug from window.location.pathname. Permission-gated;
    * users without a bos_user_roles row see a denial panel. */
   | 'backoffice'
+  /* Brand showcase — every <FlyttGoLogo> variant + the standalone
+   * favicon and apple-touch-icon rendered side by side. Public
+   * route, useful for designers / partners. */
+  | 'brand'
   /* Fallback for URLs that don't match any known route. */
   | 'not-found';
 

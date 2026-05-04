@@ -66,6 +66,7 @@ const MovingCityPage       = lazy(() => import('../pages/MovingCityPage'));
  * src/backoffice/index.tsx. Permission-gated; unauthorised users
  * see a denial panel inside the BOS layout. */
 const Backoffice           = lazy(() => import('../backoffice'));
+const BrandPage            = lazy(() => import('../pages/BrandPage'));
 const ReferPage          = lazy(() => import('../pages/ReferPage'));
 const ProviderProfilePage = lazy(() => import('../pages/ProviderProfilePage'));
 const ProvidersDirectoryPage = lazy(() => import('../pages/ProvidersDirectoryPage'));
@@ -257,6 +258,7 @@ export default function AppLayout() {
       case 'market-cz':              return <ExpansionCountryPage code="cz" />;
       case 'moving-city':            return <MovingCityPage />;
       case 'backoffice':             return <Backoffice />;
+      case 'brand':                  return <BrandPage />;
       case 'refer':                  return <ReferPage />;
       case 'provider-profile':       return <ProviderProfilePage />;
       case 'providers-directory':    return <ProvidersDirectoryPage />;
