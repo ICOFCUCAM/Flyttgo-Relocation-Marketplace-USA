@@ -222,12 +222,20 @@ export default function AppLayout() {
       case 'compliance':             return <CompliancePage />;
       case 'partners':               return <PartnersPage />;
       case 'universities':           return <UniversitiesPage />;
+      /* Legacy markets — these pages own their hero photos via
+       * src/components/global/CountryPage.tsx → HERO_PHOTOS. The
+       * visualResolver explicitly bypasses these (LEGACY_COUNTRIES)
+       * so the existing imagery is never overridden. Do NOT route
+       * them through ExpansionCountryPage. */
       case 'market-us':              return <MarketUSPage />;
       case 'market-canada':          return <MarketCanadaPage />;
       case 'market-germany':         return <MarketGermanyPage />;
       case 'market-france':          return <MarketFrancePage />;
       case 'market-uk':              return <MarketUKPage />;
       case 'market-norway':          return <MarketNorwayPage />;
+      /* Expansion markets — visualResolver routes these through the
+       * skyline registry. Adding a new ExpansionCountryPage entry
+       * automatically inherits a capital skyline via the resolver. */
       case 'market-nl':              return <ExpansionCountryPage code="nl" />;
       case 'market-se':              return <ExpansionCountryPage code="se" />;
       case 'market-es':              return <ExpansionCountryPage code="es" />;
