@@ -180,7 +180,7 @@ function buildFormatted(r: NominatimResult, countryCode: CountryCode): { line1: 
   };
 }
 
-export default function NorwayAddressAutocomplete({
+export default function GlobalAddressAutocomplete({
   value,
   onSelect,
   placeholder,

@@ -1,9 +1,10 @@
 import { useState, lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
-import { PackageSearch, Bookmark, MapPin, Calendar, X, Share2 } from "lucide-react";
+import { PackageSearch, Bookmark, MapPin, Calendar, X, Share2, Download } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../lib/auth";
 import { useApp } from "../lib/store";
+import { openBookingInvoice } from "../lib/bookingInvoice";
 import { EmptyState } from "./ds";
 import {
   useMyBookings,
@@ -251,6 +252,16 @@ export default function MyBookings() {
                 {booking.status === "pending" && <button onClick={() => cancelBooking(booking.id)} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">{t('myBookings.cancel')}</button>}
                 {booking.status === "completed" && !booking.customer_confirmation && <button onClick={() => confirmCompletion(booking.id)} className="px-4 py-2 bg-amber-600 text-white rounded text-sm">{t('myBookings.confirmCompletion')}</button>}
                 <button onClick={() => repeatBooking(booking)} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">{t('myBookings.repeatBooking')}</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const ok = openBookingInvoice({ booking });
+                    if (!ok) toast.error('Allow pop-ups to download the invoice.');
+                  }}
+                  className="px-4 py-2 border rounded text-sm hover:bg-gray-50 inline-flex items-center gap-1.5"
+                >
+                  <Download size={14} /> Invoice
+                </button>
               </div>
               <div className="text-xs text-gray-400 mt-3">{t('myBookings.loyaltyPoints')}: {Math.floor(Number(price || 0) / 100)}</div>
             </div>

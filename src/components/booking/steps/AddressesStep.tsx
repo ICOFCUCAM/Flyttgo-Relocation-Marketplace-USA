@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import NorwayAddressAutocomplete, { type USAddress, type CountryCode } from '../../NorwayAddressAutocomplete';
+import GlobalAddressAutocomplete, { type USAddress, type CountryCode } from '../../GlobalAddressAutocomplete';
 import { formatNorwegianAddress } from '../../../utils/formatNorwegianAddress';
 import { validatePostcode, postcodeFormatHint } from '../../../lib/location/postcode-validation';
 import type { StructuredAddress, AddressErrors } from '../types';
@@ -95,7 +95,7 @@ export function AddressesStep({
 
       <div className="space-y-6">
         <div>
-          <NorwayAddressAutocomplete
+          <GlobalAddressAutocomplete
             id="pickup-address"
             label={t('booking.addrPickupLabel')}
             value={pickupAddress.formatted}
@@ -119,7 +119,7 @@ export function AddressesStep({
         </div>
 
         <div>
-          <NorwayAddressAutocomplete
+          <GlobalAddressAutocomplete
             id="dropoff-address"
             label={t('booking.addrDropoffLabel')}
             value={dropoffAddress.formatted}

@@ -1,4 +1,4 @@
-import type { CountryCode } from '../../components/NorwayAddressAutocomplete';
+import type { CountryCode } from '../../components/GlobalAddressAutocomplete';
 
 /* ─────────────────────────────────────────────────────────────────
  * Country-specific postcode validation

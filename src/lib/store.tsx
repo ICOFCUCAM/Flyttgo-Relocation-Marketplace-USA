@@ -97,7 +97,7 @@ interface AppState {
 
 /**
  * Structured US address — mirrors the shape returned by
- * NorwayAddressAutocomplete.onSelect (Kartverket lookup). When the
+ * GlobalAddressAutocomplete.onSelect (Kartverket lookup). When the
  * homepage Booking Widget produces one of these, we stash it in
  * BookingData so BookingFlow can pre-fill its address fields without
  * the customer having to re-enter anything.

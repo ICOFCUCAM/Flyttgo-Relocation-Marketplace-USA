@@ -7,7 +7,7 @@ const RoutePreviewMap = lazy(() => import('./RoutePreviewMap'));
 import { toast } from 'sonner';
 import { useApp } from '../../lib/store';
 import type { BookingCountry, PaymentMethod } from '../../lib/store';
-import NorwayAddressAutocomplete, { USAddress } from '../NorwayAddressAutocomplete';
+import GlobalAddressAutocomplete, { USAddress } from '../GlobalAddressAutocomplete';
 import { COUNTRY_PAYMENT, formatCurrency, splitPayment } from '../../lib/constants';
 import { getRouteDistance, haversineKm, RouteResult } from '../../lib/routing';
 import { track } from '../../lib/analytics';
@@ -169,7 +169,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
 
   /* Swap counter — bumped each time the customer presses the swap
    * button. We use it as part of the autocomplete key so the inputs
-   * re-mount with the swapped initial values (NorwayAddressAutocomplete
+   * re-mount with the swapped initial values (GlobalAddressAutocomplete
    * only seeds query from `value` on mount). */
   const [swapCount, setSwapCount] = useState(0);
 
@@ -475,7 +475,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <NorwayAddressAutocomplete
+          <GlobalAddressAutocomplete
             key={`pickup-${country}-${swapCount}`}
             id={`shortcut-pickup-${country}`}
             label={labels.pickup}
@@ -501,7 +501,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
             </button>
           </div>
 
-          <NorwayAddressAutocomplete
+          <GlobalAddressAutocomplete
             key={`dropoff-${country}-${swapCount}`}
             id={`shortcut-dropoff-${country}`}
             label={labels.dropoff}

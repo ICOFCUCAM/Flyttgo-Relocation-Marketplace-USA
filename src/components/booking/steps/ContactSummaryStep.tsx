@@ -117,6 +117,34 @@ export function ContactSummaryStep({
             </div>
           </div>
 
+          {/* Vehicle banner — image + name + capacity. Surfaces the
+           *  chosen vehicle prominently so the customer confirms they
+           *  picked the right size before locking in the booking. */}
+          {(() => {
+            const v = VAN_TYPES.find(x => x.id === vanType);
+            if (!v) return null;
+            return (
+              <div className="rounded-xl border border-slate-200 bg-white overflow-hidden mb-3">
+                <div className="relative aspect-[16/8] overflow-hidden bg-slate-100">
+                  <img
+                    src={v.image}
+                    alt={`${v.name} — ${v.capacity}`}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                  <div className="absolute bottom-2 left-3 right-3 flex items-baseline justify-between">
+                    <span className="text-white font-bold text-sm drop-shadow">{v.name}</span>
+                    <span className="text-white/95 text-xs font-semibold drop-shadow">${v.pricePerHour}/hr</span>
+                  </div>
+                </div>
+                <div className="px-3 py-2 text-xs text-slate-600">
+                  {v.capacity} · {v.payload}
+                </div>
+              </div>
+            );
+          })()}
+
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div className="bg-gray-50 rounded-lg p-3">
               <p className="text-gray-500 text-xs">{t('booking.summaryVan')}</p>

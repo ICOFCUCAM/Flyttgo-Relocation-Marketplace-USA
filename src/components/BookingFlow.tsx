@@ -5,7 +5,7 @@ import { useBookingFlowState } from '../hooks/useBookingFlowState';
 import { usePricingCalculation } from '../hooks/usePricingCalculation';
 import { createBookingWithEscrow } from '../services/bookings';
 import { TOTAL_STEPS, type AddressErrors } from './booking/types';
-import type { CountryCode } from './NorwayAddressAutocomplete';
+import type { CountryCode } from './GlobalAddressAutocomplete';
 import { ProgressBar }   from './booking/ProgressBar';
 import { NavButtons }    from './booking/NavButtons';
 import { SignInBanner }  from './booking/SignInBanner';
