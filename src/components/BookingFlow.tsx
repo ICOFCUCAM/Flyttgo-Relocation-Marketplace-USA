@@ -445,6 +445,12 @@ return Object.keys(errs).length === 0;
 
           status: 'pending',
           payment_status: 'pending',
+
+          // Tag every booking with the country it originated in so the
+          // admin Geography panel can aggregate revenue + volume per
+          // market without ambiguity. Sourced from bookingData.country
+          // (the country shopfront the customer entered through).
+          booking_country: country ? country.toUpperCase() : null,
         })
         .select()
         .single();

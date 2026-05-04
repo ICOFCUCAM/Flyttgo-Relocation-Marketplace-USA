@@ -165,6 +165,7 @@ export default function AdminDashboard() {
   const [appDocuments, setAppDocuments] = useState<any[]>([]);
   const [adminUploadType, setAdminUploadType] = useState<string>("");
   const [adminUploadFile, setAdminUploadFile] = useState<File | null>(null);
+  const [adminUploadExpiry, setAdminUploadExpiry] = useState<string>("");
   const [adminUploadBusy, setAdminUploadBusy] = useState(false);
   const [applicationDocStatus, setApplicationDocStatus] = useState<Record<string, string[]>>({});
   const [driverSubExpiry, setDriverSubExpiry] = useState<Record<string, string | null>>({});
@@ -225,6 +226,8 @@ export default function AdminDashboard() {
   const [geoApplications, setGeoApplications] = useState<any[]>([]);
   const [geoDocuments, setGeoDocuments] = useState<any[]>([]);
   const [geoBookings, setGeoBookings] = useState<any[]>([]);
+  const [geoCompliance, setGeoCompliance] = useState<any[]>([]);
+  const [geoDocExpiry, setGeoDocExpiry] = useState<any[]>([]);
   const [geoLoading, setGeoLoading] = useState(false);
 
   /* Refresh real-disputes list when the tab opens. */
@@ -241,17 +244,21 @@ export default function AdminDashboard() {
     let cancelled = false;
     (async () => {
       setGeoLoading(true);
-      const [d, a, doc, b] = await Promise.all([
+      const [d, a, doc, b, c, e] = await Promise.all([
         supabase.from('admin_country_driver_stats').select('*'),
         supabase.from('admin_country_application_stats').select('*'),
         supabase.from('admin_country_document_stats').select('*'),
         supabase.from('admin_country_booking_stats').select('*'),
+        supabase.from('admin_country_compliance').select('*'),
+        supabase.from('admin_country_document_expiry').select('*'),
       ]);
       if (cancelled) return;
       setGeoDrivers(d.data ?? []);
       setGeoApplications(a.data ?? []);
       setGeoDocuments(doc.data ?? []);
       setGeoBookings(b.data ?? []);
+      setGeoCompliance(c.data ?? []);
+      setGeoDocExpiry(e.data ?? []);
       setGeoLoading(false);
     })();
     return () => { cancelled = true; };
@@ -673,7 +680,7 @@ export default function AdminDashboard() {
     if (!app?.user_id) { setAppDocuments([]); return; }
     const { data, error } = await supabase
       .from("driver_documents")
-      .select("id, document_type, file_url, verification_status, uploaded_at")
+      .select("id, document_type, file_url, verification_status, uploaded_at, expires_at")
       .eq("driver_id", app.user_id)
       .order("uploaded_at", { ascending: true });
     if (error || !data) { setAppDocuments([]); return; }
@@ -708,10 +715,12 @@ export default function AdminDashboard() {
         document_type: adminUploadType,
         file_url: path,
         verification_status: "approved",
+        expires_at: adminUploadExpiry || null,
       });
       if (insErr) throw insErr;
       setAdminUploadType("");
       setAdminUploadFile(null);
+      setAdminUploadExpiry("");
       loadApplicationDocuments(selectedApplication.id);
     } catch (e: any) {
       alert("Upload failed: " + (e?.message ?? String(e)));
@@ -1342,6 +1351,94 @@ export default function AdminDashboard() {
               </table>
             </div>
 
+            {/* Country compliance scoring */}
+            <h2 className="font-bold text-gray-700 mb-2">Compliance health</h2>
+            <p className="text-xs text-gray-500 mb-2">
+              Per-country fill rate across 5 axes: license number, license expiry,
+              vehicle registration, provider category, and the country's regulatory
+              column (USDOT for US, GUKG for DE, etc.).
+            </p>
+            <div className="bg-white rounded shadow-sm overflow-x-auto mb-8">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-gray-600 text-xs uppercase">
+                  <tr>
+                    <th className="text-left  px-4 py-2">Country</th>
+                    <th className="text-right px-4 py-2">Apps</th>
+                    <th className="text-right px-4 py-2">Licence</th>
+                    <th className="text-right px-4 py-2">Expiry</th>
+                    <th className="text-right px-4 py-2">Vehicle Reg</th>
+                    <th className="text-right px-4 py-2">Category</th>
+                    <th className="text-right px-4 py-2">Country-specific</th>
+                    <th className="text-left  px-4 py-2 w-48">Compliance %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {geoCompliance.length === 0 ? (
+                    <tr><td colSpan={8} className="px-4 py-6 text-center text-gray-400">No applications yet.</td></tr>
+                  ) : geoCompliance.map((r: any) => {
+                    const pct = Number(r.compliance_pct ?? 0);
+                    const barColor = pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-yellow-500" : "bg-red-500";
+                    return (
+                      <tr key={r.country} className="border-t border-gray-100">
+                        <td className="px-4 py-2 font-medium">{r.country}</td>
+                        <td className="px-4 py-2 text-right">{r.applications_total}</td>
+                        <td className="px-4 py-2 text-right">{r.with_license}</td>
+                        <td className="px-4 py-2 text-right">{r.with_license_expiry}</td>
+                        <td className="px-4 py-2 text-right">{r.with_vehicle_reg}</td>
+                        <td className="px-4 py-2 text-right">{r.with_provider_category}</td>
+                        <td className="px-4 py-2 text-right">{r.with_country_specific}</td>
+                        <td className="px-4 py-2">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 bg-gray-200 rounded h-2 overflow-hidden">
+                              <div className={`h-full ${barColor}`} style={{ width: `${Math.min(100, Math.max(0, pct))}%` }} />
+                            </div>
+                            <span className="text-xs text-gray-600 w-12 text-right">{pct.toFixed(1)}%</span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Document expiry per country × type */}
+            <h2 className="font-bold text-gray-700 mb-2">Document expiry</h2>
+            <p className="text-xs text-gray-500 mb-2">
+              Counts of expired and expiring-within-30-days documents by country
+              and type. <span className="text-gray-400">tracked</span> shows how
+              many docs have an expires_at recorded — the rest aren't being
+              monitored at all.
+            </p>
+            <div className="bg-white rounded shadow-sm overflow-x-auto mb-8">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-gray-600 text-xs uppercase">
+                  <tr>
+                    <th className="text-left  px-4 py-2">Country</th>
+                    <th className="text-left  px-4 py-2">Type</th>
+                    <th className="text-right px-4 py-2">Total</th>
+                    <th className="text-right px-4 py-2">Tracked</th>
+                    <th className="text-right px-4 py-2">Expiring 30d</th>
+                    <th className="text-right px-4 py-2">Expired</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {geoDocExpiry.length === 0 ? (
+                    <tr><td colSpan={6} className="px-4 py-6 text-center text-gray-400">No documents tracked yet.</td></tr>
+                  ) : geoDocExpiry.map((r: any, i: number) => (
+                    <tr key={`${r.country}-${r.document_type}-${i}`} className="border-t border-gray-100">
+                      <td className="px-4 py-2 font-medium">{r.country}</td>
+                      <td className="px-4 py-2">{DOCUMENT_TYPE_LABELS[r.document_type] ?? r.document_type}</td>
+                      <td className="px-4 py-2 text-right">{r.docs_total}</td>
+                      <td className="px-4 py-2 text-right">{r.tracked}</td>
+                      <td className={`px-4 py-2 text-right ${r.expiring_30d > 0 ? "text-yellow-700 font-semibold" : ""}`}>{r.expiring_30d}</td>
+                      <td className={`px-4 py-2 text-right ${r.expired > 0 ? "text-red-700 font-semibold" : ""}`}>{r.expired}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
             {/* Bookings + revenue per country */}
             <h2 className="font-bold text-gray-700 mb-2">Bookings &amp; Revenue</h2>
             <div className="bg-white rounded shadow-sm overflow-x-auto mb-8">
@@ -1357,24 +1454,39 @@ export default function AdminDashboard() {
                     <th className="text-right px-4 py-2">Gross Revenue</th>
                     <th className="text-right px-4 py-2">Commission</th>
                     <th className="text-right px-4 py-2">Driver Payouts</th>
+                    <th className="text-left  px-4 py-2 w-40">Revenue Share</th>
                   </tr>
                 </thead>
                 <tbody>
                   {geoBookings.length === 0 ? (
-                    <tr><td colSpan={9} className="px-4 py-6 text-center text-gray-400">No bookings yet.</td></tr>
-                  ) : geoBookings.map((r: any) => (
-                    <tr key={r.country} className="border-t border-gray-100">
-                      <td className="px-4 py-2 font-medium">{r.country}</td>
-                      <td className="px-4 py-2 text-right">{r.bookings_total}</td>
-                      <td className="px-4 py-2 text-right">{r.in_flight}</td>
-                      <td className="px-4 py-2 text-right text-emerald-700">{r.completed}</td>
-                      <td className="px-4 py-2 text-right text-red-700">{r.cancelled}</td>
-                      <td className="px-4 py-2 text-right">{r.last_30d}</td>
-                      <td className="px-4 py-2 text-right">{Number(r.gross_revenue ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      <td className="px-4 py-2 text-right">{Number(r.platform_commission ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      <td className="px-4 py-2 text-right">{Number(r.driver_payouts ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    </tr>
-                  ))}
+                    <tr><td colSpan={10} className="px-4 py-6 text-center text-gray-400">No bookings yet.</td></tr>
+                  ) : (() => {
+                    const totalRevenue = geoBookings.reduce((sum: number, r: any) => sum + Number(r.gross_revenue ?? 0), 0);
+                    return geoBookings.map((r: any) => {
+                      const share = totalRevenue > 0 ? (Number(r.gross_revenue ?? 0) / totalRevenue) * 100 : 0;
+                      return (
+                        <tr key={r.country} className="border-t border-gray-100">
+                          <td className="px-4 py-2 font-medium">{r.country}</td>
+                          <td className="px-4 py-2 text-right">{r.bookings_total}</td>
+                          <td className="px-4 py-2 text-right">{r.in_flight}</td>
+                          <td className="px-4 py-2 text-right text-emerald-700">{r.completed}</td>
+                          <td className="px-4 py-2 text-right text-red-700">{r.cancelled}</td>
+                          <td className="px-4 py-2 text-right">{r.last_30d}</td>
+                          <td className="px-4 py-2 text-right">{Number(r.gross_revenue ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                          <td className="px-4 py-2 text-right">{Number(r.platform_commission ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                          <td className="px-4 py-2 text-right">{Number(r.driver_payouts ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                          <td className="px-4 py-2">
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 bg-gray-200 rounded h-2 overflow-hidden">
+                                <div className="h-full bg-blue-500" style={{ width: `${Math.min(100, share)}%` }} />
+                              </div>
+                              <span className="text-xs text-gray-600 w-10 text-right">{share.toFixed(0)}%</span>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    });
+                  })()}
                 </tbody>
               </table>
             </div>
@@ -1425,6 +1537,12 @@ export default function AdminDashboard() {
                     <div>
                       <div className="text-sm font-medium text-gray-700">{DOCUMENT_TYPE_LABELS[doc.document_type] ?? doc.document_type}</div>
                       <div className="text-xs text-gray-400">{doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString() : ""}</div>
+                      {doc.expires_at && (() => {
+                        const days = Math.floor((new Date(doc.expires_at).getTime() - Date.now()) / 86400000);
+                        const cls = days < 0 ? "text-red-700 font-semibold" : days < 30 ? "text-yellow-700 font-semibold" : "text-gray-500";
+                        const txt = days < 0 ? `Expired ${Math.abs(days)}d ago` : days < 30 ? `Expires in ${days}d` : `Expires ${new Date(doc.expires_at).toLocaleDateString()}`;
+                        return <div className={`text-xs ${cls}`}>{txt}</div>;
+                      })()}
                     </div>
                     <span className={`px-2 py-1 text-xs rounded font-medium ${doc.verification_status === "approved" ? "bg-green-100 text-green-700" : doc.verification_status === "rejected" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>{doc.verification_status ?? "pending"}</span>
                   </div>
@@ -1459,6 +1577,15 @@ export default function AdminDashboard() {
               onChange={e => setAdminUploadFile(e.target.files?.[0] ?? null)}
               className="w-full text-xs"
             />
+            <label className="block text-xs text-gray-500">
+              Expires (optional)
+              <input
+                type="date"
+                value={adminUploadExpiry}
+                onChange={e => setAdminUploadExpiry(e.target.value)}
+                className="w-full text-sm border border-gray-300 rounded px-2 py-1 mt-1"
+              />
+            </label>
             <button
               disabled={!adminUploadType || !adminUploadFile || adminUploadBusy}
               onClick={uploadDocOnBehalf}
