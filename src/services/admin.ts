@@ -494,6 +494,32 @@ export function getDocumentPublicUrl(storagePath: string): string {
   return supabase.storage.from('driver-documents').getPublicUrl(storagePath).data.publicUrl;
 }
 
+/**
+ * Generate a time-limited signed URL for a document stored in the
+ * (private) `driver-documents` bucket. Use this — not getPublicUrl —
+ * to View / Download / preview docs from the admin panel.
+ *
+ * `getPublicUrl` only returns a working URL when the bucket is
+ * marked PUBLIC. Driver licenses + IDs must NOT be public, so the
+ * bucket is private and we mint a 60-minute signed URL on demand.
+ *
+ * Throws when the storage RLS rejects the request (caller surfaces
+ * a "could not load preview" state instead of a broken <img> 404).
+ */
+export async function getDocumentSignedUrl(
+  storagePath: string,
+  expiresInSeconds = 60 * 60,    // 1 hour default
+): Promise<string> {
+  const { data, error } = await supabase
+    .storage
+    .from('driver-documents')
+    .createSignedUrl(storagePath, expiresInSeconds);
+  if (error || !data?.signedUrl) {
+    throw new Error(error?.message ?? 'Failed to generate signed URL');
+  }
+  return data.signedUrl;
+}
+
 export const SetDocumentVerificationSchema = z.object({
   documentId: ZUuid,
   status:     ZDocumentVerification,

@@ -5,7 +5,7 @@ import {
   useApplicationDocuments,
   useSetDocumentVerification,
 } from '../../../hooks/queries/useAdminDashboard';
-import { getDocumentPublicUrl } from '../../../services/admin';
+import { getDocumentSignedUrl } from '../../../services/admin';
 import type { DocumentRow } from '../../../services/admin';
 import { readApplicationCompliance, complianceLabel, type ApplicationComplianceInput } from '../../../lib/application-compliance';
 
@@ -253,7 +253,26 @@ function DocumentTile({
   isPending: boolean;
 }) {
   const [previewError, setPreviewError] = useState(false);
-  const url    = getDocumentPublicUrl(doc.file_url);
+
+  /* Signed URL for the (private) bucket. Generated on mount and
+   * refreshed when the storage path changes. Until it resolves,
+   * `url` is null — the View / Download buttons surface a disabled
+   * "Loading…" state instead of pointing at the unsigned bucket
+   * path (which would 404 against private RLS). */
+  const [url, setUrl]           = useState<string | null>(null);
+  const [urlError, setUrlError] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    setUrl(null);
+    setUrlError(null);
+    getDocumentSignedUrl(doc.file_url)
+      .then(signed => { if (!cancelled) setUrl(signed); })
+      .catch(err => {
+        if (!cancelled) setUrlError(err instanceof Error ? err.message : 'Could not load document');
+      });
+    return () => { cancelled = true; };
+  }, [doc.file_url]);
+
   const status = (doc.verification_status ?? 'pending') as string;
   const tone   = STATUS_TONE[status] ?? STATUS_TONE.pending;
   const StatusIcon = tone.icon;
@@ -264,9 +283,24 @@ function DocumentTile({
 
   return (
     <article className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-      {/* Preview — image inline, PDF/other as a labelled chip. */}
+      {/* Preview — image inline (after signed URL resolves), PDF or
+       *  other as a labelled chip. Three states:
+       *    1. URL not yet resolved → skeleton spinner
+       *    2. Resolved + image     → <img src={signedUrl}>
+       *    3. Resolved + non-image OR <img> error OR signed-URL
+       *       error → labelled icon chip with optional error text. */}
       <div className="relative bg-slate-50 h-44 flex items-center justify-center">
-        {isImage && !previewError ? (
+        {urlError ? (
+          <div className="text-center px-4">
+            <AlertTriangle className="w-9 h-9 text-rose-500 mx-auto mb-1" />
+            <p className="text-[10px] font-bold uppercase tracking-wider text-rose-700">
+              Could not load
+            </p>
+            <p className="text-[10px] text-slate-500 mt-1 leading-snug">{urlError}</p>
+          </div>
+        ) : !url ? (
+          <div className="w-6 h-6 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+        ) : isImage && !previewError ? (
           <img
             src={url}
             alt={docLabel}
@@ -300,21 +334,36 @@ function DocumentTile({
         </p>
 
         <div className="mt-3 flex flex-wrap gap-2">
+          {/* View / Download — disabled until the signed URL resolves
+           *  so a click never sends the admin to a broken bucket
+           *  path. Anchors render with aria-disabled when not ready. */}
           <a
-            href={url}
+            href={url ?? '#'}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 text-xs font-bold rounded-lg transition"
+            aria-disabled={!url}
+            onClick={(e) => { if (!url) e.preventDefault(); }}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition ${
+              url
+                ? 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                : 'bg-slate-50 text-slate-400 cursor-not-allowed'
+            }`}
           >
             <Eye size={12} />
-            View
+            {url ? 'View' : 'Loading…'}
           </a>
           <a
-            href={url}
+            href={url ?? '#'}
             download
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 text-xs font-bold rounded-lg transition"
+            aria-disabled={!url}
+            onClick={(e) => { if (!url) e.preventDefault(); }}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition ${
+              url
+                ? 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                : 'bg-slate-50 text-slate-400 cursor-not-allowed'
+            }`}
           >
             <Download size={12} />
             Download
