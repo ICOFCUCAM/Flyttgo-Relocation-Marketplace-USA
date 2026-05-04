@@ -219,7 +219,7 @@ const NAV_DROPDOWNS: NavDropdown[] = [
  * UI labels keep "NO" for Norwegian even though i18next stores
  * 'nb' — the storefronts and customers think in country terms,
  * not language codes. */
-type Lang = 'en' | 'nb' | 'de' | 'fr';
+type Lang = 'en' | 'nb' | 'de' | 'fr' | 'nl' | 'sv' | 'es' | 'it' | 'pl' | 'da' | 'cs';
 
 interface LangOption {
   /** i18next language id. */
@@ -232,11 +232,25 @@ interface LangOption {
   flag:  string;
 }
 
+/** 11 languages: English baseline + 10 country-shopfront locales.
+ *  Order: legacy-market languages first, then expansion languages
+ *  in wave order so the popover reads as the rollout-status sitemap
+ *  the rest of the app already exposes. */
 const LANG_OPTIONS: LangOption[] = [
+  /* Legacy-market languages */
   { code: 'en', short: 'EN', label: 'English',   flag: '🇬🇧' },
   { code: 'fr', short: 'FR', label: 'Français',  flag: '🇫🇷' },
   { code: 'de', short: 'DE', label: 'Deutsch',   flag: '🇩🇪' },
   { code: 'nb', short: 'NO', label: 'Norsk',     flag: '🇳🇴' },
+  /* Expansion — first wave */
+  { code: 'nl', short: 'NL', label: 'Nederlands', flag: '🇳🇱' },
+  { code: 'sv', short: 'SV', label: 'Svenska',    flag: '🇸🇪' },
+  { code: 'es', short: 'ES', label: 'Español',    flag: '🇪🇸' },
+  { code: 'it', short: 'IT', label: 'Italiano',   flag: '🇮🇹' },
+  { code: 'pl', short: 'PL', label: 'Polski',     flag: '🇵🇱' },
+  /* Expansion — second wave */
+  { code: 'da', short: 'DA', label: 'Dansk',      flag: '🇩🇰' },
+  { code: 'cs', short: 'CS', label: 'Čeština',    flag: '🇨🇿' },
 ];
 
 /* Moving tools + corporate links are built inside the component
@@ -272,7 +286,9 @@ export default function Header() {
   const [scrolled,      setScrolled]      = useState(false);
   const lang: Lang = (() => {
     const c = i18nInstance.language;
-    if (c === 'fr' || c === 'de' || c === 'nb') return c;
+    /* Direct match against the supported locale set. */
+    const supported: Lang[] = ['en', 'nb', 'de', 'fr', 'nl', 'sv', 'es', 'it', 'pl', 'da', 'cs'];
+    if ((supported as string[]).includes(c)) return c as Lang;
     /* Legacy 'no' label maps to 'nb' (the actual locale id). */
     if (c === 'no') return 'nb';
     return 'en';
@@ -382,11 +398,23 @@ export default function Header() {
     void i18n.changeLanguage(l);
     setLangOpen(false);
     if (typeof window !== 'undefined') window.localStorage.setItem(LANG_STORAGE_KEY, l);
-    /* Sync <html lang="…"> for SEO + assistive tech. We map the
-     * i18next code to a BCP-47 tag where it differs (nb → nb-NO). */
+    /* Sync <html lang="…"> for SEO + assistive tech. Map the i18next
+     * code to a BCP-47 tag with the dominant region for each locale. */
     if (typeof document !== 'undefined') {
-      const tag = l === 'nb' ? 'nb-NO' : l === 'fr' ? 'fr-FR' : l === 'de' ? 'de-DE' : 'en';
-      document.documentElement.lang = tag;
+      const BCP47: Record<Lang, string> = {
+        en: 'en',
+        fr: 'fr-FR',
+        de: 'de-DE',
+        nb: 'nb-NO',
+        nl: 'nl-NL',
+        sv: 'sv-SE',
+        es: 'es-ES',
+        it: 'it-IT',
+        pl: 'pl-PL',
+        da: 'da-DK',
+        cs: 'cs-CZ',
+      };
+      document.documentElement.lang = BCP47[l] ?? 'en';
     }
   }
 

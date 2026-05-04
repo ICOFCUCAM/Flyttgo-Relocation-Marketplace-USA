@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
+import { applyCountryLanguage } from '../../lib/i18n';
 import { ShieldCheck, MapPin, Users, ArrowRight, BadgeCheck, Globe2 } from 'lucide-react';
 import { useApp } from '../../lib/store';
 import {
@@ -39,6 +40,14 @@ export default function ExpansionCountryPage({ code }: { code: ExpansionCountryC
   const cities   = useMemo(() => citiesForCountry(code), [code]);
   const corridors = useMemo(() => corridorsForCountry(code), [code]);
   const hero     = useRouteHeroImage();
+
+  /* Auto-switch i18n language to the country's national locale on
+   * mount — Dutch on /market-nl, Swedish on /market-se, etc. The
+   * customer can still override via the header language switcher;
+   * applyCountryLanguage() persists the choice to localStorage. */
+  useEffect(() => {
+    applyCountryLanguage(code);
+  }, [code]);
 
   const liveCounts = useProviderCountsByCity();
   const cityStates = useMemo(() => cities.map(c => ({

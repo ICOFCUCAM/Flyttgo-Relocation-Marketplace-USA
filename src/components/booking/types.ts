@@ -12,12 +12,25 @@ export interface StructuredAddress {
 }
 
 export const COUNTRY_LABEL: Record<string, string> = {
+  /* Legacy markets */
   us: 'USA',
   ca: 'Canada',
   de: 'Germany',
   fr: 'France',
   gb: 'United Kingdom',
   no: 'Norway',
+  /* Expansion — first wave */
+  nl: 'Netherlands',
+  se: 'Sweden',
+  es: 'Spain',
+  it: 'Italy',
+  pl: 'Poland',
+  /* Expansion — second wave */
+  dk: 'Denmark',
+  be: 'Belgium',
+  at: 'Austria',
+  ch: 'Switzerland',
+  cz: 'Czech Republic',
 };
 
 export function emptyAddress(countryLabel = 'USA'): StructuredAddress {

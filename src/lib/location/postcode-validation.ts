@@ -96,6 +96,90 @@ const POSTCODE_FORMATS: Record<CountryCode, PostcodeFormat> = {
     example: '0150',
     format:  '4 digits',
   },
+
+  /* ── Expansion markets — first wave ──────────────────── */
+  nl: {
+    /* 1234 AB — 4 digits, optional space, 2 letters (excl. SA / SD / SS). */
+    regex: /^\d{4}\s?[A-Z]{2}$/i,
+    example: '1011 AC',
+    format:  '4 digits + 2 letters',
+    normalise: (raw) => {
+      const stripped = raw.toUpperCase().replace(/\s/g, '');
+      if (stripped.length !== 6) return raw.toUpperCase().trim();
+      return `${stripped.slice(0, 4)} ${stripped.slice(4)}`;
+    },
+  },
+  se: {
+    /* 5 digits, conventionally written as "123 45". */
+    regex: /^\d{3}\s?\d{2}$/,
+    example: '111 22',
+    format:  '5 digits',
+    normalise: (raw) => {
+      const stripped = raw.replace(/\s/g, '');
+      if (stripped.length !== 5) return raw.trim();
+      return `${stripped.slice(0, 3)} ${stripped.slice(3)}`;
+    },
+  },
+  es: {
+    /* 5 digits, first 2 = province code (01–52). */
+    regex:   /^\d{5}$/,
+    example: '28013',
+    format:  '5 digits',
+  },
+  it: {
+    /* 5 digits (CAP). */
+    regex:   /^\d{5}$/,
+    example: '20121',
+    format:  '5 digits',
+  },
+  pl: {
+    /* 12-345 — 2 digits, hyphen, 3 digits. */
+    regex: /^\d{2}-?\d{3}$/,
+    example: '00-001',
+    format:  '12-345',
+    normalise: (raw) => {
+      const stripped = raw.replace(/[\s-]/g, '');
+      if (stripped.length !== 5) return raw.trim();
+      return `${stripped.slice(0, 2)}-${stripped.slice(2)}`;
+    },
+  },
+
+  /* ── Expansion markets — second wave ─────────────────── */
+  dk: {
+    /* 4 digits. */
+    regex:   /^\d{4}$/,
+    example: '1050',
+    format:  '4 digits',
+  },
+  be: {
+    /* 4 digits. */
+    regex:   /^\d{4}$/,
+    example: '1000',
+    format:  '4 digits',
+  },
+  at: {
+    /* 4 digits. */
+    regex:   /^\d{4}$/,
+    example: '1010',
+    format:  '4 digits',
+  },
+  ch: {
+    /* 4 digits. */
+    regex:   /^\d{4}$/,
+    example: '8001',
+    format:  '4 digits',
+  },
+  cz: {
+    /* 5 digits, conventionally written as "123 45". */
+    regex: /^\d{3}\s?\d{2}$/,
+    example: '110 00',
+    format:  '5 digits',
+    normalise: (raw) => {
+      const stripped = raw.replace(/\s/g, '');
+      if (stripped.length !== 5) return raw.trim();
+      return `${stripped.slice(0, 3)} ${stripped.slice(3)}`;
+    },
+  },
 };
 
 /**

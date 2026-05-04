@@ -22,15 +22,26 @@ import type { CountryCode } from '../../components/NorwayAddressAutocomplete';
  * ───────────────────────────────────────────────────────────────── */
 
 const LOCALE_REGION_TO_COUNTRY: Record<string, CountryCode> = {
+  /* Legacy markets */
   US: 'us',
   CA: 'ca',
   GB: 'gb',
   UK: 'gb',
   FR: 'fr',
   DE: 'de',
-  AT: 'de',  /* Austria — closest market to default to. */
-  CH: 'de',  /* Switzerland — closest German-speaking marketplace. */
   NO: 'no',
+  /* Expansion markets — first wave */
+  NL: 'nl',
+  SE: 'se',
+  ES: 'es',
+  IT: 'it',
+  PL: 'pl',
+  /* Expansion markets — second wave */
+  DK: 'dk',
+  BE: 'be',
+  AT: 'at',  /* Austria has its own marketplace now (was → de). */
+  CH: 'ch',  /* Switzerland has its own marketplace now (was → de). */
+  CZ: 'cz',
 };
 
 function regionFromLocale(locale: string | undefined): CountryCode | null {
