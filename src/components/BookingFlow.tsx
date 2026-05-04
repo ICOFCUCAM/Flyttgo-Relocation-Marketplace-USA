@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { recommendVan } from '../lib/constants';
-import { formatNorwegianAddress } from '../utils/formatNorwegianAddress';
+import { formatAddress } from '../utils/formatAddress';
 import { useBookingFlowState } from '../hooks/useBookingFlowState';
 import { usePricingCalculation } from '../hooks/usePricingCalculation';
 import { createBookingWithEscrow } from '../services/bookings';
@@ -112,14 +112,14 @@ export default function BookingFlow() {
       await createBookingWithEscrow({
         customer: { id: s.user.id, email: s.email, name: s.name, phone: s.phone },
         pickup: {
-          address:  s.pickupAddress.formatted || formatNorwegianAddress(s.pickupAddress).oneLine,
+          address:  s.pickupAddress.formatted || formatAddress(s.pickupAddress).oneLine,
           postcode: s.pickupAddress.postcode,
           city:     s.pickupAddress.city,
           lat:      s.pickupAddress.lat,
           lng:      s.pickupAddress.lng,
         },
         dropoff: {
-          address:  s.dropoffAddress.formatted || formatNorwegianAddress(s.dropoffAddress).oneLine,
+          address:  s.dropoffAddress.formatted || formatAddress(s.dropoffAddress).oneLine,
           postcode: s.dropoffAddress.postcode,
           city:     s.dropoffAddress.city,
           lat:      s.dropoffAddress.lat,

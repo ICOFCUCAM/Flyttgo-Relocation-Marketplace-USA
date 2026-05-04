@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { VAN_TYPES } from '../../../lib/constants';
-import { formatNorwegianAddress } from '../../../utils/formatNorwegianAddress';
+import { formatAddress } from '../../../utils/formatAddress';
 import type { StructuredAddress } from '../types';
 import type { ServerPriceResult } from '../../../lib/calculatePrice';
 
@@ -38,8 +38,8 @@ export function ContactSummaryStep({
   serverPrice: ServerPriceResult | null;
 }) {
   const { t } = useTranslation();
-  const pickupFmt  = formatNorwegianAddress(pickupAddress);
-  const dropoffFmt = formatNorwegianAddress(dropoffAddress);
+  const pickupFmt  = formatAddress(pickupAddress);
+  const dropoffFmt = formatAddress(dropoffAddress);
 
   return (
     <div className="space-y-6">

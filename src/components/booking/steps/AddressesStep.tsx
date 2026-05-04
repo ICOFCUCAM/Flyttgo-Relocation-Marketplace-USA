@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import GlobalAddressAutocomplete, { type USAddress, type CountryCode } from '../../GlobalAddressAutocomplete';
-import { formatNorwegianAddress } from '../../../utils/formatNorwegianAddress';
+import { formatAddress } from '../../../utils/formatAddress';
 import { validatePostcode, postcodeFormatHint } from '../../../lib/location/postcode-validation';
 import type { StructuredAddress, AddressErrors } from '../types';
 import type { RouteResult } from '../../../lib/routing';
@@ -108,7 +108,7 @@ export function AddressesStep({
           {pickupAddress.street_name && (
             <div className="mt-2 bg-blue-50 rounded-lg px-3 py-2 text-xs text-blue-700">
               <span className="font-semibold">Stored:</span>{' '}
-              {formatNorwegianAddress(pickupAddress).oneLine}
+              {formatAddress(pickupAddress).oneLine}
               {pickupAddress.lat && (
                 <span className="text-blue-400 ml-2 font-mono">
                   [{pickupAddress.lat.toFixed(5)}, {pickupAddress.lng?.toFixed(5)}]
@@ -132,7 +132,7 @@ export function AddressesStep({
           {dropoffAddress.street_name && (
             <div className="mt-2 bg-blue-50 rounded-lg px-3 py-2 text-xs text-blue-700">
               <span className="font-semibold">Stored:</span>{' '}
-              {formatNorwegianAddress(dropoffAddress).oneLine}
+              {formatAddress(dropoffAddress).oneLine}
               {dropoffAddress.lat && (
                 <span className="text-blue-400 ml-2 font-mono">
                   [{dropoffAddress.lat.toFixed(5)}, {dropoffAddress.lng?.toFixed(5)}]

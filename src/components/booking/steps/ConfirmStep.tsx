@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { CustomerLegalAcceptance } from '../../LegalAcceptance';
-import { formatNorwegianAddress } from '../../../utils/formatNorwegianAddress';
+import { formatAddress } from '../../../utils/formatAddress';
 import type { StructuredAddress } from '../types';
 
 export function ConfirmStep({
@@ -45,8 +45,8 @@ export function ConfirmStep({
             <p className="text-gray-500 text-xs">{t('booking.escrowNote')}</p>
           </div>
           <div className="text-right text-xs text-gray-400">
-            <p>{t('booking.summaryPickup')}: {formatNorwegianAddress(pickupAddress).short}</p>
-            <p>{t('booking.summaryDelivery')}: {formatNorwegianAddress(dropoffAddress).short}</p>
+            <p>{t('booking.summaryPickup')}: {formatAddress(pickupAddress).short}</p>
+            <p>{t('booking.summaryDelivery')}: {formatAddress(dropoffAddress).short}</p>
           </div>
         </div>
 
