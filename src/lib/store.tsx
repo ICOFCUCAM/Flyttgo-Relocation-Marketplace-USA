@@ -80,6 +80,11 @@ export type Page =
   | 'procurement-rfp'
   | 'deployment-regions'
   | 'capability-brief'
+  /* Back-Office System (BOS). Single Page id covers /backoffice +
+   * every /backoffice/<slug> sub-route — the BOS sub-router reads
+   * the slug from window.location.pathname. Permission-gated;
+   * users without a bos_user_roles row see a denial panel. */
+  | 'backoffice'
   /* Fallback for URLs that don't match any known route. */
   | 'not-found';
 

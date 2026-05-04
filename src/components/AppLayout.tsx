@@ -61,6 +61,11 @@ const MarketNorwayPage   = lazy(() => import('../pages/markets/NorwayPage'));
  * keyed by country code, so we don't need a wrapper file per country. */
 const ExpansionCountryPage = lazy(() => import('./global/ExpansionCountryPage'));
 const MovingCityPage       = lazy(() => import('../pages/MovingCityPage'));
+/* Back-Office System (BOS) — operator-only console. Single Page id
+ * 'backoffice' fans out to /backoffice/<slug> via the sub-router in
+ * src/backoffice/index.tsx. Permission-gated; unauthorised users
+ * see a denial panel inside the BOS layout. */
+const Backoffice           = lazy(() => import('../backoffice'));
 const ReferPage          = lazy(() => import('../pages/ReferPage'));
 const ProviderProfilePage = lazy(() => import('../pages/ProviderProfilePage'));
 const ProvidersDirectoryPage = lazy(() => import('../pages/ProvidersDirectoryPage'));
@@ -173,8 +178,8 @@ export default function AppLayout() {
   /* The auth callback page is a transient, full-screen landing surface
    * for Supabase email-confirmation / OAuth redirects — chrome would
    * just be visual noise during the ~100 ms session handoff. */
-  const showHeader = currentPage !== 'auth-callback';
-  const showFooter = !['booking', 'driver-portal', 'admin', 'auth-callback'].includes(currentPage);
+  const showHeader = !['auth-callback', 'backoffice'].includes(currentPage);
+  const showFooter = !['booking', 'driver-portal', 'admin', 'auth-callback', 'backoffice'].includes(currentPage);
   /* Live booking ticker is a marketplace social-proof element — only
    * show it on customer-discovery surfaces (home, country pages,
    * marketplace, how-it-works). Suppressed on dashboards, auth, and
@@ -251,6 +256,7 @@ export default function AppLayout() {
       case 'market-ch':              return <ExpansionCountryPage code="ch" />;
       case 'market-cz':              return <ExpansionCountryPage code="cz" />;
       case 'moving-city':            return <MovingCityPage />;
+      case 'backoffice':             return <Backoffice />;
       case 'refer':                  return <ReferPage />;
       case 'provider-profile':       return <ProviderProfilePage />;
       case 'providers-directory':    return <ProvidersDirectoryPage />;
@@ -308,7 +314,7 @@ export default function AppLayout() {
         </Suspense>
       )}
       {/* Floating support widget — present on every page except auth-callback */}
-      {currentPage !== 'auth-callback' && (
+      {!['auth-callback', 'backoffice'].includes(currentPage) && (
         <Suspense fallback={null}>
           <FloatingChat />
         </Suspense>
@@ -327,7 +333,7 @@ export default function AppLayout() {
       </Suspense>
       {/* PWA install prompt — fires on the beforeinstallprompt event
           when the manifest qualifies; falls back to a soft iOS hint. */}
-      {currentPage !== 'auth-callback' && (
+      {!['auth-callback', 'backoffice'].includes(currentPage) && (
         <Suspense fallback={null}>
           <PWAInstallPrompt />
         </Suspense>
@@ -349,7 +355,7 @@ export default function AppLayout() {
       {/* ⌘K / Ctrl-K command palette. Mounted globally so power
           users can navigate from any page. Hidden on auth-callback
           (full-screen Supabase handoff). */}
-      {currentPage !== 'auth-callback' && (
+      {!['auth-callback', 'backoffice'].includes(currentPage) && (
         <Suspense fallback={null}>
           <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
         </Suspense>
@@ -357,7 +363,7 @@ export default function AppLayout() {
       {/* Global "Get a quote" slide-over. Listens for the
           `flyttgo:open-quick-quote` event so any CTA in the app can
           pop the booking widget without navigating away. */}
-      {currentPage !== 'auth-callback' && currentPage !== 'booking' && (
+      {!['auth-callback', 'backoffice'].includes(currentPage) && currentPage !== 'booking' && (
         <Suspense fallback={null}>
           <QuickQuoteDrawer />
         </Suspense>

@@ -148,6 +148,12 @@ const PAGE_TO_PATH: Record<Page, string> = {
   'deployment-regions':          '/deployment-regions',
   'capability-brief':            '/resources/capability-brief',
 
+  /* Back-Office System root. Sub-routes (/backoffice/markets,
+   * /backoffice/payments, …) are dispatched inside the BOS itself
+   * via window.location.pathname; pathToPage prefix-matches /backoffice
+   * so any BOS URL resolves to the same Page id. */
+  'backoffice':              '/backoffice',
+
   /* Fallback for unknown routes. No real path — pathToPage() returns
    * this id for anything it can't match. setPage('not-found') still
    * updates history.pushState to whatever URL triggered the fallback. */
@@ -219,6 +225,7 @@ const PAGE_TITLES: Record<Page, string> = {
   'procurement-rfp':          'Submit a procurement inquiry · FlyttGo',
   'deployment-regions':       'Deployment regions · FlyttGo',
   'capability-brief':         'Capability brief · FlyttGo',
+  'backoffice':               'FlyttGo Back Office',
   'booking':                  'Book a Move · FlyttGo Global',
   'payment':                  'Secure Payment · FlyttGo Global',
   'tracking':                 'Track Your Coordination · FlyttGo Global',
@@ -352,6 +359,8 @@ const PAGE_DESCRIPTIONS: Record<Page, string> = {
     "Markets where FlyttGo settles bookings today — live coverage, partner coverage, and expansion-ready countries for institutional pilot programmes.",
   'capability-brief':
     "FlyttGo capability brief — operator governance, geographic deployment readiness, compliance + provider verification, architecture, and procurement integration patterns. Delivered tailored to your procurement context.",
+  'backoffice':
+    "FlyttGo Back Office — operator-only console for market rollout, central payments, accounting, invoices, audit, and feature flags. Permission-gated.",
   'booking':
     'Book your next move in under 3 minutes. Get an instant quote, pick a verified driver, and track your delivery live — all with escrow payment built in.',
   'payment':
@@ -604,6 +613,12 @@ export function pathToPage(path: string): Page {
    * bare /moving keeps mapping to the moving-city listing. */
   if (normalised.startsWith('/moving-') && normalised.length > '/moving-'.length) {
     return 'moving-city';
+  }
+  /* Back-Office System: /backoffice and /backoffice/<slug> both
+   * resolve to the same Page id; the BOS sub-router dispatches the
+   * slug internally. */
+  if (normalised === '/backoffice' || normalised.startsWith('/backoffice/')) {
+    return 'backoffice';
   }
   /* Unknown paths resolve to 'not-found' rather than silently
    * serving the homepage. NotFoundPage sets robots=noindex so
