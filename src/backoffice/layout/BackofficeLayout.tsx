@@ -1,7 +1,7 @@
-import { type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   LayoutDashboard, Globe, Wallet, BookOpenCheck, Receipt,
-  ShieldCheck, ScrollText, Flag, ShieldAlert, ArrowLeft, LogOut,
+  ShieldCheck, ScrollText, Flag, ShieldAlert, ArrowLeft, LogOut, LogIn,
 } from 'lucide-react';
 import { useApp } from '../../lib/store';
 import { useAuth } from '../../lib/auth';
@@ -60,25 +60,17 @@ export default function BackofficeLayout({ activeSlug, onNavigate, children }: P
     );
   }
 
-  if (!user || auth.roles.length === 0) {
+  if (!user) {
+    return <BackofficeSignInPanel onCancel={() => setPage('home')} />;
+  }
+
+  if (auth.roles.length === 0) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-6">
-        <div className="max-w-md bg-white border border-slate-200 rounded-2xl p-8 text-center shadow-sm">
-          <ShieldAlert size={36} className="mx-auto text-amber-500 mb-3" />
-          <h1 className="text-xl font-extrabold text-slate-900 mb-2 tracking-tight">Back-Office access</h1>
-          <p className="text-sm text-slate-600 leading-relaxed mb-6">
-            This area is restricted to FlyttGo operators with an assigned
-            back-office role. If you should have access, ask a Super Admin
-            to assign you a role.
-          </p>
-          <button
-            onClick={() => setPage('home')}
-            className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-bold transition"
-          >
-            <ArrowLeft size={14} /> Back to FlyttGo
-          </button>
-        </div>
-      </div>
+      <BackofficeNoRolePanel
+        email={user.email ?? ''}
+        onBack={() => setPage('home')}
+        onSignOut={async () => { await signOut(); setPage('home'); }}
+      />
     );
   }
 
@@ -178,6 +170,139 @@ export default function BackofficeLayout({ activeSlug, onNavigate, children }: P
           {children}
         </div>
       </main>
+    </div>
+  );
+}
+
+/**
+ * <BackofficeSignInPanel> — what unauthenticated visitors land on
+ * when they hit /backoffice. Inline email + password form so the
+ * operator doesn't have to bounce to the public site, sign in via
+ * the customer modal, and navigate back. Branded with the FlyttGo
+ * mark on a dark slate panel so it visually reads as "back office"
+ * rather than the public storefront.
+ */
+function BackofficeSignInPanel({ onCancel }: { onCancel: () => void }) {
+  const { signIn } = useAuth();
+  const [email,    setEmail]    = useState('');
+  const [password, setPassword] = useState('');
+  const [busy,     setBusy]     = useState(false);
+  const [error,    setError]    = useState('');
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true); setError('');
+    const res = await signIn(email.trim(), password);
+    setBusy(false);
+    if (res.error) setError(res.error.message ?? 'Sign in failed.');
+    /* On success the auth context updates and BackofficeLayout
+     * re-renders into the proper role-aware shell. No redirect
+     * needed. */
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center px-6">
+      <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-[#0b1f3a] text-white px-8 py-6">
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="w-9 h-9 rounded-lg bg-amber-400 text-slate-900 flex items-center justify-center font-extrabold">F</div>
+            <div>
+              <p className="text-xs uppercase tracking-widest text-amber-300 font-bold">FlyttGo</p>
+              <p className="text-sm font-extrabold tracking-tight">Back Office</p>
+            </div>
+          </div>
+          <h1 className="text-lg font-extrabold mb-1">Operator sign in</h1>
+          <p className="text-xs text-white/70 leading-relaxed">
+            Restricted area. Access events are recorded in the audit log.
+          </p>
+        </div>
+
+        <form onSubmit={submit} className="px-8 py-6 space-y-3">
+          <label className="block">
+            <span className="text-xs font-bold text-slate-700 mb-1 block">Email</span>
+            <input
+              type="email"
+              autoFocus
+              autoComplete="email"
+              required
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="operator@flyttgo.com"
+              className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300"
+            />
+          </label>
+          <label className="block">
+            <span className="text-xs font-bold text-slate-700 mb-1 block">Password</span>
+            <input
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300"
+            />
+          </label>
+          {error && <p className="text-rose-600 text-xs" role="alert">{error}</p>}
+          <button
+            type="submit"
+            disabled={busy || !email || !password}
+            className="w-full inline-flex items-center justify-center gap-2 bg-amber-400 hover:bg-amber-300 disabled:bg-slate-200 disabled:text-slate-500 text-slate-900 px-4 py-2.5 rounded-md text-sm font-bold transition mt-2"
+          >
+            <LogIn size={14} /> {busy ? 'Signing in…' : 'Sign in'}
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="w-full inline-flex items-center justify-center gap-2 text-slate-500 hover:text-slate-700 text-xs mt-2"
+          >
+            <ArrowLeft size={12} /> Back to FlyttGo
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * <BackofficeNoRolePanel> — shown when a customer-only account
+ * lands on /backoffice. Different copy + actions than the signed-out
+ * panel so the operator can clearly see (a) which account they're
+ * authenticated as, (b) sign out to switch accounts, or (c) leave.
+ */
+function BackofficeNoRolePanel({
+  email, onBack, onSignOut,
+}: {
+  email:     string;
+  onBack:    () => void;
+  onSignOut: () => void | Promise<void>;
+}) {
+  return (
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center px-6">
+      <div className="max-w-md bg-white border border-slate-200 rounded-2xl p-8 text-center shadow-sm">
+        <ShieldAlert size={36} className="mx-auto text-amber-500 mb-3" />
+        <h1 className="text-xl font-extrabold text-slate-900 mb-2 tracking-tight">Back-Office access</h1>
+        <p className="text-sm text-slate-600 leading-relaxed mb-2">
+          Signed in as <span className="font-bold text-slate-900">{email}</span>.
+        </p>
+        <p className="text-sm text-slate-600 leading-relaxed mb-6">
+          This account doesn't have a back-office role. Ask a Super Admin
+          to assign one — or sign out and use a different account.
+        </p>
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={onBack}
+            className="inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-bold transition"
+          >
+            <ArrowLeft size={14} /> Back to FlyttGo
+          </button>
+          <button
+            onClick={() => { void onSignOut(); }}
+            className="inline-flex items-center justify-center gap-2 text-slate-500 hover:text-rose-600 text-xs"
+          >
+            <LogOut size={12} /> Sign out
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
