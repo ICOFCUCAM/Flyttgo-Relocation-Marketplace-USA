@@ -1,0 +1,29 @@
+<!--
+  FlyttGo F-mark only — large square format for hi-DPI preview.
+  Same geometry as /public/favicon.svg, scaled up to 256×256 with
+  the brand-amber radial highlight from the home-screen tile.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <radialGradient id="mark-glow" cx="80%" cy="20%" r="60%">
+      <stop offset="0%"  stop-color="#fbbf24" stop-opacity="0.20"/>
+      <stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="#0b1f3a"/>
+  <rect width="256" height="256" rx="56" fill="url(#mark-glow)"/>
+
+  <!-- F-mark scaled up. -->
+  <g transform="translate(56 56) scale(2.25)">
+    <g transform="skewX(-14) translate(14 4)">
+      <path
+        d="M 18 6 L 54 6 L 54 18 L 30 18 L 30 28 L 44 28 L 44 38 L 30 38 L 30 58 L 18 58 Z"
+        fill="#ffffff"
+      />
+    </g>
+    <path
+      d="M 4 60 C 4 44, 14 32, 26 30 C 28 36, 26 46, 20 53 C 16 57, 10 60, 4 60 Z"
+      fill="#fbbf24"
+    />
+  </g>
+</svg>

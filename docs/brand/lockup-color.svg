@@ -1,0 +1,33 @@
+<!--
+  FlyttGo full lockup — color variant on a light card.
+  Renders the F-mark + wordmark side by side. 480×120 viewBox.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 120">
+  <rect width="480" height="120" rx="20" fill="#ffffff" stroke="#e2e8f0"/>
+
+  <!-- F-mark (color variant) — italic block F + amber leaf. -->
+  <g transform="translate(40 28) scale(1.1)">
+    <g transform="skewX(-14) translate(14 4)">
+      <path
+        d="M 18 6 L 54 6 L 54 18 L 30 18 L 30 28 L 44 28 L 44 38 L 30 38 L 30 58 L 18 58 Z"
+        fill="#0b1f3a"
+      />
+    </g>
+    <path
+      d="M 4 60 C 4 44, 14 32, 26 30 C 28 36, 26 46, 20 53 C 16 57, 10 60, 4 60 Z"
+      fill="#d97706"
+    />
+  </g>
+
+  <!-- Wordmark — bold italic, two-tone. -->
+  <text
+    x="148" y="78"
+    font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Helvetica, Arial, sans-serif"
+    font-style="italic"
+    font-weight="900"
+    font-size="68"
+    letter-spacing="-2"
+  >
+    <tspan fill="#0b1f3a">Flytt</tspan><tspan fill="#d97706">Go</tspan>
+  </text>
+</svg>
