@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 /**
  * Top-of-viewport scroll-progress bar.
@@ -22,7 +22,7 @@ export default function ScrollProgress({ currentPage }: Props) {
   const [pct, setPct] = useState(0);
 
   useEffect(() => {
-    if (HIDE_ON.includes(currentPage)) return;
+    if (HIDE_ON.includes(currentPage)) return undefined;
     const onScroll = () => {
       const doc = document.documentElement;
       const total = doc.scrollHeight - doc.clientHeight;

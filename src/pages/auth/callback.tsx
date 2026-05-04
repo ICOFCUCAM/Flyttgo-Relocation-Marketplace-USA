@@ -90,7 +90,7 @@ export default function AuthCallbackPage() {
    * profile so we know the role), bounce the user into the right
    * landing surface for their account type. */
   useEffect(() => {
-    if (loading || !user) return;
+    if (loading || !user) return undefined;
 
     /* Drivers and admins have their own home — sending them to the
      * customer dashboard would just feel wrong. */
@@ -107,7 +107,7 @@ export default function AuthCallbackPage() {
    * instead of leaving the user spinning forever. Skipped when we
    * already know from the URL that this is an error callback. */
   useEffect(() => {
-    if (user || urlError) return;
+    if (user || urlError) return undefined;
     const id = window.setTimeout(() => setTimedOut(true), SESSION_TIMEOUT_MS);
     return () => window.clearTimeout(id);
   }, [user, urlError]);

@@ -19,18 +19,18 @@
 -- the bucket alone if it already exists.
 -- ─────────────────────────────────────────────────────────────────
 
--- ── 1. Create the bucket as PRIVATE ──────────────────────
---
--- public = false → no /object/public/<bucket>/<key> access; every
--- read goes through RLS + signed URLs. Keeps driver licences + IDs
--- out of public reach.
---
--- file_size_limit is set generously (10 MB) so drivers uploading a
--- high-res phone photo of their licence don't get rejected.
---
--- allowed_mime_types is intentionally permissive (nullable) — the
--- onboarding UI already restricts to image/anything + application/pdf,
--- and locking it server-side breaks legacy mime types from older phones.
+/* ── 1. Create the bucket as PRIVATE ──────────────────────
+ *
+ * public = false → no /object/public/<bucket>/<key> access; every
+ * read goes through RLS + signed URLs. Keeps driver licences + IDs
+ * out of public reach.
+ *
+ * file_size_limit is set generously (10 MB) so drivers uploading a
+ * high-res phone photo of their licence don't get rejected.
+ *
+ * allowed_mime_types is intentionally permissive (nullable) — the
+ * onboarding UI already restricts to image/* + application/pdf, and
+ * locking it server-side breaks legacy mime types from older phones. */
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
   'driver-documents',
@@ -41,25 +41,14 @@ values (
 )
 on conflict (id) do nothing;
 
--- If the bucket already exists from a previous deploy but was
--- accidentally created public, force it back to private.
+/* If the bucket already exists from a previous deploy but was
+ * accidentally created public, force it back to private. */
 update storage.buckets
    set public = false
  where id = 'driver-documents'
    and public is distinct from false;
 
--- ── 2. Drop existing policies so re-runs don't error ─────
---
--- Two naming conventions accumulated in production from earlier
--- iterations: hyphenated (driver-documents-*) and underscored
--- (driver_documents_*). Drop both so this script ends up as the
--- single source of truth.
-
-drop policy if exists "driver-documents-self-insert" on storage.objects;
-drop policy if exists "driver-documents-self-update" on storage.objects;
-drop policy if exists "driver-documents-self-select" on storage.objects;
-drop policy if exists "driver-documents-self-delete" on storage.objects;
-drop policy if exists "driver-documents-admin-all"   on storage.objects;
+/* ── 2. Drop existing policies so re-runs don't error ───── */
 
 drop policy if exists driver_documents_self_insert on storage.objects;
 drop policy if exists driver_documents_self_update on storage.objects;
@@ -67,15 +56,14 @@ drop policy if exists driver_documents_self_read   on storage.objects;
 drop policy if exists driver_documents_admin_read  on storage.objects;
 drop policy if exists driver_documents_admin_all   on storage.objects;
 
--- ── 3. Driver can write their own folder ────────────────
---
--- Upload path pattern from DriverOnboarding.tsx:
---   `${user.id}/${doc.key}.${ext}`
---
--- So the first folder segment is the authenticated user's UUID.
--- storage.foldername() returns the path split into a text[]; we
--- compare element 1 (1-indexed) against auth.uid()::text.
-
+/* ── 3. Driver can write their own folder ────────────────
+ *
+ * Upload path pattern from DriverOnboarding.tsx:
+ *   `${user.id}/${doc.key}.${ext}`
+ *
+ * So the first folder segment is the authenticated user's UUID.
+ * storage.foldername() returns the path split into a text[]; we
+ * compare element 1 (1-indexed) against auth.uid()::text. */
 create policy driver_documents_self_insert on storage.objects
   for insert
   with check (
@@ -102,7 +90,7 @@ create policy driver_documents_self_read on storage.objects
     and (storage.foldername(name))[1] = auth.uid()::text
   );
 
--- ── 4. Admin can read every file (signed-URL flow) ──────
+/* ── 4. Admin can read every file (signed-URL flow) ────── */
 
 create policy driver_documents_admin_all on storage.objects
   for all
@@ -115,24 +103,25 @@ create policy driver_documents_admin_all on storage.objects
     and public.is_admin()
   );
 
--- ── 5. Verification queries ──────────────────────────────
---
--- Run these after applying the migration to confirm:
---
---   -- Bucket exists + is private?
---   select id, name, public, file_size_limit
---     from storage.buckets
---    where id = 'driver-documents';
---
---   -- Policies installed? (expect exactly 4 rows)
---   select policyname, cmd
---     from pg_policies
---    where schemaname = 'storage'
---      and tablename = 'objects'
---      and policyname like 'driver_documents_%';
---
---   -- Existing files (none on a fresh install)
---   select name, owner, created_at
---     from storage.objects
---    where bucket_id = 'driver-documents'
---    limit 10;
+/* ── 5. Verification queries ──────────────────────────────
+ *
+ * Run these after applying the migration to confirm:
+ *
+ *   -- Bucket exists + is private?
+ *   select id, name, public, file_size_limit
+ *     from storage.buckets
+ *    where id = 'driver-documents';
+ *
+ *   -- Policies installed?
+ *   select policyname, cmd
+ *     from pg_policies
+ *    where schemaname = 'storage'
+ *      and tablename = 'objects'
+ *      and policyname like 'driver_documents_%';
+ *
+ *   -- Existing files (none on a fresh install)
+ *   select name, owner, created_at
+ *     from storage.objects
+ *    where bucket_id = 'driver-documents'
+ *    limit 10;
+ */

@@ -82,28 +82,28 @@ export function formatAddress(
   const p = prefix ? `${prefix}_` : '';
 
   const streetName =
-    (address as any)[`${p}street_name`] ||
-    (address as any)[`${p}street`] ||
+    (address as Record<string, string | undefined>)[`${p}street_name`] ||
+    (address as Record<string, string | undefined>)[`${p}street`] ||
     address.street_name ||
     '';
 
   const houseNumber =
-    (address as any)[`${p}house_number`] ||
+    (address as Record<string, string | undefined>)[`${p}house_number`] ||
     address.house_number ||
     '';
 
   const postcode =
-    (address as any)[`${p}postcode`] ||
+    (address as Record<string, string | undefined>)[`${p}postcode`] ||
     address.postcode ||
     '';
 
   const rawCity =
-    (address as any)[`${p}city`] ||
+    (address as Record<string, string | undefined>)[`${p}city`] ||
     address.city ||
     '';
 
   const state =
-    (address as any)[`${p}state`] ||
+    (address as Record<string, string | undefined>)[`${p}state`] ||
     address.state ||
     '';
 
@@ -177,10 +177,10 @@ export function validateNorwegianAddress(
     };
   }
 
-  const street = address.street_name || (address as any).pickup_street || '';
-  const postcode = address.postcode || (address as any).pickup_postcode || '';
-  const city = address.city || (address as any).pickup_city || '';
-  const state = address.state || (address as any).pickup_state || '';
+  const street = address.street_name || (address as Record<string, string | undefined>).pickup_street || '';
+  const postcode = address.postcode || (address as Record<string, string | undefined>).pickup_postcode || '';
+  const city = address.city || (address as Record<string, string | undefined>).pickup_city || '';
+  const state = address.state || (address as Record<string, string | undefined>).pickup_state || '';
 
   if (!street || street.trim().length < 2) {
     errors.street = 'Street name is required';

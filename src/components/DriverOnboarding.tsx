@@ -1,11 +1,12 @@
-import React, { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../lib/auth';
 import { useApp } from '../lib/store';
 import { supabase } from '../lib/supabase';
+import MarketplaceBanner from './banners/MarketplaceBanner';
 import {
-  ONBOARDING_RULES, findOnboardingRules, applyConditions,
+  findOnboardingRules, applyConditions,
   COMPLIANCE_DISCLOSURE,
   type OnboardingCountryCode,
 } from '../lib/onboarding-rules';
@@ -201,42 +202,100 @@ export default function DriverOnboarding() {
        *    user_id, email, first_name, last_name, phone, address,
        *    license_number, license_expiry, years_experience,
        *    vehicle_type, vehicle_model, vehicle_year (int),
-       *    vehicle_registration, cargo_capacity, city, zone, status.
-       *    UI collects make + model separately; we concatenate them
-       *    into the single `vehicle_model` column. */
-      /* Provider category and country are appended to existing columns so we
-       * don't depend on a schema migration. The admin dashboard reads
-       * `zone` (country) and `vehicle_model` (with the category prefix)
-       * to surface the marketplace classification per applicant. */
+       *    vehicle_registration, cargo_capacity, city, zone, status,
+       *    plus structured compliance columns added by
+       *    docs/install-application-compliance-columns.sql. */
       const categoryLabel = PROVIDER_CATEGORIES.find(c => c.id === providerCategory)?.label ?? '';
-      /* Country-specific compliance answers serialized as a tiny
-       * JSON suffix so the admin dashboard sees them inline. We
-       * only emit the suffix when at least one answer is non-empty. */
-      const compliancePayload = Object.entries(complianceAnswers)
-        .filter(([, v]) => v && v.trim() !== '');
-      const complianceSuffix  = compliancePayload.length > 0
-        ? `· compliance=${JSON.stringify(Object.fromEntries(compliancePayload))}`
+
+      /* Compliance routing — known onboarding slugs map to dedicated
+       * columns. Unmapped slugs (province, business-permit, etc.)
+       * are still serialised into the cram-string suffix on
+       * vehicle_model so we don't lose data on jurisdictions that
+       * don't yet have first-class columns. The reader in
+       * src/lib/application-compliance.ts prefers structured
+       * columns; the parser is the legacy fallback. */
+      const SLUG_TO_COL: Record<string, string> = {
+        'usdot-number':                'usdot_number',
+        'mc-number':                   'mc_number',
+        'cargo-insurance':             'cargo_insurance',
+        'operator-licence-uk':         'gvol_number',
+        'gewerbeanmeldung':            'gukg_licence',
+        'commercial-transport-licence': 'ca_provincial_licence',
+        'siret':                       'siret',
+        'vat-number':                  'tva',
+        'organisation-number':         'yrkestransport',
+      };
+
+      const structuredCompliance: Record<string, string> = {};
+      const unmappedCompliance:   Record<string, string> = {};
+      for (const [slug, raw] of Object.entries(complianceAnswers)) {
+        const trimmed = (raw ?? '').trim();
+        if (!trimmed) continue;
+        const col = SLUG_TO_COL[slug];
+        if (col) structuredCompliance[col] = trimmed;
+        else     unmappedCompliance[slug]  = trimmed;
+      }
+
+      /* Cram-string suffix only carries unmapped slugs now. When
+       * every supported jurisdiction has a column, this branch
+       * collapses and we can write a clean vehicle_model. */
+      const unmappedEntries  = Object.entries(unmappedCompliance);
+      const complianceSuffix = unmappedEntries.length > 0
+        ? `· compliance=${JSON.stringify(Object.fromEntries(unmappedEntries))}`
         : '';
       const vehicleField  = [categoryLabel, `${vehicleMake} ${vehicleModel}`.trim(), complianceSuffix]
         .filter(Boolean)
         .join(' · ');
 
-      const { error: appError } = await supabase
-        .from('driver_applications')
-        .insert({
-          user_id: user.id,
-          email: user.email ?? null,
-          first_name: firstName,
-          last_name: lastName,
-          phone,
-          city,
-          zone: country || null,
-          vehicle_type: vehicleType,
-          vehicle_model: vehicleField,
-          vehicle_year: vehicleYear ? parseInt(vehicleYear, 10) : null,
-          vehicle_registration: licensePlate,
-          status: 'pending',
-        });
+      /* Insert with tolerant fallback. PostgREST rejects inserts
+       * referencing columns that don't exist (400 PGRST204), so
+       * the first attempt sends the structured columns; if the
+       * migration in docs/install-application-compliance-columns.
+       * sql hasn't been applied yet we retry with just the legacy
+       * columns. Either way the cram-string carries the same
+       * compliance data so no data is lost.
+       *
+       * Once the migration is universally applied, drop the
+       * fallback branch + unmappedCompliance suffix.
+       */
+      const legacyRow = {
+        user_id: user.id,
+        email: user.email ?? null,
+        first_name: firstName,
+        last_name: lastName,
+        phone,
+        city,
+        zone: country || null,
+        vehicle_type: vehicleType,
+        vehicle_model: vehicleField,
+        vehicle_year: vehicleYear ? parseInt(vehicleYear, 10) : null,
+        vehicle_registration: licensePlate,
+        status: 'pending',
+      };
+      const structuredRow = {
+        ...legacyRow,
+        provider_category: providerCategory || null,
+        ...structuredCompliance,
+      };
+
+      let appError: Error | null = null;
+      const firstAttempt = await supabase.from('driver_applications').insert(structuredRow);
+      if (firstAttempt.error) {
+        /* PGRST204 = "Could not find the X column of Y in the
+         * schema cache". We treat any column-shape error as a
+         * signal the migration hasn't applied and retry legacy. */
+        const msg = (firstAttempt.error.message ?? '').toLowerCase();
+        const looksLikeMissingColumn =
+          msg.includes('column') ||
+          firstAttempt.error.code === 'PGRST204' ||
+          firstAttempt.error.code === '42703';
+        if (looksLikeMissingColumn) {
+          const retry = await supabase.from('driver_applications').insert(legacyRow);
+          appError = retry.error as Error | null;
+        } else {
+          appError = firstAttempt.error as Error | null;
+        }
+      }
 
       if (appError) throw appError;
 
@@ -266,8 +325,8 @@ export default function DriverOnboarding() {
        *    client-side role update that silently fails under RLS. */
 
       setSubmitted(true);
-    } catch (e: any) {
-      setError(e.message || 'Submission failed. Please try again.');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Submission failed. Please try again.');
     }
     setLoading(false);
   }
@@ -307,12 +366,25 @@ export default function DriverOnboarding() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-[#1A365D] to-[#2D4A7A] text-white py-10">
-        <div className="max-w-3xl mx-auto px-4 text-center">
-          <h1 className="text-3xl font-bold mb-2">{t('driverOnboarding.heroTitle')}</h1>
-          <p className="text-white/70 mb-5">{t('driverOnboarding.heroSubtitle')}</p>
-          <p className="text-white/70 text-sm leading-relaxed bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-left">
+      <MarketplaceBanner
+        variant="inverse"
+        eyebrow="Provider onboarding"
+        breadcrumb={{ id: 'GLRM.05', label: 'Apply as a provider' }}
+        headline={<>Drive for Flytt<span className="text-amber-300">Go</span>. Country-licensed dispatch.</>}
+        lead={t('driverOnboarding.heroSubtitle')}
+        compliancePills={[
+          { label: 'USDOT / GVOL / GüKG eligible' },
+          { label: 'Document-verified' },
+          { label: 'Escrow-protected payouts' },
+          { label: 'Tier-based commission' },
+        ]}
+      />
+
+      {/* Coordination-layer disclosure — sits below the banner so the
+          platform's posture is unambiguous before any field is touched. */}
+      <div className="border-b border-slate-200 bg-white">
+        <div className="max-w-3xl mx-auto px-4 py-5">
+          <p className="text-slate-600 text-sm leading-relaxed">
             FlyttGo Global Logistics &amp; Relocation Marketplace operates as a
             digital coordination platform connecting customers with independent
             licensed relocation providers across multiple jurisdictions worldwide.
@@ -341,7 +413,7 @@ export default function DriverOnboarding() {
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-10">
           {STEPS.map((s, i) => (
-            <React.Fragment key={s.id}>
+            <Fragment key={s.id}>
               {i > 0 && (
                 <div className={`flex-1 h-0.5 mx-2 ${step > s.id - 1 ? 'bg-emerald-500' : 'bg-gray-200'}`} />
               )}
@@ -359,7 +431,7 @@ export default function DriverOnboarding() {
                 </div>
                 <div className="text-xs font-medium text-gray-600 mt-1 hidden sm:block">{s.title}</div>
               </div>
-            </React.Fragment>
+            </Fragment>
           ))}
         </div>
 

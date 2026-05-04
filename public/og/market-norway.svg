@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"  stop-color="#0b1f3a"/>
+      <stop offset="100%" stop-color="#142a4d"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="80%" cy="20%" r="60%">
+      <stop offset="0%"  stop-color="#fbbf24" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <!-- Top wordmark + lockup -->
+  <g transform="translate(72, 72)">
+    <rect x="0" y="0" width="56" height="56" rx="12" fill="#fbbf24"/>
+    <text x="28" y="38" text-anchor="middle" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="28" font-weight="900" fill="#0b1f3a">F</text>
+    <text x="76" y="38" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="32" font-weight="900" letter-spacing="-0.5" fill="#ffffff">
+      Flytt<tspan fill="#fcd34d">Go</tspan>
+    </text>
+    <text x="76" y="62" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="13" font-weight="700" letter-spacing="2" fill="#fbbf24">GLOBAL RELOCATION MARKETPLACE</text>
+  </g>
+
+  <!-- Status badge -->
+  <g transform="translate(1056, 86)">
+    <rect x="-160" y="-22" width="160" height="36" rx="18" fill="#34d399" fill-opacity="0.15" stroke="#34d399" stroke-opacity="0.4"/>
+    <text x="-80" y="2" text-anchor="middle" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="13" font-weight="800" letter-spacing="1.5" fill="#34d399">LIVE</text>
+  </g>
+
+  <!-- Country flag -->
+  <text x="72" y="380" font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif" font-size="180">🇳🇴</text>
+
+  <!-- Country name -->
+  <text x="72" y="470" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="76" font-weight="900" letter-spacing="-2" fill="#ffffff">Norway</text>
+
+  <!-- Subline -->
+  <text x="72" y="520" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="26" font-weight="600" fill="#fcd34d">Live marketplace · Verified providers · Escrow protected</text>
+
+  <!-- Bottom URL strip -->
+  <line x1="72" y1="556" x2="1128" y2="556" stroke="#ffffff" stroke-opacity="0.1"/>
+  <text x="72" y="592" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" font-weight="600" fill="#ffffff" fill-opacity="0.65">flyttgo.us</text>
+  <text x="1128" y="592" text-anchor="end" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="16" font-weight="600" fill="#ffffff" fill-opacity="0.55">Verified providers · Escrow on every booking</text>
+</svg>

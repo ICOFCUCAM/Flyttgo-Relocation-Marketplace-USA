@@ -10,8 +10,19 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
  *   - Nominatim `countrycodes=` filter
  *   - `Accept-Language` header for localised results
  *   - `country` field on the resulting address
+ *
+ * Covers the 6 legacy markets (us / ca / gb / de / fr / no) plus the
+ * 10 first/second-wave expansion markets (nl / se / es / it / pl /
+ * dk / be / at / ch / cz). Adding a new market = adding one line
+ * each to COUNTRY_LANG + COUNTRY_LABEL below.
  */
-export type CountryCode = 'us' | 'ca' | 'de' | 'fr' | 'gb' | 'no';
+export type CountryCode =
+  /* Legacy */
+  | 'us' | 'ca' | 'de' | 'fr' | 'gb' | 'no'
+  /* Expansion — first wave */
+  | 'nl' | 'se' | 'es' | 'it' | 'pl'
+  /* Expansion — second wave */
+  | 'dk' | 'be' | 'at' | 'ch' | 'cz';
 
 export interface USAddress {
   street_name: string;
@@ -64,21 +75,47 @@ interface Props {
 }
 
 const COUNTRY_LANG: Record<CountryCode, string> = {
+  /* Legacy */
   us: 'en-US',
   ca: 'en-CA',
   gb: 'en-GB',
   de: 'de-DE',
   fr: 'fr-FR',
   no: 'nb-NO',
+  /* Expansion — first wave */
+  nl: 'nl-NL',
+  se: 'sv-SE',
+  es: 'es-ES',
+  it: 'it-IT',
+  pl: 'pl-PL',
+  /* Expansion — second wave */
+  dk: 'da-DK',
+  be: 'nl-BE',
+  at: 'de-AT',
+  ch: 'de-CH',
+  cz: 'cs-CZ',
 };
 
 const COUNTRY_LABEL: Record<CountryCode, string> = {
+  /* Legacy */
   us: 'USA',
   ca: 'Canada',
   gb: 'United Kingdom',
   de: 'Germany',
   fr: 'France',
   no: 'Norway',
+  /* Expansion — first wave */
+  nl: 'Netherlands',
+  se: 'Sweden',
+  es: 'Spain',
+  it: 'Italy',
+  pl: 'Poland',
+  /* Expansion — second wave */
+  dk: 'Denmark',
+  be: 'Belgium',
+  at: 'Austria',
+  ch: 'Switzerland',
+  cz: 'Czech Republic',
 };
 
 const COUNTRY_VIEWBOX: Record<CountryCode, string> = {
@@ -152,7 +189,7 @@ function buildFormatted(r: NominatimResult, countryCode: CountryCode): { line1: 
   };
 }
 
-export default function NorwayAddressAutocomplete({
+export default function GlobalAddressAutocomplete({
   value,
   onSelect,
   placeholder,

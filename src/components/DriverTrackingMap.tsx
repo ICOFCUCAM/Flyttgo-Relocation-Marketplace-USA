@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -79,7 +79,7 @@ export default function DriverTrackingMap({ pickup, dropoff, driverId, className
   useEffect(() => {
     if (!driverId) {
       setDriverPos(null);
-      return;
+      return undefined;
     }
 
     let cancelled = false;
@@ -93,7 +93,7 @@ export default function DriverTrackingMap({ pickup, dropoff, driverId, className
       .limit(1)
       .maybeSingle()
       .then(({ data }) => {
-        if (cancelled || !data) return;
+        if (cancelled || !data) return undefined;
         const lat = Number(data.lat);
         const lng = Number(data.lng);
         if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
@@ -110,7 +110,7 @@ export default function DriverTrackingMap({ pickup, dropoff, driverId, className
         { event: '*', schema: 'public', table: 'driver_locations', filter: `driver_id=eq.${driverId}` },
         (payload) => {
           const row = (payload.new ?? payload.old) as { lat?: number; lng?: number } | null;
-          if (!row || row.lat == null || row.lng == null) return;
+          if (!row || row.lat == null || row.lng == null) return undefined;
           setDriverPos({ lat: Number(row.lat), lng: Number(row.lng) });
         }
       )

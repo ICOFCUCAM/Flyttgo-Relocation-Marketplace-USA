@@ -1,4 +1,3 @@
-import React from 'react';
 import { GitCompare, X, ChevronUp } from 'lucide-react';
 import { useCompareStore, removeFromCompare, clearCompare, COMPARE_MAX } from '../../lib/compare-store';
 import { useApp } from '../../lib/store';

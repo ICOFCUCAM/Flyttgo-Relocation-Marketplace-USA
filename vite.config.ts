@@ -31,7 +31,12 @@ export default defineConfig(({ mode }) => ({
      * Disabled in dev (the SW would shadow HMR). Run `npm run build &&
      * npm run preview` to test offline behaviour locally. */
     VitePWA({
-      registerType: 'autoUpdate',
+      /* registerType: 'prompt' — we surface a custom "New version
+       * available — reload" toast via main.tsx's registerSW hook so
+       * customers don't lose form state on a silent autoUpdate. The
+       * SW still installs in the background; it just waits for the
+       * user to confirm before activating. */
+      registerType: 'prompt',
       includeAssets: [
         'favicon.svg',
         'apple-touch-icon.svg',

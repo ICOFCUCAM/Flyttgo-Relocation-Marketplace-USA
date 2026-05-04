@@ -1,4 +1,3 @@
-import React from 'react';
 import { useApp } from '../lib/store';
 
 export default function CompanyDashboardInfoPage() {

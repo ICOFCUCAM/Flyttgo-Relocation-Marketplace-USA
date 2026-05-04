@@ -1,4 +1,3 @@
-import React from 'react';
 import { Globe2, Sparkles, MapPin } from 'lucide-react';
 import { useApp } from '../lib/store';
 import { Section, Eyebrow, Pill } from '../components/ds';

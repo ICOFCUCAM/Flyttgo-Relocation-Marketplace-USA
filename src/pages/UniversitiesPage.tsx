@@ -1,27 +1,28 @@
-import React from 'react';
 import { useApp } from '../lib/store';
 import { SectionIndex } from '../components/global/CountryPage';
+import MarketplaceBanner from '../components/banners/MarketplaceBanner';
 
 export default function UniversitiesPage() {
   const { setPage } = useApp();
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
-      <section className="border-b border-slate-200 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-6 py-20">
-          <SectionIndex id="GLRM.01" label="University relocation" />
-          <h1 className="font-serif text-5xl lg:text-6xl leading-[1.05] tracking-tight">
-            Student relocation, coordinated globally
-          </h1>
-          <p className="mt-6 text-lg leading-relaxed text-slate-700 max-w-3xl">
-            Move-in, move-out, semester mobility, and international arrival
-            corridors for universities, residence halls, and student housing
-            offices. FlyttGo coordinates with independent licensed providers
-            in each jurisdiction so housing and admissions teams operate from a
-            single audit-ready record across countries.
-          </p>
-        </div>
-      </section>
+      <MarketplaceBanner
+        eyebrow="University Mobility"
+        breadcrumb={{ id: 'GLRM.01', label: 'University relocation' }}
+        headline="Student relocation, coordinated globally"
+        lead="Move-in, move-out, semester mobility, and international arrival corridors for universities, residence halls, and student housing offices. FlyttGo coordinates with independent licensed providers in each jurisdiction so housing and admissions teams operate from a single audit-ready record across countries."
+        compliancePills={[
+          { label: 'Term-aware scheduling' },
+          { label: 'Residence-hall verified' },
+          { label: 'Cross-border corridors' },
+          { label: 'Bonded carriers' },
+        ]}
+        ctas={[
+          { label: 'Coordinate with admissions →', onClick: () => setPage('contact'), primary: true },
+          { label: 'Capability brief',             onClick: () => setPage('capability-brief') },
+        ]}
+      />
 
       <section className="border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-6 py-20">

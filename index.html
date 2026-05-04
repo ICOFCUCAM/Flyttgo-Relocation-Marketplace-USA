@@ -3,7 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#0f172a" />
+    <!-- theme-color aligned with manifest.json (#0b1f3a). Light/dark
+         media queries supported by Chrome / Safari ≥ 15. -->
+    <meta name="theme-color" content="#0b1f3a" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0b1f3a" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#0b1f3a" />
 
     <title>FlyttGo · Move anywhere. Book a licensed mover in 60 seconds.</title>
     <meta name="description" content="FlyttGo Global Logistics & Relocation Marketplace — worldwide digital coordination infrastructure connecting customers with licensed relocation providers, logistics partners, workforce support, storage, and mobility services across multiple jurisdictions." />
@@ -28,9 +32,9 @@
     <!-- Apple / Android PWA install hints -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="FlyttGo Global" />
+    <meta name="apple-mobile-web-app-title" content="FlyttGo" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="application-name" content="FlyttGo Global" />
+    <meta name="application-name" content="FlyttGo" />
     <meta name="format-detection" content="telephone=no" />
     <meta name="msapplication-TileColor" content="#0b1f3a" />
     <meta name="color-scheme" content="light" />

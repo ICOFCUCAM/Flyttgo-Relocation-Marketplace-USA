@@ -1,12 +1,7 @@
-import React, { useState } from 'react';
-import { useApp } from '../lib/store';
-
 const LAST_UPDATED = 'March 31, 2026';
 const EFFECTIVE_DATE = 'March 31, 2026';
 
 export default function TermsPage() {
-  const { setPage } = useApp();
-  const [activeSection, setActiveSection] = useState('');
 
   const sections = [
     { id: 'overview', title: '1. Platform Overview & Legal Status' },

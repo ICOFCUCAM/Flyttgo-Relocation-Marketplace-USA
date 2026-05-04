@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /**
  * <AnimatedNumber> — counts a value up from 0 → target as soon as it
@@ -28,17 +28,17 @@ export default function AnimatedNumber({
   const started = useRef(false);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return undefined;
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduceMotion) {
       setShown(value);
       started.current = true;
-      return;
+      return undefined;
     }
 
     const node = ref.current;
-    if (!node) return;
+    if (!node) return undefined;
 
     const io = new IntersectionObserver(
       entries => {

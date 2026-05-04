@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Loader2, ShieldCheck, AlertTriangle, CheckCircle2, ArrowRight,
 } from 'lucide-react';
@@ -30,23 +30,23 @@ export default function AcceptOrgInvitePage() {
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return undefined;
     const t = new URLSearchParams(window.location.search).get('token');
     if (!t) {
       setState({ phase: 'error', reason: 'No invite token in URL.' });
-      return;
+      return undefined;
     }
     setToken(t);
     setState(user ? { phase: 'accepting' } : { phase: 'awaiting-signin' });
   }, [user]);
 
   useEffect(() => {
-    if (state.phase !== 'accepting' || !token) return;
+    if (state.phase !== 'accepting' || !token) return undefined;
     let cancelled = false;
     acceptOrgInvite(token)
       .then(orgId => { if (!cancelled) setState({ phase: 'accepted', orgId }); })
       .catch(err => {
-        if (cancelled) return;
+        if (cancelled) return undefined;
         const reason = err instanceof Error ? err.message : 'Could not accept invite.';
         setState({ phase: 'error', reason });
       });
@@ -135,7 +135,7 @@ export default function AcceptOrgInvitePage() {
   );
 }
 
-function Status({ icon, title }: { icon: 'loading'; title: string }) {
+function Status({ title }: { icon?: 'loading'; title: string }) {
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center">
       <Loader2 size={28} className="text-slate-400 mx-auto mb-3 animate-spin" />

@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   ShieldCheck, Building2, Globe2, Database, Lock, Activity,
   Mail, type LucideIcon,

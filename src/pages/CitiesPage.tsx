@@ -1,7 +1,7 @@
-import React from 'react';
 import { useApp } from '../lib/store';
 import type { Page } from '../lib/store';
 import { SectionIndex } from '../components/global/CountryPage';
+import MarketplaceBanner from '../components/banners/MarketplaceBanner';
 
 const COUNTRIES: { iso: string; name: string; phase: string; route: Page }[] = [
   { iso: 'US', name: 'United States',  phase: 'Phase 1 — Live',              route: 'market-us' },
@@ -24,20 +24,20 @@ export default function CitiesPage() {
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
-      <section className="border-b border-slate-200 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-6 py-20">
-          <SectionIndex id="GLRM.01" label="Geographic deployment" />
-          <h1 className="font-serif text-5xl lg:text-6xl leading-[1.05] tracking-tight">
-            Markets &amp; deployment nodes
-          </h1>
-          <p className="mt-6 text-lg leading-relaxed text-slate-700 max-w-3xl">
-            FlyttGo Global Logistics &amp; Relocation Marketplace operates country-level
-            deployment nodes across the United States, Canada, Germany, France, the
-            United Kingdom, and Norway, with intercontinental corridors planned
-            through 2030.
-          </p>
-        </div>
-      </section>
+      <MarketplaceBanner
+        eyebrow="Geographic deployment"
+        breadcrumb={{ id: 'GLRM.01', label: 'Markets & deployment nodes' }}
+        headline="Markets & deployment nodes"
+        lead="FlyttGo operates country-level deployment nodes across the United States, Canada, Germany, France, the United Kingdom, and Norway, with intercontinental corridors planned through 2030."
+        compliancePills={[
+          { label: '6 active markets' },
+          { label: 'Phase 4: intercontinental corridors' },
+          { label: 'Country-licensed dispatch' },
+        ]}
+        ctas={[
+          { label: 'Pick a country →',  onClick: () => setPage('home'), primary: true },
+        ]}
+      />
 
       <section className="border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-6 py-20">

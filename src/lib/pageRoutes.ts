@@ -82,6 +82,25 @@ const PAGE_TO_PATH: Record<Page, string> = {
   'market-uk':               '/uk',
   'market-norway':           '/norway',
 
+  /* Expansion-country shopfronts (Phase 13). Each is a rollout-status
+   * shopfront — booking widget hidden until the country's payment +
+   * address autocomplete are wired. See src/lib/expansion-cities.ts. */
+  'market-nl':               '/market-nl',
+  'market-se':               '/market-se',
+  'market-es':               '/market-es',
+  'market-it':               '/market-it',
+  'market-pl':               '/market-pl',
+  'market-dk':               '/market-dk',
+  'market-be':               '/market-be',
+  'market-at':               '/market-at',
+  'market-ch':               '/market-ch',
+  'market-cz':               '/market-cz',
+
+  /* Strategic-city SEO landing root. Live navigations push the full
+   * /moving-<slug> URL via history.pushState; pathToPage resolves any
+   * `/moving-…` path to this Page id. */
+  'moving-city':             '/moving',
+
   /* Referral program landing. */
   'refer':                   '/refer',
 
@@ -98,6 +117,11 @@ const PAGE_TO_PATH: Record<Page, string> = {
    * listing root; live navigations push the full /services/<slug>
    * URL via history.pushState. */
   'service-category':        '/services',
+
+  /* Per-corridor landing page. PAGE_TO_PATH only stores the
+   * listing root; live navigations push the full
+   * /corridor/<country>/<slug> URL via history.pushState. */
+  'corridor':                '/corridor',
 
   /* US pricing transparency. */
   'pricing':                 '/pricing',
@@ -123,6 +147,13 @@ const PAGE_TO_PATH: Record<Page, string> = {
   'procurement-rfp':             '/procurement/rfp',
   'deployment-regions':          '/deployment-regions',
   'capability-brief':            '/resources/capability-brief',
+
+  /* Back-Office System root. Sub-routes (/backoffice/markets,
+   * /backoffice/payments, …) are dispatched inside the BOS itself
+   * via window.location.pathname; pathToPage prefix-matches /backoffice
+   * so any BOS URL resolves to the same Page id. */
+  'backoffice':              '/backoffice',
+  'brand':                   '/brand',
 
   /* Fallback for unknown routes. No real path — pathToPage() returns
    * this id for anything it can't match. setPage('not-found') still
@@ -165,11 +196,23 @@ const PAGE_TITLES: Record<Page, string> = {
   'market-france':            'France Moves & Logistics · FlyttGo Global',
   'market-uk':                'United Kingdom Moves & Logistics · FlyttGo Global',
   'market-norway':            'Norway Moves & Logistics · FlyttGo Global',
+  'market-nl':                'Moving in Amsterdam · Rotterdam · The Hague · Utrecht · Eindhoven — Netherlands marketplace · FlyttGo',
+  'market-se':                'Moving in Stockholm · Göteborg · Malmö · Uppsala · Västerås — Sweden marketplace · FlyttGo',
+  'market-es':                'Moving in Madrid · Barcelona · Valencia · Sevilla · Málaga — Spain marketplace · FlyttGo',
+  'market-it':                'Moving in Milano · Roma · Torino · Bologna · Firenze — Italy marketplace · FlyttGo',
+  'market-pl':                'Moving in Warszawa · Kraków · Wrocław · Gdańsk · Poznań — Poland marketplace · FlyttGo',
+  'market-dk':                'Moving in København · Aarhus · Odense · Aalborg · Esbjerg — Denmark marketplace · FlyttGo',
+  'market-be':                'Moving in Brussels · Antwerp · Ghent · Leuven · Liège — Belgium marketplace · FlyttGo',
+  'market-at':                'Moving in Wien · Graz · Linz · Salzburg · Innsbruck — Austria marketplace · FlyttGo',
+  'market-ch':                'Moving in Zürich · Genève · Basel · Bern · Lausanne — Switzerland marketplace · FlyttGo',
+  'market-cz':                'Moving in Praha · Brno · Ostrava · Plzeň · Liberec — Czech Republic marketplace · FlyttGo',
+  'moving-city':              'Moving services · FlyttGo Global',
   'refer':                    'Give £25, get £25 · FlyttGo referrals',
   'provider-profile':         'Provider profile · FlyttGo Global',
   'providers-directory':      'Browse verified providers · FlyttGo Global',
   'compare':                  'Compare providers side by side · FlyttGo Global',
   'service-category':         'Service category · FlyttGo Global',
+  'corridor':                 'Relocation corridor · FlyttGo Global',
   'pricing':                  'US relocation pricing · transparent rates · FlyttGo',
   'provider-pricing-settings': 'Pricing settings · FlyttGo Provider Dashboard',
   'provider-requirements':    'Provider onboarding requirements · FlyttGo',
@@ -183,6 +226,8 @@ const PAGE_TITLES: Record<Page, string> = {
   'procurement-rfp':          'Submit a procurement inquiry · FlyttGo',
   'deployment-regions':       'Deployment regions · FlyttGo',
   'capability-brief':         'Capability brief · FlyttGo',
+  'backoffice':               'FlyttGo Back Office',
+  'brand':                    'FlyttGo brand · logo · downloads',
   'booking':                  'Book a Move · FlyttGo Global',
   'payment':                  'Secure Payment · FlyttGo Global',
   'tracking':                 'Track Your Coordination · FlyttGo Global',
@@ -256,6 +301,28 @@ const PAGE_DESCRIPTIONS: Record<Page, string> = {
     "United Kingdom moves & logistics — Goods Vehicle Operator Licence carrier matching, moving labor, packing, storage, and enterprise relocation across the UK marketplace.",
   'market-norway':
     "Norway moves & logistics — flytteselskap carrier matching, moving labor, packing, storage, and corporate flytting coordination across the Norwegian marketplace.",
+  'market-nl':
+    "Netherlands relocation marketplace — Amsterdam, Rotterdam, The Hague, Utrecht, Eindhoven. Kiwa-licensed verhuisbedrijven, Benelux corridor coordination, transparent pricing, and verified providers per anchor city.",
+  'market-se':
+    "Sweden relocation marketplace — Stockholm, Göteborg, Malmö, Uppsala, Västerås. Yrkestrafiktillstånd-licensed flyttfirmor, Nordic corridor coordination, transparent pricing across every Swedish anchor city.",
+  'market-es':
+    "Spain relocation marketplace — Madrid, Barcelona, Valencia, Sevilla, Málaga. Tarjeta-de-transporte-licensed empresas de mudanzas, Iberian + Mediterranean corridor coordination, transparent pricing per city.",
+  'market-it':
+    "Italy relocation marketplace — Milano, Roma, Torino, Bologna, Firenze. Albo-Autotrasportatori-registered imprese di traslochi, Alpine + Mediterranean corridors, transparent pricing across every Italian anchor city.",
+  'market-pl':
+    "Poland relocation marketplace — Warszawa, Kraków, Wrocław, Gdańsk, Poznań. GITD-licensed firmy przeprowadzkowe, Central-Europe corridor coordination, transparent pricing per Polish anchor city.",
+  'market-dk':
+    "Denmark relocation marketplace — København, Aarhus, Odense, Aalborg, Esbjerg. Vejtransportlov-compliant flyttefirmaer, Øresund + Nordic corridors, transparent pricing across every Danish anchor city.",
+  'market-be':
+    "Belgium relocation marketplace — Brussels, Antwerp, Ghent, Leuven, Liège. SPF-registered verhuisfirma's / sociétés de déménagement, EU-capital corridors, bilingual NL/FR coordination per anchor city.",
+  'market-at':
+    "Austria relocation marketplace — Wien, Graz, Linz, Salzburg, Innsbruck. WKO-registered Umzugsunternehmen, DACH + Central-Europe corridors, transparent pricing across every Austrian anchor city.",
+  'market-ch':
+    "Switzerland relocation marketplace — Zürich, Genève, Basel, Bern, Lausanne. Strassenverkehrsamt-registered Umzugsfirmen / entreprises de déménagement, DACH + Alpine corridors, trilingual DE/FR/IT coordination.",
+  'market-cz':
+    "Czech Republic relocation marketplace — Praha, Brno, Ostrava, Plzeň, Liberec. Ministerstvo-dopravy-licensed stěhovací firmy, Central-Europe corridor coordination, transparent pricing per Czech anchor city.",
+  'moving-city':
+    "City-specific FlyttGo relocation services — verified local providers, transparent pricing, cross-border corridor connections, and escrow protection on every move.",
   'refer':
     "Invite a friend to FlyttGo — they get £25 off their first move, you get £25 in account credit when they complete it. Share your code by link, WhatsApp, email or QR.",
   'provider-profile':
@@ -266,6 +333,8 @@ const PAGE_DESCRIPTIONS: Record<Page, string> = {
     "Compare your shortlisted FlyttGo providers side by side — rating, reviews, starting price, services, fleet, verifications, and availability — in a single table.",
   'service-category':
     "FlyttGo service category — see the providers offering this service across our six markets, with verified credentials, ratings, and instant quotes.",
+  'corridor':
+    "City-to-city relocation corridor on FlyttGo — licensed movers, distance-priced quotes, and escrow protection on every booking. Compare options for your route.",
   'pricing':
     "Transparent US relocation pricing — labor-only $60–$120/hr, movers + truck $120–$250/hr, packing $40–$90/hr, corporate $150–$300/hr. See what drives the price and how FlyttGo's marketplace compares to national rates.",
   'provider-pricing-settings':
@@ -292,6 +361,10 @@ const PAGE_DESCRIPTIONS: Record<Page, string> = {
     "Markets where FlyttGo settles bookings today — live coverage, partner coverage, and expansion-ready countries for institutional pilot programmes.",
   'capability-brief':
     "FlyttGo capability brief — operator governance, geographic deployment readiness, compliance + provider verification, architecture, and procurement integration patterns. Delivered tailored to your procurement context.",
+  'backoffice':
+    "FlyttGo Back Office — operator-only console for market rollout, central payments, accounting, invoices, audit, and feature flags. Permission-gated.",
+  'brand':
+    "FlyttGo brand showcase — logo lockup, color variants, mark + wordmark composition flags, and standalone favicon / Apple touch icon downloads.",
   'booking':
     'Book your next move in under 3 minutes. Get an instant quote, pick a verified driver, and track your delivery live — all with escrow payment built in.',
   'payment':
@@ -383,10 +456,55 @@ export function pageMeta(page: Page): PageMeta {
 }
 
 /**
+ * Per-page hreflang alternates — language siblings that share the
+ * same URL slug but represent different markets. Google uses these
+ * to avoid indexing a country page as duplicate content of its
+ * sibling, and to surface the right localized version per region.
+ *
+ * Mapping is country-page → list of ISO language tags. We render an
+ * x-default pointing at the same URL (the canonical landing copy is
+ * English baseline). Adding a fully translated sibling later
+ * becomes a registry edit, not a routing change.
+ */
+const HREFLANG_BY_PAGE: Partial<Record<Page, string[]>> = {
+  /* Legacy markets — country shopfront covers the listed locales. */
+  'market-us':       ['en-US', 'en'],
+  'market-canada':   ['en-CA', 'fr-CA', 'en'],
+  'market-uk':       ['en-GB', 'en'],
+  'market-france':   ['fr-FR', 'en'],
+  'market-germany':  ['de-DE', 'en'],
+  'market-norway':   ['nb-NO', 'no', 'en'],
+  /* Expansion markets — locale comes from EXPANSION_COUNTRIES.locale. */
+  'market-nl':       ['nl-NL', 'en'],
+  'market-se':       ['sv-SE', 'en'],
+  'market-es':       ['es-ES', 'en'],
+  'market-it':       ['it-IT', 'en'],
+  'market-pl':       ['pl-PL', 'en'],
+  'market-dk':       ['da-DK', 'en'],
+  'market-be':       ['fr-BE', 'nl-BE', 'en'],
+  'market-at':       ['de-AT', 'de', 'en'],
+  'market-ch':       ['de-CH', 'fr-CH', 'it-CH', 'en'],
+  'market-cz':       ['cs-CZ', 'en'],
+};
+
+/** Locale used as the page-level <html lang> for each market. */
+const PRIMARY_LANG_BY_PAGE: Partial<Record<Page, string>> = {
+  'market-us': 'en', 'market-canada': 'en', 'market-uk': 'en',
+  'market-france': 'fr', 'market-germany': 'de', 'market-norway': 'nb',
+  'market-nl': 'nl', 'market-se': 'sv', 'market-es': 'es',
+  'market-it': 'it', 'market-pl': 'pl', 'market-dk': 'da',
+  'market-be': 'fr', 'market-at': 'de', 'market-ch': 'de',
+  'market-cz': 'cs',
+};
+
+/**
  * Apply page meta to the document head. Updates <title>, meta
  * description, canonical link, OpenGraph and Twitter tags in place.
  * Creates missing tags if they're not already in index.html so
  * deep-linked pages still get the right head from a cold load.
+ *
+ * Also emits hreflang alternates per HREFLANG_BY_PAGE so country
+ * shopfronts don't compete with their language siblings in EU SEO.
  */
 export function applyPageMeta(page: Page): void {
   if (typeof document === 'undefined') return;
@@ -399,17 +517,56 @@ export function applyPageMeta(page: Page): void {
   upsertMeta('name',     'description',      meta.description);
   upsertLink('canonical', url);
 
+  /* Per-country OG card — 16 country shopfronts ship dedicated OG
+   * card SVGs at /og/<page>.svg, generated at build time by
+   * scripts/generate-og-cards.mjs. Falls back to /og.svg for
+   * everything else. */
+  const ogImage = page.startsWith('market-')
+    ? `https://flyttgo.us/og/${page}.svg`
+    : image;
+
   upsertMeta('property', 'og:title',        meta.title);
   upsertMeta('property', 'og:description',  meta.description);
   upsertMeta('property', 'og:url',          url);
-  upsertMeta('property', 'og:image',        image);
+  upsertMeta('property', 'og:image',        ogImage);
   upsertMeta('property', 'og:type',         'website');
   upsertMeta('property', 'og:site_name',    'FlyttGo Global Logistics & Relocation Marketplace');
 
   upsertMeta('name',     'twitter:card',        'summary_large_image');
   upsertMeta('name',     'twitter:title',        meta.title);
   upsertMeta('name',     'twitter:description',  meta.description);
-  upsertMeta('name',     'twitter:image',        image);
+  upsertMeta('name',     'twitter:image',        ogImage);
+
+  /* Hreflang alternates — clear out any previously emitted ones
+   * (covers SPA navigation between two countries) and re-emit. */
+  document.querySelectorAll<HTMLLinkElement>('link[rel="alternate"][data-flyttgo-hreflang]')
+    .forEach(el => el.remove());
+  const hreflangs = HREFLANG_BY_PAGE[page];
+  if (hreflangs?.length) {
+    for (const tag of hreflangs) {
+      const link = document.createElement('link');
+      link.setAttribute('rel', 'alternate');
+      link.setAttribute('hreflang', tag);
+      link.setAttribute('href', url);
+      link.setAttribute('data-flyttgo-hreflang', '1');
+      document.head.appendChild(link);
+    }
+    /* x-default — fallback when none of the listed languages match. */
+    const xdef = document.createElement('link');
+    xdef.setAttribute('rel', 'alternate');
+    xdef.setAttribute('hreflang', 'x-default');
+    xdef.setAttribute('href', url);
+    xdef.setAttribute('data-flyttgo-hreflang', '1');
+    document.head.appendChild(xdef);
+  }
+
+  /* Set <html lang> to the page's primary locale so screen readers
+   * + Google + browser translate pick up the right pronunciation +
+   * translation chain. */
+  const lang = PRIMARY_LANG_BY_PAGE[page];
+  if (lang && document.documentElement) {
+    document.documentElement.setAttribute('lang', lang);
+  }
 }
 
 function upsertMeta(keyAttr: 'name' | 'property', keyValue: string, content: string) {
@@ -447,6 +604,26 @@ export function pathToPage(path: string): Page {
   if (normalised.startsWith('/services/') && normalised.length > '/services/'.length) {
     return 'service-category';
   }
+  /* Corridor pages: /corridor/<country>/<slug> resolves to the
+   * corridor page; CorridorPage reads country + slug from
+   * window.location.pathname. The bare /corridor falls through to
+   * not-found because there is no corridor index page. */
+  if (normalised.startsWith('/corridor/') && normalised.length > '/corridor/'.length) {
+    return 'corridor';
+  }
+  /* Strategic-city landing pages: /moving-<slug> resolves to the
+   * moving-city page; MovingCityPage reads the slug from
+   * window.location.pathname and looks it up in ANCHOR_CITIES. The
+   * bare /moving keeps mapping to the moving-city listing. */
+  if (normalised.startsWith('/moving-') && normalised.length > '/moving-'.length) {
+    return 'moving-city';
+  }
+  /* Back-Office System: /backoffice and /backoffice/<slug> both
+   * resolve to the same Page id; the BOS sub-router dispatches the
+   * slug internally. */
+  if (normalised === '/backoffice' || normalised.startsWith('/backoffice/')) {
+    return 'backoffice';
+  }
   /* Unknown paths resolve to 'not-found' rather than silently
    * serving the homepage. NotFoundPage sets robots=noindex so
    * Google doesn't index the garbage URL, and the user sees a
@@ -457,4 +634,41 @@ export function pathToPage(path: string): Page {
 /** Page id → browser tab title. */
 export function pageTitle(page: Page): string {
   return PAGE_TITLES[page] ?? 'FlyttGo Global';
+}
+
+/**
+ * Country ISO / code → Page id for the country's marketplace
+ * shopfront.
+ *
+ * Critical mapping: legacy markets use country *names* in their Page
+ * id (`market-canada`, `market-germany`, …) while expansion markets
+ * use the ISO code directly (`market-nl`, `market-se`, …). Hard-
+ * coding a single template (e.g. `market-${iso}`) breaks on five of
+ * the six legacy markets — use this helper at every call site.
+ *
+ * Accepts BookingCountry (`us|ca|de|fr|gb|no`) and ExpansionCountryCode
+ * (`nl|se|es|it|pl|dk|be|at|ch|cz`). Returns 'home' for anything else
+ * so callers don't accidentally land on /not-found.
+ */
+const ISO_TO_MARKET_PAGE: Record<string, Page> = {
+  us: 'market-us',
+  ca: 'market-canada',
+  de: 'market-germany',
+  fr: 'market-france',
+  gb: 'market-uk',
+  no: 'market-norway',
+  nl: 'market-nl',
+  se: 'market-se',
+  es: 'market-es',
+  it: 'market-it',
+  pl: 'market-pl',
+  dk: 'market-dk',
+  be: 'market-be',
+  at: 'market-at',
+  ch: 'market-ch',
+  cz: 'market-cz',
+};
+
+export function isoToMarketPage(iso: string): Page {
+  return ISO_TO_MARKET_PAGE[iso.toLowerCase()] ?? 'home';
 }

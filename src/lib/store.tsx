@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { pageToPath, pathToPage, applyPageMeta } from './pageRoutes';
 
 export type Page =
@@ -40,6 +40,22 @@ export type Page =
    * rather than a `?slug=` query param so the page reads as a real
    * SEO target. pathToPage prefix-matches /services/. */
   | 'service-category'
+  /* Per-corridor SEO landing page — /corridor/<country>/<slug>.
+   *
+   * Country + slug carried via URL path segments rather than a
+   * query string so each corridor reads as a real SEO target.
+   * pathToPage prefix-matches /corridor/. */
+  | 'corridor'
+  /* Expansion-country shopfronts — first wave + second wave. Each
+   * is a rollout-status shopfront (booking widget hidden until the
+   * country's payment + address autocomplete are wired). See
+   * src/lib/expansion-cities.ts for the registry. */
+  | 'market-nl' | 'market-se' | 'market-es' | 'market-it' | 'market-pl'
+  | 'market-dk' | 'market-be' | 'market-at' | 'market-ch' | 'market-cz'
+  /* Strategic-city SEO landing page — /moving-<slug>. Slug is
+   * looked up against ANCHOR_CITIES; pathToPage prefix-matches
+   * /moving-. */
+  | 'moving-city'
   /* US pricing transparency landing page. */
   | 'pricing'
   /* Provider-facing pricing settings (driver portal). */
@@ -64,6 +80,15 @@ export type Page =
   | 'procurement-rfp'
   | 'deployment-regions'
   | 'capability-brief'
+  /* Back-Office System (BOS). Single Page id covers /backoffice +
+   * every /backoffice/<slug> sub-route — the BOS sub-router reads
+   * the slug from window.location.pathname. Permission-gated;
+   * users without a bos_user_roles row see a denial panel. */
+  | 'backoffice'
+  /* Brand showcase — every <FlyttGoLogo> variant + the standalone
+   * favicon and apple-touch-icon rendered side by side. Public
+   * route, useful for designers / partners. */
+  | 'brand'
   /* Fallback for URLs that don't match any known route. */
   | 'not-found';
 
@@ -81,7 +106,7 @@ interface AppState {
 
 /**
  * Structured US address — mirrors the shape returned by
- * NorwayAddressAutocomplete.onSelect (Kartverket lookup). When the
+ * GlobalAddressAutocomplete.onSelect (Kartverket lookup). When the
  * homepage Booking Widget produces one of these, we stash it in
  * BookingData so BookingFlow can pre-fill its address fields without
  * the customer having to re-enter anything.
@@ -188,7 +213,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       /* Don't rewrite the URL when showing the 404 page — the user's
        * original URL should stay in the address bar so they can copy
        * it into a bug report and so a refresh hits the same path. */
-      if (page === 'not-found') return;
+      if (page === 'not-found') return undefined;
       const path = pageToPath(page);
       if (window.location.pathname !== path) {
         window.history.pushState({ page }, '', path);
@@ -200,7 +225,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
    * URL that the browser navigates to. We never pushState from here
    * to avoid feedback loops. */
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return undefined;
     const onPop = () => setCurrentPage(pathToPage(window.location.pathname));
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
