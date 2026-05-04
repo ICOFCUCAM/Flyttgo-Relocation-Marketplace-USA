@@ -71,6 +71,19 @@ export interface SubscriptionTier {
    *  daily so casual providers can opt in for a single peak day;
    *  higher-tier commitments stay monthly. */
   baselineUSD:    number;
+  /** Optional per-country USD override. When set for a country,
+   *  localPriceForTier() uses this value verbatim (× usdRate for
+   *  currency conversion) and SKIPS the country multiplier — so the
+   *  override is the canonical US-dollar price for that market.
+   *
+   *  Use this when the multiplier model isn't precise enough — e.g.
+   *  a Norwegian Silver Plus that needs to sit at exactly $35 USD
+   *  rather than the 29 × 1.20 = $34.8 the multiplier produces, or a
+   *  market with regulatory price ceilings that don't line up with a
+   *  flat percentage.
+   *
+   *  Leave blank for countries that should follow the multiplier. */
+  pricesByCountry?: Partial<Record<PricingCountry, number>>;
   /** Billing cadence. Drives both the price suffix ("/ day" vs
    *  "/ month") and the eventual Stripe-subscription interval. */
   cadence:        'daily' | 'monthly';
@@ -265,13 +278,22 @@ export function localPriceForTier(
   const multiplier = multiplierForCountry(country);
   const locale     = LOCALE_BY_CURRENCY[profile.currency] ?? 'en-US';
 
-  /* USD baseline → local-currency amount. The baseline is the
-   * cadence-specific USD price (daily for tiers with cadence='daily',
-   * monthly for cadence='monthly'). We multiply by the country
-   * multiplier AND the country's USD rate to land on the
-   * local-currency value, then round to whole units (sub-unit
-   * pricing reads as noise on a marketing surface). */
-  const rawAmount = t.baselineUSD * multiplier * profile.usdRate;
+  /* USD baseline → local-currency amount. Two paths:
+   *
+   *   1. Per-country USD override (t.pricesByCountry[country]) is the
+   *      canonical price in USD for that market. We treat it as
+   *      already country-specific and SKIP the multiplier — only the
+   *      local-currency conversion via usdRate runs.
+   *
+   *   2. No override → fall back to the historical multiplier model:
+   *      baselineUSD × countryMultiplier × usdRate.
+   *
+   * Either way we round to whole units; sub-unit pricing reads as
+   * noise on a marketing surface. */
+  const overrideUSD = t.pricesByCountry?.[country];
+  const baselineUSD = overrideUSD ?? t.baselineUSD;
+  const effectiveMultiplier = overrideUSD !== undefined ? 1 : multiplier;
+  const rawAmount = baselineUSD * effectiveMultiplier * profile.usdRate;
   /* Daily prices in low-multiplier markets can round to 0 (e.g.
    * $1.49 × 0.25 = $0.37 in NGN/KES baseline) which would render
    * as "Free" and confuse providers. Floor at 1 unit when the tier
