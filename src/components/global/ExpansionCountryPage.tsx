@@ -11,6 +11,7 @@ import {
   corridorsForCountry, slugifyCity,
 } from '../../lib/cross-border-corridors';
 import { useRouteHeroImage } from '../../hooks/useRouteHeroImage';
+import ExpansionCountrySEOSection from '../seo/ExpansionCountrySEOSection';
 import { track } from '../../lib/analytics';
 
 /**
@@ -289,6 +290,13 @@ export default function ExpansionCountryPage({ code }: { code: ExpansionCountryC
           </div>
         </section>
       )}
+
+      {/* ─── COUNTRY SEO SECTION ─────────────────────────────
+       *   Crawlable anchor-city + corridor body. Sits before the
+       *   Provider Acquisition CTA so the SEO body is the last
+       *   thing search engines see before the closing conversion
+       *   module — same insertion point as <CountrySEOSection>. */}
+      <ExpansionCountrySEOSection code={code} />
 
       {/* ─── PROVIDER ACQUISITION CTA ───────────────────────── */}
       <section className="bg-[#0b1f3a] text-white py-16 sm:py-20">

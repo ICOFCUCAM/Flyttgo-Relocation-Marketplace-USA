@@ -74,8 +74,90 @@ export default function MovingCityPage() {
   const tone     = STATUS_TONE[state.status];
   const corridors = corridorsForCity(city.slug);
 
+  /* Per-city <head> meta — title + description + canonical so each
+   * /moving-<slug> URL ships its own crawl-ready meta. Runs as an
+   * effect because MovingCityPage shares one Page id ('moving-city')
+   * across 50 URLs; the global applyPageMeta() in store.tsx only
+   * sees the page id, not the slug, so per-city meta has to land
+   * here. */
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+    const url = `https://flyttgo.us/moving-${city.slug}`;
+    const title = `Moving in ${city.city}, ${country.name} · FlyttGo marketplace`;
+    const description = city.paragraph;
+
+    const prevTitle = document.title;
+    document.title = title;
+
+    const upsertMeta = (attr: 'name' | 'property', key: string, content: string) => {
+      let el = document.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute(attr, key);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('content', content);
+    };
+    const upsertLink = (rel: string, href: string) => {
+      let el = document.querySelector<HTMLLinkElement>(`link[rel="${rel}"]`);
+      if (!el) {
+        el = document.createElement('link');
+        el.setAttribute('rel', rel);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('href', href);
+    };
+
+    upsertMeta('name',     'description',      description);
+    upsertLink('canonical', url);
+    upsertMeta('property', 'og:title',         title);
+    upsertMeta('property', 'og:description',   description);
+    upsertMeta('property', 'og:url',           url);
+    upsertMeta('name',     'twitter:title',    title);
+    upsertMeta('name',     'twitter:description', description);
+
+    return () => {
+      document.title = prevTitle;
+    };
+  }, [city.slug, city.city, country.name, city.paragraph]);
+
+  /* JSON-LD per city — Place + BreadcrumbList. Place carries the
+   * city's slug + paragraph; BreadcrumbList wires the nav trail
+   * (FlyttGo › Country › City) for Google rich results. */
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type':       'Place',
+        '@id':         `https://flyttgo.us/moving-${city.slug}#place`,
+        name:          city.city,
+        description:   city.paragraph,
+        url:           `https://flyttgo.us/moving-${city.slug}`,
+        address:       { '@type': 'PostalAddress', addressCountry: city.country.toUpperCase(), addressLocality: city.city },
+        containedInPlace: {
+          '@type': 'Country',
+          name:    country.name,
+          url:     `https://flyttgo.us/market-${city.country}`,
+        },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'FlyttGo',           item: 'https://flyttgo.us/' },
+          { '@type': 'ListItem', position: 2, name: country.name,         item: `https://flyttgo.us/market-${city.country}` },
+          { '@type': 'ListItem', position: 3, name: `Moving in ${city.city}`, item: `https://flyttgo.us/moving-${city.slug}` },
+        ],
+      },
+    ],
+  };
+
   return (
     <main className="bg-white text-slate-900">
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
 
       {/* ─── HERO ──────────────────────────────────────────── */}
       <section className="relative overflow-hidden">

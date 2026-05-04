@@ -189,16 +189,16 @@ const PAGE_TITLES: Record<Page, string> = {
   'market-france':            'France Moves & Logistics · FlyttGo Global',
   'market-uk':                'United Kingdom Moves & Logistics · FlyttGo Global',
   'market-norway':            'Norway Moves & Logistics · FlyttGo Global',
-  'market-nl':                'Netherlands Moves & Logistics · FlyttGo Global',
-  'market-se':                'Sweden Moves & Logistics · FlyttGo Global',
-  'market-es':                'Spain Moves & Logistics · FlyttGo Global',
-  'market-it':                'Italy Moves & Logistics · FlyttGo Global',
-  'market-pl':                'Poland Moves & Logistics · FlyttGo Global',
-  'market-dk':                'Denmark Moves & Logistics · FlyttGo Global',
-  'market-be':                'Belgium Moves & Logistics · FlyttGo Global',
-  'market-at':                'Austria Moves & Logistics · FlyttGo Global',
-  'market-ch':                'Switzerland Moves & Logistics · FlyttGo Global',
-  'market-cz':                'Czech Republic Moves & Logistics · FlyttGo Global',
+  'market-nl':                'Moving in Amsterdam · Rotterdam · The Hague · Utrecht · Eindhoven — Netherlands marketplace · FlyttGo',
+  'market-se':                'Moving in Stockholm · Göteborg · Malmö · Uppsala · Västerås — Sweden marketplace · FlyttGo',
+  'market-es':                'Moving in Madrid · Barcelona · Valencia · Sevilla · Málaga — Spain marketplace · FlyttGo',
+  'market-it':                'Moving in Milano · Roma · Torino · Bologna · Firenze — Italy marketplace · FlyttGo',
+  'market-pl':                'Moving in Warszawa · Kraków · Wrocław · Gdańsk · Poznań — Poland marketplace · FlyttGo',
+  'market-dk':                'Moving in København · Aarhus · Odense · Aalborg · Esbjerg — Denmark marketplace · FlyttGo',
+  'market-be':                'Moving in Brussels · Antwerp · Ghent · Leuven · Liège — Belgium marketplace · FlyttGo',
+  'market-at':                'Moving in Wien · Graz · Linz · Salzburg · Innsbruck — Austria marketplace · FlyttGo',
+  'market-ch':                'Moving in Zürich · Genève · Basel · Bern · Lausanne — Switzerland marketplace · FlyttGo',
+  'market-cz':                'Moving in Praha · Brno · Ostrava · Plzeň · Liberec — Czech Republic marketplace · FlyttGo',
   'moving-city':              'Moving services · FlyttGo Global',
   'refer':                    'Give £25, get £25 · FlyttGo referrals',
   'provider-profile':         'Provider profile · FlyttGo Global',
@@ -293,25 +293,25 @@ const PAGE_DESCRIPTIONS: Record<Page, string> = {
   'market-norway':
     "Norway moves & logistics — flytteselskap carrier matching, moving labor, packing, storage, and corporate flytting coordination across the Norwegian marketplace.",
   'market-nl':
-    "Netherlands moves & logistics — verhuisbedrijf carrier matching, Benelux corridor coordination, packing, storage, and corporate relocation across the Dutch marketplace.",
+    "Netherlands relocation marketplace — Amsterdam, Rotterdam, The Hague, Utrecht, Eindhoven. Kiwa-licensed verhuisbedrijven, Benelux corridor coordination, transparent pricing, and verified providers per anchor city.",
   'market-se':
-    "Sweden moves & logistics — flyttfirma carrier matching, Nordic corridor coordination, packing, storage, and corporate flytt across the Swedish marketplace.",
+    "Sweden relocation marketplace — Stockholm, Göteborg, Malmö, Uppsala, Västerås. Yrkestrafiktillstånd-licensed flyttfirmor, Nordic corridor coordination, transparent pricing across every Swedish anchor city.",
   'market-es':
-    "Spain moves & logistics — empresa de mudanzas carrier matching, Iberian corridor coordination, packing, storage, and corporate relocation across the Spanish marketplace.",
+    "Spain relocation marketplace — Madrid, Barcelona, Valencia, Sevilla, Málaga. Tarjeta-de-transporte-licensed empresas de mudanzas, Iberian + Mediterranean corridor coordination, transparent pricing per city.",
   'market-it':
-    "Italy moves & logistics — impresa di traslochi carrier matching, Alpine + Mediterranean corridor coordination, packing, storage, and corporate trasloco across the Italian marketplace.",
+    "Italy relocation marketplace — Milano, Roma, Torino, Bologna, Firenze. Albo-Autotrasportatori-registered imprese di traslochi, Alpine + Mediterranean corridors, transparent pricing across every Italian anchor city.",
   'market-pl':
-    "Poland moves & logistics — firma przeprowadzkowa carrier matching, Central-Europe corridor coordination, packing, storage, and corporate przeprowadzki across the Polish marketplace.",
+    "Poland relocation marketplace — Warszawa, Kraków, Wrocław, Gdańsk, Poznań. GITD-licensed firmy przeprowadzkowe, Central-Europe corridor coordination, transparent pricing per Polish anchor city.",
   'market-dk':
-    "Denmark moves & logistics — flyttefirma carrier matching, Øresund corridor coordination, packing, storage, and corporate flytning across the Danish marketplace.",
+    "Denmark relocation marketplace — København, Aarhus, Odense, Aalborg, Esbjerg. Vejtransportlov-compliant flyttefirmaer, Øresund + Nordic corridors, transparent pricing across every Danish anchor city.",
   'market-be':
-    "Belgium moves & logistics — verhuisfirma / société de déménagement carrier matching, EU-capital corridor coordination, packing, storage, and corporate relocation across the Belgian marketplace.",
+    "Belgium relocation marketplace — Brussels, Antwerp, Ghent, Leuven, Liège. SPF-registered verhuisfirma's / sociétés de déménagement, EU-capital corridors, bilingual NL/FR coordination per anchor city.",
   'market-at':
-    "Austria moves & logistics — Umzugsunternehmen carrier matching, DACH + Central-Europe corridor coordination, packing, storage, and corporate Umzug across the Austrian marketplace.",
+    "Austria relocation marketplace — Wien, Graz, Linz, Salzburg, Innsbruck. WKO-registered Umzugsunternehmen, DACH + Central-Europe corridors, transparent pricing across every Austrian anchor city.",
   'market-ch':
-    "Switzerland moves & logistics — Umzugsfirma / entreprise de déménagement carrier matching, DACH + Alpine corridor coordination, packing, storage, and corporate relocation across the Swiss marketplace.",
+    "Switzerland relocation marketplace — Zürich, Genève, Basel, Bern, Lausanne. Strassenverkehrsamt-registered Umzugsfirmen / entreprises de déménagement, DACH + Alpine corridors, trilingual DE/FR/IT coordination.",
   'market-cz':
-    "Czech Republic moves & logistics — stěhovací firma carrier matching, Central-Europe corridor coordination, packing, storage, and corporate stěhování across the Czech marketplace.",
+    "Czech Republic relocation marketplace — Praha, Brno, Ostrava, Plzeň, Liberec. Ministerstvo-dopravy-licensed stěhovací firmy, Central-Europe corridor coordination, transparent pricing per Czech anchor city.",
   'moving-city':
     "City-specific FlyttGo relocation services — verified local providers, transparent pricing, cross-border corridor connections, and escrow protection on every move.",
   'refer':
