@@ -10,6 +10,7 @@ import {
 import {
   corridorsForCountry, slugifyCity,
 } from '../../lib/cross-border-corridors';
+import { heroForExpansionCountry } from '../../lib/expansion-hero-images';
 import { track } from '../../lib/analytics';
 
 /**
@@ -35,6 +36,7 @@ export default function ExpansionCountryPage({ code }: { code: ExpansionCountryC
   const country  = EXPANSION_COUNTRIES[code];
   const cities   = useMemo(() => citiesForCountry(code), [code]);
   const corridors = useMemo(() => corridorsForCountry(code), [code]);
+  const hero     = heroForExpansionCountry(code);
 
   const cityStates = useMemo(() => cities.map(c => ({
     city:  c,
@@ -48,10 +50,16 @@ export default function ExpansionCountryPage({ code }: { code: ExpansionCountryC
     <main className="bg-white text-slate-900">
 
       {/* ─── HERO ──────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#0b1f3a] via-[#0b1f3a] to-[#0b1f3a]/80">
-        <div className="absolute inset-0 opacity-20 pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 h-72 w-72 rounded-full bg-amber-300 blur-[100px]" />
-          <div className="absolute bottom-0 right-1/4 h-72 w-72 rounded-full bg-emerald-400 blur-[100px]" />
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0">
+          <img
+            src={hero.url}
+            alt={hero.alt}
+            className="h-full w-full object-cover"
+            loading="eager"
+            fetchPriority="high"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0b1f3a]/95 via-[#0b1f3a]/85 to-[#0b1f3a]/55" />
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
