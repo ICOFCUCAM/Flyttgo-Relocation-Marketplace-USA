@@ -26,6 +26,30 @@ export async function listRoles(): Promise<BosRole[]> {
   return (data as BosRole[]) ?? [];
 }
 
+/**
+ * Resolve a user's auth.users id from their email or phone. Used by
+ * the SuperAdmin assign-role dialog so non-IT operators don't have
+ * to paste UUIDs. Returns null when no profile matches; throws when
+ * Supabase itself errors. Queries are case-insensitive on email and
+ * tolerant of whitespace on both fields.
+ */
+export async function findUserIdByContact(args: {
+  email?: string | null;
+  phone?: string | null;
+}): Promise<string | null> {
+  const email = args.email?.trim().toLowerCase() || null;
+  const phone = args.phone?.trim() || null;
+  if (!email && !phone) return null;
+
+  let query = supabase.from('profiles').select('user_id').limit(1);
+  if (email) query = query.ilike('email', email);
+  if (phone) query = query.eq('phone', phone);
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data && data.length > 0 ? (data[0] as { user_id: string }).user_id : null;
+}
+
 export async function listRolePermissions(): Promise<{ role_id: string; permission: string }[]> {
   const { data, error } = await supabase.from('bos_role_permissions').select('role_id, permission');
   if (error) return [];

@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { UserPlus, X } from 'lucide-react';
 import {
   listRoles, listUserRoles, listRolePermissions,
-  assignRole, revokeRole,
+  assignRole, revokeRole, findUserIdByContact,
 } from '../services/rbac-service';
 import { useBackofficeAuth } from '../rbac/useBackofficeAuth';
 import { PERMISSIONS, ROLE_LABELS } from '../rbac/permissions';
@@ -133,15 +133,36 @@ export default function SuperAdminPage() {
 function AssignRoleDialog({
   roleIds, onClose, onAssigned,
 }: { roleIds: string[]; onClose: () => void; onAssigned: () => void }) {
+  const [mode,   setMode]   = useState<'email' | 'phone' | 'userId'>('email');
+  const [email,  setEmail]  = useState('');
+  const [phone,  setPhone]  = useState('');
   const [userId, setUserId] = useState('');
   const [roleId, setRoleId] = useState(roleIds[0] ?? 'support');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const [busy,   setBusy]   = useState(false);
+  const [error,  setError]  = useState('');
+
+  /* Disable the Assign button until enough is filled in. */
+  const ready =
+    (mode === 'email'  && !!email.trim()) ||
+    (mode === 'phone'  && !!phone.trim()) ||
+    (mode === 'userId' && !!userId.trim());
 
   async function submit() {
     setBusy(true); setError('');
     try {
-      await assignRole({ userId: userId.trim(), roleId });
+      let resolvedUserId = userId.trim();
+      if (mode !== 'userId') {
+        /* Resolve email or phone → user_id via the profiles table.
+         * Surfacing a clear "no match" beats letting Supabase return
+         * a foreign-key error a couple of network hops later. */
+        const found = await findUserIdByContact({
+          email: mode === 'email' ? email : null,
+          phone: mode === 'phone' ? phone : null,
+        });
+        if (!found) throw new Error('No user matches that email or phone.');
+        resolvedUserId = found;
+      }
+      await assignRole({ userId: resolvedUserId, roleId });
       onAssigned();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed');
@@ -153,12 +174,73 @@ function AssignRoleDialog({
     <div className="fixed inset-0 z-40 bg-slate-900/50 flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
         <h2 className="text-lg font-extrabold mb-1 tracking-tight">Assign role</h2>
-        <p className="text-xs text-slate-500 mb-4">Paste the user's auth.users id (UUID).</p>
+        <p className="text-xs text-slate-500 mb-4">
+          Look up by email or phone — we'll resolve the user automatically.
+          Use User id only if you already have the auth.users UUID.
+        </p>
+
+        {/* Mode tabs — keeps the dialog one-mode-at-a-time so a single
+         *  field collects what we actually need. */}
+        <div className="flex gap-1 mb-3 text-xs font-bold border-b border-slate-200">
+          {(['email', 'phone', 'userId'] as const).map(m => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              className={`px-3 py-2 -mb-px border-b-2 transition ${
+                mode === m
+                  ? 'border-amber-400 text-amber-700'
+                  : 'border-transparent text-slate-500 hover:text-slate-700'
+              }`}
+              type="button"
+            >
+              {m === 'userId' ? 'User id' : m.charAt(0).toUpperCase() + m.slice(1)}
+            </button>
+          ))}
+        </div>
+
         <div className="space-y-3 text-sm">
-          <label className="block">
-            <span className="text-xs font-bold text-slate-700 mb-1 block">User id</span>
-            <input value={userId} onChange={e => setUserId(e.target.value)} placeholder="00000000-0000-0000-0000-000000000000" className="w-full border border-slate-200 rounded-md px-3 py-2 font-mono text-xs" />
-          </label>
+          {mode === 'email' && (
+            <label className="block">
+              <span className="text-xs font-bold text-slate-700 mb-1 block">Email</span>
+              <input
+                type="email"
+                autoFocus
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="user@example.com"
+                className="w-full border border-slate-200 rounded-md px-3 py-2"
+              />
+            </label>
+          )}
+          {mode === 'phone' && (
+            <label className="block">
+              <span className="text-xs font-bold text-slate-700 mb-1 block">Phone</span>
+              <input
+                type="tel"
+                autoFocus
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+                placeholder="+1 555 123 4567"
+                className="w-full border border-slate-200 rounded-md px-3 py-2"
+              />
+              <span className="text-[11px] text-slate-500 mt-1 block">
+                Match the format stored on the profile (with country code).
+              </span>
+            </label>
+          )}
+          {mode === 'userId' && (
+            <label className="block">
+              <span className="text-xs font-bold text-slate-700 mb-1 block">User id (UUID)</span>
+              <input
+                autoFocus
+                value={userId}
+                onChange={e => setUserId(e.target.value)}
+                placeholder="00000000-0000-0000-0000-000000000000"
+                className="w-full border border-slate-200 rounded-md px-3 py-2 font-mono text-xs"
+              />
+            </label>
+          )}
+
           <label className="block">
             <span className="text-xs font-bold text-slate-700 mb-1 block">Role</span>
             <select value={roleId} onChange={e => setRoleId(e.target.value)} className="w-full border border-slate-200 rounded-md px-3 py-2">
@@ -169,7 +251,7 @@ function AssignRoleDialog({
         </div>
         <div className="mt-5 flex justify-end gap-2">
           <button onClick={onClose} className="px-4 py-2 text-sm border border-slate-200 rounded-md">Cancel</button>
-          <button onClick={submit} disabled={busy || !userId} className="px-4 py-2 text-sm bg-amber-400 hover:bg-amber-300 text-slate-900 rounded-md font-bold disabled:opacity-50">
+          <button onClick={submit} disabled={busy || !ready} className="px-4 py-2 text-sm bg-amber-400 hover:bg-amber-300 text-slate-900 rounded-md font-bold disabled:opacity-50">
             {busy ? 'Assigning…' : 'Assign'}
           </button>
         </div>

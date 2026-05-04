@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react';
 import {
   LayoutDashboard, Globe, Wallet, BookOpenCheck, Receipt,
-  ShieldCheck, ScrollText, Flag, ShieldAlert, ArrowLeft,
+  ShieldCheck, ScrollText, Flag, ShieldAlert, ArrowLeft, LogOut,
 } from 'lucide-react';
 import { useApp } from '../../lib/store';
 import { useAuth } from '../../lib/auth';
@@ -49,7 +49,7 @@ interface Props {
 
 export default function BackofficeLayout({ activeSlug, onNavigate, children }: Props) {
   const { setPage } = useApp();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const auth = useBackofficeAuth();
 
   if (auth.loading) {
@@ -136,12 +136,20 @@ export default function BackofficeLayout({ activeSlug, onNavigate, children }: P
               Wildcard
             </span>
           )}
-          <button
-            onClick={() => setPage('home')}
-            className="mt-3 inline-flex items-center gap-1.5 text-white/65 hover:text-amber-300 transition"
-          >
-            <ArrowLeft size={12} /> Customer site
-          </button>
+          <div className="mt-3 flex flex-col gap-2">
+            <button
+              onClick={() => setPage('home')}
+              className="inline-flex items-center gap-1.5 text-white/65 hover:text-amber-300 transition"
+            >
+              <ArrowLeft size={12} /> Customer site
+            </button>
+            <button
+              onClick={async () => { await signOut(); setPage('home'); }}
+              className="inline-flex items-center gap-1.5 text-white/65 hover:text-rose-300 transition"
+            >
+              <LogOut size={12} /> Sign out
+            </button>
+          </div>
         </div>
       </aside>
 
