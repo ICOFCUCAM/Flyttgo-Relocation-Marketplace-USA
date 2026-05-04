@@ -46,6 +46,16 @@ export type Page =
    * query string so each corridor reads as a real SEO target.
    * pathToPage prefix-matches /corridor/. */
   | 'corridor'
+  /* Expansion-country shopfronts — first wave + second wave. Each
+   * is a rollout-status shopfront (booking widget hidden until the
+   * country's payment + address autocomplete are wired). See
+   * src/lib/expansion-cities.ts for the registry. */
+  | 'market-nl' | 'market-se' | 'market-es' | 'market-it' | 'market-pl'
+  | 'market-dk' | 'market-be' | 'market-at' | 'market-ch' | 'market-cz'
+  /* Strategic-city SEO landing page — /moving-<slug>. Slug is
+   * looked up against ANCHOR_CITIES; pathToPage prefix-matches
+   * /moving-. */
+  | 'moving-city'
   /* US pricing transparency landing page. */
   | 'pricing'
   /* Provider-facing pricing settings (driver portal). */

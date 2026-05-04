@@ -55,6 +55,11 @@ const MarketGermanyPage  = lazy(() => import('../pages/markets/GermanyPage'));
 const MarketFrancePage   = lazy(() => import('../pages/markets/FrancePage'));
 const MarketUKPage       = lazy(() => import('../pages/markets/UKPage'));
 const MarketNorwayPage   = lazy(() => import('../pages/markets/NorwayPage'));
+/* Expansion-country shopfronts (Phase 13). Each is a rollout-status
+ * shopfront; the underlying template reads from EXPANSION_COUNTRIES
+ * keyed by country code, so we don't need a wrapper file per country. */
+const ExpansionCountryPage = lazy(() => import('./global/ExpansionCountryPage'));
+const MovingCityPage       = lazy(() => import('../pages/MovingCityPage'));
 const ReferPage          = lazy(() => import('../pages/ReferPage'));
 const ProviderProfilePage = lazy(() => import('../pages/ProviderProfilePage'));
 const ProvidersDirectoryPage = lazy(() => import('../pages/ProvidersDirectoryPage'));
@@ -170,7 +175,7 @@ export default function AppLayout() {
    * show it on customer-discovery surfaces (home, country pages,
    * marketplace, how-it-works). Suppressed on dashboards, auth, and
    * payment surfaces where it would distract. */
-  const showTicker = ['home','marketplace','how-it-works','providers','cities','enterprise-relocation','partners','about','universities','market-us','market-canada','market-germany','market-france','market-uk','market-norway','refer','provider-profile','providers-directory','compare','service-category','pricing','provider-requirements','government-programs','ngo-deployment','pilot-deployment-programs','vendor-pack','procurement-rfp','deployment-regions','capability-brief'].includes(currentPage);
+  const showTicker = ['home','marketplace','how-it-works','providers','cities','enterprise-relocation','partners','about','universities','market-us','market-canada','market-germany','market-france','market-uk','market-norway','market-nl','market-se','market-es','market-it','market-pl','market-dk','market-be','market-at','market-ch','market-cz','moving-city','refer','provider-profile','providers-directory','compare','service-category','pricing','provider-requirements','government-programs','ngo-deployment','pilot-deployment-programs','vendor-pack','procurement-rfp','deployment-regions','capability-brief'].includes(currentPage);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -223,6 +228,17 @@ export default function AppLayout() {
       case 'market-france':          return <MarketFrancePage />;
       case 'market-uk':              return <MarketUKPage />;
       case 'market-norway':          return <MarketNorwayPage />;
+      case 'market-nl':              return <ExpansionCountryPage code="nl" />;
+      case 'market-se':              return <ExpansionCountryPage code="se" />;
+      case 'market-es':              return <ExpansionCountryPage code="es" />;
+      case 'market-it':              return <ExpansionCountryPage code="it" />;
+      case 'market-pl':              return <ExpansionCountryPage code="pl" />;
+      case 'market-dk':              return <ExpansionCountryPage code="dk" />;
+      case 'market-be':              return <ExpansionCountryPage code="be" />;
+      case 'market-at':              return <ExpansionCountryPage code="at" />;
+      case 'market-ch':              return <ExpansionCountryPage code="ch" />;
+      case 'market-cz':              return <ExpansionCountryPage code="cz" />;
+      case 'moving-city':            return <MovingCityPage />;
       case 'refer':                  return <ReferPage />;
       case 'provider-profile':       return <ProviderProfilePage />;
       case 'providers-directory':    return <ProvidersDirectoryPage />;

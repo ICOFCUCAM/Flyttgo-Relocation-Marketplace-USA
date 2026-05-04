@@ -82,6 +82,25 @@ const PAGE_TO_PATH: Record<Page, string> = {
   'market-uk':               '/uk',
   'market-norway':           '/norway',
 
+  /* Expansion-country shopfronts (Phase 13). Each is a rollout-status
+   * shopfront — booking widget hidden until the country's payment +
+   * address autocomplete are wired. See src/lib/expansion-cities.ts. */
+  'market-nl':               '/market-nl',
+  'market-se':               '/market-se',
+  'market-es':               '/market-es',
+  'market-it':               '/market-it',
+  'market-pl':               '/market-pl',
+  'market-dk':               '/market-dk',
+  'market-be':               '/market-be',
+  'market-at':               '/market-at',
+  'market-ch':               '/market-ch',
+  'market-cz':               '/market-cz',
+
+  /* Strategic-city SEO landing root. Live navigations push the full
+   * /moving-<slug> URL via history.pushState; pathToPage resolves any
+   * `/moving-…` path to this Page id. */
+  'moving-city':             '/moving',
+
   /* Referral program landing. */
   'refer':                   '/refer',
 
@@ -170,6 +189,17 @@ const PAGE_TITLES: Record<Page, string> = {
   'market-france':            'France Moves & Logistics · FlyttGo Global',
   'market-uk':                'United Kingdom Moves & Logistics · FlyttGo Global',
   'market-norway':            'Norway Moves & Logistics · FlyttGo Global',
+  'market-nl':                'Netherlands Moves & Logistics · FlyttGo Global',
+  'market-se':                'Sweden Moves & Logistics · FlyttGo Global',
+  'market-es':                'Spain Moves & Logistics · FlyttGo Global',
+  'market-it':                'Italy Moves & Logistics · FlyttGo Global',
+  'market-pl':                'Poland Moves & Logistics · FlyttGo Global',
+  'market-dk':                'Denmark Moves & Logistics · FlyttGo Global',
+  'market-be':                'Belgium Moves & Logistics · FlyttGo Global',
+  'market-at':                'Austria Moves & Logistics · FlyttGo Global',
+  'market-ch':                'Switzerland Moves & Logistics · FlyttGo Global',
+  'market-cz':                'Czech Republic Moves & Logistics · FlyttGo Global',
+  'moving-city':              'Moving services · FlyttGo Global',
   'refer':                    'Give £25, get £25 · FlyttGo referrals',
   'provider-profile':         'Provider profile · FlyttGo Global',
   'providers-directory':      'Browse verified providers · FlyttGo Global',
@@ -262,6 +292,28 @@ const PAGE_DESCRIPTIONS: Record<Page, string> = {
     "United Kingdom moves & logistics — Goods Vehicle Operator Licence carrier matching, moving labor, packing, storage, and enterprise relocation across the UK marketplace.",
   'market-norway':
     "Norway moves & logistics — flytteselskap carrier matching, moving labor, packing, storage, and corporate flytting coordination across the Norwegian marketplace.",
+  'market-nl':
+    "Netherlands moves & logistics — verhuisbedrijf carrier matching, Benelux corridor coordination, packing, storage, and corporate relocation across the Dutch marketplace.",
+  'market-se':
+    "Sweden moves & logistics — flyttfirma carrier matching, Nordic corridor coordination, packing, storage, and corporate flytt across the Swedish marketplace.",
+  'market-es':
+    "Spain moves & logistics — empresa de mudanzas carrier matching, Iberian corridor coordination, packing, storage, and corporate relocation across the Spanish marketplace.",
+  'market-it':
+    "Italy moves & logistics — impresa di traslochi carrier matching, Alpine + Mediterranean corridor coordination, packing, storage, and corporate trasloco across the Italian marketplace.",
+  'market-pl':
+    "Poland moves & logistics — firma przeprowadzkowa carrier matching, Central-Europe corridor coordination, packing, storage, and corporate przeprowadzki across the Polish marketplace.",
+  'market-dk':
+    "Denmark moves & logistics — flyttefirma carrier matching, Øresund corridor coordination, packing, storage, and corporate flytning across the Danish marketplace.",
+  'market-be':
+    "Belgium moves & logistics — verhuisfirma / société de déménagement carrier matching, EU-capital corridor coordination, packing, storage, and corporate relocation across the Belgian marketplace.",
+  'market-at':
+    "Austria moves & logistics — Umzugsunternehmen carrier matching, DACH + Central-Europe corridor coordination, packing, storage, and corporate Umzug across the Austrian marketplace.",
+  'market-ch':
+    "Switzerland moves & logistics — Umzugsfirma / entreprise de déménagement carrier matching, DACH + Alpine corridor coordination, packing, storage, and corporate relocation across the Swiss marketplace.",
+  'market-cz':
+    "Czech Republic moves & logistics — stěhovací firma carrier matching, Central-Europe corridor coordination, packing, storage, and corporate stěhování across the Czech marketplace.",
+  'moving-city':
+    "City-specific FlyttGo relocation services — verified local providers, transparent pricing, cross-border corridor connections, and escrow protection on every move.",
   'refer':
     "Invite a friend to FlyttGo — they get £25 off their first move, you get £25 in account credit when they complete it. Share your code by link, WhatsApp, email or QR.",
   'provider-profile':
@@ -461,6 +513,13 @@ export function pathToPage(path: string): Page {
    * not-found because there is no corridor index page. */
   if (normalised.startsWith('/corridor/') && normalised.length > '/corridor/'.length) {
     return 'corridor';
+  }
+  /* Strategic-city landing pages: /moving-<slug> resolves to the
+   * moving-city page; MovingCityPage reads the slug from
+   * window.location.pathname and looks it up in ANCHOR_CITIES. The
+   * bare /moving keeps mapping to the moving-city listing. */
+  if (normalised.startsWith('/moving-') && normalised.length > '/moving-'.length) {
+    return 'moving-city';
   }
   /* Unknown paths resolve to 'not-found' rather than silently
    * serving the homepage. NotFoundPage sets robots=noindex so

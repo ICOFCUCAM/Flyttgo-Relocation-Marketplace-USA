@@ -333,6 +333,93 @@ order.
 3. Sweep emerald → amber/ink unless the use is a legitimate success/verified state
 4. Audit typography hierarchy against `<MarketplaceBanner>`'s heading sizes (5xl-7xl extrabold tracking-tight leading-[1.05]) so headings on body sections match or read as a deliberate step down
 
+## 12. Geographic expansion — four-level rollout architecture
+
+The marketplace expands by **registry of intent** first, then by
+**provider density** — Google indexes the SEO surface immediately,
+real bookings activate as the supply side fills in.
+
+### Level 1 — Country activation (manual decision)
+
+A country comes online when FlyttGo Technologies Group registers it
+in `src/lib/expansion-cities.ts::EXPANSION_COUNTRIES`. Existing live
+markets (US, CA, DE, FR, UK, NO) keep their bespoke `pages/markets/*`
+pages. Expansion countries (NL, SE, ES, IT, PL · DK, BE, AT, CH, CZ)
+share the rollout-status `<ExpansionCountryPage code="…">` template.
+
+A country is **first-wave** (NL · SE · ES · IT · PL) or **second-wave**
+(DK · BE · AT · CH · CZ); both ship URLs + SEO immediately, but
+first-wave activation is prioritized for compliance + payment-rail
+work.
+
+### Level 2 — Auto city activation (≥1 provider)
+
+Each country ships **5 designated anchor cities** in
+`ANCHOR_CITIES`. They're chosen for:
+1. Maximum relocation demand
+2. Maximum provider-availability probability
+3. Cross-border corridor connectivity
+4. Logistics network density
+5. University / corporate flow
+
+A city's status auto-promotes against live provider counts:
+
+| Threshold | Status | Effect |
+|-----------|--------|--------|
+| 0         | `inactive`  | Waitlist only — landing page exposes provider-acquisition CTA |
+| ≥1        | `active`    | "Activating" pill — booking widget shown, low dispatch priority |
+| ≥3        | `promoted`  | "Live · accepting bookings" — qualifies for SEO landing-page exposure |
+| ≥10       | `anchor`    | Top-of-marketplace dispatch priority + permanent SEO anchor |
+
+`computeCityStatus(city, providerCount)` in
+`src/lib/expansion-rollout.ts` is the canonical promotion function.
+
+### Level 3 — Strategic city landing pages
+
+Anchor cities (`anchorFlag === true`) lock to `status: 'anchor'`
+regardless of density so SEO + dispatch don't regress when transient
+churn drops their provider count. Each anchor city ships a
+`/moving-<slug>` SEO landing page rendered by
+`src/pages/MovingCityPage.tsx`.
+
+### Level 4 — Cross-border corridor intelligence
+
+`src/lib/cross-border-corridors.ts` registers high-frequency
+international relocation routes (Amsterdam ↔ Brussels, Stockholm ↔
+Oslo, Madrid ↔ Barcelona, Milan ↔ Zürich, Warsaw ↔ Vienna, Prague ↔
+Berlin, Copenhagen ↔ Stockholm, etc.). Each corridor surfaces on
+both endpoints' city landing pages and feeds the existing
+`/corridor/<country>/<slug>` route.
+
+### Routing
+
+| Page id        | URL                       | Purpose |
+|----------------|---------------------------|---------|
+| `market-{cc}`  | `/market-nl` … `/market-cz` | Expansion-country shopfront (10 codes) |
+| `moving-city`  | `/moving-<slug>`          | Anchor-city SEO landing |
+| `corridor`     | `/corridor/<cc>/<slug>`   | Cross-border corridor landing |
+
+`src/lib/pageRoutes.ts` adds prefix-matching for `/moving-` so any
+slug under that prefix resolves to the `moving-city` Page id, where
+`MovingCityPage` reads the slug from `window.location.pathname` and
+looks it up against `ANCHOR_CITIES`.
+
+### Deployment rollout sequence
+
+1. **Land routing + SEO** (this commit) — registry of intent, all 10
+   country shopfronts + 50 city landing pages indexable, sitemap
+   updated.
+2. **Wire payment rails** per first-wave country — extend
+   `COUNTRY_PAYMENT` in `src/lib/constants.ts` (NL, SE, ES, IT, PL).
+3. **Wire address autocomplete** per first-wave country — add the
+   country to `GlobalAddressAutocomplete`'s scope table.
+4. **Provider-onboarding gating** — open driver onboarding to the
+   first-wave countries; second-wave stays waitlisted.
+5. **Open booking widget** on country shopfronts as
+   `cityState.qualifiesForLanding` flips for at least one anchor city.
+6. **Repeat for second wave** once first-wave reaches anchor density
+   on at least 3 cities each.
+
 ## 10. The seams to know about
 
 - `src/lib/store.tsx` — single source of truth for current page id +
@@ -348,3 +435,16 @@ order.
 - `src/components/global/BookingShortcut.tsx` — the canonical
   country-scoped instant-quote widget. Mount it wherever you want a
   customer to start a booking; the rest of the flow is automatic.
+- `src/lib/expansion-cities.ts` — registry of 10 expansion countries
+  + 50 anchor cities. Adding a country / city = adding rows.
+- `src/lib/expansion-rollout.ts` — pure function module that maps
+  `(city, providerCount)` to the live `CityRolloutState`. Consumers
+  (page templates, dispatch matcher, sitemap generator) call
+  `computeCityStatus()` and get the canonical status back.
+- `src/lib/cross-border-corridors.ts` — registry of high-frequency
+  international corridors. Adding a corridor = adding a row.
+- `src/components/global/ExpansionCountryPage.tsx` — rollout-status
+  shopfront template for not-yet-onboarded markets. Booking widget
+  hidden until the country's payment + address autocomplete are wired.
+- `src/pages/MovingCityPage.tsx` — strategic-city SEO landing page
+  template. Reads the slug from the URL.
