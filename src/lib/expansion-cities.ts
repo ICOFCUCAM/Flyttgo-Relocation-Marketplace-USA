@@ -71,12 +71,12 @@ export interface ExpansionCountryProfile {
 
 export const EXPANSION_COUNTRIES: Record<ExpansionCountryCode, ExpansionCountryProfile> = {
   nl: { code: 'nl', name: 'Netherlands',     flag: '🇳🇱', localLabel: 'Nederland',         currency: 'EUR', locale: 'nl-NL', wave: 'first',  positioning: 'Marketplace activating in 2026 — anchor cities Amsterdam, Rotterdam, The Hague, Utrecht, Eindhoven.',                       compliance: 'Kiwa licensed verhuisbedrijven · BTW-registered transporteurs.',  activationWindow: '2026 Q2 — first wave' },
-  se: { code: 'se', name: 'Sweden',          flag: '🇸🇪', localLabel: 'Sverige',           currency: 'SEK', locale: 'sv-SE', wave: 'first',  positioning: 'Marketplace activating in 2026 — anchor cities Stockholm, Göteborg, Malmö, Uppsala, Lund.',                                  compliance: 'Yrkestrafiktillstånd · Transportstyrelsen-registered carriers.', activationWindow: '2026 Q2 — first wave' },
-  es: { code: 'es', name: 'Spain',           flag: '🇪🇸', localLabel: 'España',            currency: 'EUR', locale: 'es-ES', wave: 'first',  positioning: 'Marketplace activating in 2026 — anchor cities Madrid, Barcelona, Valencia, Sevilla, Bilbao.',                              compliance: 'Tarjeta de transporte · Ministerio de Transportes-registered carriers.', activationWindow: '2026 Q3 — first wave' },
+  se: { code: 'se', name: 'Sweden',          flag: '🇸🇪', localLabel: 'Sverige',           currency: 'SEK', locale: 'sv-SE', wave: 'first',  positioning: 'Marketplace activating in 2026 — anchor cities Stockholm, Göteborg, Malmö, Uppsala, Västerås.',                                  compliance: 'Yrkestrafiktillstånd · Transportstyrelsen-registered carriers.', activationWindow: '2026 Q2 — first wave' },
+  es: { code: 'es', name: 'Spain',           flag: '🇪🇸', localLabel: 'España',            currency: 'EUR', locale: 'es-ES', wave: 'first',  positioning: 'Marketplace activating in 2026 — anchor cities Madrid, Barcelona, Valencia, Sevilla, Málaga.',                              compliance: 'Tarjeta de transporte · Ministerio de Transportes-registered carriers.', activationWindow: '2026 Q3 — first wave' },
   it: { code: 'it', name: 'Italy',           flag: '🇮🇹', localLabel: 'Italia',            currency: 'EUR', locale: 'it-IT', wave: 'first',  positioning: 'Marketplace activating in 2026 — anchor cities Milano, Roma, Torino, Bologna, Firenze.',                                    compliance: 'Albo Nazionale Autotrasportatori-registered carriers.',          activationWindow: '2026 Q3 — first wave' },
   pl: { code: 'pl', name: 'Poland',          flag: '🇵🇱', localLabel: 'Polska',            currency: 'PLN', locale: 'pl-PL', wave: 'first',  positioning: 'Marketplace activating in 2026 — anchor cities Warszawa, Kraków, Wrocław, Gdańsk, Poznań.',                                 compliance: 'Licencja krajowa transportu drogowego · GITD-registered carriers.', activationWindow: '2026 Q3 — first wave' },
   dk: { code: 'dk', name: 'Denmark',         flag: '🇩🇰', localLabel: 'Danmark',           currency: 'DKK', locale: 'da-DK', wave: 'second', positioning: 'Second-wave marketplace — waitlisting providers across København, Aarhus, Odense, Aalborg, Esbjerg.',                       compliance: 'Vejtransportlov · Trafik-, Bygge- og Boligstyrelsen-registered.',  activationWindow: '2026 Q4 — second wave' },
-  be: { code: 'be', name: 'Belgium',         flag: '🇧🇪', localLabel: 'Belgique · België', currency: 'EUR', locale: 'fr-BE', wave: 'second', positioning: 'Second-wave marketplace — waitlisting providers across Brussels, Antwerp, Ghent, Liège, Bruges. Bilingual FR/NL coordination.', compliance: 'Vergunning vervoer voor eigen rekening · SPF-registered.',         activationWindow: '2026 Q4 — second wave' },
+  be: { code: 'be', name: 'Belgium',         flag: '🇧🇪', localLabel: 'Belgique · België', currency: 'EUR', locale: 'fr-BE', wave: 'second', positioning: 'Second-wave marketplace — waitlisting providers across Brussels, Antwerp, Ghent, Leuven, Liège. Bilingual FR/NL coordination.', compliance: 'Vergunning vervoer voor eigen rekening · SPF-registered.',         activationWindow: '2026 Q4 — second wave' },
   at: { code: 'at', name: 'Austria',         flag: '🇦🇹', localLabel: 'Österreich',        currency: 'EUR', locale: 'de-AT', wave: 'second', positioning: 'Second-wave marketplace — waitlisting providers across Wien, Graz, Linz, Salzburg, Innsbruck.',                              compliance: 'GüKG / KfG · WKO-registered.',                                     activationWindow: '2026 Q4 — second wave' },
   ch: { code: 'ch', name: 'Switzerland',     flag: '🇨🇭', localLabel: 'Schweiz · Suisse',  currency: 'CHF', locale: 'de-CH', wave: 'second', positioning: 'Second-wave marketplace — waitlisting providers across Zürich, Genève, Basel, Bern, Lausanne. DE/FR/IT trilingual coordination.', compliance: 'Strassenverkehrsamt / Bundesamt für Verkehr-registered.',          activationWindow: '2027 Q1 — second wave' },
   cz: { code: 'cz', name: 'Czech Republic',  flag: '🇨🇿', localLabel: 'Česko',             currency: 'CZK', locale: 'cs-CZ', wave: 'second', positioning: 'Second-wave marketplace — waitlisting providers across Praha, Brno, Ostrava, Plzeň, Liberec.',                                compliance: 'Koncese silniční dopravy · Ministerstvo dopravy-registered.',     activationWindow: '2027 Q1 — second wave' },
@@ -144,9 +144,9 @@ export const ANCHOR_CITIES: AnchorCity[] = [
   { slug: 'uppsala',    city: 'Uppsala',    country: 'se', status: 'active',   anchorFlag: false, dispatchPriority: 'medium', crossBorderCorridorFlag: false,
     paragraph: 'Uppsala University — Scandinavia\'s oldest, drives seasonal student-mobility peaks every September and June.',
     rationale: ['Uppsala University student flow', 'Stockholm-region commuter belt'] },
-  { slug: 'lund',       city: 'Lund',       country: 'se', status: 'active',   anchorFlag: false, dispatchPriority: 'medium', crossBorderCorridorFlag: false,
-    paragraph: 'Southern Sweden university anchor — Lund University + Skåne corporate relocation density.',
-    rationale: ['Lund University residence-hall flow', 'Skåne tech-corridor'] },
+  { slug: 'vasteras',   city: 'Västerås',   country: 'se', status: 'active',   anchorFlag: false, dispatchPriority: 'medium', crossBorderCorridorFlag: false,
+    paragraph: 'Lake Mälaren industrial anchor — ABB + automation-corporate relocation flow, Mälardalen University seasonal student moves.',
+    rationale: ['ABB + automation-corporate flow', 'Mälardalen University student flow', 'Stockholm-region commuter corridor'] },
 
   /* ── Spain ───────────────────────────────────────────────── */
   { slug: 'madrid',     city: 'Madrid',     country: 'es', status: 'anchor',   anchorFlag: true, dispatchPriority: 'high',   crossBorderCorridorFlag: false,
@@ -161,9 +161,9 @@ export const ANCHOR_CITIES: AnchorCity[] = [
   { slug: 'seville',    city: 'Sevilla',    country: 'es', status: 'active',   anchorFlag: false, dispatchPriority: 'medium', crossBorderCorridorFlag: false,
     paragraph: 'Andalucía relocation anchor — government + university density, Córdoba and Málaga corridor connector.',
     rationale: ['Andalucía government workforce', 'Universidad de Sevilla flow'] },
-  { slug: 'bilbao',     city: 'Bilbao',     country: 'es', status: 'active',   anchorFlag: false, dispatchPriority: 'medium', crossBorderCorridorFlag: true,
-    paragraph: 'Basque country anchor — cross-border corridor to Bordeaux + Toulouse (FR).',
-    rationale: ['Iberian-French corridor connector', 'Industrial relocation density'] },
+  { slug: 'malaga',     city: 'Málaga',     country: 'es', status: 'active',   anchorFlag: false, dispatchPriority: 'medium', crossBorderCorridorFlag: false,
+    paragraph: 'Costa del Sol relocation anchor — fast-growing tech + remote-worker influx, Málaga port logistics density, Andalucía corridor connector.',
+    rationale: ['Tech-hub remote-worker relocation surge', 'Port-of-Málaga logistics density', 'Costa del Sol expat + corporate flow'] },
 
   /* ── Italy ───────────────────────────────────────────────── */
   { slug: 'milan',      city: 'Milano',     country: 'it', status: 'anchor',   anchorFlag: true, dispatchPriority: 'high',   crossBorderCorridorFlag: true,
@@ -229,9 +229,9 @@ export const ANCHOR_CITIES: AnchorCity[] = [
   { slug: 'liege',      city: 'Liège',      country: 'be', status: 'active',   anchorFlag: false, dispatchPriority: 'medium', crossBorderCorridorFlag: true,
     paragraph: 'Wallonian anchor — corridor to Aachen (DE) + Maastricht (NL).',
     rationale: ['Tri-border corridor connector', 'Université de Liège flow'] },
-  { slug: 'bruges',     city: 'Bruges',     country: 'be', status: 'inactive', anchorFlag: false, dispatchPriority: 'low',    crossBorderCorridorFlag: false,
-    paragraph: 'West-Flanders waitlist tier — coastal-tourism + university density.',
-    rationale: ['College of Europe student flow'] },
+  { slug: 'leuven',     city: 'Leuven',     country: 'be', status: 'active',   anchorFlag: false, dispatchPriority: 'medium', crossBorderCorridorFlag: false,
+    paragraph: 'Flemish university + biotech anchor — KU Leuven flow, IMEC + life-sciences corporate density on the Brussels axis.',
+    rationale: ['KU Leuven student flow', 'IMEC + biotech corporate moves', 'Brussels-axis commuter corridor'] },
 
   /* ── Austria ─────────────────────────────────────────────── */
   { slug: 'vienna',     city: 'Wien',       country: 'at', status: 'anchor',   anchorFlag: true, dispatchPriority: 'high',   crossBorderCorridorFlag: true,

@@ -67,7 +67,7 @@ export default function MovingCityPage() {
   const state    = computeCityStatus(city, city.initialProviderCount ?? 0);
   const tone     = STATUS_TONE[state.status];
   const corridors = corridorsForCity(city.slug);
-  const hero     = heroForCity(city.slug);
+  const hero     = heroForCity(city.slug, city.city);
 
   return (
     <main className="bg-white text-slate-900">
