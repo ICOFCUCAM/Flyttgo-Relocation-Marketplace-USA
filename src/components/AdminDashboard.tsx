@@ -641,11 +641,16 @@ export default function AdminDashboard() {
       .select("id, document_type, file_url, verification_status, uploaded_at")
       .eq("driver_id", app.user_id)
       .order("uploaded_at", { ascending: true });
-    setAppDocuments(error || !data ? [] : data);
-  }
-
-  function getDocumentUrl(storagePath: string): string {
-    return supabase.storage.from("driver-documents").getPublicUrl(storagePath).data.publicUrl;
+    if (error || !data) { setAppDocuments([]); return; }
+    // driver-documents is a private bucket, so getPublicUrl() returns 404.
+    // Mint a 1-hour signed URL per file for the View button.
+    const withSigned = await Promise.all(data.map(async (doc: any) => {
+      const { data: signed } = await supabase.storage
+        .from("driver-documents")
+        .createSignedUrl(doc.file_url, 3600);
+      return { ...doc, signedUrl: signed?.signedUrl ?? null };
+    }));
+    setAppDocuments(withSigned);
   }
 
   if (loading || !profile || profile.role !== "admin") {
@@ -1193,12 +1198,16 @@ export default function AdminDashboard() {
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-sm font-medium text-gray-700">{DOCUMENT_TYPE_LABELS[doc.document_type] ?? doc.document_type}</div>
-                      <div className="text-xs text-gray-400">{new Date(doc.created_at).toLocaleDateString()}</div>
+                      <div className="text-xs text-gray-400">{doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString() : ""}</div>
                     </div>
                     <span className={`px-2 py-1 text-xs rounded font-medium ${doc.verification_status === "approved" ? "bg-green-100 text-green-700" : doc.verification_status === "rejected" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>{doc.verification_status ?? "pending"}</span>
                   </div>
                   <div className="flex gap-2">
-                    <a href={getDocumentUrl(doc.file_url)} target="_blank" rel="noopener noreferrer" className="bg-emerald-600 text-white px-3 py-1 text-xs rounded hover:bg-emerald-700 transition">View</a>
+                    {doc.signedUrl ? (
+                      <a href={doc.signedUrl} target="_blank" rel="noopener noreferrer" className="bg-emerald-600 text-white px-3 py-1 text-xs rounded hover:bg-emerald-700 transition">View</a>
+                    ) : (
+                      <span className="bg-gray-300 text-gray-500 px-3 py-1 text-xs rounded cursor-not-allowed" title="File missing in storage">View</span>
+                    )}
                     <button onClick={async () => { await supabase.from("driver_documents").update({ verification_status: "approved" }).eq("id", doc.id); loadApplicationDocuments(selectedApplication.id); }} className="bg-green-600 text-white px-2 py-1 text-xs rounded">Approve</button>
                     <button onClick={async () => { await supabase.from("driver_documents").update({ verification_status: "rejected" }).eq("id", doc.id); loadApplicationDocuments(selectedApplication.id); }} className="bg-red-600 text-white px-2 py-1 text-xs rounded">Reject</button>
                   </div>
