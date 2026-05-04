@@ -243,7 +243,10 @@ export default function Footer() {
        * "Activating" (expansion markets with rollout-status pages),
        * so every shopfront in pageRoutes.ts is reachable from the
        * footer without exploding the grid into a 7th column. */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8">
+      {/* lg:grid-cols-7 — Markets occupies 2 of those 7 tracks via
+       *  col-span-2 inside FooterMarketsColumn, so its inner 2-col
+       *  country grid has room without squeezing the other lanes. */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-8">
         <FooterColumn title="Customers"  items={CUSTOMERS}  onNav={go} />
         <FooterColumn title="Providers"  items={PROVIDERS}  onNav={go} />
         <FooterColumn title="Enterprise" items={ENTERPRISE} onNav={go} />
@@ -474,14 +477,19 @@ function FooterColumn({
  * who want a higher-level view.
  */
 function FooterMarketsColumn({ onNav }: { onNav: (p: Page) => void }) {
+  /* Both country lists render as a 2-column inner grid so the column
+   * doesn't tower over its neighbours (Customers, Providers, …). With
+   * 6 active + 10 activating, side-by-side wrapping cuts vertical
+   * footprint roughly in half — 3+3 active rows and 5+5 activating
+   * rows, instead of stacked 6 + 10. */
   return (
-    <div>
+    <div className="sm:col-span-2 lg:col-span-2">
       <p className="text-xs font-bold uppercase tracking-wider text-white/50 mb-4">Markets</p>
 
       <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-300/80 mb-2">
         Active
       </p>
-      <ul className="space-y-1.5 mb-5">
+      <ul className="grid grid-cols-2 gap-x-4 gap-y-1.5 mb-5">
         {MARKETS_ACTIVE.map((it) => (
           <li key={`${it.label}-${it.page}`}>
             <button
@@ -497,7 +505,7 @@ function FooterMarketsColumn({ onNav }: { onNav: (p: Page) => void }) {
       <p className="text-[10px] font-bold uppercase tracking-wider text-amber-300/80 mb-2">
         Activating
       </p>
-      <ul className="space-y-1.5 mb-5">
+      <ul className="grid grid-cols-2 gap-x-4 gap-y-1.5 mb-5">
         {MARKETS_ACTIVATING.map((it) => (
           <li key={`${it.label}-${it.page}`}>
             <button
@@ -513,7 +521,7 @@ function FooterMarketsColumn({ onNav }: { onNav: (p: Page) => void }) {
       <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">
         Discover
       </p>
-      <ul className="space-y-1.5">
+      <ul className="grid grid-cols-2 gap-x-4 gap-y-1.5">
         {MARKETS_DISCOVER.map((it) => (
           <li key={`${it.label}-${it.page}`}>
             <button
