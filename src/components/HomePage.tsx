@@ -1,6 +1,7 @@
 import { Star, ShieldCheck, Truck, Clock, BadgeCheck, MapPin, Users, MessageCircle } from 'lucide-react';
 import { useApp } from '../lib/store';
 import type { Page, BookingCountry } from '../lib/store';
+import { isoToMarketPage } from '../lib/pageRoutes';
 import { AnimatedNumber } from './ds';
 import { track } from '../lib/analytics';
 import PressStrip from './global/PressStrip';
@@ -171,7 +172,7 @@ export default function HomePage() {
               {SHOPFRONTS.map(s => (
                 <button
                   key={s.iso}
-                  onClick={() => { track('country_tile_clicked', { country: s.iso, surface: 'home-hero' }); go(`market-${s.iso}` as Page); }}
+                  onClick={() => { track('country_tile_clicked', { country: s.iso, surface: 'home-hero' }); go(isoToMarketPage(s.iso)); }}
                   className="group flex flex-col items-center justify-center gap-2 py-4 rounded-xl border border-transparent hover:border-amber-300 hover:bg-amber-50 hover:shadow-[0_8px_24px_-8px_rgba(245,158,11,0.55)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
                   aria-label={`Go to ${s.name} marketplace`}
                 >
@@ -335,7 +336,7 @@ export default function HomePage() {
             {SHOPFRONTS.map(s => (
               <button
                 key={s.iso}
-                onClick={() => { track('country_tile_clicked', { country: s.iso, surface: 'home' }); go(`market-${s.iso}` as Page); }}
+                onClick={() => { track('country_tile_clicked', { country: s.iso, surface: 'home' }); go(isoToMarketPage(s.iso)); }}
                 className="group relative text-left bg-white rounded-2xl overflow-hidden border border-slate-200 hover:border-amber-300 hover:shadow-2xl transition-all hover:-translate-y-1"
               >
                 <div className="relative h-52 overflow-hidden">
@@ -522,7 +523,7 @@ export default function HomePage() {
             {SHOPFRONTS.map(s => (
               <button
                 key={s.iso}
-                onClick={() => { track('country_tile_clicked', { country: s.iso, surface: 'home' }); go(`market-${s.iso}` as Page); }}
+                onClick={() => { track('country_tile_clicked', { country: s.iso, surface: 'home' }); go(isoToMarketPage(s.iso)); }}
                 className="inline-flex items-center gap-2 bg-white hover:bg-slate-900 hover:text-white px-5 py-3 rounded-xl text-sm font-bold shadow-lg transition"
               >
                 <span aria-hidden>{s.flag}</span>

@@ -532,3 +532,40 @@ export function pathToPage(path: string): Page {
 export function pageTitle(page: Page): string {
   return PAGE_TITLES[page] ?? 'FlyttGo Global';
 }
+
+/**
+ * Country ISO / code → Page id for the country's marketplace
+ * shopfront.
+ *
+ * Critical mapping: legacy markets use country *names* in their Page
+ * id (`market-canada`, `market-germany`, …) while expansion markets
+ * use the ISO code directly (`market-nl`, `market-se`, …). Hard-
+ * coding a single template (e.g. `market-${iso}`) breaks on five of
+ * the six legacy markets — use this helper at every call site.
+ *
+ * Accepts BookingCountry (`us|ca|de|fr|gb|no`) and ExpansionCountryCode
+ * (`nl|se|es|it|pl|dk|be|at|ch|cz`). Returns 'home' for anything else
+ * so callers don't accidentally land on /not-found.
+ */
+const ISO_TO_MARKET_PAGE: Record<string, Page> = {
+  us: 'market-us',
+  ca: 'market-canada',
+  de: 'market-germany',
+  fr: 'market-france',
+  gb: 'market-uk',
+  no: 'market-norway',
+  nl: 'market-nl',
+  se: 'market-se',
+  es: 'market-es',
+  it: 'market-it',
+  pl: 'market-pl',
+  dk: 'market-dk',
+  be: 'market-be',
+  at: 'market-at',
+  ch: 'market-ch',
+  cz: 'market-cz',
+};
+
+export function isoToMarketPage(iso: string): Page {
+  return ISO_TO_MARKET_PAGE[iso.toLowerCase()] ?? 'home';
+}

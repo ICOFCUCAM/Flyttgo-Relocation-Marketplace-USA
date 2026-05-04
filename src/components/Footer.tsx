@@ -22,47 +22,93 @@ interface LinkItem { label: string; page: Page; }
 
 const CUSTOMERS: LinkItem[] = [
   { label: 'How booking works',     page: 'how-it-works' },
+  { label: 'Marketplace',           page: 'marketplace' },
+  { label: 'Browse providers',      page: 'providers-directory' },
+  { label: 'Compare providers',     page: 'compare' },
+  { label: 'Request a quote',       page: 'request-quote' },
   { label: 'Pricing guide',         page: 'pricing' },
-  { label: 'Insurance coverage',    page: 'liability' },
-  { label: 'Escrow protection',     page: 'safety' },
+  { label: 'Refer a friend',        page: 'refer' },
+  { label: 'Track a move',          page: 'tracking' },
   { label: 'FAQ',                   page: 'faq' },
+  { label: 'Help center',           page: 'help' },
+  { label: 'Contact',               page: 'contact' },
 ];
 
 const PROVIDERS: LinkItem[] = [
-  { label: 'Earnings simulator',    page: 'providers' },
-  { label: 'Join FlyttGo',          page: 'driver-onboarding' },
-  { label: 'Subscription tiers',    page: 'subscriptions' },
-  { label: 'Provider dashboard',    page: 'driver-portal' },
+  { label: 'For providers',          page: 'providers' },
+  { label: 'Provider requirements',  page: 'provider-requirements' },
+  { label: 'Join FlyttGo',           page: 'driver-onboarding' },
+  { label: 'Application status',     page: 'driver-application-status' },
+  { label: 'Subscription tiers',     page: 'subscriptions' },
+  { label: 'Provider dashboard',     page: 'driver-portal' },
+  { label: 'Provider terms',         page: 'driver-terms' },
 ];
 
 const ENTERPRISE: LinkItem[] = [
   { label: 'Corporate relocation',   page: 'enterprise-relocation' },
+  { label: 'Bulk booking',           page: 'bulk-booking' },
+  { label: 'Recurring deliveries',   page: 'recurring-deliveries' },
+  { label: 'Invoice & billing',      page: 'invoice-billing' },
+  { label: 'API access',             page: 'corporate-api-access' },
   { label: 'Universities',           page: 'universities' },
-  { label: 'Municipal relocation',   page: 'pilot-deployment-programs' },
-  { label: 'Government mobility',    page: 'government-programs' },
+  { label: 'Government programs',    page: 'government-programs' },
+  { label: 'NGO deployment',         page: 'ngo-deployment' },
+  { label: 'Pilot programs',         page: 'pilot-deployment-programs' },
+  { label: 'Vendor pack',            page: 'vendor-pack' },
+  { label: 'Procurement RFP',        page: 'procurement-rfp' },
+  { label: 'Capability brief',       page: 'capability-brief' },
 ];
 
-const COUNTRIES: LinkItem[] = [
-  { label: 'USA',     page: 'market-us' },
-  { label: 'Canada',  page: 'market-canada' },
-  { label: 'UK',      page: 'market-uk' },
-  { label: 'France',  page: 'market-france' },
-  { label: 'Germany', page: 'market-germany' },
-  { label: 'Norway',  page: 'market-norway' },
+/** Active markets — the six legacy shopfronts with full booking
+ *  + payment + autocomplete wiring. Visualized first in the
+ *  Markets footer column. */
+const MARKETS_ACTIVE: LinkItem[] = [
+  { label: '🇺🇸 USA',         page: 'market-us' },
+  { label: '🇨🇦 Canada',      page: 'market-canada' },
+  { label: '🇬🇧 UK',          page: 'market-uk' },
+  { label: '🇫🇷 France',      page: 'market-france' },
+  { label: '🇩🇪 Germany',     page: 'market-germany' },
+  { label: '🇳🇴 Norway',      page: 'market-norway' },
+];
+
+/** Activating markets — first + second wave expansion shopfronts.
+ *  Booking widget hidden until each country's payment + address
+ *  autocomplete are wired; rollout-status surface in the meantime. */
+const MARKETS_ACTIVATING: LinkItem[] = [
+  { label: '🇳🇱 Netherlands',     page: 'market-nl' },
+  { label: '🇸🇪 Sweden',          page: 'market-se' },
+  { label: '🇪🇸 Spain',           page: 'market-es' },
+  { label: '🇮🇹 Italy',           page: 'market-it' },
+  { label: '🇵🇱 Poland',          page: 'market-pl' },
+  { label: '🇩🇰 Denmark',         page: 'market-dk' },
+  { label: '🇧🇪 Belgium',         page: 'market-be' },
+  { label: '🇦🇹 Austria',         page: 'market-at' },
+  { label: '🇨🇭 Switzerland',     page: 'market-ch' },
+  { label: '🇨🇿 Czech Republic',  page: 'market-cz' },
+];
+
+/** Cross-market discovery surfaces — broader than a single country. */
+const MARKETS_DISCOVER: LinkItem[] = [
+  { label: 'All markets',         page: 'cities' },
+  { label: 'Deployment regions',  page: 'deployment-regions' },
 ];
 
 const PLATFORM: LinkItem[] = [
-  { label: 'About FlyttGo',  page: 'about' },
-  { label: 'Careers',        page: 'careers' },
-  { label: 'Press',          page: 'press' },
-  { label: 'Partners',       page: 'partners' },
+  { label: 'About FlyttGo',     page: 'about' },
+  { label: 'Careers',           page: 'careers' },
+  { label: 'Press',             page: 'press' },
+  { label: 'Partners',          page: 'partners' },
+  { label: 'Sustainability',    page: 'sustainability' },
+  { label: 'Safety',            page: 'safety' },
+  { label: 'Compliance',        page: 'compliance' },
 ];
 
 const LEGAL: LinkItem[] = [
-  { label: 'Terms',            page: 'terms' },
-  { label: 'Privacy',          page: 'privacy' },
-  { label: 'Escrow policy',    page: 'safety' },
-  { label: 'Insurance terms',  page: 'liability' },
+  { label: 'Terms',             page: 'terms' },
+  { label: 'Privacy',           page: 'privacy' },
+  { label: 'Liability',         page: 'liability' },
+  { label: 'Provider terms',    page: 'driver-terms' },
+  { label: 'File a dispute',    page: 'dispute' },
 ];
 
 export default function Footer() {
@@ -153,12 +199,18 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* ── Sitemap — 6-column platform navigation hub ─────────── */}
+      {/* ── Sitemap — 6-column platform navigation hub ───────────
+       *
+       * The Markets column carries 16 country shopfronts grouped
+       * into "Active" (legacy markets with full booking) and
+       * "Activating" (expansion markets with rollout-status pages),
+       * so every shopfront in pageRoutes.ts is reachable from the
+       * footer without exploding the grid into a 7th column. */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8">
         <FooterColumn title="Customers"  items={CUSTOMERS}  onNav={go} />
         <FooterColumn title="Providers"  items={PROVIDERS}  onNav={go} />
         <FooterColumn title="Enterprise" items={ENTERPRISE} onNav={go} />
-        <FooterColumn title="Countries"  items={COUNTRIES}  onNav={go} />
+        <FooterMarketsColumn onNav={go} />
         <FooterColumn title="Legal"      items={LEGAL}      onNav={go} />
         <FooterColumn title="Platform"   items={PLATFORM}   onNav={go} />
       </div>
@@ -199,6 +251,69 @@ function FooterColumn({
       <p className="text-xs font-bold uppercase tracking-wider text-white/50 mb-4">{title}</p>
       <ul className="space-y-2">
         {items.map((it) => (
+          <li key={`${it.label}-${it.page}`}>
+            <button
+              onClick={() => onNav(it.page)}
+              className="text-sm text-white/75 hover:text-amber-300 transition text-left"
+            >
+              {it.label}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/**
+ * Markets footer column — surfaces every country shopfront grouped
+ * by rollout status. Active markets first (six legacy shopfronts),
+ * then Activating markets (ten expansion shopfronts), then a thin
+ * Discover row pointing at /cities + /deployment-regions for users
+ * who want a higher-level view.
+ */
+function FooterMarketsColumn({ onNav }: { onNav: (p: Page) => void }) {
+  return (
+    <div>
+      <p className="text-xs font-bold uppercase tracking-wider text-white/50 mb-4">Markets</p>
+
+      <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-300/80 mb-2">
+        Active
+      </p>
+      <ul className="space-y-1.5 mb-5">
+        {MARKETS_ACTIVE.map((it) => (
+          <li key={`${it.label}-${it.page}`}>
+            <button
+              onClick={() => onNav(it.page)}
+              className="text-sm text-white/75 hover:text-amber-300 transition text-left"
+            >
+              {it.label}
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      <p className="text-[10px] font-bold uppercase tracking-wider text-amber-300/80 mb-2">
+        Activating
+      </p>
+      <ul className="space-y-1.5 mb-5">
+        {MARKETS_ACTIVATING.map((it) => (
+          <li key={`${it.label}-${it.page}`}>
+            <button
+              onClick={() => onNav(it.page)}
+              className="text-sm text-white/65 hover:text-amber-300 transition text-left"
+            >
+              {it.label}
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">
+        Discover
+      </p>
+      <ul className="space-y-1.5">
+        {MARKETS_DISCOVER.map((it) => (
           <li key={`${it.label}-${it.page}`}>
             <button
               onClick={() => onNav(it.page)}

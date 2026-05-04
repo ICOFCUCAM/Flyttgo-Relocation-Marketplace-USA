@@ -1,5 +1,6 @@
 import React, { Suspense, lazy, useEffect } from 'react';
 import { useApp } from '../lib/store';
+import { isoToMarketPage } from '../lib/pageRoutes';
 import Header from './Header';
 import AuthModal from './AuthModal';
 
@@ -143,8 +144,11 @@ export default function AppLayout() {
       window.history.replaceState({}, '', cleanedPath);
 
       /* Land on the matching country shopfront — the imported quote
-       * sits in MyBookings → Saved quotes ready to resume. */
-      setPage(`market-${payload.country}` as typeof currentPage);
+       * sits in MyBookings → Saved quotes ready to resume. Use
+       * isoToMarketPage so legacy ISOs (ca/de/fr/gb/no) map to the
+       * correct Page id (market-canada / market-germany / …) instead
+       * of falling through to /not-found. */
+      setPage(isoToMarketPage(payload.country));
     });
     return () => { cancelled = true; };
   }, [setPage]);
