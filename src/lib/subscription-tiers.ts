@@ -102,9 +102,9 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
     displayName: 'Silver Plus',
     shortName:   'Silver+',
     tagline:     'Visibility unlock — moderate dispatch priority',
-    /* $1.49/day ≈ $44/mo equivalent — small enough for a single
-     * peak-day opt-in, large enough to fund the dispatch boost. */
-    baselineUSD: 1.49,
+    /* $29/day — daily cadence keeps the tier accessible for a
+     * single peak-day opt-in without committing to a full month. */
+    baselineUSD: 29,
     cadence:     'daily',
     commissionPct: 0.25,
     privileges:  ['standard-queue', 'moderate-dispatch'],
@@ -116,10 +116,10 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
     displayName: 'Gold',
     shortName:   'Gold',
     tagline:     'Growth acceleration · high-priority dispatch + dedicated AM',
-    /* $2.99/day ≈ $89/mo equivalent — daily cadence keeps the
-     * tier accessible to corridor specialists who only need lift
-     * during peak weeks. */
-    baselineUSD: 2.99,
+    /* $79/day — daily cadence so corridor specialists can opt in
+     * for peak weeks (Memorial Day, end-of-month, university
+     * intake) without a multi-month commitment. */
+    baselineUSD: 79,
     cadence:     'daily',
     commissionPct: 0.20,
     privileges:  ['standard-queue', 'high-dispatch', 'dedicated-account-manager'],
