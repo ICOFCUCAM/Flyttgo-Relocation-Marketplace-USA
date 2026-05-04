@@ -1,15 +1,19 @@
 {
   "name": "FlyttGo Global Logistics & Relocation Marketplace",
-  "short_name": "FlyttGo Global",
-  "description": "Worldwide marketplace connecting customers with licensed movers, packers, storage and relocation providers across the United States, Canada, Germany, France, the United Kingdom, and Norway.",
+  "short_name": "FlyttGo",
+  "description": "Worldwide marketplace connecting customers with licensed movers, packers, storage and relocation providers across 16 countries — USA · Canada · UK · France · Germany · Norway plus expansion markets in the Netherlands, Sweden, Spain, Italy, Poland, Denmark, Belgium, Austria, Switzerland, and the Czech Republic.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui", "browser"],
   "background_color": "#0b1f3a",
-  "theme_color": "#f59e0b",
+  "theme_color": "#0b1f3a",
   "orientation": "portrait-primary",
   "lang": "en",
-  "id": "/",
+  "dir": "ltr",
+  "id": "/?source=pwa",
+  "prefer_related_applications": false,
+  "launch_handler": { "client_mode": "navigate-existing" },
   "icons": [
     {
       "src": "/favicon.svg",
@@ -24,7 +28,16 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["business", "lifestyle", "productivity"],
+  "categories": ["business", "lifestyle", "productivity", "travel"],
+  "share_target": {
+    "action": "/?source=pwa-share",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text":  "text",
+      "url":   "url"
+    }
+  },
   "shortcuts": [
     {
       "name": "Get a quote",
@@ -34,15 +47,10 @@
       "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
     },
     {
-      "name": "United States",
-      "short_name": "US",
-      "url": "/us?source=pwa-shortcut",
-      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
-    },
-    {
-      "name": "United Kingdom",
-      "short_name": "UK",
-      "url": "/uk?source=pwa-shortcut",
+      "name": "Track a move",
+      "short_name": "Track",
+      "description": "Live driver tracking + ETA",
+      "url": "/track?source=pwa-shortcut",
       "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
     },
     {
@@ -50,6 +58,43 @@
       "short_name": "My moves",
       "url": "/my-bookings?source=pwa-shortcut",
       "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Browse marketplace",
+      "short_name": "Browse",
+      "description": "16 country marketplaces in one app",
+      "url": "/marketplace?source=pwa-shortcut",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og/market-us.svg",
+      "sizes": "1200x630",
+      "type": "image/svg+xml",
+      "form_factor": "wide",
+      "label": "FlyttGo United States marketplace"
+    },
+    {
+      "src": "/og/market-uk.svg",
+      "sizes": "1200x630",
+      "type": "image/svg+xml",
+      "form_factor": "wide",
+      "label": "FlyttGo United Kingdom marketplace"
+    },
+    {
+      "src": "/og/market-nl.svg",
+      "sizes": "1200x630",
+      "type": "image/svg+xml",
+      "form_factor": "wide",
+      "label": "FlyttGo Netherlands — activating"
+    },
+    {
+      "src": "/og.svg",
+      "sizes": "1200x630",
+      "type": "image/svg+xml",
+      "form_factor": "narrow",
+      "label": "FlyttGo Global Marketplace"
     }
   ]
 }
