@@ -8,8 +8,11 @@ import MarketplaceBanner from './banners/MarketplaceBanner';
 import {
   findOnboardingRules, applyConditions,
   COMPLIANCE_DISCLOSURE,
+  ONBOARDING_RULES,
   type OnboardingCountryCode,
 } from '../lib/onboarding-rules';
+import { POPULAR_CITIES } from '../lib/popular-cities';
+import type { BookingCountry } from '../lib/store';
 
 const VEHICLE_TYPES = [
   { id: 'small_van', label: 'Small Van (3–4 m³)', examples: 'Ford Transit Connect, VW Caddy' },
@@ -44,6 +47,15 @@ const PROVIDER_CATEGORIES = [
  * driver_documents. The admin dashboard approval flow already reads
  * those exact strings (see AdminDashboard REQUIRED_DOCS), so we stay
  * aligned by not renaming them. */
+/** Flag emojis keyed on the lowercase country code in ONBOARDING_RULES.
+ *  Lookup-only — the rules file holds the canonical name + compliance
+ *  fields, this just decorates the dropdown. Add a row when introducing
+ *  a new country to onboarding-rules.ts. */
+const COUNTRY_FLAG: Record<string, string> = {
+  us: '🇺🇸', ca: '🇨🇦', gb: '🇬🇧', de: '🇩🇪', fr: '🇫🇷', no: '🇳🇴',
+  ae: '🇦🇪', ng: '🇳🇬', ke: '🇰🇪', in: '🇮🇳',
+};
+
 const DOCUMENT_TYPES = [
   { key: 'driver_license',       label: "Driver's License",   desc: 'Valid US or EU/EEA driver\u2019s license (front + back)' },
   { key: 'insurance',             label: 'Vehicle Insurance',  desc: 'Comprehensive insurance covering commercial use' },
@@ -85,7 +97,7 @@ export default function DriverOnboarding() {
   const [lastName, setLastName] = useState(profile?.last_name || '');
   const [phone, setPhone] = useState(profile?.phone || '');
   const [city, setCity] = useState('');
-  const [country, setCountry] = useState<'US' | 'CA' | 'DE' | 'FR' | 'GB' | 'NO' | 'NG' | 'KE' | 'AE' | 'IN' | ''>('');
+  const [country, setCountry] = useState<string>('');
   const [providerCategory, setProviderCategory] = useState('');
   /* Country-specific compliance answers — keyed by the rule's
    * field slug (e.g. 'usdot-number', 'siret', 'gewerbeanmeldung').
@@ -189,7 +201,13 @@ export default function DriverOnboarding() {
   }
 
   async function handleSubmit() {
-    if (!user) return;
+    if (!user) {
+      /* Silent-return was masking the most common failure mode —
+       * the operator filled out four steps without signing up. Be
+       * explicit so they can fix it. */
+      setError('Please sign in or create an account before submitting.');
+      return;
+    }
     setLoading(true);
     setError('');
 
@@ -467,25 +485,56 @@ export default function DriverOnboarding() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Country of operation</label>
-                    <select value={country} onChange={e => setCountry(e.target.value as typeof country)}
+                    <select value={country} onChange={e => { setCountry(e.target.value as typeof country); setCity(''); }}
                       className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm bg-white">
                       <option value="">Select country</option>
-                      <option value="US">🇺🇸 United States</option>
-                      <option value="CA">🇨🇦 Canada</option>
-                      <option value="GB">🇬🇧 United Kingdom</option>
-                      <option value="DE">🇩🇪 Germany</option>
-                      <option value="FR">🇫🇷 France</option>
-                      <option value="NO">🇳🇴 Norway</option>
-                      <option value="AE">🇦🇪 United Arab Emirates</option>
-                      <option value="NG">🇳🇬 Nigeria</option>
-                      <option value="KE">🇰🇪 Kenya</option>
-                      <option value="IN">🇮🇳 India</option>
+                      {/* Driven by ONBOARDING_RULES so adding a new
+                       *  country in src/lib/onboarding-rules.ts unlocks
+                       *  it on the driver form automatically. Ordered
+                       *  by display name for predictable UX. */}
+                      {[...ONBOARDING_RULES]
+                        .sort((a, b) => a.countryName.localeCompare(b.countryName))
+                        .map(r => (
+                          <option key={r.country} value={r.country.toUpperCase()}>
+                            {COUNTRY_FLAG[r.country] ?? ''} {r.countryName}
+                          </option>
+                        ))}
                     </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">{t('driverOnboarding.cityLabel')}</label>
-                    <input value={city} onChange={e => setCity(e.target.value)} placeholder="City / metro"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm" />
+                    {(() => {
+                      /* Per-country city list from POPULAR_CITIES — the
+                       *  same set the country shopfronts surface. When
+                       *  the country has no curated city list (e.g. AE,
+                       *  NG, KE, IN) or the driver picks "Other", fall
+                       *  back to a free-text input. */
+                      const lc = country.toLowerCase() as BookingCountry;
+                      const list = POPULAR_CITIES[lc] ?? [];
+                      const inList = list.includes(city);
+                      const useFreeText = list.length === 0 || (city && !inList);
+                      if (useFreeText) {
+                        return (
+                          <input
+                            value={city}
+                            onChange={e => setCity(e.target.value)}
+                            placeholder="City / metro"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
+                          />
+                        );
+                      }
+                      return (
+                        <select
+                          value={city}
+                          onChange={e => setCity(e.target.value === '__other' ? ' ' : e.target.value)}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm bg-white"
+                        >
+                          <option value="">Select city</option>
+                          {list.map(c => <option key={c} value={c}>{c}</option>)}
+                          <option value="__other">Other (type below)</option>
+                        </select>
+                      );
+                    })()}
                   </div>
                 </div>
 
