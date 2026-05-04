@@ -162,6 +162,9 @@ export default function AdminDashboard() {
   }
   const [selectedApplication, setSelectedApplication] = useState<any | null>(null);
   const [appDocuments, setAppDocuments] = useState<any[]>([]);
+  const [adminUploadType, setAdminUploadType] = useState<string>("");
+  const [adminUploadFile, setAdminUploadFile] = useState<File | null>(null);
+  const [adminUploadBusy, setAdminUploadBusy] = useState(false);
   const [applicationDocStatus, setApplicationDocStatus] = useState<Record<string, string[]>>({});
   const [driverSubExpiry, setDriverSubExpiry] = useState<Record<string, string | null>>({});
   const [platformSettings, setPlatformSettings] = useState<Record<string, string>>({});
@@ -651,6 +654,38 @@ export default function AdminDashboard() {
       return { ...doc, signedUrl: signed?.signedUrl ?? null };
     }));
     setAppDocuments(withSigned);
+  }
+
+  // Admin uploads a document on behalf of a driver (e.g. driver emailed
+  // a missing photo). The file lands at the same path layout drivers use,
+  // and the row is auto-approved since the admin is the one submitting it.
+  async function uploadDocOnBehalf() {
+    if (!selectedApplication || !adminUploadType || !adminUploadFile) return;
+    const driverId = selectedApplication.user_id;
+    if (!driverId) { alert("Application has no user_id."); return; }
+    setAdminUploadBusy(true);
+    try {
+      const ext = adminUploadFile.name.split(".").pop() || "bin";
+      const path = `${driverId}/${adminUploadType}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("driver-documents")
+        .upload(path, adminUploadFile, { upsert: true, contentType: adminUploadFile.type });
+      if (upErr) throw upErr;
+      const { error: insErr } = await supabase.from("driver_documents").insert({
+        driver_id: driverId,
+        document_type: adminUploadType,
+        file_url: path,
+        verification_status: "approved",
+      });
+      if (insErr) throw insErr;
+      setAdminUploadType("");
+      setAdminUploadFile(null);
+      loadApplicationDocuments(selectedApplication.id);
+    } catch (e: any) {
+      alert("Upload failed: " + (e?.message ?? String(e)));
+    } finally {
+      setAdminUploadBusy(false);
+    }
   }
 
   if (loading || !profile || profile.role !== "admin") {
@@ -1215,7 +1250,33 @@ export default function AdminDashboard() {
               ))}
             </div>
           )}
-          <button onClick={() => { setSelectedApplication(null); setAppDocuments([]); }} className="w-full bg-gray-200 text-gray-700 px-3 py-2 rounded text-sm">Close</button>
+          <div className="border-t border-gray-200 pt-3 mb-3 space-y-2">
+            <div className="text-xs font-semibold text-gray-600">Upload on driver's behalf</div>
+            <select
+              value={adminUploadType}
+              onChange={e => setAdminUploadType(e.target.value)}
+              className="w-full text-sm border border-gray-300 rounded px-2 py-1"
+            >
+              <option value="">Select document type…</option>
+              {REQUIRED_DOCS.map(t => (
+                <option key={t} value={t}>{DOCUMENT_TYPE_LABELS[t] ?? t}</option>
+              ))}
+            </select>
+            <input
+              type="file"
+              accept="image/*,application/pdf"
+              onChange={e => setAdminUploadFile(e.target.files?.[0] ?? null)}
+              className="w-full text-xs"
+            />
+            <button
+              disabled={!adminUploadType || !adminUploadFile || adminUploadBusy}
+              onClick={uploadDocOnBehalf}
+              className="w-full bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-3 py-1.5 rounded text-sm"
+            >
+              {adminUploadBusy ? "Uploading…" : "Upload + auto-approve"}
+            </button>
+          </div>
+          <button onClick={() => { setSelectedApplication(null); setAppDocuments([]); setAdminUploadType(""); setAdminUploadFile(null); }} className="w-full bg-gray-200 text-gray-700 px-3 py-2 rounded text-sm">Close</button>
         </div>
       )}
 
