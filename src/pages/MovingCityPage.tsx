@@ -8,7 +8,7 @@ import {
   computeCityStatus, STATUS_LABEL, STATUS_TONE,
 } from '../lib/expansion-rollout';
 import { corridorsForCity } from '../lib/cross-border-corridors';
-import { heroForCity } from '../lib/expansion-hero-images';
+import { useRouteHeroImage } from '../hooks/useRouteHeroImage';
 import { track } from '../lib/analytics';
 
 /**
@@ -44,6 +44,12 @@ export default function MovingCityPage() {
 
   const city = useMemo<AnchorCity | null>(() => findCityBySlug(slug), [slug]);
 
+  /* Hooks must run unconditionally — call useRouteHeroImage *before*
+   * the city-not-found early return. The hook reads the slug from the
+   * URL itself and returns the right hero (or DEFAULT_HERO_IMAGE
+   * when the slug isn't registered). */
+  const hero = useRouteHeroImage(city?.city);
+
   if (!city) {
     return (
       <main className="min-h-[60vh] flex items-center justify-center bg-white text-slate-900">
@@ -67,7 +73,6 @@ export default function MovingCityPage() {
   const state    = computeCityStatus(city, city.initialProviderCount ?? 0);
   const tone     = STATUS_TONE[state.status];
   const corridors = corridorsForCity(city.slug);
-  const hero     = heroForCity(city.slug, city.city);
 
   return (
     <main className="bg-white text-slate-900">

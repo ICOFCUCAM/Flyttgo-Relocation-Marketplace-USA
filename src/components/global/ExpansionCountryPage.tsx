@@ -10,7 +10,7 @@ import {
 import {
   corridorsForCountry, slugifyCity,
 } from '../../lib/cross-border-corridors';
-import { heroForExpansionCountry } from '../../lib/expansion-hero-images';
+import { useRouteHeroImage } from '../../hooks/useRouteHeroImage';
 import { track } from '../../lib/analytics';
 
 /**
@@ -36,7 +36,7 @@ export default function ExpansionCountryPage({ code }: { code: ExpansionCountryC
   const country  = EXPANSION_COUNTRIES[code];
   const cities   = useMemo(() => citiesForCountry(code), [code]);
   const corridors = useMemo(() => corridorsForCountry(code), [code]);
-  const hero     = heroForExpansionCountry(code);
+  const hero     = useRouteHeroImage();
 
   const cityStates = useMemo(() => cities.map(c => ({
     city:  c,

@@ -7,8 +7,8 @@
  *   /market-<country>   (capital city skyline — looked up by capital slug)
  *   /moving-<city>      (city skyline)
  *
- * Fallback handled in src/lib/expansion-hero-images.ts when a slug
- * isn't mapped here.
+ * Route-aware lookup + fallback handling lives in
+ *   src/hooks/useRouteHeroImage.ts
  */
 
 export const CITY_HERO_IMAGES: Record<string, string> = {
