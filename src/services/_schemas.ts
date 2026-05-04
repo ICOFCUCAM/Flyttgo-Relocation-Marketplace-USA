@@ -32,7 +32,11 @@ export const ZRefundPercent    = z.number().int().min(0).max(100);
 
 /* ── Domain enums ──────────────────────────────────────────────── */
 
-export const ZDriverPlan = z.enum(['free', 'basic', 'pro_mini', 'pro', 'unlimited']);
+/* Plan slugs — must match SUBSCRIPTION_TIERS in src/lib/subscription-tiers.ts.
+ * The marketplace shopfront page (/driver-subscriptions) and the in-portal
+ * Subscription tab share these IDs so a driver sees the same plan name on
+ * both surfaces. driver_subscriptions.plan stores the slug verbatim. */
+export const ZDriverPlan = z.enum(['silver', 'silver_plus', 'gold', 'gold_pro', 'elite']);
 export type DriverPlan   = z.infer<typeof ZDriverPlan>;
 
 export const ZPayMethod  = z.enum(['card', 'apple_pay', 'google_pay', 'invoice']);

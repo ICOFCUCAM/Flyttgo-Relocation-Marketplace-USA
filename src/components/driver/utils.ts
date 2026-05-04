@@ -16,24 +16,26 @@ export function daysLeft(endDate: string | null | undefined): number | null {
   return Math.ceil((new Date(endDate).getTime() - Date.now()) / 86_400_000);
 }
 
-/** Commission brackets keyed on the lowercase plan IDs stored in
- *  driver_subscriptions.plan. Mirrors the engine's decision matrix. */
+/** Commission brackets keyed on the canonical plan slugs in
+ *  driver_subscriptions.plan (silver / silver_plus / gold / gold_pro
+ *  / elite). Mirrors the engine's decision matrix and stays in
+ *  lockstep with SUBSCRIPTION_TIERS commissionPct. */
 export function calcCommission(price: number, plan: string): { rate: number; commission: number; earning: number } {
   const p = Number.isNaN(price) ? 0 : price;
   if (p <= 500) return { rate: 0, commission: 0, earning: p };
 
   let rate = 0;
-  if (plan === 'basic') {
+  if (plan === 'silver' || plan === 'silver_plus') {
     if (p <= 1500)      rate = 0.2;
     else if (p <= 5000) rate = 0.15;
     else                rate = 0.1;
   }
-  if (plan === 'pro_mini' || plan === 'pro') {
+  if (plan === 'gold' || plan === 'gold_pro') {
     if (p <= 1500)      rate = 0.1;
     else if (p <= 5000) rate = 0.05;
     else                rate = 0.04;
   }
-  if (plan === 'unlimited') rate = 0;
+  if (plan === 'elite') rate = 0;
 
   const commission = p * rate;
   return { rate, commission, earning: p - commission };
@@ -68,10 +70,14 @@ export function calculateProration(
 ): ProrationResult | null {
   const plan       = currentSub?.plan;
   const startDate  = currentSub?.start_date;
-  if (plan !== 'pro' || newPlan.id !== 'unlimited') return null;
+  /* Proration only applies to monthly→monthly upgrades. With the
+   * canonical tiers, the only such pair is gold_pro → elite. Daily
+   * tiers (silver/silver_plus/gold) bill per-use so credit doesn't
+   * carry. */
+  if (plan !== 'gold_pro' || newPlan.id !== 'elite') return null;
   if (!startDate) return null;
 
-  const proPlan       = PLAN_OPTIONS.find(p => p.id === 'pro');
+  const proPlan       = PLAN_OPTIONS.find(p => p.id === 'gold_pro');
   if (!proPlan) return null;
 
   const today         = new Date();

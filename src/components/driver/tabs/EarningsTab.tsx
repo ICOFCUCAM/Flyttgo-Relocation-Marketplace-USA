@@ -24,7 +24,7 @@ export function EarningsTab({
       <div className="bg-white p-6 rounded-xl border">
         <h2 className="font-bold text-lg mb-1">{t('driverPortal.earningsCalc')}</h2>
         <p className="text-sm text-gray-500 mb-5">Estimate your net earnings for any job before you accept.</p>
-        <EarningsCalculator plan={plan ?? 'basic'} />
+        <EarningsCalculator plan={plan ?? 'silver'} />
       </div>
     </div>
   );

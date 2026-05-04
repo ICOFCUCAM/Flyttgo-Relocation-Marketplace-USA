@@ -79,7 +79,7 @@ export function JobsTab({
 
       {jobs.map(job => {
         const price = safeNumber(job.final_price ?? job.original_price ?? job.price_estimate);
-        const comm  = calcCommission(price, plan ?? 'basic');
+        const comm  = calcCommission(price, plan ?? 'silver');
         return (
           <div key={job.id} className="bg-white p-5 rounded-xl shadow-sm border">
             <div className="flex justify-between items-start mb-3">

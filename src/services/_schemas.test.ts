@@ -85,8 +85,8 @@ describe('mutation-boundary schemas', () => {
     });
     it('SubscriptionCheckoutPayload: rejects a non-subscription type literal', () => {
       expect(() => SubscriptionCheckoutPayloadSchema.parse({
-        type: 'donation', planId: 'pro', planLabel: 'Pro', driverId: UUID, userId: UUID,
-        amount: 150, amountExVat: 150, vatAmount: 0, billing: '/month', prorationNote: '',
+        type: 'donation', planId: 'gold', planLabel: 'Gold', driverId: UUID, userId: UUID,
+        amount: 79, amountExVat: 79, vatAmount: 0, billing: '/day', prorationNote: '',
         proration: null, description: 'desc',
       })).toThrow();
     });

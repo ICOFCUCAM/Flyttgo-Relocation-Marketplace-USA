@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useApp } from '../../../lib/store';
 import { calculateProration, daysLeft } from '../utils';
 import { PLAN_OPTIONS, VAT_RATE, type PlanOption } from '../types';
+import { localPriceForTier } from '../../../lib/subscription-tiers';
+import type { PricingCountry } from '../../../lib/pricing-engine';
 import {
   useChangeSubscription,
   useCreateSubscriptionCheckout,
@@ -24,6 +26,16 @@ export function SubscriptionTab({
   const change          = useChangeSubscription(userId);
   const checkout        = useCreateSubscriptionCheckout();
   const logCredit       = useLogSubscriptionCredit();
+
+  /* Pricing country for this driver. Sourced from driver_profiles.zone
+   * (the same column the onboarding flow writes to), normalised to
+   * lowercase for the PricingCountry enum. Defaults to 'us' when the
+   * driver hasn't been assigned a zone yet — matches the marketing
+   * shopfront's default. */
+  const country: PricingCountry = useMemo(() => {
+    const z = (driver?.zone ?? '').toLowerCase();
+    return (z || 'us') as PricingCountry;
+  }, [driver?.zone]);
 
   const subExpiry = subscription ? daysLeft(subscription.end_date) : null;
   const headerTone =
@@ -145,6 +157,7 @@ export function SubscriptionTab({
           <PlanCard
             key={plan.id}
             plan={plan}
+            country={country}
             current={subscription?.plan === plan.id}
             isLoading={changing === plan.id}
             anyLoading={!!changing}
@@ -158,18 +171,24 @@ export function SubscriptionTab({
 }
 
 function PlanCard({
-  plan, current, isLoading, anyLoading, subscription, onSubscribe,
+  plan, country, current, isLoading, anyLoading, subscription, onSubscribe,
 }: {
   plan:         PlanOption;
+  country:      PricingCountry;
   current:      boolean;
   isLoading:    boolean;
   anyLoading:   boolean;
   subscription: SubscriptionRow | null;
   onSubscribe:  (plan: PlanOption) => void;
 }) {
-  const vatAmount = Math.round(plan.priceUSD * VAT_RATE);
-  const totalUSD  = plan.priceUSD + vatAmount;
-  const isPaid    = plan.priceUSD > 0;
+  /* Localised price for this driver's country — the same renderer
+   * the marketing shopfront uses, so a driver in DE sees EUR and a
+   * driver in NO sees NOK. Falls back to USD when the slug isn't a
+   * recognised SUBSCRIPTION_TIERS entry. */
+  const local     = localPriceForTier(plan.id, country);
+  const vatAmount = Math.round(local.amount * VAT_RATE);
+  const totalLocal = local.amount + vatAmount;
+  const isPaid    = !local.isFree;
   const pro       = calculateProration(subscription, plan);
 
   const cardBorder = current
@@ -184,7 +203,17 @@ function PlanCard({
         {current   && <span className="text-xs bg-emerald-100 text-emerald-700 px-2.5 py-0.5 rounded-full font-semibold">Current</span>}
         {plan.highlight && !current && <span className="text-xs bg-emerald-600 text-white px-2.5 py-0.5 rounded-full font-semibold">Popular</span>}
       </div>
-      {!isPaid && <div className="mb-3"><span className="text-2xl font-bold text-gray-900">Free</span></div>}
+      {!isPaid && (
+        <div className="mb-3">
+          <span className="text-2xl font-bold text-gray-900">Free</span>
+        </div>
+      )}
+      {isPaid && (
+        <div className="mb-3">
+          <span className="text-2xl font-bold text-gray-900">{local.formatted}</span>
+          <span className="text-xs text-gray-500 ml-1">{local.cadenceLabel.trim()}</span>
+        </div>
+      )}
       <div className="text-xs text-gray-500 mb-1">Commission: <strong>{plan.commission}</strong></div>
       <div className="text-xs text-gray-400 mb-4 flex-1">{plan.description}</div>
 
@@ -196,11 +225,11 @@ function PlanCard({
         <div className="space-y-2">
           {!pro && (
             <div className="bg-gray-50 rounded-xl p-3 text-xs space-y-1 mb-1">
-              <div className="flex justify-between text-gray-600"><span>Price (ex VAT)</span><span>{plan.priceUSD.toLocaleString()} USD</span></div>
-              <div className="flex justify-between text-gray-600"><span>Sales Tax</span><span>{vatAmount.toLocaleString()} USD</span></div>
+              <div className="flex justify-between text-gray-600"><span>Price (ex VAT)</span><span>{local.formatted}</span></div>
+              <div className="flex justify-between text-gray-600"><span>Sales Tax</span><span>{vatAmount.toLocaleString()} {local.currency}</span></div>
               <div className="flex justify-between font-bold text-gray-900 border-t border-gray-200 pt-1">
                 <span>Total</span>
-                <span className="text-emerald-700">{totalUSD.toLocaleString()} USD</span>
+                <span className="text-emerald-700">{totalLocal.toLocaleString()} {local.currency}</span>
               </div>
             </div>
           )}
@@ -210,7 +239,7 @@ function PlanCard({
               disabled={anyLoading}
               className="w-full py-2.5 rounded-xl text-sm font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
             >
-              Pay {(pro ? pro.dueTotal : totalUSD).toLocaleString()} USD
+              Pay {(pro ? pro.dueTotal : totalLocal).toLocaleString()} {pro ? 'USD' : local.currency}
             </button>
           )}
           {pro?.isFullyCovered && (
