@@ -105,45 +105,60 @@ export default function FlyttGoLogo({
 
 /* ── F-mark ───────────────────────────────────────────────────
  *
- * A slanted block "F" rendered as two filled paths: the dark
- * letter shape itself (top bar, stem, middle bar — angled at the
- * top-left and bottom-left edges to read as forward-leaning), and
- * a teardrop / leaf accent in brand amber tucked into the lower-
- * left negative space where a regular F has its bottom serif.
+ * Composed in two layers:
  *
- * Coordinates are hand-tuned; resizing happens via the parent
- * SVG's viewBox. */
+ *   1. A block "F" drawn as a single closed path UPRIGHT, then
+ *      skewX(-14°) on its parent <g> to apply a uniform forward
+ *      lean. Skewing rather than hand-slanting each vertex keeps
+ *      every stroke at the same angle — the visual cue that says
+ *      "italic" rather than "wonky". The translate compensates
+ *      for the leftward shift the skew introduces so the mark
+ *      stays inside the bbox.
+ *
+ *   2. A curved teardrop / leaf accent in brand amber drawn
+ *      OUTSIDE the skew group so its curves stay organic instead
+ *      of stretching with the italic. Sits at the bottom-left of
+ *      the mark with its tip aimed at the F's stem, mirroring the
+ *      reference brand mark.
+ * ──────────────────────────────────────────────────────────── */
 function FMark({ x, ink, accent }: { x: number; ink: string; accent: string }) {
   return (
     <g transform={`translate(${x} 0)`}>
-      {/* Letter body — top bar + stem + middle bar, slanted forward.
-          Single closed path so corners read as one unit. */}
+
+      {/* Italic block F — uniform skew on the whole letter so the
+          left edge, right edge, and crossbar terminations all share
+          the same slant. translate(8 0) keeps the mark visually
+          centred after the skew shifts the upper portion left. */}
+      <g transform="skewX(-14) translate(8 0)">
+        <path
+          d="
+            M 18 6
+            L 54 6
+            L 54 18
+            L 30 18
+            L 30 28
+            L 44 28
+            L 44 38
+            L 30 38
+            L 30 58
+            L 18 58
+            Z
+          "
+          fill={ink}
+        />
+      </g>
+
+      {/* Leaf / flame accent. Cubic-curve teardrop with the tip
+          aimed up-and-right toward the F's stem; the wide curve
+          closes back at the lower-left. The shape lives in the
+          unskewed coordinate space so its arcs stay symmetrical
+          even though the F leans. */}
       <path
         d="
-          M 18 4
-          L 60 4
-          L 60 16
-          L 32 16
-          L 32 28
-          L 50 28
-          L 50 40
-          L 32 40
-          L 32 60
-          L 22 60
-          L 18 36
-          Z
-        "
-        fill={ink}
-      />
-      {/* Leaf / flame accent — orange teardrop nestled at the
-          bottom-left where the F's serif would normally sit.
-          Drawn as a quadratic-curve closed path that opens toward
-          the lower-left. */}
-      <path
-        d="
-          M 6 60
-          C 6 46, 14 36, 24 34
-          C 22 44, 16 56, 6 60
+          M 4 60
+          C 4 44, 14 32, 26 30
+          C 28 36, 26 46, 20 53
+          C 16 57, 10 60, 4 60
           Z
         "
         fill={accent}
