@@ -5,6 +5,7 @@ import {
 } from '../../lib/expansion-cities';
 import { corridorsForCountry } from '../../lib/cross-border-corridors';
 import { computeCityStatus, STATUS_LABEL, STATUS_TONE } from '../../lib/expansion-rollout';
+import { useProviderCountsByCity } from '../../hooks/queries/useProviderCounts';
 import { track } from '../../lib/analytics';
 
 /* ─────────────────────────────────────────────────────────────────
@@ -36,8 +37,9 @@ interface Props {
 export default function ExpansionCountrySEOSection({ code }: Props) {
   const { setPage } = useApp();
   const country  = EXPANSION_COUNTRIES[code];
-  const cities   = citiesForCountry(code);
+  const cities    = citiesForCountry(code);
   const corridors = corridorsForCountry(code).slice(0, 6);
+  const liveCounts = useProviderCountsByCity();
 
   /* Compose the SEO paragraph — country positioning + named anchor
    * cities. Reads naturally and surfaces every anchor's display name
@@ -79,7 +81,6 @@ export default function ExpansionCountrySEOSection({ code }: Props) {
     >
       <script
         type="application/ld+json"
-        // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
@@ -135,7 +136,10 @@ export default function ExpansionCountrySEOSection({ code }: Props) {
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
             {cities.map(city => {
-              const state = computeCityStatus(city, city.initialProviderCount ?? 0);
+              const state = computeCityStatus(
+                city,
+                liveCounts[city.slug] ?? city.initialProviderCount ?? 0,
+              );
               const tone = STATUS_TONE[state.status];
               return (
                 <a

@@ -10,6 +10,7 @@ import {
 import {
   corridorsForCountry, slugifyCity,
 } from '../../lib/cross-border-corridors';
+import { useProviderCountsByCity } from '../../hooks/queries/useProviderCounts';
 import { useRouteHeroImage } from '../../hooks/useRouteHeroImage';
 import ExpansionCountrySEOSection from '../seo/ExpansionCountrySEOSection';
 import { track } from '../../lib/analytics';
@@ -39,10 +40,17 @@ export default function ExpansionCountryPage({ code }: { code: ExpansionCountryC
   const corridors = useMemo(() => corridorsForCountry(code), [code]);
   const hero     = useRouteHeroImage();
 
+  const liveCounts = useProviderCountsByCity();
   const cityStates = useMemo(() => cities.map(c => ({
     city:  c,
-    state: computeCityStatus(c, c.initialProviderCount ?? 0),
-  })), [cities]);
+    state: computeCityStatus(
+      c,
+      /* Live > static. Falls back to initialProviderCount when the
+       * Supabase view hasn't been migrated yet or the city slug
+       * doesn't appear in driver_profiles.home_city_slug. */
+      liveCounts[c.slug] ?? c.initialProviderCount ?? 0,
+    ),
+  })), [cities, liveCounts]);
 
   const anchorCount = cityStates.filter(s => s.state.status === 'anchor').length;
   const liveCount   = cityStates.filter(s => s.state.status === 'promoted' || s.state.status === 'anchor').length;

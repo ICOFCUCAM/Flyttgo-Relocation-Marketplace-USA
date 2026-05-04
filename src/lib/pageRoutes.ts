@@ -443,10 +443,55 @@ export function pageMeta(page: Page): PageMeta {
 }
 
 /**
+ * Per-page hreflang alternates — language siblings that share the
+ * same URL slug but represent different markets. Google uses these
+ * to avoid indexing a country page as duplicate content of its
+ * sibling, and to surface the right localized version per region.
+ *
+ * Mapping is country-page → list of ISO language tags. We render an
+ * x-default pointing at the same URL (the canonical landing copy is
+ * English baseline). Adding a fully translated sibling later
+ * becomes a registry edit, not a routing change.
+ */
+const HREFLANG_BY_PAGE: Partial<Record<Page, string[]>> = {
+  /* Legacy markets — country shopfront covers the listed locales. */
+  'market-us':       ['en-US', 'en'],
+  'market-canada':   ['en-CA', 'fr-CA', 'en'],
+  'market-uk':       ['en-GB', 'en'],
+  'market-france':   ['fr-FR', 'en'],
+  'market-germany':  ['de-DE', 'en'],
+  'market-norway':   ['nb-NO', 'no', 'en'],
+  /* Expansion markets — locale comes from EXPANSION_COUNTRIES.locale. */
+  'market-nl':       ['nl-NL', 'en'],
+  'market-se':       ['sv-SE', 'en'],
+  'market-es':       ['es-ES', 'en'],
+  'market-it':       ['it-IT', 'en'],
+  'market-pl':       ['pl-PL', 'en'],
+  'market-dk':       ['da-DK', 'en'],
+  'market-be':       ['fr-BE', 'nl-BE', 'en'],
+  'market-at':       ['de-AT', 'de', 'en'],
+  'market-ch':       ['de-CH', 'fr-CH', 'it-CH', 'en'],
+  'market-cz':       ['cs-CZ', 'en'],
+};
+
+/** Locale used as the page-level <html lang> for each market. */
+const PRIMARY_LANG_BY_PAGE: Partial<Record<Page, string>> = {
+  'market-us': 'en', 'market-canada': 'en', 'market-uk': 'en',
+  'market-france': 'fr', 'market-germany': 'de', 'market-norway': 'nb',
+  'market-nl': 'nl', 'market-se': 'sv', 'market-es': 'es',
+  'market-it': 'it', 'market-pl': 'pl', 'market-dk': 'da',
+  'market-be': 'fr', 'market-at': 'de', 'market-ch': 'de',
+  'market-cz': 'cs',
+};
+
+/**
  * Apply page meta to the document head. Updates <title>, meta
  * description, canonical link, OpenGraph and Twitter tags in place.
  * Creates missing tags if they're not already in index.html so
  * deep-linked pages still get the right head from a cold load.
+ *
+ * Also emits hreflang alternates per HREFLANG_BY_PAGE so country
+ * shopfronts don't compete with their language siblings in EU SEO.
  */
 export function applyPageMeta(page: Page): void {
   if (typeof document === 'undefined') return;
@@ -459,17 +504,56 @@ export function applyPageMeta(page: Page): void {
   upsertMeta('name',     'description',      meta.description);
   upsertLink('canonical', url);
 
+  /* Per-country OG card — 16 country shopfronts ship dedicated OG
+   * card SVGs at /og/<page>.svg, generated at build time by
+   * scripts/generate-og-cards.mjs. Falls back to /og.svg for
+   * everything else. */
+  const ogImage = page.startsWith('market-')
+    ? `https://flyttgo.us/og/${page}.svg`
+    : image;
+
   upsertMeta('property', 'og:title',        meta.title);
   upsertMeta('property', 'og:description',  meta.description);
   upsertMeta('property', 'og:url',          url);
-  upsertMeta('property', 'og:image',        image);
+  upsertMeta('property', 'og:image',        ogImage);
   upsertMeta('property', 'og:type',         'website');
   upsertMeta('property', 'og:site_name',    'FlyttGo Global Logistics & Relocation Marketplace');
 
   upsertMeta('name',     'twitter:card',        'summary_large_image');
   upsertMeta('name',     'twitter:title',        meta.title);
   upsertMeta('name',     'twitter:description',  meta.description);
-  upsertMeta('name',     'twitter:image',        image);
+  upsertMeta('name',     'twitter:image',        ogImage);
+
+  /* Hreflang alternates — clear out any previously emitted ones
+   * (covers SPA navigation between two countries) and re-emit. */
+  document.querySelectorAll<HTMLLinkElement>('link[rel="alternate"][data-flyttgo-hreflang]')
+    .forEach(el => el.remove());
+  const hreflangs = HREFLANG_BY_PAGE[page];
+  if (hreflangs?.length) {
+    for (const tag of hreflangs) {
+      const link = document.createElement('link');
+      link.setAttribute('rel', 'alternate');
+      link.setAttribute('hreflang', tag);
+      link.setAttribute('href', url);
+      link.setAttribute('data-flyttgo-hreflang', '1');
+      document.head.appendChild(link);
+    }
+    /* x-default — fallback when none of the listed languages match. */
+    const xdef = document.createElement('link');
+    xdef.setAttribute('rel', 'alternate');
+    xdef.setAttribute('hreflang', 'x-default');
+    xdef.setAttribute('href', url);
+    xdef.setAttribute('data-flyttgo-hreflang', '1');
+    document.head.appendChild(xdef);
+  }
+
+  /* Set <html lang> to the page's primary locale so screen readers
+   * + Google + browser translate pick up the right pronunciation +
+   * translation chain. */
+  const lang = PRIMARY_LANG_BY_PAGE[page];
+  if (lang && document.documentElement) {
+    document.documentElement.setAttribute('lang', lang);
+  }
 }
 
 function upsertMeta(keyAttr: 'name' | 'property', keyValue: string, content: string) {

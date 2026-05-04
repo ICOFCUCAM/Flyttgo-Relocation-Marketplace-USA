@@ -8,6 +8,7 @@ import {
   computeCityStatus, STATUS_LABEL, STATUS_TONE,
 } from '../lib/expansion-rollout';
 import { corridorsForCity } from '../lib/cross-border-corridors';
+import { useProviderCountsByCity } from '../hooks/queries/useProviderCounts';
 import { useRouteHeroImage } from '../hooks/useRouteHeroImage';
 import { track } from '../lib/analytics';
 
@@ -44,44 +45,19 @@ export default function MovingCityPage() {
 
   const city = useMemo<AnchorCity | null>(() => findCityBySlug(slug), [slug]);
 
-  /* Hooks must run unconditionally — call useRouteHeroImage *before*
-   * the city-not-found early return. The hook reads the slug from the
-   * URL itself and returns the right hero (or DEFAULT_HERO_IMAGE
-   * when the slug isn't registered). */
-  const hero = useRouteHeroImage(city?.city);
-
-  if (!city) {
-    return (
-      <main className="min-h-[60vh] flex items-center justify-center bg-white text-slate-900">
-        <div className="max-w-lg text-center px-4">
-          <h1 className="text-3xl font-extrabold mb-3">City not found</h1>
-          <p className="text-slate-600 mb-6">
-            We don't have a landing page for <code className="bg-slate-100 px-1.5 py-0.5 rounded">/moving-{slug}</code> yet.
-          </p>
-          <button
-            onClick={() => setPage('home')}
-            className="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-900 px-5 py-3 rounded-xl text-sm font-bold transition"
-          >
-            Back to FlyttGo home <ArrowRight size={16} />
-          </button>
-        </div>
-      </main>
-    );
-  }
-
-  const country  = EXPANSION_COUNTRIES[city.country];
-  const state    = computeCityStatus(city, city.initialProviderCount ?? 0);
-  const tone     = STATUS_TONE[state.status];
-  const corridors = corridorsForCity(city.slug);
+  /* Hooks must run unconditionally — call them *before* the
+   * city-not-found early return. */
+  const hero       = useRouteHeroImage(city?.city);
+  const liveCounts = useProviderCountsByCity();
 
   /* Per-city <head> meta — title + description + canonical so each
-   * /moving-<slug> URL ships its own crawl-ready meta. Runs as an
-   * effect because MovingCityPage shares one Page id ('moving-city')
-   * across 50 URLs; the global applyPageMeta() in store.tsx only
-   * sees the page id, not the slug, so per-city meta has to land
-   * here. */
+   * /moving-<slug> URL ships its own crawl-ready meta. MovingCityPage
+   * shares one Page id ('moving-city') across 50 URLs; the global
+   * applyPageMeta() in store.tsx only sees the page id, not the
+   * slug, so per-city meta lands here. */
   useEffect(() => {
-    if (typeof document === 'undefined') return undefined;
+    if (typeof document === 'undefined' || !city) return undefined;
+    const country = EXPANSION_COUNTRIES[city.country];
     const url = `https://flyttgo.us/moving-${city.slug}`;
     const title = `Moving in ${city.city}, ${country.name} · FlyttGo marketplace`;
     const description = city.paragraph;
@@ -119,7 +95,32 @@ export default function MovingCityPage() {
     return () => {
       document.title = prevTitle;
     };
-  }, [city.slug, city.city, country.name, city.paragraph]);
+  }, [city]);
+
+  if (!city) {
+    return (
+      <main className="min-h-[60vh] flex items-center justify-center bg-white text-slate-900">
+        <div className="max-w-lg text-center px-4">
+          <h1 className="text-3xl font-extrabold mb-3">City not found</h1>
+          <p className="text-slate-600 mb-6">
+            We don't have a landing page for <code className="bg-slate-100 px-1.5 py-0.5 rounded">/moving-{slug}</code> yet.
+          </p>
+          <button
+            onClick={() => setPage('home')}
+            className="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-900 px-5 py-3 rounded-xl text-sm font-bold transition"
+          >
+            Back to FlyttGo home <ArrowRight size={16} />
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  const country    = EXPANSION_COUNTRIES[city.country];
+  const liveCount  = liveCounts[city.slug] ?? city.initialProviderCount ?? 0;
+  const state      = computeCityStatus(city, liveCount);
+  const tone     = STATUS_TONE[state.status];
+  const corridors = corridorsForCity(city.slug);
 
   /* JSON-LD per city — Place + BreadcrumbList. Place carries the
    * city's slug + paragraph; BreadcrumbList wires the nav trail
@@ -155,7 +156,6 @@ export default function MovingCityPage() {
     <main className="bg-white text-slate-900">
       <script
         type="application/ld+json"
-        // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 

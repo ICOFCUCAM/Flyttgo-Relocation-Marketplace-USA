@@ -80,8 +80,11 @@ export default function PressPage() {
               { title: 'Brand guidelines',    size: '3.4 MB' },
               { title: 'Product screenshots', size: '12 MB' },
             ].map(a => (
-              <a key={a.title} href="#"
-                className="bg-white border border-gray-100 rounded-2xl p-5 hover:shadow-xl hover:border-emerald-200 transition flex items-start gap-4">
+              <button
+                key={a.title}
+                type="button"
+                onClick={() => { /* TODO: wire actual press-asset download endpoints. */ }}
+                className="text-left bg-white border border-gray-100 rounded-2xl p-5 hover:shadow-xl hover:border-emerald-200 transition flex items-start gap-4">
                 <div className="w-11 h-11 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0">
                   <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -91,7 +94,7 @@ export default function PressPage() {
                   <div className="font-semibold text-[#0B2E59] text-sm">{a.title}</div>
                   <div className="text-xs text-gray-500 mt-1">Download · {a.size}</div>
                 </div>
-              </a>
+              </button>
             ))}
           </div>
         </div>

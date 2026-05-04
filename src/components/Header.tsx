@@ -62,23 +62,23 @@ interface NavDropdown {
 }
 
 const NAV_DROPDOWNS: NavDropdown[] = [
-  /* Countries — 6 markets, 2 × 3 grid with flag prefixes + corridor
-   *  context per country. Right-rail feature points at the country
-   *  index page. */
+  /* Countries — all 16 markets surfaced as four columns: Active (NA),
+   *  Active (EU), Activating wave 1, Activating wave 2. Right-rail
+   *  feature points at the country index page. */
   {
     key:   'countries',
     label: 'Countries',
-    width: 'w-[44rem]',
+    width: 'w-[64rem]',
     sections: [
       {
-        eyebrow: 'North America',
+        eyebrow: 'Active · North America',
         items: [
           { label: 'United States',  page: 'market-us',     prefix: '🇺🇸', description: 'NYC · LA · Austin · Atlanta' },
           { label: 'Canada',         page: 'market-canada', prefix: '🇨🇦', description: 'Toronto · Montréal · Vancouver' },
         ],
       },
       {
-        eyebrow: 'Europe',
+        eyebrow: 'Active · Europe',
         items: [
           { label: 'United Kingdom', page: 'market-uk',     prefix: '🇬🇧', description: 'London · Manchester · Edinburgh' },
           { label: 'France',         page: 'market-france', prefix: '🇫🇷', description: 'Paris · Lyon · Marseille' },
@@ -86,11 +86,31 @@ const NAV_DROPDOWNS: NavDropdown[] = [
           { label: 'Norway',         page: 'market-norway', prefix: '🇳🇴', description: 'Oslo · Bergen · Trondheim' },
         ],
       },
+      {
+        eyebrow: 'Activating · Wave 1',
+        items: [
+          { label: 'Netherlands',    page: 'market-nl',     prefix: '🇳🇱', description: 'Amsterdam · Rotterdam · The Hague' },
+          { label: 'Sweden',         page: 'market-se',     prefix: '🇸🇪', description: 'Stockholm · Göteborg · Malmö' },
+          { label: 'Spain',          page: 'market-es',     prefix: '🇪🇸', description: 'Madrid · Barcelona · Valencia' },
+          { label: 'Italy',          page: 'market-it',     prefix: '🇮🇹', description: 'Milano · Roma · Torino' },
+          { label: 'Poland',         page: 'market-pl',     prefix: '🇵🇱', description: 'Warszawa · Kraków · Wrocław' },
+        ],
+      },
+      {
+        eyebrow: 'Activating · Wave 2',
+        items: [
+          { label: 'Denmark',        page: 'market-dk',     prefix: '🇩🇰', description: 'København · Aarhus · Odense' },
+          { label: 'Belgium',        page: 'market-be',     prefix: '🇧🇪', description: 'Brussels · Antwerp · Ghent' },
+          { label: 'Austria',        page: 'market-at',     prefix: '🇦🇹', description: 'Wien · Graz · Linz' },
+          { label: 'Switzerland',    page: 'market-ch',     prefix: '🇨🇭', description: 'Zürich · Genève · Basel' },
+          { label: 'Czech Republic', page: 'market-cz',     prefix: '🇨🇿', description: 'Praha · Brno · Ostrava' },
+        ],
+      },
     ],
     feature: {
-      eyebrow: 'New countries',
-      title:   '6 active markets, more on deck',
-      body:    'Spain, Netherlands, UAE, Kenya, and Nigeria are next in our country expansion roadmap.',
+      eyebrow: '16 markets',
+      title:   '6 live + 10 activating',
+      body:    'Active markets ship full booking + escrow today. Activating markets surface 5 anchor cities each with rollout-status SEO landings; provider density unlocks bookings on a per-city threshold.',
       cta:     { label: 'See all marketplaces →', page: 'cities' },
     },
   },
@@ -517,7 +537,12 @@ export default function Header() {
                            *  when a feature panel is present, full
                            *  width otherwise. Each section becomes one
                            *  column at lg+. */}
-                          <div className={`${hasFeature ? 'col-span-8' : 'col-span-1'} p-4 grid ${d.sections.length > 1 ? 'grid-cols-2 gap-x-2' : 'grid-cols-1'}`}>
+                          <div className={`${hasFeature ? 'col-span-8' : 'col-span-1'} p-4 grid ${
+                            d.sections.length >= 4 ? 'grid-cols-4 gap-x-2' :
+                            d.sections.length === 3 ? 'grid-cols-3 gap-x-2' :
+                            d.sections.length === 2 ? 'grid-cols-2 gap-x-2' :
+                                                      'grid-cols-1'
+                          }`}>
                             {d.sections.map((s, si) => (
                               <div key={si} className="space-y-0.5">
                                 {s.eyebrow && (
