@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { CheckCircle2, XCircle, Clock, AlertTriangle, FileText, Eye, X, Download, Image as ImageIcon, Truck } from 'lucide-react';
-import { DOCUMENT_TYPE_LABELS } from '../utils';
+import { useQueryClient } from '@tanstack/react-query';
+import { CheckCircle2, XCircle, Clock, AlertTriangle, FileText, Eye, X, Download, Image as ImageIcon, Truck, Upload } from 'lucide-react';
+import { DOCUMENT_TYPE_LABELS, REQUIRED_DOCS } from '../utils';
 import {
   useApplicationDocuments,
   useSetDocumentVerification,
 } from '../../../hooks/queries/useAdminDashboard';
-import { getDocumentSignedUrl } from '../../../services/admin';
+import { getDocumentSignedUrl, uploadDocumentForDriver } from '../../../services/admin';
 import type { DocumentRow } from '../../../services/admin';
 import { readApplicationCompliance, complianceLabel, type ApplicationComplianceInput } from '../../../lib/application-compliance';
 
@@ -235,8 +236,102 @@ export function ApplicationDocsPanel({
               ))}
             </div>
           )}
+
+          <AdminUploadOnBehalf
+            driverId={context.userId}
+            invalidateKey={context.applicationId ?? context.userId}
+          />
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * <AdminUploadOnBehalf> — collapsible form letting the admin upload
+ * a document on the driver's behalf (e.g. driver emailed a missing
+ * vehicle photo). The row is auto-approved on insert. Optional expiry
+ * date is forwarded to driver_documents.expires_at so the per-tile
+ * expiry tag picks it up immediately on re-fetch.
+ */
+function AdminUploadOnBehalf({
+  driverId,
+  invalidateKey,
+}: {
+  driverId:      string;
+  invalidateKey: string | null;
+}) {
+  const qc = useQueryClient();
+  const [type,    setType]    = useState<string>('');
+  const [file,    setFile]    = useState<File | null>(null);
+  const [expires, setExpires] = useState<string>('');
+  const [busy,    setBusy]    = useState(false);
+  const [error,   setError]   = useState<string | null>(null);
+
+  async function submit() {
+    if (!type || !file) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await uploadDocumentForDriver({
+        driverId,
+        documentType: type,
+        file,
+        expiresAt: expires || null,
+      });
+      setType('');
+      setFile(null);
+      setExpires('');
+      qc.invalidateQueries({ queryKey: ['admin', 'app-docs', invalidateKey ?? 'none'] });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Upload failed.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-6 border border-slate-200 rounded-xl bg-slate-50 p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <Upload className="w-4 h-4 text-slate-500" />
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-700">
+          Upload on driver's behalf
+        </p>
+      </div>
+      <div className="grid sm:grid-cols-3 gap-3">
+        <select
+          value={type}
+          onChange={e => setType(e.target.value)}
+          className="text-sm border border-slate-300 rounded px-2 py-1.5 bg-white"
+        >
+          <option value="">Document type…</option>
+          {REQUIRED_DOCS.map(t => (
+            <option key={t} value={t}>{DOCUMENT_TYPE_LABELS[t] ?? t}</option>
+          ))}
+        </select>
+        <input
+          type="file"
+          accept="image/*,application/pdf"
+          onChange={e => setFile(e.target.files?.[0] ?? null)}
+          className="text-xs text-slate-700"
+        />
+        <input
+          type="date"
+          value={expires}
+          onChange={e => setExpires(e.target.value)}
+          placeholder="Expires (optional)"
+          className="text-sm border border-slate-300 rounded px-2 py-1.5 bg-white"
+        />
+      </div>
+      {error && <p className="text-xs text-rose-700 mt-2">{error}</p>}
+      <button
+        type="button"
+        disabled={!type || !file || busy}
+        onClick={submit}
+        className="mt-3 inline-flex items-center gap-2 px-4 py-1.5 rounded bg-amber-500 text-slate-900 text-sm font-bold hover:bg-amber-600 transition disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed"
+      >
+        {busy ? 'Uploading…' : 'Upload + auto-approve'}
+      </button>
     </div>
   );
 }
@@ -332,6 +427,20 @@ function DocumentTile({
         <p className="text-[11px] text-slate-500 mt-0.5">
           Uploaded {doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString() : '—'}
         </p>
+        {doc.expires_at && (() => {
+          const days = Math.floor((new Date(doc.expires_at).getTime() - Date.now()) / 86400000);
+          const cls = days < 0
+            ? 'text-rose-700 font-semibold'
+            : days < 30
+              ? 'text-amber-700 font-semibold'
+              : 'text-slate-500';
+          const txt = days < 0
+            ? `Expired ${Math.abs(days)}d ago`
+            : days < 30
+              ? `Expires in ${days}d`
+              : `Expires ${new Date(doc.expires_at).toLocaleDateString()}`;
+          return <p className={`text-[11px] mt-0.5 ${cls}`}>{txt}</p>;
+        })()}
 
         <div className="mt-3 flex flex-wrap gap-2">
           {/* View / Download — disabled until the signed URL resolves

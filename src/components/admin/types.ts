@@ -13,6 +13,7 @@ export type AdminTab =
   | 'revenue'
   | 'disputes'
   | 'matcher'
+  | 'geography'
   | 'settings';
 
 export const ADMIN_TABS: AdminTab[] = [
@@ -24,6 +25,7 @@ export const ADMIN_TABS: AdminTab[] = [
   'revenue',
   'disputes',
   'matcher',
+  'geography',
   'settings',
 ];
 

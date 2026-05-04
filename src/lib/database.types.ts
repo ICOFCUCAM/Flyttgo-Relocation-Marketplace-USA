@@ -295,6 +295,9 @@ export interface DriverDocumentRow {
   file_url:            string;
   verification_status: DocumentVerificationStatus | string;
   uploaded_at:         Timestamptz;
+  /** Expiry date for documents that expire (licenses, insurance,
+   *  vehicle registrations). Nullable for non-expiring types. */
+  expires_at?:         string | null;
 }
 
 /* ─── driver_subscriptions ─────────────────────────────────────── */

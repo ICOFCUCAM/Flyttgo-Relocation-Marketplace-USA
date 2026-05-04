@@ -11,6 +11,7 @@ import { ApplicationsTab } from './admin/tabs/ApplicationsTab';
 import { RevenueTab }      from './admin/tabs/RevenueTab';
 import { DisputesTab }     from './admin/tabs/DisputesTab';
 import { MatcherTab }      from './admin/tabs/MatcherTab';
+import { GeographyTab }    from './admin/tabs/GeographyTab';
 import { SettingsTab }     from './admin/tabs/SettingsTab';
 import { ApplicationDocsPanel }   from './admin/modals/ApplicationDocsPanel';
 import { ManualRefundPanel }      from './admin/modals/ManualRefundPanel';
@@ -136,6 +137,7 @@ export default function AdminDashboard() {
             {tab === 'revenue'      && <RevenueTab stats={snapshot.revenueStats} />}
             {tab === 'disputes'     && <DisputesTab />}
             {tab === 'matcher'      && <MatcherTab />}
+            {tab === 'geography'    && <GeographyTab />}
             {tab === 'settings'     && <SettingsTab enabled={isAdmin} />}
           </>
         )}

@@ -55,6 +55,10 @@ export const CreateBookingInputSchema = z.object({
   distanceKm:         z.number().nonnegative().finite(),
   estimatedHours:     z.number().positive().max(48),
   priceTotal:         z.number().positive().finite(),
+  /** ISO-2 country code of the shopfront the booking originated from
+   *  (us / ca / de / fr / gb / no). Tagged on the row so the admin
+   *  Geography panel can aggregate revenue + volume per market. */
+  country:            z.string().trim().min(2).max(3).nullable().optional(),
 });
 
 export type CreateBookingInput = z.infer<typeof CreateBookingInputSchema>;
@@ -111,6 +115,8 @@ export async function createBookingWithEscrow(rawInput: CreateBookingInput): Pro
 
       status:         'pending',
       payment_status: 'pending',
+
+      booking_country: input.country ? input.country.toUpperCase() : null,
     })
     .select()
     .single();

@@ -483,11 +483,45 @@ export async function fetchApplicationDocuments(applicationId: string, userId: s
   if (!userId) return [];
   const { data, error } = await supabase
     .from('driver_documents')
-    .select('id, document_type, file_url, verification_status, uploaded_at')
+    .select('id, document_type, file_url, verification_status, uploaded_at, expires_at')
     .eq('driver_id', userId)
     .order('uploaded_at', { ascending: true });
   void applicationId;
   return error || !data ? [] : (data as DocumentRow[]);
+}
+
+/**
+ * Admin uploads a document on a driver's behalf — typically when the
+ * driver emails a missing or replacement file. The file lands at the
+ * same {driver_id}/{document_type}.{ext} path drivers use, and the
+ * resulting driver_documents row is auto-approved since the admin is
+ * the one submitting it. The optional expires_at lets the admin
+ * record a licence / insurance expiry at upload time.
+ *
+ * Storage RLS permits this via the existing admin_all policy on
+ * storage.objects (see docs/install-driver-documents-bucket.sql).
+ */
+export async function uploadDocumentForDriver(args: {
+  driverId:     string;
+  documentType: string;
+  file:         File;
+  expiresAt?:   string | null;
+}): Promise<void> {
+  const { driverId, documentType, file, expiresAt } = args;
+  const ext  = file.name.split('.').pop() || 'bin';
+  const path = `${driverId}/${documentType}.${ext}`;
+  const { error: upErr } = await supabase.storage
+    .from('driver-documents')
+    .upload(path, file, { upsert: true, contentType: file.type });
+  if (upErr) throw upErr;
+  const { error: insErr } = await supabase.from('driver_documents').insert({
+    driver_id:           driverId,
+    document_type:       documentType,
+    file_url:            path,
+    verification_status: 'approved',
+    expires_at:          expiresAt || null,
+  });
+  if (insErr) throw insErr;
 }
 
 export function getDocumentPublicUrl(storagePath: string): string {

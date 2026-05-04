@@ -80,6 +80,7 @@ export const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   insurance:            'Vehicle Insurance',
   vehicle_registration: 'Vehicle Registration',
   identity_document:    'ID / Passport',
+  vehicle_photo:        'Vehicle Photo',
   profile_photo:        'Profile Photo',
   background_check:     'Background Check',
 };
@@ -93,4 +94,5 @@ export const REQUIRED_DOCS = [
   'insurance',
   'vehicle_registration',
   'identity_document',
+  'vehicle_photo',
 ] as const;

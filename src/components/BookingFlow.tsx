@@ -136,6 +136,7 @@ export default function BookingFlow() {
         distanceKm:         pricing.distanceKm,
         estimatedHours:     s.estimatedHours,
         priceTotal:         pricing.priceTotal,
+        country:            s.country ?? null,
       });
 
       s.setPage('payment');

@@ -109,6 +109,7 @@ export default function DriverOnboarding() {
     insurance:            null,
     vehicle_registration: null,
     identity_document:    null,
+    vehicle_photo:        null,
   });
 
   // Step 4 — Terms
