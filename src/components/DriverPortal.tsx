@@ -162,6 +162,7 @@ export default function DriverPortal() {
           <OverviewTab
             wallet={wallet}
             subscription={subscription}
+            country={driver?.zone ?? 'US'}
             onOpenSubscription={() => setActiveTab('subscription')}
           />
         )}

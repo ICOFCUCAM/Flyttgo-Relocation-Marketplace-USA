@@ -2,14 +2,17 @@ import { Card } from '../Card';
 import { FOCUS_RING } from '../../ds';
 import { daysLeft } from '../utils';
 import type { WalletRow, SubscriptionRow } from '../../../services/driver';
+import { DemandHeatmap } from '../DemandHeatmap';
 
 export function OverviewTab({
   wallet,
   subscription,
+  country,
   onOpenSubscription,
 }: {
   wallet: WalletRow | null | undefined;
   subscription: SubscriptionRow | null | undefined;
+  country: string;
   onOpenSubscription: () => void;
 }) {
   const subExpiry = subscription ? daysLeft(subscription.end_date) : null;
@@ -48,6 +51,12 @@ export function OverviewTab({
           </div>
         </div>
       )}
+
+      {/* Demand heatmap — top cities by recent booking volume in
+       *  the driver's market. Helps the driver position for the
+       *  highest dispatch rate. Renders an empty-state on a fresh
+       *  market with no bookings yet. */}
+      <DemandHeatmap country={country} />
     </div>
   );
 }
