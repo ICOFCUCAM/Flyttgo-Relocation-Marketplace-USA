@@ -76,12 +76,16 @@ export type SubscriptionStatus =
   | 'cancelled'
   | 'expired';
 
+/* Plan slugs — must stay in lockstep with ZDriverPlan in
+ * src/services/_schemas.ts and SUBSCRIPTION_TIERS in
+ * src/lib/subscription-tiers.ts. driver_subscriptions.plan stores
+ * one of these. */
 export type DriverPlanId =
-  | 'free'
-  | 'basic'
-  | 'pro_mini'
-  | 'pro'
-  | 'unlimited';
+  | 'silver'
+  | 'silver_plus'
+  | 'gold'
+  | 'gold_pro'
+  | 'elite';
 
 export type DocumentVerificationStatus =
   | 'pending'
