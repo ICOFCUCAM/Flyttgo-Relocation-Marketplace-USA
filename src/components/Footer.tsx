@@ -9,6 +9,7 @@ import { track } from '../lib/analytics';
 import { COUNTRY_PROFILES } from '../lib/country-profiles';
 import { ONBOARDING_RULES } from '../lib/onboarding-rules';
 import { INPUT_FOCUS } from './ds';
+import { FlyttGoLogo } from './brand';
 
 interface LinkItem { label: string; page: Page; }
 
@@ -184,15 +185,12 @@ export default function Footer() {
       <div className="border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid lg:grid-cols-12 gap-10">
           <div className="lg:col-span-5">
-            <div className="flex items-center gap-2 mb-4">
-              <img
-                src="/logo-mark.png"
-                alt="FlyttGo"
-                className="w-9 h-9 rounded-lg object-contain bg-white"
+            <div className="mb-4">
+              <FlyttGoLogo
+                size="md"
+                variant="on-dark"
+                subtitle="Global relocation marketplace"
               />
-              <span className="text-xl font-extrabold text-white tracking-tight">
-                Flytt<span className="text-amber-300">Go</span>
-              </span>
             </div>
             <p className="text-sm text-white/70 leading-relaxed max-w-md mb-6">
               FlyttGo Global Logistics &amp; Relocation Marketplace connects

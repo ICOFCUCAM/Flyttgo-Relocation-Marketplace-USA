@@ -9,6 +9,7 @@ import { useAuth } from '../../lib/auth';
 import { useBackofficeAuth } from '../rbac/useBackofficeAuth';
 import { PAGE_PERMISSIONS, ROLE_LABELS } from '../rbac/permissions';
 import { type BosSlug } from '../routes';
+import { FlyttGoLogo } from '../../components/brand';
 
 interface NavItem {
   slug:  BosSlug;
@@ -88,13 +89,7 @@ export default function BackofficeLayout({ activeSlug, onNavigate, children }: P
       {/* ── Sidebar ─────────────────────────────────────── */}
       <aside className="hidden lg:flex w-64 flex-col bg-[#0b1f3a] text-white border-r border-white/5">
         <div className="p-5 border-b border-white/10">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="w-8 h-8 rounded-lg bg-amber-400 text-slate-900 flex items-center justify-center font-extrabold">F</div>
-            <div className="leading-tight">
-              <p className="text-sm font-extrabold tracking-tight">FlyttGo</p>
-              <p className="text-[10px] uppercase tracking-[0.18em] text-amber-300/80 font-bold">Back Office</p>
-            </div>
-          </div>
+          <FlyttGoLogo size="sm" variant="on-dark" subtitle="Back Office" />
         </div>
 
         <nav className="flex-1 overflow-y-auto p-3 space-y-1" aria-label="Back-office navigation">
@@ -150,10 +145,7 @@ export default function BackofficeLayout({ activeSlug, onNavigate, children }: P
       <main className="flex-1 min-w-0">
         {/* Top bar — mobile-only sidebar substitute. */}
         <div className="lg:hidden bg-[#0b1f3a] text-white px-4 py-3 flex items-center justify-between sticky top-0 z-20">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-amber-400 text-slate-900 flex items-center justify-center font-extrabold text-xs">F</div>
-            <span className="font-extrabold text-sm">FlyttGo Back Office</span>
-          </div>
+          <FlyttGoLogo size="sm" variant="on-dark" subtitle="Back Office" />
           <select
             className="bg-white/10 border border-white/20 rounded-md px-2 py-1 text-xs"
             value={activeSlug}
@@ -205,12 +197,8 @@ function BackofficeSignInPanel({ onCancel }: { onCancel: () => void }) {
     <div className="min-h-screen bg-slate-100 flex items-center justify-center px-6">
       <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
         <div className="bg-[#0b1f3a] text-white px-8 py-6">
-          <div className="flex items-center gap-2.5 mb-3">
-            <div className="w-9 h-9 rounded-lg bg-amber-400 text-slate-900 flex items-center justify-center font-extrabold">F</div>
-            <div>
-              <p className="text-xs uppercase tracking-widest text-amber-300 font-bold">FlyttGo</p>
-              <p className="text-sm font-extrabold tracking-tight">Back Office</p>
-            </div>
+          <div className="mb-3">
+            <FlyttGoLogo size="md" variant="on-dark" subtitle="Back Office" />
           </div>
           <h1 className="text-lg font-extrabold mb-1">Operator sign in</h1>
           <p className="text-xs text-white/70 leading-relaxed">

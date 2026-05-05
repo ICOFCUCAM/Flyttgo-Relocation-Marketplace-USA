@@ -1,4 +1,5 @@
 import { NAV_ITEMS, type DashTab } from './types';
+import { FlyttGoLogo } from '../brand';
 
 export function Sidebar({
   current,
@@ -10,11 +11,11 @@ export function Sidebar({
   return (
     <aside className="w-64 bg-[#0B2E59] text-white flex-shrink-0 flex-col hidden lg:flex">
       <div className="p-6 border-b border-white/10">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-sm font-bold" aria-hidden="true">F</div>
-          <span className="font-bold text-lg">FlyttGo</span>
-        </div>
-        <div className="text-xs text-white/50">Corporate Dashboard</div>
+        <FlyttGoLogo
+          size="sm"
+          variant="on-dark"
+          subtitle="Corporate Dashboard"
+        />
       </div>
 
       <nav className="flex-1 py-4" aria-label="Corporate sections">

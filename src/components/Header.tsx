@@ -7,6 +7,7 @@ import { LogIn, Bell, User as UserIcon, ArrowRight } from 'lucide-react';
 import ThemeToggle from './global/ThemeToggle';
 import { useNotifications } from '../hooks/useNotifications';
 import type { Page as PageType } from '../lib/store';
+import { FlyttGoLogo } from './brand';
 
 /* ─────────────────────────────────────────────────────────────────
  * 2035 marketplace nav structure — four dropdowns + two plain links.
@@ -527,20 +528,16 @@ export default function Header() {
              *  matches the marketplace banner palette so the logo
              *  doesn't read as a different product than the rest of
              *  the site. */}
-            <button onClick={() => handleNav('home')} className="flex items-center gap-1 flex-shrink-0 mr-4 lg:mr-10 group">
-              {/* Brand mark — public/logo-mark.png. The PNG ships with
-               *  whitespace baked into its margins; object-cover crops
-               *  it edge-to-edge so the wordmark sits flush against
-               *  the F instead of floating in the middle of the row. */}
-              <img
-                src="/logo-mark.png"
-                alt="FlyttGo"
-                className="w-9 h-9 rounded-xl object-cover"
+            <button onClick={() => handleNav('home')} className="flex-shrink-0 mr-4 lg:mr-10 group">
+              {/* Single source of truth — see src/components/brand/FlyttGoLogo.tsx.
+               *  Subtitle hidden below sm so the lockup stays tight on phones. */}
+              <FlyttGoLogo
+                size="md"
+                variant="color"
+                subtitle="Global relocation marketplace"
+                className="hidden sm:inline-flex"
               />
-              <div className="flex flex-col leading-none">
-                <span className="text-xl font-extrabold text-slate-900 tracking-tight">Flytt<span className="text-amber-600">Go</span></span>
-                <span className="hidden sm:inline text-[10px] uppercase tracking-[0.18em] text-slate-500 mt-0.5 font-semibold">Global relocation marketplace</span>
-              </div>
+              <FlyttGoLogo size="md" variant="color" className="sm:hidden" />
             </button>
 
             {/* Desktop nav — 2035 marketplace hierarchy.

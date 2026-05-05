@@ -1,4 +1,5 @@
 import { ADMIN_TABS, type AdminTab } from './types';
+import { FlyttGoLogo } from '../brand';
 
 /* ─────────────────────────────────────────────────────────────────
  * <AdminSidebar>
@@ -30,17 +31,11 @@ export function AdminSidebar({
   return (
     <aside className="w-64 bg-ink-900 text-white flex-shrink-0 flex flex-col">
       <div className="p-6 border-b border-white/10">
-        <div className="flex items-center gap-2.5">
-          <img
-            src="/logo-mark.png"
-            alt="FlyttGo"
-            className="w-8 h-8 rounded-lg object-contain bg-white"
-          />
-          <div>
-            <p className="text-sm font-extrabold tracking-tight">FlyttGo</p>
-            <p className="text-[10px] uppercase tracking-[0.18em] text-amber-300 font-bold">Admin</p>
-          </div>
-        </div>
+        <FlyttGoLogo
+          size="sm"
+          variant="on-dark"
+          subtitle="Admin"
+        />
       </div>
 
       <nav aria-label="Admin sections" className="flex-1 py-2">

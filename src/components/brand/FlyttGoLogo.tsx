@@ -1,228 +1,187 @@
 /* ─────────────────────────────────────────────────────────────────
  * <FlyttGoLogo>
  *
- * Brand mark + wordmark, hand-drawn as SVG so it renders crisply at
- * any size without a font dependency. The F-mark is a slanted block
- * letter with an orange leaf accent nestled at its base; the
- * wordmark is bold-italic with "Flytt" in deep navy and "Go" in
- * brand amber.
+ * The single source of truth for the FlyttGo brand mark across the
+ * marketplace. Replaces the dozen hand-rolled `<img> + <span>FlyttGo`
+ * blocks the codebase used to ship with so the wordmark spacing,
+ * subtitle treatment, and alignment stay consistent everywhere.
+ *
+ * Composition:
+ *   • F-mark        — public/logo-mark.png (raster, brand-issued)
+ *                     Mono / inverse variants fall back to an inline
+ *                     SVG so the mark can still recolour for dark
+ *                     hero overlays.
+ *   • Wordmark      — "FlyttGo" set in bold-italic system fonts
+ *   • Subtitle      — optional small-caps tagline beneath the wordmark
+ *
+ * Layout: top-aligned (items-start). The wordmark's top edge lines up
+ * with the mark's top edge, and the subtitle sits directly under the
+ * wordmark in a tight vertical stack — no vertical centring weirdness
+ * regardless of whether the subtitle is shown.
+ *
+ * Sizes (preset → mark px / wordmark text class):
+ *   sm  → 24 / text-base
+ *   md  → 36 / text-xl     (default)
+ *   lg  → 56 / text-3xl
  *
  * Variants:
- *   color       — full brand palette (default; navy + amber)
- *   mono-dark   — everything in deep navy (works on light surfaces)
- *   mono-light  — everything in white (works on dark surfaces)
- *   inverse     — white F + amber leaf + white "Flytt" + amber "Go"
- *                 (designed for the navy hero overlays)
+ *   color       — full-colour brand PNG + navy wordmark + amber "Go"
+ *   on-dark     — same PNG + white wordmark + amber "Go" (dark surfaces)
+ *   mono-dark   — drawn SVG in deep navy (light surfaces, no colour)
+ *   mono-light  — drawn SVG in white (dark surfaces, no colour)
  *
- * Composition flags:
- *   showMark      — render the F-mark (default true)
- *   showWordmark  — render the "FlyttGo" text (default true)
- *
- *   The two flags compose: <FlyttGoLogo showWordmark={false} /> renders
- *   just the F-mark (favicon-style), <FlyttGoLogo showMark={false} />
- *   renders just the wordmark (footer-style).
- *
- * Sizing is driven by the `size` prop (height in px) — width is
- * derived automatically from the chosen composition. Pass
- * `className` for layout positioning; the component never sets its
- * own margins.
- * ───────────────────────────────────────────────────────────────── */
+ * Use sparingly: this is a navigation / footer / auth ornament. If
+ * you need a 200px brand panel, use BrandPage's larger composition.
+ * ──────────────────────────────────────────────────────────────── */
 
-export type FlyttGoLogoVariant = 'color' | 'mono-dark' | 'mono-light' | 'inverse';
+import type { CSSProperties } from 'react';
 
-interface Props {
-  size?:          number;
-  variant?:       FlyttGoLogoVariant;
-  showMark?:      boolean;
-  showWordmark?:  boolean;
-  className?:     string;
-  ariaLabel?:     string;
+export type FlyttGoLogoSize    = 'sm' | 'md' | 'lg';
+export type FlyttGoLogoVariant = 'color' | 'on-dark' | 'mono-dark' | 'mono-light';
+
+interface SizePreset {
+  /** F-mark side length in px. */
+  mark:        number;
+  /** Tailwind text class for the wordmark. */
+  wordmark:    string;
+  /** Tailwind text class for the optional subtitle. */
+  subtitle:    string;
+  /** Negative letter spacing on the wordmark. */
+  tracking:    string;
+  /** Gap between mark and wordmark column. */
+  gap:         string;
 }
 
-interface PaletteEntry {
-  ink:     string;
-  accent:  string;
-  flytt:   string;
-  go:      string;
-}
-
-const PALETTE: Record<FlyttGoLogoVariant, PaletteEntry> = {
-  color:      { ink: '#0b1f3a', accent: '#d97706', flytt: '#0b1f3a', go: '#d97706' },
-  'mono-dark':  { ink: '#0b1f3a', accent: '#0b1f3a', flytt: '#0b1f3a', go: '#0b1f3a' },
-  'mono-light': { ink: '#ffffff', accent: '#ffffff', flytt: '#ffffff', go: '#ffffff' },
-  inverse:    { ink: '#ffffff', accent: '#fbbf24', flytt: '#ffffff', go: '#fbbf24' },
+const SIZE_PRESETS: Record<FlyttGoLogoSize, SizePreset> = {
+  sm: { mark: 24, wordmark: 'text-base',  subtitle: 'text-[9px]',  tracking: 'tracking-tight',  gap: 'gap-2' },
+  md: { mark: 36, wordmark: 'text-xl',    subtitle: 'text-[10px]', tracking: 'tracking-tight',  gap: 'gap-2' },
+  lg: { mark: 56, wordmark: 'text-3xl',   subtitle: 'text-[11px]', tracking: 'tracking-tight',  gap: 'gap-3' },
 };
 
+interface VariantTokens {
+  flytt:    string;       // Tailwind text colour for "Flytt"
+  go:       string;       // Tailwind text colour for "Go"
+  subtitle: string;       // Tailwind text colour for subtitle
+}
+
+const VARIANT_TOKENS: Record<FlyttGoLogoVariant, VariantTokens> = {
+  color:      { flytt: 'text-slate-900', go: 'text-amber-600',  subtitle: 'text-slate-500' },
+  'on-dark':  { flytt: 'text-white',     go: 'text-amber-300',  subtitle: 'text-white/60'  },
+  'mono-dark':{ flytt: 'text-slate-900', go: 'text-slate-900',  subtitle: 'text-slate-500' },
+  'mono-light':{flytt: 'text-white',     go: 'text-white',      subtitle: 'text-white/60'  },
+};
+
+export interface FlyttGoLogoProps {
+  /** Preset size; controls mark px + font sizes together. Default 'md'. */
+  size?:      FlyttGoLogoSize;
+  /** Colour variant. Default 'color'. */
+  variant?:   FlyttGoLogoVariant;
+  /** Optional subtitle (e.g. "Global relocation marketplace"). */
+  subtitle?:  string;
+  /** Hide the wordmark, render just the mark. Useful for super-tight slots. */
+  markOnly?:  boolean;
+  /** Forwarded to the outer container so callers can add margins / hover styles. */
+  className?: string;
+  /** Override the aria label. Default 'FlyttGo'. */
+  ariaLabel?: string;
+}
+
 export default function FlyttGoLogo({
-  size         = 32,
-  variant      = 'color',
-  showMark     = true,
-  showWordmark = true,
-  className    = '',
-  ariaLabel    = 'FlyttGo',
-}: Props) {
-  const p = PALETTE[variant];
+  size      = 'md',
+  variant   = 'color',
+  subtitle,
+  markOnly  = false,
+  className = '',
+  ariaLabel = 'FlyttGo',
+}: FlyttGoLogoProps) {
+  const preset = SIZE_PRESETS[size];
+  const tokens = VARIANT_TOKENS[variant];
 
-  /* viewBox dimensions — the mark is a 64-unit square, the wordmark
-   * is a 180-unit-wide text block. Combined width depends on which
-   * pieces are visible. */
-  const MARK_W   = 64;
-  const WORD_W   = 180;
-  const GAP      = 14;
-  const BOX_H    = 64;
+  /* The mark uses the brand-issued raster for the colour + on-dark
+   * variants (matches the favicon + apple-touch-icon pixel-for-pixel)
+   * and falls back to the inline SVG drawing for mono variants which
+   * need to recolour cleanly. */
+  const mark = (variant === 'color' || variant === 'on-dark')
+    ? <RasterMark size={preset.mark} alt={ariaLabel} />
+    : <DrawnMark  size={preset.mark} variant={variant} />;
 
-  let viewW: number;
-  if (showMark && showWordmark) viewW = MARK_W + GAP + WORD_W;
-  else if (showMark)            viewW = MARK_W;
-  else                          viewW = WORD_W;
+  if (markOnly) return <span className={className}>{mark}</span>;
 
-  /* Width is computed from the requested height so the bbox stays
-   * proportional regardless of which pieces are showing. */
-  const heightPx = size;
-  const widthPx  = (viewW / BOX_H) * heightPx;
+  return (
+    <span
+      role="img"
+      aria-label={subtitle ? `${ariaLabel} — ${subtitle}` : ariaLabel}
+      className={`inline-flex items-start ${preset.gap} ${className}`}
+    >
+      {mark}
+
+      <span className="flex flex-col leading-none pt-0.5">
+        <span className={`font-extrabold ${preset.tracking} ${preset.wordmark} ${tokens.flytt}`}>
+          Flytt<span className={tokens.go}>Go</span>
+        </span>
+        {subtitle && (
+          <span
+            className={`uppercase font-semibold mt-1 ${preset.subtitle} ${tokens.subtitle}`}
+            style={SUBTITLE_TRACKING}
+          >
+            {subtitle}
+          </span>
+        )}
+      </span>
+    </span>
+  );
+}
+
+/* Letter-spacing is too wide to express via a Tailwind class and stay
+ * legible — set it inline. */
+const SUBTITLE_TRACKING: CSSProperties = { letterSpacing: '0.18em' };
+
+/* ── Raster mark (color + on-dark) ───────────────────────────── */
+
+function RasterMark({ size, alt }: { size: number; alt: string }) {
+  return (
+    <img
+      src="/logo-mark.png"
+      alt={alt}
+      width={size}
+      height={size}
+      style={{ width: size, height: size }}
+      className="rounded-lg object-cover flex-shrink-0"
+      decoding="async"
+    />
+  );
+}
+
+/* ── Drawn mark (mono-dark / mono-light) ──────────────────────
+ *
+ * Italic block "F" + leaf accent, drawn so the mark can recolour to
+ * a single brand ink. Used on dark hero overlays and other surfaces
+ * where the raster's full-colour palette would clash. */
+function DrawnMark({
+  size, variant,
+}: { size: number; variant: 'mono-dark' | 'mono-light' }) {
+  const ink    = variant === 'mono-light' ? '#ffffff' : '#0b1f3a';
+  const accent = ink;
 
   return (
     <svg
-      role="img"
-      aria-label={ariaLabel}
-      width={widthPx}
-      height={heightPx}
-      viewBox={`0 0 ${viewW} ${BOX_H}`}
+      width={size}
+      height={size}
+      viewBox="0 0 64 64"
       xmlns="http://www.w3.org/2000/svg"
-      className={className}
+      className="flex-shrink-0"
+      aria-hidden
     >
-      {showMark && <FMark x={0} ink={p.ink} accent={p.accent} variant={variant} />}
-      {showWordmark && (
-        <Wordmark
-          x={showMark ? MARK_W + GAP : 0}
-          flytt={p.flytt}
-          go={p.go}
-        />
-      )}
-    </svg>
-  );
-}
-
-/* ── F-mark ───────────────────────────────────────────────────
- *
- * Composed in two layers:
- *
- *   1. A block "F" drawn as a single closed path UPRIGHT, then
- *      skewX(-14°) on its parent <g> to apply a uniform forward
- *      lean. Skewing rather than hand-slanting each vertex keeps
- *      every stroke at the same angle — the visual cue that says
- *      "italic" rather than "wonky". The translate compensates
- *      for the leftward shift the skew introduces so the mark
- *      stays inside the bbox.
- *
- *   2. A curved teardrop / leaf accent in brand amber drawn
- *      OUTSIDE the skew group so its curves stay organic instead
- *      of stretching with the italic. Sits at the bottom-left of
- *      the mark with its tip aimed at the F's stem, mirroring the
- *      reference brand mark.
- * ──────────────────────────────────────────────────────────── */
-function FMark({
-  x, ink, accent, variant,
-}: {
-  x: number; ink: string; accent: string; variant: FlyttGoLogoVariant;
-}) {
-  /* Color variant uses the brand-issued PNG (public/logo-mark.png) so
-   * the mark matches the rest of the brand system pixel-for-pixel.
-   *
-   * Mono variants still use the inline SVG paths because they need to
-   * recolour to white (mono-light), navy (mono-dark) or the inverse
-   * navy/amber pair on dark hero overlays — a raster image can't
-   * recolour without ugly CSS filter() approximations. */
-  if (variant === 'color') {
-    return (
-      <image
-        href="/logo-mark.png"
-        x={x}
-        y={0}
-        width={64}
-        height={64}
-        preserveAspectRatio="xMidYMid meet"
-      />
-    );
-  }
-
-  return (
-    <g transform={`translate(${x} 0)`}>
-
-      {/* Italic block F — uniform skew on the whole letter so the
-          left edge, right edge, and crossbar terminations all share
-          the same slant. translate(8 0) keeps the mark visually
-          centred after the skew shifts the upper portion left. */}
       <g transform="skewX(-14) translate(8 0)">
         <path
-          d="
-            M 18 6
-            L 54 6
-            L 54 18
-            L 30 18
-            L 30 28
-            L 44 28
-            L 44 38
-            L 30 38
-            L 30 58
-            L 18 58
-            Z
-          "
+          d="M 18 6 L 54 6 L 54 18 L 30 18 L 30 28 L 44 28 L 44 38 L 30 38 L 30 58 L 18 58 Z"
           fill={ink}
         />
       </g>
-
-      {/* Leaf / flame accent. Cubic-curve teardrop with the tip
-          aimed up-and-right toward the F's stem; the wide curve
-          closes back at the lower-left. The shape lives in the
-          unskewed coordinate space so its arcs stay symmetrical
-          even though the F leans. */}
       <path
-        d="
-          M 4 60
-          C 4 44, 14 32, 26 30
-          C 28 36, 26 46, 20 53
-          C 16 57, 10 60, 4 60
-          Z
-        "
+        d="M 4 60 C 4 44, 14 32, 26 30 C 28 36, 26 46, 20 53 C 16 57, 10 60, 4 60 Z"
         fill={accent}
       />
-    </g>
-  );
-}
-
-/* ── Wordmark ──────────────────────────────────────────────────
- *
- * "Flytt" + "Go" rendered as bold-italic SVG text. We use the
- * system font stack with explicit italic + 900 weight so the
- * wordmark inherits the platform's preferred bold-italic glyphs
- * without bundling a font file.
- *
- * Letter spacing pulled in slightly (-1.5) so the wordmark reads
- * as a tight unit rather than spaced-out marketing copy. */
-function Wordmark({ x, flytt, go }: { x: number; flytt: string; go: string }) {
-  const fontFamily =
-    "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, " +
-    "'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif";
-
-  return (
-    <g
-      transform={`translate(${x} 0)`}
-      fontFamily={fontFamily}
-      fontStyle="italic"
-      fontWeight={900}
-      fontSize={56}
-      letterSpacing={-1.5}
-    >
-      {/* "Flytt" — navy. y=46 baselines it at the visual centre of
-          the 64-unit box (height 56 + descender ≈ 8 → 46 looks
-          right for a heavy italic). */}
-      <text x={0}   y={46} fill={flytt}>Flytt</text>
-      {/* "Go" — amber. The Wordmark's intrinsic width depends on the
-          renderer's bold-italic glyphs; 96 is the visual end of
-          "Flytt" with the chosen letter-spacing. Adjust here if the
-          wordmark ever feels mis-spaced in a specific browser. */}
-      <text x={104} y={46} fill={go}>Go</text>
-    </g>
+    </svg>
   );
 }
