@@ -215,8 +215,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
        * it into a bug report and so a refresh hits the same path. */
       if (page === 'not-found') return undefined;
       const path = pageToPath(page);
-      if (window.location.pathname !== path) {
+      const samePath = window.location.pathname === path;
+      if (!samePath) {
         window.history.pushState({ page }, '', path);
+      }
+      /* Reset scroll on every cross-page navigation so a footer
+       * link from deep on Page A lands at the top of Page B —
+       * not at the equivalent scroll offset. Skip when the path
+       * didn't change (in-page state updates shouldn't yank the
+       * viewport). */
+      if (!samePath) {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
       }
     }
   }, []);
@@ -226,7 +235,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
    * to avoid feedback loops. */
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
-    const onPop = () => setCurrentPage(pathToPage(window.location.pathname));
+    const onPop = () => {
+      setCurrentPage(pathToPage(window.location.pathname));
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
   }, []);
