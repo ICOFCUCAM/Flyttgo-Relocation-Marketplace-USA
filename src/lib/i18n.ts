@@ -92,6 +92,7 @@ const COUNTRY_LANG: Record<string, SupportedLang> = {
   at: 'de',     /* Austria — German. */
   ch: 'de',     /* Switzerland — trilingual DE/FR/IT; defaults to DE. */
   cz: 'cs',
+  cy: 'en',     /* Cyprus — Greek + English; the marketplace surface is English-first. */
 };
 
 /**
