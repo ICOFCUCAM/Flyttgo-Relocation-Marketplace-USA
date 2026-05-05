@@ -180,6 +180,12 @@ const POSTCODE_FORMATS: Record<CountryCode, PostcodeFormat> = {
       return `${stripped.slice(0, 3)} ${stripped.slice(3)}`;
     },
   },
+  cy: {
+    /* Cyprus: 4-digit postal codes (1000-9999 range). */
+    regex:   /^\d{4}$/,
+    example: '1011',
+    format:  '4 digits',
+  },
 };
 
 /**

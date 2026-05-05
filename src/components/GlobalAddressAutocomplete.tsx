@@ -22,7 +22,7 @@ export type CountryCode =
   /* Expansion — first wave */
   | 'nl' | 'se' | 'es' | 'it' | 'pl'
   /* Expansion — second wave */
-  | 'dk' | 'be' | 'at' | 'ch' | 'cz';
+  | 'dk' | 'be' | 'at' | 'ch' | 'cz' | 'cy';
 
 export interface USAddress {
   street_name: string;
@@ -94,6 +94,7 @@ const COUNTRY_LANG: Record<CountryCode, string> = {
   at: 'de-AT',
   ch: 'de-CH',
   cz: 'cs-CZ',
+  cy: 'el-CY',
 };
 
 const COUNTRY_LABEL: Record<CountryCode, string> = {
@@ -116,6 +117,7 @@ const COUNTRY_LABEL: Record<CountryCode, string> = {
   at: 'Austria',
   ch: 'Switzerland',
   cz: 'Czech Republic',
+  cy: 'Cyprus',
 };
 
 /* Partial: country viewboxes only exist for the 6 markets where
