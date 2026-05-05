@@ -3,7 +3,7 @@ import { FOCUS_RING } from '../../ds';
 import { useApp } from '../../../lib/store';
 import { calculateProration, daysLeft } from '../utils';
 import { PLAN_OPTIONS, VAT_RATE, type PlanOption } from '../types';
-import { localPriceForTier } from '../../../lib/subscription-tiers';
+import { localPriceForTier, tierLabelForCountry, SUBSCRIPTION_TIERS } from '../../../lib/subscription-tiers';
 import type { PricingCountry } from '../../../lib/pricing-engine';
 import {
   useChangeSubscription,
@@ -133,7 +133,19 @@ export function SubscriptionTab({
           <div className="flex items-start justify-between">
             <div>
               <div className="text-sm text-gray-500 mb-1">Current Plan</div>
-              <div className="text-2xl font-bold text-gray-900 capitalize">{subscription.plan}</div>
+              {/* Resolve the slug to the country-localised tier label
+               *  (e.g. 'elite' → 'Infrastructure Partner' on US,
+               *  'Infrastrukturpartner' on Norwegian shopfront) so
+               *  the displayed name matches what the marketing page
+               *  shows for the same subscription. capitalize() was
+               *  rendering 'Elite' which doesn't exist as a label
+               *  anywhere in the brand. */}
+              <div className="text-2xl font-bold text-gray-900">
+                {(() => {
+                  const tier = SUBSCRIPTION_TIERS.find(t => t.slug === subscription.plan);
+                  return tier ? tierLabelForCountry(tier, country) : subscription.plan;
+                })()}
+              </div>
               <div className="text-sm text-gray-500 mt-1">
                 Status: <span className={`font-medium ${subscription.status === 'active' ? 'text-emerald-600' : 'text-red-500'}`}>
                   {subscription.status}
@@ -209,7 +221,14 @@ function PlanCard({
   return (
     <div className={`bg-white border-2 rounded-2xl p-5 flex flex-col transition ${cardBorder} ${popular}`}>
       <div className="flex items-center justify-between mb-2">
-        <div className="font-bold text-gray-900">{plan.label}</div>
+        {/* Country-localised tier label so a NO driver sees
+         *  'Infrastrukturpartner', a DE driver 'Infrastruktur-
+         *  Partner', etc. Falls back to plan.label when the slug
+         *  isn't in SUBSCRIPTION_TIERS (shouldn't happen but cheap). */}
+        <div className="font-bold text-gray-900">{(() => {
+          const tier = SUBSCRIPTION_TIERS.find(t => t.slug === plan.id);
+          return tier ? tierLabelForCountry(tier, country) : plan.label;
+        })()}</div>
         {current   && <span className="text-xs bg-emerald-100 text-emerald-700 px-2.5 py-0.5 rounded-full font-semibold">Current</span>}
         {plan.highlight && !current && <span className="text-xs bg-emerald-600 text-white px-2.5 py-0.5 rounded-full font-semibold">Popular</span>}
       </div>

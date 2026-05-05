@@ -69,6 +69,7 @@ const DOC_LABEL: Record<string, string> = {
   insurance:            'Vehicle Insurance',
   vehicle_registration: 'Vehicle Registration',
   identity_document:    'ID / Passport',
+  vehicle_photo:        'Vehicle Photo',
   profile_photo:        'Profile Photo',
 };
 
