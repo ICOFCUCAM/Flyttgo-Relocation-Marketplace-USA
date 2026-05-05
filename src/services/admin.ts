@@ -475,6 +475,12 @@ export async function reviewDriverApplication(
     phone:     app.phone,
     status:    'approved',
     online:    false,
+    /* Carry the application's country + city onto the profile so
+     * the admin Geography panel and the country-aware subscription
+     * pricing see the right market on day 1 — without this, every
+     * approved driver landed in 'unknown' until manually backfilled. */
+    zone:      app.zone ?? null,
+    city:      app.city ?? null,
   });
   return { activated: true };
 }
