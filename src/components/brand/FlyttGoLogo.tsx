@@ -91,7 +91,7 @@ export default function FlyttGoLogo({
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      {showMark && <FMark x={0} ink={p.ink} accent={p.accent} />}
+      {showMark && <FMark x={0} ink={p.ink} accent={p.accent} variant={variant} />}
       {showWordmark && (
         <Wordmark
           x={showMark ? MARK_W + GAP : 0}
@@ -121,7 +121,31 @@ export default function FlyttGoLogo({
  *      the mark with its tip aimed at the F's stem, mirroring the
  *      reference brand mark.
  * ──────────────────────────────────────────────────────────── */
-function FMark({ x, ink, accent }: { x: number; ink: string; accent: string }) {
+function FMark({
+  x, ink, accent, variant,
+}: {
+  x: number; ink: string; accent: string; variant: FlyttGoLogoVariant;
+}) {
+  /* Color variant uses the brand-issued PNG (public/logo-mark.png) so
+   * the mark matches the rest of the brand system pixel-for-pixel.
+   *
+   * Mono variants still use the inline SVG paths because they need to
+   * recolour to white (mono-light), navy (mono-dark) or the inverse
+   * navy/amber pair on dark hero overlays — a raster image can't
+   * recolour without ugly CSS filter() approximations. */
+  if (variant === 'color') {
+    return (
+      <image
+        href="/logo-mark.png"
+        x={x}
+        y={0}
+        width={64}
+        height={64}
+        preserveAspectRatio="xMidYMid meet"
+      />
+    );
+  }
+
   return (
     <g transform={`translate(${x} 0)`}>
 

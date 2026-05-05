@@ -86,7 +86,7 @@ const STATIC_URLS = [
   { path: '/providers',            changefreq: 'monthly', priority: '0.9' },
   { path: '/providers/directory',  changefreq: 'weekly',  priority: '0.9' },
   { path: '/providers/requirements', changefreq: 'monthly', priority: '0.85' },
-  { path: '/become-a-driver',      changefreq: 'monthly', priority: '0.8' },
+  { path: '/drive',                changefreq: 'monthly', priority: '0.8' },
   { path: '/driver-subscriptions', changefreq: 'monthly', priority: '0.7' },
   { path: '/compare',              changefreq: 'weekly',  priority: '0.7' },
 

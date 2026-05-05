@@ -16,14 +16,14 @@
   "launch_handler": { "client_mode": "navigate-existing" },
   "icons": [
     {
-      "src": "/favicon.svg",
-      "type": "image/svg+xml",
+      "src": "/logo-mark.png",
+      "type": "image/png",
       "sizes": "any",
       "purpose": "any"
     },
     {
-      "src": "/apple-touch-icon.svg",
-      "type": "image/svg+xml",
+      "src": "/logo-mark.png",
+      "type": "image/png",
       "sizes": "180x180",
       "purpose": "any maskable"
     }
@@ -44,27 +44,27 @@
       "short_name": "Quote",
       "description": "Compare licensed movers in 60 seconds",
       "url": "/book?source=pwa-shortcut",
-      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+      "icons": [{ "src": "/logo-mark.png", "sizes": "any" }]
     },
     {
       "name": "Track a move",
       "short_name": "Track",
       "description": "Live driver tracking + ETA",
       "url": "/track?source=pwa-shortcut",
-      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+      "icons": [{ "src": "/logo-mark.png", "sizes": "any" }]
     },
     {
       "name": "My bookings",
       "short_name": "My moves",
       "url": "/my-bookings?source=pwa-shortcut",
-      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+      "icons": [{ "src": "/logo-mark.png", "sizes": "any" }]
     },
     {
       "name": "Browse marketplace",
       "short_name": "Browse",
       "description": "16 country marketplaces in one app",
       "url": "/marketplace?source=pwa-shortcut",
-      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+      "icons": [{ "src": "/logo-mark.png", "sizes": "any" }]
     }
   ],
   "screenshots": [
