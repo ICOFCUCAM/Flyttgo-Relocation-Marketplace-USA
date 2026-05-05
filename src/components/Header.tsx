@@ -531,13 +531,8 @@ export default function Header() {
             <button onClick={() => handleNav('home')} className="flex-shrink-0 mr-4 lg:mr-10 group">
               {/* Single source of truth — see src/components/brand/FlyttGoLogo.tsx.
                *  Subtitle hidden below sm so the lockup stays tight on phones. */}
-              <FlyttGoLogo
-                size="md"
-                variant="color"
-                subtitle="Global relocation marketplace"
-                className="hidden sm:inline-flex"
-              />
-              <FlyttGoLogo size="md" variant="color" className="sm:hidden" />
+              <FlyttGoLogo variant="color" className="hidden sm:flex" />
+              <FlyttGoLogo variant="color" subtitle={null} className="sm:hidden" />
             </button>
 
             {/* Desktop nav — 2035 marketplace hierarchy.

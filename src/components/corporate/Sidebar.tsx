@@ -11,11 +11,7 @@ export function Sidebar({
   return (
     <aside className="w-64 bg-[#0B2E59] text-white flex-shrink-0 flex-col hidden lg:flex">
       <div className="p-6 border-b border-white/10">
-        <FlyttGoLogo
-          size="sm"
-          variant="on-dark"
-          subtitle="Corporate Dashboard"
-        />
+        <FlyttGoLogo variant="on-dark" subtitle="Corporate Dashboard" />
       </div>
 
       <nav className="flex-1 py-4" aria-label="Corporate sections">

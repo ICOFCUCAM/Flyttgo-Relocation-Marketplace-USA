@@ -89,7 +89,7 @@ export default function BackofficeLayout({ activeSlug, onNavigate, children }: P
       {/* ── Sidebar ─────────────────────────────────────── */}
       <aside className="hidden lg:flex w-64 flex-col bg-[#0b1f3a] text-white border-r border-white/5">
         <div className="p-5 border-b border-white/10">
-          <FlyttGoLogo size="sm" variant="on-dark" subtitle="Back Office" />
+          <FlyttGoLogo variant="on-dark" subtitle="Back Office" />
         </div>
 
         <nav className="flex-1 overflow-y-auto p-3 space-y-1" aria-label="Back-office navigation">
@@ -145,7 +145,7 @@ export default function BackofficeLayout({ activeSlug, onNavigate, children }: P
       <main className="flex-1 min-w-0">
         {/* Top bar — mobile-only sidebar substitute. */}
         <div className="lg:hidden bg-[#0b1f3a] text-white px-4 py-3 flex items-center justify-between sticky top-0 z-20">
-          <FlyttGoLogo size="sm" variant="on-dark" subtitle="Back Office" />
+          <FlyttGoLogo variant="on-dark" subtitle="Back Office" />
           <select
             className="bg-white/10 border border-white/20 rounded-md px-2 py-1 text-xs"
             value={activeSlug}
@@ -198,7 +198,7 @@ function BackofficeSignInPanel({ onCancel }: { onCancel: () => void }) {
       <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
         <div className="bg-[#0b1f3a] text-white px-8 py-6">
           <div className="mb-3">
-            <FlyttGoLogo size="md" variant="on-dark" subtitle="Back Office" />
+            <FlyttGoLogo variant="on-dark" subtitle="Back Office" />
           </div>
           <h1 className="text-lg font-extrabold mb-1">Operator sign in</h1>
           <p className="text-xs text-white/70 leading-relaxed">

@@ -186,11 +186,7 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid lg:grid-cols-12 gap-10">
           <div className="lg:col-span-5">
             <div className="mb-4">
-              <FlyttGoLogo
-                size="md"
-                variant="on-dark"
-                subtitle="Global relocation marketplace"
-              />
+              <FlyttGoLogo variant="on-dark" />
             </div>
             <p className="text-sm text-white/70 leading-relaxed max-w-md mb-6">
               FlyttGo Global Logistics &amp; Relocation Marketplace connects

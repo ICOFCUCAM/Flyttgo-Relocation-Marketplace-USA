@@ -93,7 +93,6 @@ export default function CookieConsent() {
           />
           <div className="relative flex items-start justify-between gap-3">
             <FlyttGoLogo
-              size="sm"
               variant="on-dark"
               subtitle="GDPR · We use cookies"
               className="min-w-0"

@@ -31,11 +31,7 @@ export function AdminSidebar({
   return (
     <aside className="w-64 bg-ink-900 text-white flex-shrink-0 flex flex-col">
       <div className="p-6 border-b border-white/10">
-        <FlyttGoLogo
-          size="sm"
-          variant="on-dark"
-          subtitle="Admin"
-        />
+        <FlyttGoLogo variant="on-dark" subtitle="Admin" />
       </div>
 
       <nav aria-label="Admin sections" className="flex-1 py-2">
