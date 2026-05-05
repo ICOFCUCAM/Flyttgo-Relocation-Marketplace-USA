@@ -1,11 +1,13 @@
 import { Card } from '../Card';
-import { Inbox } from 'lucide-react';
+import { Inbox, FileText } from 'lucide-react';
+import { useState } from 'react';
 import type { AdminDashboardSnapshot } from '../../../services/admin';
 import { useAdminAnalyticsRealtime } from '../../../hooks/queries/useAdminAnalytics';
 import TimeSeriesSparklines from '../analytics/TimeSeriesSparklines';
 import FunnelView from '../analytics/FunnelView';
 import CohortRetention from '../analytics/CohortRetention';
 import PerCountryBreakdown from '../analytics/PerCountryBreakdown';
+import WeeklyReportModal from '../analytics/WeeklyReportModal';
 
 export function OverviewTab({ data }: { data: AdminDashboardSnapshot }) {
   /* Subscribe to bookings + applications + driver_profiles +
@@ -13,6 +15,8 @@ export function OverviewTab({ data }: { data: AdminDashboardSnapshot }) {
    * row mutates. The dashboard then feels real-time without polling
    * harder than 60s. */
   useAdminAnalyticsRealtime();
+
+  const [reportOpen, setReportOpen] = useState(false);
   const {
     drivers, bookings, applications, customerCount,
     activeDrivers, activeBookings, totalRevenue,
@@ -30,7 +34,18 @@ export function OverviewTab({ data }: { data: AdminDashboardSnapshot }) {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">FlyttGo Operations Control Center</h1>
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <h1 className="text-2xl font-bold">FlyttGo Operations Control Center</h1>
+        <button
+          onClick={() => setReportOpen(true)}
+          className="inline-flex items-center gap-1.5 bg-[#0B2E59] hover:bg-[#0F3558] text-white px-4 py-2 rounded-lg text-xs font-bold transition"
+          title="Generate a printable weekly report. Use the browser's Print → Save as PDF to export."
+        >
+          <FileText className="w-3.5 h-3.5" /> Weekly report (PDF)
+        </button>
+      </div>
+      {reportOpen && <WeeklyReportModal onClose={() => setReportOpen(false)} />}
+
       {pendingApplicationsCount > 0 && (
         <div role="alert" className="mb-4 bg-amber-50 border border-amber-300 text-amber-900 px-6 py-4 rounded-2xl flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-amber-400 text-ink-900 flex items-center justify-center flex-shrink-0 shadow shadow-amber-500/30">
