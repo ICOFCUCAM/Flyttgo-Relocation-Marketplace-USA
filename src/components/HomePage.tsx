@@ -15,6 +15,7 @@ import ReviewsCarousel from './global/ReviewsCarousel';
 import HomeFAQ from './global/HomeFAQ';
 import WorldDeploymentMap from './global/WorldDeploymentMap';
 import GlobalPresence from './global/GlobalPresence';
+import MobilityIntelligence from './global/MobilityIntelligence';
 import { SERVICE_CATEGORIES } from '../lib/service-categories';
 import { PROVIDERS } from '../lib/providers-catalogue';
 
@@ -249,6 +250,9 @@ export default function HomePage() {
 
       {/* ─── 1.5 · GLOBAL PRESENCE ─ at-a-glance trust signals ── */}
       <GlobalPresence />
+
+      {/* ─── 1.7 · MOBILITY INTELLIGENCE ─ corridor + season read */}
+      <MobilityIntelligence />
 
       {/* ─── 2 · CATEGORIES ─ "What you can book" ───────────── */}
       <section className="bg-[#fafaf7] py-16 sm:py-20">

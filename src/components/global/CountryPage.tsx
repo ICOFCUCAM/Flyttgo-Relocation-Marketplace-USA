@@ -10,6 +10,7 @@ import {
   POPULAR_CORRIDORS, COUNTRY_COMPLIANCE_PILLS, PROVIDER_AVAILABILITY_THIS_WEEK,
 } from '../../lib/popular-cities';
 import { track } from '../../lib/analytics';
+import { corridorsForCountry, type MarketCountryCode } from '../../lib/cross-border-corridors';
 
 /**
  * Section-index label — kept for backward compatibility with editorial
@@ -446,6 +447,13 @@ export default function CountryPage(props: CountryPageProps) {
         </div>
       </section>
 
+      {/* ─── CROSS-BORDER CORRIDORS ──────────────────────────
+       *   Surfaces every CROSS_BORDER_CORRIDOR that touches this
+       *   country. Anchors the SEO body with concrete, in-network
+       *   move pairs — high-frequency corridors get an Amber tag.
+       *   Hidden when the country isn't part of any corridor. */}
+      <CrossBorderCorridorsForCountry iso2={props.iso2} name={props.name} />
+
       {/* ─── COUNTRY SEO SLOT ────────────────────────────────
        *   Optional multilingual SEO + corridor block injected by
        *   each country page. Sits just before the Final CTA so the
@@ -478,5 +486,68 @@ export default function CountryPage(props: CountryPageProps) {
         </div>
       </section>
     </main>
+  );
+}
+
+/**
+ * <CrossBorderCorridorsForCountry>
+ *
+ * Lists every CROSS_BORDER_CORRIDORS entry that originates in or
+ * terminates at the country. High-frequency corridors get an amber
+ * tag; corridors that bridge into an existing market get a small
+ * 'In-network' note. Renders nothing when the country isn't part
+ * of any corridor (clean fall-through, no empty section).
+ *
+ * Hoisted to CountryPage rather than each market shopfront so all 6
+ * legacy markets pick it up uniformly.
+ */
+function CrossBorderCorridorsForCountry({ iso2, name }: { iso2: string; name: string }) {
+  const corridors = corridorsForCountry(iso2.toLowerCase() as MarketCountryCode);
+  if (corridors.length === 0) return null;
+
+  return (
+    <section className="bg-white border-t border-slate-200/70">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16">
+        <div className="mb-8">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-amber-600 mb-2">
+            Cross-border corridors
+          </p>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            In-network moves touching {name}
+          </h2>
+          <p className="text-sm text-slate-600 mt-2 max-w-2xl">
+            Corridors with active dispatch coordination. High-frequency lanes
+            carry guaranteed weekly capacity; in-network bridges connect
+            expansion markets to a fully-activated FlyttGo shopfront.
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {corridors.map(c => (
+            <div
+              key={c.slug}
+              className="border border-slate-200 rounded-xl p-4 bg-white hover:shadow-sm transition"
+            >
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <p className="text-sm font-bold text-slate-900 leading-tight">
+                  {c.fromCity} <span className="text-slate-400">→</span> {c.toCity}
+                </p>
+                {c.isHighFrequency && (
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider bg-amber-100 text-amber-800 uppercase">
+                    High-frequency
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-slate-500 uppercase tracking-wider font-bold">
+                {c.fromCountry.toUpperCase()} → {c.toCountry.toUpperCase()}
+                {c.bridgesToExistingMarket && (
+                  <span className="ml-2 text-emerald-700 normal-case font-semibold">· In-network bridge</span>
+                )}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
