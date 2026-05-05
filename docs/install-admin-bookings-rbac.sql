@@ -106,7 +106,8 @@ create policy bookings_admin_update on public.bookings
  * Atomic merge of pending_admin_edits into the live columns,
  * scoped to the calling customer. Server-side enforcement so a
  * malicious client can't approve and edit at the same time. */
-create or replace function public.approve_pending_admin_edit(p_booking_id uuid)
+drop function if exists public.approve_pending_admin_edit(uuid);
+create function public.approve_pending_admin_edit(p_booking_id uuid)
 returns public.bookings
 language plpgsql
 security definer
@@ -161,7 +162,8 @@ grant execute on function public.approve_pending_admin_edit(uuid) to authenticat
 /* ── 5. decline_pending_admin_edit() RPC ───────────────────────
  * Customer rejects the staged change — clears the pending payload
  * but records the rejection so admin can see it. */
-create or replace function public.decline_pending_admin_edit(p_booking_id uuid)
+drop function if exists public.decline_pending_admin_edit(uuid);
+create function public.decline_pending_admin_edit(p_booking_id uuid)
 returns public.bookings
 language plpgsql
 security definer
@@ -193,8 +195,13 @@ grant execute on function public.decline_pending_admin_edit(uuid) to authenticat
 /* ── 6. delete_user_account() RPC — super-admin only ──────────
  * Soft alternative to ALTER auth.users. Deletes the row from
  * auth.users; CASCADE on profiles / driver_profiles cleans up the
- * rest. Wrapped in a function so we can audit + gate by role. */
-create or replace function public.delete_user_account(p_user_id uuid)
+ * rest. Wrapped in a function so we can audit + gate by role.
+ *
+ * DROP-then-CREATE because a prior migration may have shipped this
+ * function with parameter defaults; PostgreSQL refuses a CREATE OR
+ * REPLACE that changes the parameter signature. */
+drop function if exists public.delete_user_account(uuid);
+create function public.delete_user_account(p_user_id uuid)
 returns void
 language plpgsql
 security definer
