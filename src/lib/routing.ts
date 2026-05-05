@@ -43,8 +43,12 @@ export interface LatLng {
 export interface RouteResult {
   distanceKm:      number;
   durationMinutes: number;
-  /** Where the numbers came from — useful for UI labels + debugging. */
-  source:          'osrm' | 'haversine';
+  /** Where the numbers came from — useful for UI labels + debugging.
+   *  'cache' is set by the route-cache layer in services/route-cache;
+   *  callers shouldn't rely on it being one of the original two for
+   *  decisioning (the cached value is whichever the original source
+   *  was). */
+  source:          'osrm' | 'haversine' | 'cache';
 }
 
 /* ── Straight-line fallback ────────────────────────────────────── */

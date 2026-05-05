@@ -36,7 +36,11 @@ import { track } from '../lib/analytics';
  * for unauthenticated visitors who haven't yet signed up.
  * ───────────────────────────────────────────────────────────────── */
 
-const COUNTRY_FLAGS: Record<OnboardingCountryCode, string> = {
+/* Partial: ONBOARDING_RULES drives the actual list of countries at
+ * runtime, but the type `OnboardingCountryCode` widened to all 16+1
+ * PricingCountry codes when the rollout expanded — flags only exist
+ * for jurisdictions that have rules today. */
+const COUNTRY_FLAGS: Partial<Record<OnboardingCountryCode, string>> = {
   us: '🇺🇸', ca: '🇨🇦', gb: '🇬🇧', de: '🇩🇪', fr: '🇫🇷',
   no: '🇳🇴', ng: '🇳🇬', ke: '🇰🇪', ae: '🇦🇪', in: '🇮🇳',
 };

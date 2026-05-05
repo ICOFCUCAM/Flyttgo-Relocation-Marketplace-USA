@@ -351,6 +351,8 @@ const LOCALE_BY_CURRENCY: Record<CountryProfile['currency'], string> = {
   NGN: 'en-NG',
   KES: 'en-KE',
   AED: 'en-AE',
+  SEK: 'sv-SE',
+  DKK: 'da-DK',
 };
 
 /**

@@ -152,6 +152,21 @@ export interface BookingRow {
 
   created_at:          Timestamptz;
   updated_at:          Timestamptz | null;
+
+  /* Optional invoice / alt-payment fields read by lib/bookingInvoice.
+   * Typed as optional so callers that reference them compile while
+   * the schema migration to make them non-null is staged. Remove the
+   * `?` once the matching columns land in the bookings table. */
+  vehicle_type?:       string | null;
+  estimated_price?:    number | null;
+  deposit_amount?:     number | null;
+  cash_due_amount?:    number | null;
+  contact_name?:       string | null;
+  contact_email?:      string | null;
+  contact_phone?:      string | null;
+  from_address?:       string | null;
+  to_address?:         string | null;
+  scheduled_at?:       Timestamptz | null;
 }
 
 export interface BookingInsert
@@ -228,6 +243,11 @@ export interface DriverProfileRow {
   online:              boolean | null;
   is_busy:             boolean | null;
   availability_status: string | null;
+  /** ISO-2 country / market code the driver operates in. Drives the
+   *  country-aware subscription pricing in the driver portal. */
+  zone:                string | null;
+  /** City the driver primarily operates in. */
+  city:                string | null;
   created_at:          Timestamptz;
 
   /* Joined ad-hoc by AdminDashboard via

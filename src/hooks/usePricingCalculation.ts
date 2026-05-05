@@ -39,7 +39,7 @@ export interface PricingCalculationResult {
   /** Effective values — server wins, client fallback. */
   distanceKm:      number;
   durationMin:     number;
-  routingProvider: 'OSRM' | 'haversine-fallback' | 'osrm' | 'haversine' | null;
+  routingProvider: 'OSRM' | 'haversine-fallback' | 'osrm' | 'haversine' | 'cache' | null;
   priceTotal:      number;
   priceSubtotal:   number;
   vatAmount:       number;

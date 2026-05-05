@@ -33,7 +33,7 @@ export function AddressesStep({
   serverPrice:    ServerPriceResult | null;
   distanceKm:     number;
   durationMin:    number;
-  routingProvider: 'OSRM' | 'haversine-fallback' | 'osrm' | 'haversine' | null;
+  routingProvider: 'OSRM' | 'haversine-fallback' | 'osrm' | 'haversine' | 'cache' | null;
 }) {
   const { t } = useTranslation();
 
@@ -163,7 +163,7 @@ function DistancePill({
   serverPrice:    ServerPriceResult | null;
   distanceKm:     number;
   durationMin:    number;
-  routingProvider: 'OSRM' | 'haversine-fallback' | 'osrm' | 'haversine' | null;
+  routingProvider: 'OSRM' | 'haversine-fallback' | 'osrm' | 'haversine' | 'cache' | null;
 }) {
   if (!clientRoute && !serverPrice) {
     return (

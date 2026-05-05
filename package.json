@@ -13,6 +13,7 @@
     "build:dev": "vite build --mode development",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "typecheck:strict": "tsc --noEmit -p tsconfig.app.strict.json",
+    "verify": "npm run typecheck && npm run build",
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",

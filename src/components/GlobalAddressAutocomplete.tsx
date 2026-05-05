@@ -118,7 +118,10 @@ const COUNTRY_LABEL: Record<CountryCode, string> = {
   cz: 'Czech Republic',
 };
 
-const COUNTRY_VIEWBOX: Record<CountryCode, string> = {
+/* Partial: country viewboxes only exist for the 6 markets where
+ * Nominatim address autocomplete is wired today. Lookups for
+ * expansion countries fall back to the un-bounded global query. */
+const COUNTRY_VIEWBOX: Partial<Record<CountryCode, string>> = {
   no: '&viewbox=4.5,58,31.5,71.5&bounded=1',
   us: '&viewbox=-125,24,-66,49&bounded=1',
   ca: '&viewbox=-141,41,-52,83&bounded=1',

@@ -8,7 +8,7 @@ import type { Page } from '../../lib/store';
 import { PROVIDERS } from '../../lib/providers-catalogue';
 import { getProviderPublicIdentity } from '../../lib/provider-identity';
 import { track } from '../../lib/analytics';
-import { FOCUS_RING, INPUT_FOCUS , INPUT_FOCUS} from '../../components/ds';
+import { FOCUS_RING, INPUT_FOCUS } from '../../components/ds';
 
 /**
  * USPage — US marketplace shopfront.

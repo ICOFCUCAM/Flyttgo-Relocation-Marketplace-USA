@@ -324,7 +324,11 @@ export default function Header() {
   /* Sync <html lang> with the active language whenever it changes. */
   useEffect(() => {
     if (typeof document !== 'undefined') {
-      document.documentElement.lang = lang === 'no' ? 'en-US' : 'en';
+      /* Norwegian Bokmål is 'nb' in the Lang union, not 'no'; the
+       * latter is the country code, not a locale tag. Comparing to
+       * 'no' was always false — the pre-existing typo here meant
+       * Norwegian visitors were tagged as en-US. */
+      document.documentElement.lang = lang === 'nb' ? 'nb-NO' : 'en';
     }
   }, [lang]);
 
