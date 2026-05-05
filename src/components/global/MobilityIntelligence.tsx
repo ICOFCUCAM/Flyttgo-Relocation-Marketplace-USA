@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { TrendingUp, ArrowRight, Calendar, MapPin } from 'lucide-react';
 import { CROSS_BORDER_CORRIDORS } from '../../lib/cross-border-corridors';
-import { EXPANSION_CITIES } from '../../lib/expansion-cities';
+import { ANCHOR_CITIES } from '../../lib/expansion-cities';
 import { useApp } from '../../lib/store';
 import { track } from '../../lib/analytics';
 import { FOCUS_RING } from '../ds';
@@ -29,7 +29,7 @@ export default function MobilityIntelligence() {
   const stats = useMemo(() => {
     const allCorridors = CROSS_BORDER_CORRIDORS;
     const highFreq     = allCorridors.filter(c => c.isHighFrequency);
-    const anchorCities = EXPANSION_CITIES.filter(c => c.anchorFlag);
+    const anchorCities = ANCHOR_CITIES.filter(c => c.anchorFlag);
     return {
       corridorsTotal:    allCorridors.length,
       highFreqCorridors: highFreq.slice(0, 4),
