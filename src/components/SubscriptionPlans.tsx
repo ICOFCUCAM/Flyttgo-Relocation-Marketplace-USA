@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { INPUT_FOCUS } from './ds';
 import { SUBSCRIPTION_PLANS, calculateCommission, COMMISSION } from '../lib/constants';
 import { useApp } from '../lib/store';
@@ -47,6 +48,7 @@ function mapDocTypeToCipSlug(raw: string | null | undefined): CipDocumentSlug | 
 }
 
 export default function SubscriptionPlans() {
+  const { t } = useTranslation();
   const { setShowAuthModal, setAuthMode, setPage, bookingData } = useApp();
   const { user, profile } = useAuth();
   const [examplePrice, setExamplePrice] = useState(1000);
@@ -197,10 +199,10 @@ export default function SubscriptionPlans() {
     <div className="min-h-screen bg-gray-50">
       <MarketplaceBanner
         variant="inverse"
-        eyebrow="Provider Subscriptions"
-        breadcrumb={{ id: 'GLRM.05', label: 'Subscription tiers' }}
-        headline={<>Five tiers. Lower commission, higher dispatch&nbsp;priority.</>}
-        lead="Silver entry to Certified Infrastructure Partner. Country-aware pricing — pick your market and the per-tier monthly rate adjusts to local-currency norms."
+        eyebrow={t('driverSubscriptions.eyebrow')}
+        breadcrumb={{ id: 'GLRM.05', label: t('driverSubscriptions.breadcrumb') }}
+        headline={<>{t('driverSubscriptions.headline')}</>}
+        lead={t('driverSubscriptions.lead')}
         compliancePills={[
           { label: 'Escrow-protected payouts' },
           { label: 'Country-licensed dispatch' },
@@ -208,7 +210,7 @@ export default function SubscriptionPlans() {
         ]}
         aside={
           <div className="bg-white/5 border border-white/15 backdrop-blur rounded-2xl p-5">
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-amber-300 mb-2">Market</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-amber-300 mb-2">{t('driverSubscriptions.market')}</p>
             <select
               value={country}
               onChange={e => setCountry(e.target.value as PricingCountry)}
@@ -297,7 +299,7 @@ export default function SubscriptionPlans() {
                 </div>
               )}
               {plan.popular && !isCip && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-600 text-white text-xs font-bold px-4 py-1 rounded-full">MOST POPULAR</div>
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-600 text-white text-xs font-bold px-4 py-1 rounded-full">{t('driverSubscriptions.mostPopular')}</div>
               )}
               <h3 className="text-xl font-bold text-gray-900 leading-tight mb-1">{tier.displayName}</h3>
               <p className="text-xs text-gray-500 leading-relaxed mb-4 min-h-[2rem]">{tier.tagline}</p>
@@ -352,12 +354,12 @@ export default function SubscriptionPlans() {
                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                {gate === 'loading' && user ? 'Checking…' :
-                 gate === 'not-applied'     ? 'Apply first' :
-                 gate === 'pending'         ? 'Under review' :
-                 gate === 'rejected'        ? 'Re-submit application' :
-                 plan.price === 0           ? 'Get Started Free' :
-                                               'Subscribe Now'}
+                {gate === 'loading' && user ? t('driverSubscriptions.ctaChecking') :
+                 gate === 'not-applied'     ? t('driverSubscriptions.ctaApplyFirst') :
+                 gate === 'pending'         ? t('driverSubscriptions.ctaUnderReview') :
+                 gate === 'rejected'        ? t('driverSubscriptions.ctaResubmit') :
+                 plan.price === 0           ? t('driverSubscriptions.ctaGetStarted') :
+                                               t('driverSubscriptions.ctaSubscribe')}
               </button>
             </div>
             );

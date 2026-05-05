@@ -915,6 +915,20 @@ export const en = {
   },
 
   /* ─── Driver portal ─── */
+  driverSubscriptions: {
+    eyebrow:        'Provider Subscriptions',
+    breadcrumb:     'Subscription tiers',
+    headline:       'Five tiers. Lower commission, higher dispatch priority.',
+    lead:           'Silver entry to Infrastructure Partner. Country-aware pricing — pick your market and the per-tier rate adjusts to local-currency norms.',
+    market:         'Market',
+    mostPopular:    'MOST POPULAR',
+    ctaChecking:    'Checking…',
+    ctaApplyFirst: 'Apply first',
+    ctaUnderReview: 'Under review',
+    ctaResubmit:    'Re-submit application',
+    ctaGetStarted:  'Get Started Free',
+    ctaSubscribe:   'Subscribe Now',
+  },
   driverPortal: {
     title:             'Driver Portal',
     online:            'Online',
