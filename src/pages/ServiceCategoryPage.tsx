@@ -83,7 +83,7 @@ export default function ServiceCategoryPage() {
           body={
             <span>
               We couldn't find that service category. Pick one of the
-              six categories below to see providers who offer it.
+              categories below to see providers who offer it.
             </span>
           }
           primaryAction={{ label: 'See all services', onClick: () => setPage('services') }}

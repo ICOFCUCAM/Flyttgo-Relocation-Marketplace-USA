@@ -54,8 +54,9 @@ export interface ProrationResult {
   isFullyCovered:  boolean;
 }
 
-/** Pro → Unlimited proration. Returns null if the upgrade isn't a
- *  pro→unlimited transition or the current sub has no start_date.
+/** Gold Pro → Infrastructure Partner proration. Returns null if the
+ *  upgrade isn't a gold_pro → elite transition or the current sub
+ *  has no start_date.
  *  Accepts a minimal structural shape so callers can pass either a
  *  full DriverSubscriptionRow or a synthetic preview object without
  *  casts. */
