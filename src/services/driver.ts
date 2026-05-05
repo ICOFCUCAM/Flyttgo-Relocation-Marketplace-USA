@@ -260,6 +260,11 @@ export const SubscriptionCheckoutPayloadSchema = z.object({
   prorationNote:  z.string().max(500),
   proration:      z.record(z.unknown()).nullable(),
   description:    ZShortString('description', 500),
+  /** Lowercase ISO-4217 currency code Stripe expects. The
+   *  create-checkout-session edge function accepts usd/eur/gbp/nok/
+   *  sek/dkk/cad/aed/ngn/kes; defaults to 'usd' if omitted to keep
+   *  legacy callers working. */
+  currency:       z.string().toLowerCase().min(3).max(3).optional(),
 });
 export type CheckoutPayload = z.infer<typeof SubscriptionCheckoutPayloadSchema>;
 

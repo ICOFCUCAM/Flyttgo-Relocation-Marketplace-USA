@@ -190,10 +190,27 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
     slug:        'elite',
     displayName: 'Infrastructure Partner',
     shortName:   'Infrastructure',
+    /* Localised tier label per market. The Silver / Gold brand
+     * names stay English (recognised globally); only the
+     * Infrastructure Partner tier gets a local-language form so
+     * the marketing copy reads natively in each shopfront. */
     displayNameByCountry: {
       us: 'Infrastructure Partner',
-      /* Other markets default to displayName above; populate this
-       * map to localise (e.g. de: 'Infrastruktur-Partner'). */
+      ca: 'Infrastructure Partner',
+      gb: 'Infrastructure Partner',
+      no: 'Infrastrukturpartner',
+      de: 'Infrastruktur-Partner',
+      fr: "Partenaire d'Infrastructure",
+      nl: 'Infrastructuurpartner',
+      se: 'Infrastrukturpartner',
+      dk: 'Infrastrukturpartner',
+      at: 'Infrastruktur-Partner',
+      be: 'Infrastructuurpartner',
+      es: 'Socio de Infraestructura',
+      it: 'Partner Infrastruttura',
+      pl: 'Partner Infrastruktury',
+      cz: 'Infrastrukturní Partner',
+      cy: 'Infrastructure Partner',
     },
     tagline:     'Institutional gateway · government + enterprise + university procurement',
     baselineUSD: 499,

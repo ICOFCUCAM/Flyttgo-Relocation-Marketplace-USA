@@ -112,6 +112,10 @@ interface BookingRequest {
   type?:          undefined;
   bookingId:      string;
   amount:         number;
+  /** ISO-4217 lowercase currency code Stripe expects ('usd', 'eur',
+   *  'gbp', 'nok', 'sek', 'dkk', 'cad'). Defaults to 'usd' when
+   *  omitted so legacy callers keep working. */
+  currency?:      string;
   method?:        'card' | 'google_pay' | 'apple_pay' | 'klarna' | 'link';
   customerEmail?: string;
   description?:   string;
@@ -124,6 +128,7 @@ interface SubscriptionRequest {
   driverId:    string;
   userId?:     string;
   amount:      number;
+  currency?:   string;
   description?:string;
   /* Optional VAT split — our PRICING uses 25% VAT included, so
    * amountExVat + vatAmount should equal amount. Kept loose. */
@@ -196,7 +201,22 @@ serve(async (req: Request) => {
   }
 
   /* Build the common pieces up-front and then branch on request type. */
-  const amountOre = Math.round(amount * 100); // USD → cents (Stripe smallest currency unit)
+  /* Currency: caller picks (e.g. 'eur' for DE/FR, 'nok' for NO,
+   * 'sek' for SE, 'dkk' for DK). Stripe wants lowercase ISO-4217.
+   * Defaults to 'usd' to stay compatible with pre-currency callers.
+   *
+   * Zero-decimal currencies (JPY, KRW, etc.) would need a different
+   * unit conversion — none of the rollout markets use them, so
+   * everything is simply price × 100. */
+  const ALLOWED_CURRENCIES = new Set([
+    'usd','eur','gbp','nok','sek','dkk','cad','aed','ngn','kes',
+  ]);
+  const requestedCurrency = String((body as { currency?: unknown }).currency ?? 'usd').toLowerCase();
+  if (!ALLOWED_CURRENCIES.has(requestedCurrency)) {
+    return json({ error: `currency '${requestedCurrency}' is not enabled — add it to ALLOWED_CURRENCIES` }, 400);
+  }
+  const currency  = requestedCurrency;
+  const amountOre = Math.round(amount * 100); // local-currency smallest unit
 
   let reference:   string;
   let productName: string;
@@ -254,7 +274,7 @@ serve(async (req: Request) => {
   /* Line item. One line item = the full booking/subscription total
    * including Sales Tax. The customer sees this label in Stripe Checkout. */
   params.set('line_items[0][quantity]', '1');
-  params.set('line_items[0][price_data][currency]', 'usd');
+  params.set('line_items[0][price_data][currency]', currency);
   params.set('line_items[0][price_data][unit_amount]', String(amountOre));
   params.set('line_items[0][price_data][product_data][name]', productName);
   if (body.description) {

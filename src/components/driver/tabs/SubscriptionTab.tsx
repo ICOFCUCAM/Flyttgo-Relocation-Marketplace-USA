@@ -49,7 +49,15 @@ export function SubscriptionTab({
     if (!userId || !driver) return;
     setChanging(plan.id);
     try {
-      if (plan.priceUSD === 0) {
+      /* Use the local-currency price for this driver's market. The
+       * country's localPriceForTier override (when present) is the
+       * canonical price; falls back to plan.priceUSD baseline. */
+      const local = localPriceForTier(plan.id, country);
+      const localPrice = local.amount;
+      const checkoutCurrency = local.currency.toLowerCase();
+      const isFreeLocal = local.isFree;
+
+      if (isFreeLocal) {
         await change.mutateAsync(plan.id);
         alert(`Switched to ${plan.label} plan.`);
         return;
@@ -63,9 +71,9 @@ export function SubscriptionTab({
         await logCredit.mutateAsync({
           driverId:    driver.id,
           amount:      proration.creditExVat,
-          description: `Plan credit — ${proration.daysRemaining} unused Pro days`,
+          description: `Plan credit — ${proration.daysRemaining} unused Gold Pro days`,
         });
-        alert('Upgraded to Unlimited. Your remaining Pro credit fully covered the cost — no charge.');
+        alert('Upgraded to Infrastructure Partner. Your remaining Gold Pro credit fully covered the cost — no charge.');
         return;
       }
 
@@ -73,10 +81,10 @@ export function SubscriptionTab({
         amountExVat   = proration.dueExVat;
         vatAmount     = proration.dueVat;
         totalAmount   = proration.dueTotal;
-        prorationNote = `Pro → Unlimited proration: ${proration.daysRemaining}d remaining on Pro → credit ${proration.creditExVat} USD ex VAT`;
+        prorationNote = `Gold Pro → Infrastructure proration: ${proration.daysRemaining}d remaining on Gold Pro → credit ${proration.creditExVat} ${local.currency} ex VAT`;
       } else {
-        amountExVat   = plan.priceUSD;
-        vatAmount     = Math.round(plan.priceUSD * VAT_RATE);
+        amountExVat   = localPrice;
+        vatAmount     = Math.round(localPrice * VAT_RATE);
         totalAmount   = amountExVat + vatAmount;
       }
 
@@ -90,13 +98,14 @@ export function SubscriptionTab({
         amountExVat,
         vatAmount,
         billing:     plan.billing,
+        currency:    checkoutCurrency,
         prorationNote,
         proration: proration ? {
           creditApplied:    proration.creditExVat,
           daysRemaining:    proration.daysRemaining,
           daysInMonth:      proration.daysInMonth,
-          fromPlan:         'pro',
-          fromPlanFullCost: 150,
+          fromPlan:         'gold_pro',
+          fromPlanFullCost: localPriceForTier('gold_pro', country).amount,
         } : null,
         description: proration
           ? `FlyttGo ${plan.label} (prorated ${proration.daysRemaining}d, plus sales tax)`

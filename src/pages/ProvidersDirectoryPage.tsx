@@ -53,6 +53,22 @@ const COUNTRY_FLAGS: Record<BookingCountry, string> = {
  * fromPrice string ("from $480" → 480, "fra 4 200 kr" → 4200,
  * "à partir de 460 €" → 460). Used only for sort ordering, never
  * displayed to the customer. */
+/** Subscription-tier rank for the search ranking boost. Higher
+ *  ranks float to the top of every result set per the global
+ *  rollout spec ("Infrastructure -> always top"). Provider badges
+ *  that don't map to a paid tier (e.g. 'Home market', 'Bilingual')
+ *  sort below all tiered providers. */
+function tierRank(badge: string | undefined | null): number {
+  if (!badge) return 0;
+  const b = badge.toLowerCase();
+  if (b.includes('infrastructure') || b === 'elite' || b === 'cip') return 50;
+  if (b === 'gold pro' || b === 'gold-pro')                          return 40;
+  if (b === 'gold')                                                  return 30;
+  if (b === 'silver plus' || b === 'silver+')                        return 20;
+  if (b === 'silver')                                                return 10;
+  return 0;
+}
+
 function parsePrice(s: string): number {
   const m = s.replace(/\s+/g, '').match(/(\d[\d.,]*)/);
   if (!m) return Number.POSITIVE_INFINITY;
@@ -133,6 +149,14 @@ export default function ProvidersDirectoryPage() {
       return true;
     });
     list = list.sort((a, b) => {
+      /* Tier-priority dominates: Infrastructure / Elite ranks at the
+       * top of every result set, then Gold Pro, Gold, Silver Plus,
+       * Silver. The user's chosen sort (rating / reviews / price)
+       * applies as the tie-breaker within each tier band so a
+       * higher-rated Silver provider can never displace a lower-
+       * rated Gold Pro on the same list. */
+      const tierDelta = tierRank(b.badge) - tierRank(a.badge);
+      if (tierDelta !== 0) return tierDelta;
       if (sort === 'rating')  return b.rating - a.rating;
       if (sort === 'reviews') return b.reviews - a.reviews;
       return parsePrice(a.fromPrice) - parsePrice(b.fromPrice);
