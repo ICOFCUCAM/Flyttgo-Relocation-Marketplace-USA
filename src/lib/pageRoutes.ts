@@ -108,6 +108,10 @@ const PAGE_TO_PATH: Record<Page, string> = {
   /* Public driver-earnings transparency page. */
   'driver-earnings':         '/driver-earnings',
 
+  /* Enterprise accounting workspace + auditor read-only workspace. */
+  'accounting':              '/accounting',
+  'audit':                   '/audit',
+
   /* Provider profile (slug carried via ?slug=). */
   'provider-profile':        '/provider',
 
@@ -214,6 +218,8 @@ const PAGE_TITLES: Record<Page, string> = {
   'moving-city':              'Moving services · FlyttGo Global',
   'refer':                    'Give £25, get £25 · FlyttGo referrals',
   'driver-earnings':          'What drivers earn — live per-city payouts · FlyttGo',
+  'accounting':               'Accounting workspace · FlyttGo',
+  'audit':                    'Audit workspace · FlyttGo',
   'provider-profile':         'Provider profile · FlyttGo Global',
   'providers-directory':      'Browse verified providers · FlyttGo Global',
   'compare':                  'Compare providers side by side · FlyttGo Global',
@@ -335,6 +341,10 @@ const PAGE_DESCRIPTIONS: Record<Page, string> = {
     "Invite a friend to FlyttGo — they get £25 off their first move, you get £25 in account credit when they complete it. Share your code by link, WhatsApp, email or QR.",
   'driver-earnings':
     "What drivers actually earn on FlyttGo — anonymized per-city payouts from the last 90 days, pulled live from the platform. No marketing numbers, just real escrow releases.",
+  'accounting':
+    "FlyttGo accounting workspace — multi-jurisdiction journal entries, VAT engine, trial balance and statutory exports. Restricted to accountants and admins.",
+  'audit':
+    "FlyttGo audit workspace — read-only access to journal entries, reports, attachments, and the append-only audit log, with auditor annotations.",
   'provider-profile':
     "Verified provider on the FlyttGo marketplace — see ratings, services, sample jobs, and book directly with this licensed mover.",
   'providers-directory':

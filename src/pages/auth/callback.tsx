@@ -38,6 +38,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../lib/auth';
 import { useApp }  from '../../lib/store';
 import { recordReferralRedemption } from '../../services/referrals';
+import { getMyFinanceRoles, routeForFinanceRoles } from '../../accounting/service';
 
 /** Hard ceiling on how long we'll wait for the session before showing
  *  the error fallback. supabase-js usually populates the session in
@@ -106,15 +107,38 @@ export default function AuthCallbackPage() {
         .finally(() => window.sessionStorage.removeItem('flyttgo:ref-code'));
     }
 
-    /* Drivers and admins have their own home — sending them to the
-     * customer dashboard would just feel wrong. */
-    if (profile?.role === 'driver') {
-      setPage('driver-portal');
-    } else if (profile?.role === 'admin') {
-      setPage('admin');
-    } else {
-      setPage('customer-dashboard');
-    }
+    /* Finance-role routing (Phase 16): accountants land at /accounting,
+     * auditors land at /audit. Admins keep their existing /admin home
+     * even when they ALSO carry a finance role. The lookup is async,
+     * so we run it inline; defaults to the existing role-based
+     * routing below if no finance role is found. */
+    let cancelled = false;
+    void getMyFinanceRoles(user.id).then(roles => {
+      if (cancelled) return;
+      const target = routeForFinanceRoles(roles);
+      if (target === 'accounting') { setPage('accounting'); return; }
+      if (target === 'audit')      { setPage('audit');      return; }
+      /* target === 'admin' or null → fall through to legacy routing */
+      if (profile?.role === 'driver') {
+        setPage('driver-portal');
+      } else if (profile?.role === 'admin') {
+        setPage('admin');
+      } else {
+        setPage('customer-dashboard');
+      }
+    }).catch(() => {
+      /* Finance-role lookup failed (RLS or network) — fall back to
+       * the legacy routing so the user is never stranded. */
+      if (cancelled) return;
+      if (profile?.role === 'driver') {
+        setPage('driver-portal');
+      } else if (profile?.role === 'admin') {
+        setPage('admin');
+      } else {
+        setPage('customer-dashboard');
+      }
+    });
+    return () => { cancelled = true; };
   }, [loading, user, profile, setPage]);
 
   /* Safety net — if no session ever materialises, surface an error

@@ -30,6 +30,9 @@ export type Page =
   | 'refer'
   /* Public driver-earnings transparency page (acquisition funnel). */
   | 'driver-earnings'
+  /* Enterprise accounting workspace + auditor read-only workspace. */
+  | 'accounting'
+  | 'audit'
   /* Provider profile (slug carried via ?slug= query param). */
   | 'provider-profile'
   /* Provider directory (search + filter). */
