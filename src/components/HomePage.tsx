@@ -14,6 +14,7 @@ import EarningsSimulator from './global/EarningsSimulator';
 import ReviewsCarousel from './global/ReviewsCarousel';
 import HomeFAQ from './global/HomeFAQ';
 import WorldDeploymentMap from './global/WorldDeploymentMap';
+import GlobalPresence from './global/GlobalPresence';
 
 /* ────────────────────────────────────────────────────────────
  *  COUNTRY SHOPFRONT METADATA
@@ -243,6 +244,9 @@ export default function HomePage() {
        *   already serve the supply-acquisition role the Featured
        *   tier was meant to occupy.
        * ───────────────────────────────────────────────────────── */}
+
+      {/* ─── 1.5 · GLOBAL PRESENCE ─ at-a-glance trust signals ── */}
+      <GlobalPresence />
 
       {/* ─── 2 · CATEGORIES ─ "What you can book" ───────────── */}
       <section className="bg-[#fafaf7] py-16 sm:py-20">
