@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
+import { INPUT_FOCUS } from '../ds';
 import { Banknote, CreditCard, MapPin, Clock, Info, Bookmark, Tag, Check, X as XIcon, ArrowDownUp, Leaf } from 'lucide-react';
 
 /* Lazy-loaded so the ~150 KB Leaflet bundle only ships once the
@@ -520,7 +521,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
               value={moveDate}
               min={new Date().toISOString().slice(0, 10)}
               onChange={e => setMoveDate(e.target.value)}
-              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none text-sm bg-white"
+              className={`w-full px-4 py-3 border border-slate-200 rounded-xl ${INPUT_FOCUS} text-sm bg-white`}
             />
           </div>
           <div>
@@ -531,7 +532,7 @@ export default function BookingShortcut({ country, compact = false }: Props) {
               id="booking-shortcut-move-type"
               value={moveType}
               onChange={e => setMoveType(e.target.value as MoveType)}
-              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none text-sm bg-white"
+              className={`w-full px-4 py-3 border border-slate-200 rounded-xl ${INPUT_FOCUS} text-sm bg-white`}
             >
               {MOVE_TYPE_OPTIONS.map(o => (
                 <option key={o.value} value={o.value}>{o.label}</option>

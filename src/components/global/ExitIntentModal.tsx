@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { INPUT_FOCUS } from '../ds';
 import { X, Mail, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { track } from '../../lib/analytics';
@@ -114,7 +115,7 @@ export default function ExitIntentModal() {
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="w-full pl-9 pr-3 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-400 outline-none text-sm"
+                    className={`w-full pl-9 pr-3 py-3 border border-slate-200 rounded-xl ${INPUT_FOCUS} text-sm`}
                   />
                 </div>
               </label>

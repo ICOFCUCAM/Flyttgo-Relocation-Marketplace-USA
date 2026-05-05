@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { INPUT_FOCUS } from './ds';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../lib/store';
 import { useAuth } from '../lib/auth';
@@ -170,7 +171,7 @@ export default function AuthModal() {
   }
 
   const fieldCls =
-    'w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition';
+    `w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 ${INPUT_FOCUS} transition`;
 
   const primaryBtnCls =
     'w-full py-3 bg-amber-600 text-white rounded-xl font-semibold hover:bg-amber-700 transition disabled:opacity-60 shadow-sm';

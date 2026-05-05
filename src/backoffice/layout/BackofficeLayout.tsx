@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import { INPUT_FOCUS } from '../../components/ds';
 import {
   LayoutDashboard, Globe, Wallet, BookOpenCheck, Receipt,
   ShieldCheck, ScrollText, Flag, ShieldAlert, ArrowLeft, LogOut, LogIn,
@@ -228,7 +229,7 @@ function BackofficeSignInPanel({ onCancel }: { onCancel: () => void }) {
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="operator@flyttgo.com"
-              className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300"
+              className={`w-full border border-slate-200 rounded-md px-3 py-2 text-sm ${INPUT_FOCUS}`}
             />
           </label>
           <label className="block">
@@ -239,7 +240,7 @@ function BackofficeSignInPanel({ onCancel }: { onCancel: () => void }) {
               required
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300"
+              className={`w-full border border-slate-200 rounded-md px-3 py-2 text-sm ${INPUT_FOCUS}`}
             />
           </label>
           {error && <p className="text-rose-600 text-xs" role="alert">{error}</p>}

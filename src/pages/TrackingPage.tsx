@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { INPUT_FOCUS } from '../components/ds';
 import { useTranslation } from 'react-i18next';
 import { Phone, MessageCircle, Truck, FileCheck, UserCheck, Timer, CheckCircle, Loader2 } from 'lucide-react';
 import { useApp } from '../lib/store';
@@ -163,7 +164,7 @@ export default function TrackingPage() {
                 onChange={e => setBookingId(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleTrack()}
                 placeholder={t('tracking.searchPlaceholder')}
-                className="w-full pl-9 pr-4 py-3.5 rounded-xl text-sm shadow-lg focus:ring-2 focus:ring-amber-400 outline-none"
+                className={`w-full pl-9 pr-4 py-3.5 rounded-xl text-sm shadow-lg ${INPUT_FOCUS}`}
               />
             </div>
             <button onClick={handleTrack} disabled={searchLoading}

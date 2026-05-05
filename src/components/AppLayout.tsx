@@ -3,6 +3,7 @@ import { useApp } from '../lib/store';
 import { isoToMarketPage } from '../lib/pageRoutes';
 import Header from './Header';
 import AuthModal from './AuthModal';
+import RouteErrorBoundary from './ErrorBoundary';
 
 const HomePage           = lazy(() => import('./HomePage'));
 const BookingFlow        = lazy(() => import('./BookingFlow'));
@@ -335,9 +336,15 @@ useEffect(() => {
       {showHeader && <Header />}
       <AuthModal />
       <main id="main-content" tabIndex={-1}>
-        <Suspense fallback={<Loading />}>
-          {renderPage()}
-        </Suspense>
+        {/* Per-route ErrorBoundary so a thrown render on one page
+         *  doesn't blank the entire app. resetKey={currentPage}
+         *  clears the error when the user navigates away — they can
+         *  click a nav link instead of having to reload. */}
+        <RouteErrorBoundary resetKey={currentPage}>
+          <Suspense fallback={<Loading />}>
+            {renderPage()}
+          </Suspense>
+        </RouteErrorBoundary>
       </main>
       {showFooter && (
         <Suspense fallback={null}>

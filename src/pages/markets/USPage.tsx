@@ -8,7 +8,7 @@ import type { Page } from '../../lib/store';
 import { PROVIDERS } from '../../lib/providers-catalogue';
 import { getProviderPublicIdentity } from '../../lib/provider-identity';
 import { track } from '../../lib/analytics';
-import { FOCUS_RING, INPUT_FOCUS } from '../../components/ds';
+import { FOCUS_RING, INPUT_FOCUS , INPUT_FOCUS} from '../../components/ds';
 
 /**
  * USPage — US marketplace shopfront.
@@ -334,7 +334,7 @@ function USProviderList({ go }: { go: (p: Page) => void }) {
             id="us-provider-sort"
             value={sort}
             onChange={e => setSort(e.target.value as SortKey)}
-            className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-amber-400 outline-none"
+            className={`border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white ${INPUT_FOCUS}`}
           >
             <option value="best">Sort: Best match</option>
             <option value="price">Lowest price</option>

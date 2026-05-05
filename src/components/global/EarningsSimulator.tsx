@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { INPUT_FOCUS } from '../ds';
 import {
   TrendingUp, Users, Truck, Package, Boxes, MapPin,
   CalendarDays, ArrowRight, Sparkles, type LucideIcon,
@@ -150,7 +151,7 @@ export default function EarningsSimulator({ compact = false, initial }: Props) {
             value={city}
             onChange={e => patch(() => setCity(e.target.value))}
             placeholder="Type a city to apply the metro multiplier…"
-            className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none"
+            className={`w-full px-3 py-2 text-sm border border-slate-300 rounded-lg ${INPUT_FOCUS}`}
           />
           <datalist id={`sim-city-${country}`}>
             {cityList.map(c => <option key={c} value={c} />)}

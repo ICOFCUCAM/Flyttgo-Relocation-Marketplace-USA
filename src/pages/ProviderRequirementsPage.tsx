@@ -12,7 +12,7 @@ import {
 import {
   PROVIDER_CATEGORIES, findProviderCategory, type ProviderCategorySlug,
 } from '../lib/provider-categories';
-import { Section, Eyebrow, Pill } from '../components/ds';
+import { Section, Eyebrow, Pill , INPUT_FOCUS} from '../components/ds';
 import { track } from '../lib/analytics';
 
 /* ─────────────────────────────────────────────────────────────────
@@ -118,7 +118,7 @@ export default function ProviderRequirementsPage() {
               <select
                 value={country}
                 onChange={e => setCountry(e.target.value as OnboardingCountryCode)}
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none bg-white"
+                className={`w-full px-3 py-2 text-sm border border-slate-300 rounded-lg ${INPUT_FOCUS} bg-white`}
               >
                 {ONBOARDING_RULES.map(r => (
                   <option key={r.country} value={r.country}>

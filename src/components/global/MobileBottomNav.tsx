@@ -1,4 +1,4 @@
-import { Home, Search, MessageCircle, User, type LucideIcon } from 'lucide-react';
+import { Home, Search, MessageCircle, User, LayoutGrid, type LucideIcon } from 'lucide-react';
 import { useApp, Page } from '../../lib/store';
 import { useAuth } from '../../lib/auth';
 import { openQuickQuote } from '../../lib/quick-quote';
@@ -23,6 +23,7 @@ interface Tab {
 const TABS: Tab[] = [
   { label: 'Home',     icon: Home,          page: 'home',      match: (c) => c === 'home' },
   { label: 'Markets',  icon: Search,        page: 'cities',    match: (c) => c.startsWith('market-') || c === 'cities' || c === 'marketplace' },
+  { label: 'Services', icon: LayoutGrid,    page: 'services',  match: (c) => c === 'services' || c === 'service-category' },
   { label: 'Quote',    icon: MessageCircle, page: 'booking',   match: (c) => c === 'booking' },
   { label: 'Account',  icon: User,          page: 'profile',   match: (c) => c === 'profile' || c === 'customer-dashboard' || c === 'my-bookings' },
 ];
@@ -56,7 +57,7 @@ export default function MobileBottomNav() {
       className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)]"
       aria-label="Bottom navigation"
     >
-      <div className="grid grid-cols-4">
+      <div className="grid grid-cols-5">
         {TABS.map(t => {
           const active = t.match(currentPage);
           return (

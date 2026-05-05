@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { INPUT_FOCUS } from '../components/ds';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../lib/store';
 import MarketplaceBanner from '../components/banners/MarketplaceBanner';
@@ -134,7 +135,7 @@ export default function FaqPage() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder={t('faq.searchPlaceholder')}
-              className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-white text-slate-900 placeholder-slate-400 border border-slate-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/40 outline-none shadow-sm"
+              className={`w-full pl-12 pr-4 py-3.5 rounded-xl bg-white text-slate-900 placeholder-slate-400 border border-slate-200 ${INPUT_FOCUS} shadow-sm`}
             />
           </div>
         </div>

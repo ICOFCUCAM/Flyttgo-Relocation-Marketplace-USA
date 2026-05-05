@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { INPUT_FOCUS } from './ds';
 import { SUBSCRIPTION_PLANS, calculateCommission, COMMISSION } from '../lib/constants';
 import { useApp } from '../lib/store';
 import { useAuth } from '../lib/auth';
@@ -211,7 +212,7 @@ export default function SubscriptionPlans() {
             <select
               value={country}
               onChange={e => setCountry(e.target.value as PricingCountry)}
-              className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm font-bold outline-none focus:ring-2 focus:ring-amber-400"
+              className={`w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm font-bold ${INPUT_FOCUS}`}
             >
               {COUNTRY_PROFILES.map(p => (
                 <option key={p.code} value={p.code} className="text-slate-900">
