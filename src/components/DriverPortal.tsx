@@ -119,7 +119,7 @@ export default function DriverPortal() {
         <button
           onClick={toggleOnline}
           aria-pressed={driver?.online === true}
-          className={`px-4 py-2 rounded-full font-medium text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 ${
+          className={`px-4 py-2 rounded-full font-medium text-sm ${FOCUS_RING} ${
             driver?.online ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
           }`}
         >
@@ -141,7 +141,7 @@ export default function DriverPortal() {
               onClick={() => setActiveTab(tab)}
               role="tab"
               aria-selected={activeTab === tab}
-              className={`px-4 py-2 rounded capitalize text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
+              className={`px-4 py-2 rounded capitalize text-sm font-medium ${FOCUS_RING_TIGHT} ${
                 activeTab === tab ? 'bg-black text-white' : 'bg-gray-200 text-gray-700'
               }`}
             >
@@ -150,7 +150,7 @@ export default function DriverPortal() {
           ))}
           <button
             onClick={() => setPage('provider-pricing-settings')}
-            className="px-4 py-2 rounded text-sm font-medium bg-amber-100 text-amber-800 hover:bg-amber-200 transition inline-flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+            className={`px-4 py-2 rounded text-sm font-medium bg-amber-100 text-amber-800 hover:bg-amber-200 transition inline-flex items-center gap-1.5 ${FOCUS_RING_TIGHT}`}
           >
             <DollarSign size={14} />
             Pricing

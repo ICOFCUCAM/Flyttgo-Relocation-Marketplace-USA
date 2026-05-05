@@ -139,7 +139,7 @@ function CenteredCard({
         <p className="text-gray-600 text-sm mb-6">{body}</p>
         <button
           onClick={onCta}
-          className={`w-full py-3 ${ctaClass} text-white rounded-xl font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2`}
+          className={`w-full py-3 ${ctaClass} text-white rounded-xl font-semibold transition ${FOCUS_RING}`}
         >
           {ctaLabel}
         </button>

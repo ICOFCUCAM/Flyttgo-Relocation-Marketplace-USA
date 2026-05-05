@@ -154,7 +154,7 @@ export function SubscriptionTab({
           <p className="text-sm text-gray-500 mb-4">Subscribe to unlock higher dispatch priority and lower commission rates.</p>
           <button
             onClick={() => setPage('subscriptions')}
-            className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+            className={`px-6 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition ${FOCUS_RING}`}
           >
             View Subscription Plans →
           </button>
@@ -246,7 +246,7 @@ function PlanCard({
             <button
               onClick={() => onSubscribe(plan)}
               disabled={anyLoading}
-              className="w-full py-2.5 rounded-xl text-sm font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+              className={`w-full py-2.5 rounded-xl text-sm font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition disabled:opacity-50 ${FOCUS_RING}`}
             >
               Pay {(pro ? pro.dueTotal : totalLocal).toLocaleString()} {pro ? 'USD' : local.currency}
             </button>
@@ -255,7 +255,7 @@ function PlanCard({
             <button
               onClick={() => onSubscribe(plan)}
               disabled={anyLoading}
-              className="w-full py-2.5 rounded-xl text-sm font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+              className={`w-full py-2.5 rounded-xl text-sm font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition disabled:opacity-50 ${FOCUS_RING}`}
             >
               Switch Now — No Charge
             </button>
@@ -265,7 +265,7 @@ function PlanCard({
         <button
           onClick={() => onSubscribe(plan)}
           disabled={anyLoading}
-          className="w-full py-2.5 rounded-xl text-sm font-bold bg-gray-800 text-white hover:bg-gray-900 transition disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+          className={`w-full py-2.5 rounded-xl text-sm font-bold bg-gray-800 text-white hover:bg-gray-900 transition disabled:opacity-50 ${FOCUS_RING}`}
         >
           Switch to {plan.label}
         </button>

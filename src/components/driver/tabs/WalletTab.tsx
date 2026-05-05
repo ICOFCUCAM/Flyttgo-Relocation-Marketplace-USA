@@ -42,7 +42,7 @@ export function WalletTab({ driverId }: { driverId: string | null | undefined })
       <button
         onClick={handlePayout}
         disabled={payout.isPending}
-        className="bg-blue-600 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+        className={`bg-blue-600 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-medium ${FOCUS_RING}`}
       >
         {t('driverPortal.requestPayout')}
       </button>

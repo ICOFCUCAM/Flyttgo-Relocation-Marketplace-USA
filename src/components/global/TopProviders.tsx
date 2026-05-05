@@ -214,7 +214,7 @@ export default function TopProviders() {
                   <button
                     type="button"
                     onClick={() => openProfile(p.slug)}
-                    className="flex items-center gap-3 text-left flex-1 min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded"
+                    className={`flex items-center gap-3 text-left flex-1 min-w-0 ${FOCUS_RING_TIGHT} rounded`}
                   >
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center flex-shrink-0">
                       <Truck size={20} className="text-amber-700" />
@@ -319,7 +319,7 @@ export default function TopProviders() {
                 <button
                   type="button"
                   onClick={() => bookProvider(p)}
-                  className="mt-auto w-full bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold py-2.5 rounded-lg text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+                  className={`mt-auto w-full bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold py-2.5 rounded-lg text-sm transition ${FOCUS_RING}`}
                 >
                   Book this operator →
                 </button>
@@ -328,7 +328,7 @@ export default function TopProviders() {
                   <button
                     type="button"
                     onClick={() => openProfile(p.slug)}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded"
+                    className={`inline-flex items-center gap-1 text-xs font-bold text-slate-700 hover:text-amber-700 ${FOCUS_RING_TIGHT} rounded`}
                   >
                     Open profile
                     <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />

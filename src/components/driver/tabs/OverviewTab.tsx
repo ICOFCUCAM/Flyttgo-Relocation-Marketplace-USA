@@ -40,7 +40,7 @@ export function OverviewTab({
             </div>
             <button
               onClick={onOpenSubscription}
-              className="text-xs px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+              className={`text-xs px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition ${FOCUS_RING}`}
             >
               Manage
             </button>

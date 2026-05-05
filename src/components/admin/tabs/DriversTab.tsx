@@ -63,7 +63,7 @@ export function DriversTab({
         <h1 className="text-xl font-bold">Drivers ({filtered.length})</h1>
         <button
           onClick={exportCsv}
-          className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+          className={`bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded text-xs font-semibold ${FOCUS_RING}`}
         >
           Export CSV
         </button>

@@ -152,7 +152,7 @@ export default function DiscoveryProvidersSection({ limit = 6 }: Props) {
               <button
                 type="button"
                 onClick={() => claimListing(p)}
-                className="w-full inline-flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-lg text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+                className={`w-full inline-flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-lg text-xs transition ${FOCUS_RING}`}
               >
                 Are you {p.name.split(' ')[0]}? Claim & onboard
                 <ArrowRight size={12} />

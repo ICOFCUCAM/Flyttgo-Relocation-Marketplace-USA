@@ -17,7 +17,7 @@ export function PlaceholderTab({
       </p>
       <button
         onClick={onActivate}
-        className="px-8 py-3 bg-[#0B2E59] text-white rounded-xl font-semibold hover:bg-[#1a4a8a] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+        className={`px-8 py-3 bg-[#0B2E59] text-white rounded-xl font-semibold hover:bg-[#1a4a8a] transition ${FOCUS_RING}`}
       >
         Activate Corporate Account
       </button>

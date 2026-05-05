@@ -38,7 +38,7 @@ export function ShipmentsTab() {
           <option>Scheduled</option>
           <option>Exception</option>
         </select>
-        <button className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2">
+        <button className={`px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition ${FOCUS_RING}`}>
           + New Shipment
         </button>
       </div>

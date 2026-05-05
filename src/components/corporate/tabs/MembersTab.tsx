@@ -61,7 +61,7 @@ export function MembersTab({
           <button
             disabled={busy || !activeOrgId}
             onClick={handleInvite}
-            className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-sm font-bold rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+            className={`px-3 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-sm font-bold rounded-lg ${FOCUS_RING}`}
           >
             Invite member
           </button>

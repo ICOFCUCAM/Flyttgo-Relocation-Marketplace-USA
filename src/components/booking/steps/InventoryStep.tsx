@@ -50,7 +50,7 @@ export function InventoryStep({
               key={preset}
               type="button"
               onClick={() => applyPreset(preset)}
-              className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-xs font-medium text-gray-700 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+              className={`px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-xs font-medium text-gray-700 transition ${FOCUS_RING_TIGHT}`}
             >
               {preset}
             </button>
@@ -69,7 +69,7 @@ export function InventoryStep({
           <button
             type="button"
             onClick={() => setVanType(recommendVan(totalVolume))}
-            className="px-3 py-2 bg-emerald-600 text-white text-xs rounded-lg font-semibold hover:bg-emerald-700 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+            className={`px-3 py-2 bg-emerald-600 text-white text-xs rounded-lg font-semibold hover:bg-emerald-700 transition ${FOCUS_RING}`}
           >
             Use Recommended
           </button>
@@ -91,7 +91,7 @@ export function InventoryStep({
                     type="button"
                     onClick={() => updateInventory(item.name, -1)}
                     aria-label={`Remove one ${item.name}`}
-                    className="w-7 h-7 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                    className={`w-7 h-7 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center text-sm ${FOCUS_RING_TIGHT}`}
                   >
                     −
                   </button>
@@ -102,7 +102,7 @@ export function InventoryStep({
                     type="button"
                     onClick={() => updateInventory(item.name, 1)}
                     aria-label={`Add one ${item.name}`}
-                    className="w-7 h-7 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                    className={`w-7 h-7 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center text-sm ${FOCUS_RING_TIGHT}`}
                   >
                     +
                   </button>

@@ -42,7 +42,7 @@ export function MoveDetailsStep({
               key={item.id}
               type="button"
               onClick={() => { setMoveType(item.id); setError(''); }}
-              className={`p-4 rounded-xl border-2 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 ${
+              className={`p-4 rounded-xl border-2 text-center transition-all ${FOCUS_RING} ${
                 moveType === item.id
                   ? 'border-amber-500 bg-amber-50 shadow-sm'
                   : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
@@ -76,7 +76,7 @@ export function MoveDetailsStep({
                   type="button"
                   onClick={() => setVanType(van.id)}
                   aria-pressed={selected}
-                  className={`group relative overflow-hidden rounded-xl border-2 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 ${
+                  className={`group relative overflow-hidden rounded-xl border-2 text-left transition-all ${FOCUS_RING} ${
                     selected
                       ? 'border-amber-500 shadow-lg shadow-amber-500/10 bg-white'
                       : 'border-slate-200 hover:border-slate-300 bg-white hover:shadow-md'
@@ -142,7 +142,7 @@ export function MoveDetailsStep({
               onClick={() => setHelpers(h => Math.max(0, h - 1))}
               aria-label="Decrease helpers"
               disabled={helpers === 0}
-              className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-700 hover:bg-amber-50 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+              className={`w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-700 hover:bg-amber-50 disabled:opacity-40 disabled:cursor-not-allowed ${FOCUS_RING_TIGHT}`}
             >
               <span className="text-lg leading-none" aria-hidden>−</span>
             </button>
@@ -158,7 +158,7 @@ export function MoveDetailsStep({
               onClick={() => setHelpers(h => Math.min(3, h + 1))}
               aria-label="Increase helpers"
               disabled={helpers >= 3}
-              className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-700 hover:bg-amber-50 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+              className={`w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-700 hover:bg-amber-50 disabled:opacity-40 disabled:cursor-not-allowed ${FOCUS_RING_TIGHT}`}
             >
               <span className="text-lg leading-none" aria-hidden>+</span>
             </button>

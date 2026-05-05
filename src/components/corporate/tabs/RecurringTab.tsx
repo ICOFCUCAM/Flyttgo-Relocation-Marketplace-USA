@@ -10,7 +10,7 @@ export function RecurringTab() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <p className="text-gray-500 text-sm">3 active schedules · Next run: Today 16:00</p>
-        <button className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2">
+        <button className={`px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold ${FOCUS_RING}`}>
           + New Schedule
         </button>
       </div>

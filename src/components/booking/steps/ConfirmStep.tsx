@@ -58,7 +58,7 @@ export function ConfirmStep({
               <button
                 type="button"
                 onClick={onSignIn}
-                className="mt-3 px-4 py-2 bg-[#0B2E59] text-white rounded-lg text-xs font-semibold hover:bg-[#1a4a8a] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+                className={`mt-3 px-4 py-2 bg-[#0B2E59] text-white rounded-lg text-xs font-semibold hover:bg-[#1a4a8a] transition ${FOCUS_RING}`}
               >
                 Sign in to continue →
               </button>
@@ -74,7 +74,7 @@ export function ConfirmStep({
           type="button"
           onClick={onSubmit}
           disabled={saving || !legalAccepted || !pricingReady}
-          className="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold text-base hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+          className={`w-full py-4 bg-emerald-600 text-white rounded-xl font-bold text-base hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${FOCUS_RING}`}
         >
           {saving ? (
             <>

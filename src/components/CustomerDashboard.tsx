@@ -153,7 +153,7 @@ export default function CustomerDashboard() {
                   </p>
                   <button
                     onClick={() => goToPayment(activeBooking.id)}
-                    className="mt-3 bg-amber-600 hover:bg-amber-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+                    className={`mt-3 bg-amber-600 hover:bg-amber-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition ${FOCUS_RING}`}
                   >
                     {t('dashboard.completePayment')}
                   </button>
@@ -194,7 +194,7 @@ export default function CustomerDashboard() {
                 activeBooking.status !== "completed" && (
                   <button
                     onClick={() => setPage("tracking")}
-                    className="bg-[#0B2E59] hover:bg-[#1a4a8a] text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+                    className={`bg-[#0B2E59] hover:bg-[#1a4a8a] text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 ${FOCUS_RING}`}
                   >
                     <span aria-hidden="true">📍</span>
                     {t('dashboard.trackDelivery')}
@@ -220,7 +220,7 @@ export default function CustomerDashboard() {
                 <button
                   onClick={() => confirmCompletion(activeBooking.id)}
                   disabled={confirmCompletionMut.isPending}
-                  className="bg-amber-600 text-white px-4 py-2 rounded text-sm font-semibold disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+                  className={`bg-amber-600 text-white px-4 py-2 rounded text-sm font-semibold disabled:opacity-60 ${FOCUS_RING}`}
                 >
                   Confirm Completion
                 </button>
@@ -238,9 +238,9 @@ export default function CustomerDashboard() {
           </div>
         )}
         <div className="grid sm:grid-cols-3 gap-4 mb-8">
-          <button onClick={() => setPage("booking")} className="bg-amber-600 text-white rounded-xl p-5 font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2">{t('dashboard.newBooking')}</button>
-          <button onClick={() => setPage("my-bookings")} className="bg-white rounded-xl p-5 border font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2">{t('dashboard.myBookings')}</button>
-          <button onClick={() => setPage("van-guide")} className="bg-white rounded-xl p-5 border font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2">{t('dashboard.vanCalculator')}</button>
+          <button onClick={() => setPage("booking")} className={`bg-amber-600 text-white rounded-xl p-5 font-semibold ${FOCUS_RING}`}>{t('dashboard.newBooking')}</button>
+          <button onClick={() => setPage("my-bookings")} className={`bg-white rounded-xl p-5 border font-semibold ${FOCUS_RING}`}>{t('dashboard.myBookings')}</button>
+          <button onClick={() => setPage("van-guide")} className={`bg-white rounded-xl p-5 border font-semibold ${FOCUS_RING}`}>{t('dashboard.vanCalculator')}</button>
         </div>
         <div className="bg-white rounded-xl border overflow-hidden">
           <div className="p-5 border-b"><h2 className="text-lg font-bold">{t('dashboard.recentBookings')}</h2></div>
@@ -258,7 +258,7 @@ export default function CustomerDashboard() {
                     {b.payment_status === "pending" && b.status !== "cancelled" && (
                       <button
                         onClick={() => goToPayment(b.id)}
-                        className="block mt-2 text-xs font-semibold text-amber-700 hover:text-amber-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded"
+                        className={`block mt-2 text-xs font-semibold text-amber-700 hover:text-amber-800 hover:underline ${FOCUS_RING_TIGHT} rounded`}
                       >
                         Complete Payment →
                       </button>
@@ -266,7 +266,7 @@ export default function CustomerDashboard() {
                     {IN_FLIGHT_STATUSES.has(b.status) && (
                       <button
                         onClick={() => setPage("tracking")}
-                        className="block mt-2 text-xs font-semibold text-[#0B2E59] hover:text-[#1a4a8a] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded"
+                        className={`block mt-2 text-xs font-semibold text-[#0B2E59] hover:text-[#1a4a8a] hover:underline ${FOCUS_RING_TIGHT} rounded`}
                       >
                         <span aria-hidden="true">📍</span> Track →
                       </button>

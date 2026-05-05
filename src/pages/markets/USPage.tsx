@@ -123,7 +123,7 @@ export default function USPage() {
               </select>
               <button
                 onClick={startQuote}
-                className="bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold rounded-lg px-4 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+                className={`bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold rounded-lg px-4 py-2 text-sm transition ${FOCUS_RING}`}
               >
                 Get price →
               </button>
@@ -165,7 +165,7 @@ export default function USPage() {
               </button>
               <button
                 onClick={() => { track('us_market_universities_clicked'); go('universities'); }}
-                className="bg-white border border-amber-200 hover:bg-amber-100 text-slate-900 font-bold px-4 py-2 rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+                className={`bg-white border border-amber-200 hover:bg-amber-100 text-slate-900 font-bold px-4 py-2 rounded-lg transition ${FOCUS_RING}`}
               >
                 University programs →
               </button>
@@ -246,7 +246,7 @@ type SortKey = 'best' | 'price' | 'rating' | 'fastest';
 type FilterKey = 'available_week' | 'under_800' | 'rating_4_8' | 'long_distance';
 
 const FILTER_BTN =
-  'px-4 py-2 rounded-full border text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2';
+  `px-4 py-2 rounded-full border text-sm font-semibold transition ${FOCUS_RING}`;
 
 const BADGE =
   'text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded font-medium';
