@@ -492,7 +492,7 @@ function FooterColumn({
 function FooterMarketsColumn({ onNav }: { onNav: (p: Page) => void }) {
   /* Both country lists render as a 2-column inner grid so the column
    * doesn't tower over its neighbours (Customers, Providers, …). With
-   * 6 active + 10 activating, side-by-side wrapping cuts vertical
+   * 6 active + 11 activating, side-by-side wrapping cuts vertical
    * footprint roughly in half — 3+3 active rows and 5+5 activating
    * rows, instead of stacked 6 + 10. */
   return (

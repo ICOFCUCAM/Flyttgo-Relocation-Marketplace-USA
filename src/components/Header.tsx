@@ -62,7 +62,7 @@ interface NavDropdown {
 }
 
 const NAV_DROPDOWNS: NavDropdown[] = [
-  /* Countries — all 16 markets surfaced as four columns: Active (NA),
+  /* Countries — all 17 markets surfaced as four columns: Active (NA),
    *  Active (EU), Activating wave 1, Activating wave 2. Right-rail
    *  feature points at the country index page. */
   {
@@ -109,8 +109,8 @@ const NAV_DROPDOWNS: NavDropdown[] = [
       },
     ],
     feature: {
-      eyebrow: '16 markets',
-      title:   '6 live + 10 activating',
+      eyebrow: '17 markets',
+      title:   '6 live + 11 activating',
       body:    'Active markets ship full booking + escrow today. Activating markets surface 5 anchor cities each with rollout-status SEO landings; provider density unlocks bookings on a per-city threshold.',
       cta:     { label: 'See all marketplaces →', page: 'cities' },
     },
