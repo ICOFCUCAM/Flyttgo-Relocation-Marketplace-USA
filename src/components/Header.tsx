@@ -638,20 +638,12 @@ export default function Header() {
                 );
               })}
 
-              {/* Plain links — pricing + how booking works. aria-current
-               *  conveys active page to assistive tech and to keyboard
-               *  users who can't see the colour change. */}
-              <button
-                onClick={() => handleNav('pricing')}
-                aria-current={currentPage === 'pricing' ? 'page' : undefined}
-                className={`px-3.5 py-2 rounded-lg text-sm font-semibold transition ${
-                  currentPage === 'pricing'
-                    ? 'text-amber-700 bg-amber-50'
-                    : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
-                }`}
-              >
-                Pricing
-              </button>
+              {/* Plain links — 'How booking works' stays in the top
+               *  nav as a single-line conversion explainer. Pricing
+               *  was removed: it's surfaced as 'Pricing guide' in the
+               *  footer Customers column where transparency-curious
+               *  customers naturally look, and the marketplace tier
+               *  pricing for providers lives at /driver-subscriptions. */}
               <button
                 onClick={() => handleNav('how-it-works')}
                 aria-current={currentPage === 'how-it-works' ? 'page' : undefined}
@@ -887,13 +879,10 @@ export default function Header() {
           ))}
 
           <div className="pt-3 border-t border-slate-100">
-            <button
-              onClick={() => handleNav('pricing')}
-              aria-current={currentPage === 'pricing' ? 'page' : undefined}
-              className={`block w-full text-left px-3 py-2.5 text-sm font-semibold rounded-lg ${currentPage === 'pricing' ? 'bg-amber-50 text-amber-700' : 'text-slate-700 hover:bg-slate-50'}`}
-            >
-              Pricing
-            </button>
+            {/* Pricing intentionally not in the mobile menu — it
+             *  reaches the Pricing page via the footer Customers
+             *  column ('Pricing guide'), keeping the mobile menu
+             *  focused on the main conversion paths. */}
             <button
               onClick={() => handleNav('how-it-works')}
               aria-current={currentPage === 'how-it-works' ? 'page' : undefined}

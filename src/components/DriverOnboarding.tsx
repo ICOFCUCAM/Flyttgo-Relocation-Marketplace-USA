@@ -12,6 +12,7 @@ import {
   type OnboardingCountryCode,
 } from '../lib/onboarding-rules';
 import { POPULAR_CITIES } from '../lib/popular-cities';
+import { ANCHOR_CITIES } from '../lib/expansion-cities';
 import type { BookingCountry } from '../lib/store';
 
 const VEHICLE_TYPES = [
@@ -54,6 +55,8 @@ const PROVIDER_CATEGORIES = [
 const COUNTRY_FLAG: Record<string, string> = {
   us: '🇺🇸', ca: '🇨🇦', gb: '🇬🇧', de: '🇩🇪', fr: '🇫🇷', no: '🇳🇴',
   ae: '🇦🇪', ng: '🇳🇬', ke: '🇰🇪', in: '🇮🇳',
+  nl: '🇳🇱', se: '🇸🇪', dk: '🇩🇰', at: '🇦🇹', be: '🇧🇪',
+  es: '🇪🇸', it: '🇮🇹', pl: '🇵🇱', cz: '🇨🇿', cy: '🇨🇾',
 };
 
 const DOCUMENT_TYPES = [
@@ -504,13 +507,16 @@ export default function DriverOnboarding() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">{t('driverOnboarding.cityLabel')}</label>
                     {(() => {
-                      /* Per-country city list from POPULAR_CITIES — the
-                       *  same set the country shopfronts surface. When
-                       *  the country has no curated city list (e.g. AE,
-                       *  NG, KE, IN) or the driver picks "Other", fall
-                       *  back to a free-text input. */
-                      const lc = country.toLowerCase() as BookingCountry;
-                      const list = POPULAR_CITIES[lc] ?? [];
+                      /* Per-country city list. Active markets pull from
+                       *  POPULAR_CITIES (the curated shopfront set);
+                       *  expansion markets pull from ANCHOR_CITIES
+                       *  (5 anchor cities per country). When neither
+                       *  has a list (AE/NG/KE/IN) or the driver picks
+                       *  "Other", fall back to free-text. */
+                      const lc = country.toLowerCase();
+                      const popular = POPULAR_CITIES[lc as BookingCountry] ?? [];
+                      const anchor = ANCHOR_CITIES.filter(c => c.country === lc).map(c => c.city);
+                      const list = popular.length > 0 ? popular : anchor;
                       const inList = list.includes(city);
                       const useFreeText = list.length === 0 || (city && !inList);
                       if (useFreeText) {
