@@ -70,6 +70,23 @@ export function ConfirmStep({
           </div>
         )}
 
+        {/* Trust strip — escrow + verification posture, surfaced
+         *  immediately above the submit button so the customer sees
+         *  the safeguard right where the cost commitment happens.
+         *  No icons-only / no grey-on-grey: the signal needs to read
+         *  at a glance, not be decoration. */}
+        <div className="mb-3 grid grid-cols-3 gap-2 text-[11px]">
+          <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-2 text-emerald-800 font-semibold">
+            <span aria-hidden>🔒</span> Escrow held
+          </div>
+          <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-2 text-emerald-800 font-semibold">
+            <span aria-hidden>✓</span> FlyttGo Verified
+          </div>
+          <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-2 text-emerald-800 font-semibold">
+            <span aria-hidden>↩</span> Refund on cancel
+          </div>
+        </div>
+
         <button
           type="button"
           onClick={onSubmit}

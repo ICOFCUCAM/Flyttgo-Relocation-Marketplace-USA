@@ -107,9 +107,21 @@ export default function MobilityIntelligence() {
           </p>
           <div className="flex flex-wrap gap-2">
             {stats.highFreqCorridors.map(c => (
-              <span
+              <button
                 key={c.slug}
-                className="inline-flex items-center gap-1.5 bg-white border border-slate-200 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-[0_1px_0_rgba(15,23,42,0.04)]"
+                type="button"
+                onClick={() => {
+                  track('mobility_intel_corridor_clicked', { slug: c.slug });
+                  if (typeof window !== 'undefined') {
+                    window.history.pushState({}, '', `/corridor/${c.slug}`);
+                  }
+                  setPage('corridor');
+                  if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                  }
+                }}
+                className={`inline-flex items-center gap-1.5 bg-white border border-slate-200 hover:border-amber-300 hover:bg-amber-50 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-[0_1px_0_rgba(15,23,42,0.04)] transition ${FOCUS_RING}`}
+                aria-label={`Open ${c.fromCity} to ${c.toCity} corridor`}
               >
                 {c.fromCity}
                 <ArrowRight size={11} className="text-slate-400" />
@@ -117,7 +129,7 @@ export default function MobilityIntelligence() {
                 <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider bg-amber-100 text-amber-800 uppercase">
                   {c.fromCountry} → {c.toCountry}
                 </span>
-              </span>
+              </button>
             ))}
           </div>
         </div>

@@ -16,4 +16,4 @@ export { default as StatBlock }      from './StatBlock';
 export { default as Pill }           from './Pill';
 export { default as AnimatedNumber } from './AnimatedNumber';
 export { default as EmptyState }     from './EmptyState';
-export { FOCUS_RING, FOCUS_RING_TIGHT, PRESS_FEEDBACK, MOTION } from './tokens';
+export { FOCUS_RING, FOCUS_RING_TIGHT, INPUT_FOCUS, PRESS_FEEDBACK, MOTION } from './tokens';

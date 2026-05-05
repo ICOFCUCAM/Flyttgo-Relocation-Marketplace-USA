@@ -6,6 +6,7 @@ import LiveBookingTicker from '../../components/global/LiveBookingTicker';
 import { useApp } from '../../lib/store';
 import type { Page } from '../../lib/store';
 import { PROVIDERS } from '../../lib/providers-catalogue';
+import { getProviderPublicIdentity } from '../../lib/provider-identity';
 import { track } from '../../lib/analytics';
 
 /**
@@ -347,10 +348,16 @@ function USProviderList({ go }: { go: (p: Page) => void }) {
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {providers.map(p => (
+            {providers.map(p => {
+              /* Mask the raw provider name behind the public identity
+               * (FG-US-XXX-Y). Customers see a stable opaque handle
+               * pre-booking; the brand name is unlocked in the
+               * confirmation flow once escrow is funded. */
+              const id = getProviderPublicIdentity(p);
+              return (
               <article key={p.slug} className="bg-white rounded-2xl border border-slate-200 hover:border-amber-300 hover:shadow-lg transition flex flex-col p-5">
                 <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-bold text-slate-900 text-base leading-tight">{p.name}</h3>
+                  <h3 className="font-bold text-slate-900 text-base leading-tight">{id.displayName}</h3>
                   {p.badge && (
                     <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-400 text-slate-900 px-2 py-1 rounded-md flex-shrink-0 ml-2">
                       {p.badge}
@@ -393,7 +400,8 @@ function USProviderList({ go }: { go: (p: Page) => void }) {
                   Book this mover →
                 </button>
               </article>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

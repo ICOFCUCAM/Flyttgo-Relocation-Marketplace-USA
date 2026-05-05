@@ -30,6 +30,17 @@ export const FOCUS_RING =
 export const FOCUS_RING_TIGHT =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400';
 
+/** Form-input focus ring — different convention from buttons.
+ *  Inputs SHOULD show their focus state on every focus event
+ *  (including mouse click) so the customer can see which field
+ *  they're typing into. Buttons use focus-visible (keyboard only)
+ *  because a hover-then-click should not leave a lingering ring.
+ *
+ *  Apply to <input>, <select>, <textarea>, and search/autocomplete
+ *  trigger surfaces. Pairs naturally with `outline-none`. */
+export const INPUT_FOCUS =
+  'focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400';
+
 /** Subtle press feedback for primary CTAs — translates 1px on
  *  active so the click registers physically without a colour shift
  *  that would conflict with the brand amber. */

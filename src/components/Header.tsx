@@ -634,9 +634,12 @@ export default function Header() {
                 );
               })}
 
-              {/* Plain links — pricing + how booking works. */}
+              {/* Plain links — pricing + how booking works. aria-current
+               *  conveys active page to assistive tech and to keyboard
+               *  users who can't see the colour change. */}
               <button
                 onClick={() => handleNav('pricing')}
+                aria-current={currentPage === 'pricing' ? 'page' : undefined}
                 className={`px-3.5 py-2 rounded-lg text-sm font-semibold transition ${
                   currentPage === 'pricing'
                     ? 'text-amber-700 bg-amber-50'
@@ -647,6 +650,7 @@ export default function Header() {
               </button>
               <button
                 onClick={() => handleNav('how-it-works')}
+                aria-current={currentPage === 'how-it-works' ? 'page' : undefined}
                 className={`px-3.5 py-2 rounded-lg text-sm font-semibold transition ${
                   currentPage === 'how-it-works'
                     ? 'text-amber-700 bg-amber-50'
@@ -881,12 +885,14 @@ export default function Header() {
           <div className="pt-3 border-t border-slate-100">
             <button
               onClick={() => handleNav('pricing')}
+              aria-current={currentPage === 'pricing' ? 'page' : undefined}
               className={`block w-full text-left px-3 py-2.5 text-sm font-semibold rounded-lg ${currentPage === 'pricing' ? 'bg-amber-50 text-amber-700' : 'text-slate-700 hover:bg-slate-50'}`}
             >
               Pricing
             </button>
             <button
               onClick={() => handleNav('how-it-works')}
+              aria-current={currentPage === 'how-it-works' ? 'page' : undefined}
               className={`block w-full text-left px-3 py-2.5 text-sm font-semibold rounded-lg ${currentPage === 'how-it-works' ? 'bg-amber-50 text-amber-700' : 'text-slate-700 hover:bg-slate-50'}`}
             >
               How booking works
