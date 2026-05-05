@@ -111,9 +111,13 @@ export default function MobilityIntelligence() {
                 key={c.slug}
                 type="button"
                 onClick={() => {
+                  /* Corridor route shape per pages/CorridorPage.tsx is
+                   * /corridor/<country>/<slug> — two segments after
+                   * the prefix. Use the from-country so the page
+                   * resolves the right shopfront context. */
                   track('mobility_intel_corridor_clicked', { slug: c.slug });
                   if (typeof window !== 'undefined') {
-                    window.history.pushState({}, '', `/corridor/${c.slug}`);
+                    window.history.pushState({}, '', `/corridor/${c.fromCountry}/${c.slug}`);
                   }
                   setPage('corridor');
                   if (typeof window !== 'undefined') {
