@@ -11,6 +11,7 @@ import {
 } from '../../lib/popular-cities';
 import { track } from '../../lib/analytics';
 import { corridorsForCountry, type MarketCountryCode } from '../../lib/cross-border-corridors';
+import { CITY_HERO_IMAGES } from '../../config/cityHeroImages';
 
 /**
  * Section-index label — kept for backward compatibility with editorial
@@ -74,14 +75,21 @@ export interface CountryPageProps {
   seoSlot?: ReactNode;
 }
 
-/* Default cityscape photo per country. Stable Unsplash CDN URLs. */
+/* Default cityscape photo per country.
+ *
+ * Norway sources from the shared CITY_HERO_IMAGES skyline registry
+ * so the legacy market matches the same visual system the expansion
+ * markets use (one source of truth for capital-city skylines).
+ * The other legacy markets keep their bespoke marketing photos for
+ * now — those were art-directed against a specific shopfront layout
+ * and not just "capital skyline." */
 const HERO_PHOTOS: Record<BookingCountry, string> = {
   us: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=1920&q=70',
   ca: 'https://images.unsplash.com/photo-1503614472-8c93d56e92ce?auto=format&fit=crop&w=1920&q=70',
   de: 'https://images.unsplash.com/photo-1560969184-10fe8719e047?auto=format&fit=crop&w=1920&q=70',
   fr: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1920&q=70',
   gb: 'https://images.unsplash.com/photo-1486299267070-83823f5448dd?auto=format&fit=crop&w=1920&q=70',
-  no: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1920&q=70',
+  no: CITY_HERO_IMAGES.oslo,
 };
 
 /* Default trust stats per country. Numbers are rough but shape the

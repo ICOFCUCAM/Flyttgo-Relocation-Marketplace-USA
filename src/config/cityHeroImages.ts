@@ -37,6 +37,16 @@ export const CITY_HERO_IMAGES: Record<string, string> = {
   vasteras:
     "https://images.unsplash.com/photo-1608658964123-3b33c4c1bb65?q=80&w=2400",
 
+  /* Norway */
+  oslo:
+    "https://images.unsplash.com/photo-1601270440739-f6a7c8e3e58e?q=80&w=2400",
+  bergen:
+    "https://images.unsplash.com/photo-1601581875309-fafbf2d3ed3a?q=80&w=2400",
+  trondheim:
+    "https://images.unsplash.com/photo-1605648916361-9bc12ad6a569?q=80&w=2400",
+  stavanger:
+    "https://images.unsplash.com/photo-1597220858400-3f8d7d6e5fbd?q=80&w=2400",
+
   /* Spain */
   madrid:
     "https://images.unsplash.com/photo-1543785734-4b54c1cba0bc?q=80&w=2400",
