@@ -92,6 +92,7 @@ const MARKETS_ACTIVATING: LinkItem[] = [
   { label: '🇦🇹 Austria',         page: 'market-at' },
   { label: '🇨🇭 Switzerland',     page: 'market-ch' },
   { label: '🇨🇿 Czech Republic',  page: 'market-cz' },
+  { label: '🇨🇾 Cyprus',          page: 'market-cy' },
 ];
 
 /** Cross-market discovery surfaces — broader than a single country. */

@@ -104,6 +104,7 @@ const NAV_DROPDOWNS: NavDropdown[] = [
           { label: 'Austria',        page: 'market-at',     prefix: '🇦🇹', description: 'Wien · Graz · Linz' },
           { label: 'Switzerland',    page: 'market-ch',     prefix: '🇨🇭', description: 'Zürich · Genève · Basel' },
           { label: 'Czech Republic', page: 'market-cz',     prefix: '🇨🇿', description: 'Praha · Brno · Ostrava' },
+          { label: 'Cyprus',         page: 'market-cy',     prefix: '🇨🇾', description: 'Lefkosia · Lemesos · Larnaka' },
         ],
       },
     ],

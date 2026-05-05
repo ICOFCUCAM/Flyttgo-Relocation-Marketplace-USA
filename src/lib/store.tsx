@@ -51,7 +51,7 @@ export type Page =
    * country's payment + address autocomplete are wired). See
    * src/lib/expansion-cities.ts for the registry. */
   | 'market-nl' | 'market-se' | 'market-es' | 'market-it' | 'market-pl'
-  | 'market-dk' | 'market-be' | 'market-at' | 'market-ch' | 'market-cz'
+  | 'market-dk' | 'market-be' | 'market-at' | 'market-ch' | 'market-cz' | 'market-cy'
   /* Strategic-city SEO landing page — /moving-<slug>. Slug is
    * looked up against ANCHOR_CITIES; pathToPage prefix-matches
    * /moving-. */

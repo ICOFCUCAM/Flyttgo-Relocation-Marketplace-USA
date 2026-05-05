@@ -95,6 +95,7 @@ const PAGE_TO_PATH: Record<Page, string> = {
   'market-at':               '/market-at',
   'market-ch':               '/market-ch',
   'market-cz':               '/market-cz',
+  'market-cy':               '/market-cy',
 
   /* Strategic-city SEO landing root. Live navigations push the full
    * /moving-<slug> URL via history.pushState; pathToPage resolves any
@@ -206,6 +207,7 @@ const PAGE_TITLES: Record<Page, string> = {
   'market-at':                'Moving in Wien · Graz · Linz · Salzburg · Innsbruck — Austria marketplace · FlyttGo',
   'market-ch':                'Moving in Zürich · Genève · Basel · Bern · Lausanne — Switzerland marketplace · FlyttGo',
   'market-cz':                'Moving in Praha · Brno · Ostrava · Plzeň · Liberec — Czech Republic marketplace · FlyttGo',
+  'market-cy':                'Moving in Lefkosia · Lemesos · Larnaka · Pafos · Famagusta — Cyprus marketplace · FlyttGo',
   'moving-city':              'Moving services · FlyttGo Global',
   'refer':                    'Give £25, get £25 · FlyttGo referrals',
   'provider-profile':         'Provider profile · FlyttGo Global',
@@ -321,6 +323,8 @@ const PAGE_DESCRIPTIONS: Record<Page, string> = {
     "Switzerland relocation marketplace — Zürich, Genève, Basel, Bern, Lausanne. Strassenverkehrsamt-registered Umzugsfirmen / entreprises de déménagement, DACH + Alpine corridors, trilingual DE/FR/IT coordination.",
   'market-cz':
     "Czech Republic relocation marketplace — Praha, Brno, Ostrava, Plzeň, Liberec. Ministerstvo-dopravy-licensed stěhovací firmy, Central-Europe corridor coordination, transparent pricing per Czech anchor city.",
+  'market-cy':
+    "Cyprus relocation marketplace — Lefkosia, Lemesos, Larnaka, Pafos, Famagusta. Department-of-Road-Transport-registered carriers, EU + Eastern-Mediterranean corridor coordination, transparent EUR pricing per Cypriot anchor city.",
   'moving-city':
     "City-specific FlyttGo relocation services — verified local providers, transparent pricing, cross-border corridor connections, and escrow protection on every move.",
   'refer':
@@ -485,6 +489,7 @@ const HREFLANG_BY_PAGE: Partial<Record<Page, string[]>> = {
   'market-at':       ['de-AT', 'de', 'en'],
   'market-ch':       ['de-CH', 'fr-CH', 'it-CH', 'en'],
   'market-cz':       ['cs-CZ', 'en'],
+  'market-cy':       ['el-CY', 'en'],
 };
 
 /** Locale used as the page-level <html lang> for each market. */
@@ -494,7 +499,7 @@ const PRIMARY_LANG_BY_PAGE: Partial<Record<Page, string>> = {
   'market-nl': 'nl', 'market-se': 'sv', 'market-es': 'es',
   'market-it': 'it', 'market-pl': 'pl', 'market-dk': 'da',
   'market-be': 'fr', 'market-at': 'de', 'market-ch': 'de',
-  'market-cz': 'cs',
+  'market-cz': 'cs', 'market-cy': 'el',
 };
 
 /**
@@ -667,6 +672,7 @@ const ISO_TO_MARKET_PAGE: Record<string, Page> = {
   at: 'market-at',
   ch: 'market-ch',
   cz: 'market-cz',
+  cy: 'market-cy',
 };
 
 export function isoToMarketPage(iso: string): Page {

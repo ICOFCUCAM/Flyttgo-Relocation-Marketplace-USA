@@ -28,12 +28,12 @@
  * ───────────────────────────────────────────────────────────────── */
 
 export type ExpansionCountryCode =
-  | 'nl' | 'se' | 'es' | 'it' | 'pl'   // first-wave expansion
-  | 'dk' | 'be' | 'at' | 'ch' | 'cz';  // second-wave expansion
+  | 'nl' | 'se' | 'es' | 'it' | 'pl'           // first-wave expansion
+  | 'dk' | 'be' | 'at' | 'ch' | 'cz' | 'cy';   // second-wave expansion (cy per global rollout spec)
 
 /** All expansion country codes (first + second wave). */
 export const EXPANSION_COUNTRY_CODES: ExpansionCountryCode[] =
-  ['nl', 'se', 'es', 'it', 'pl', 'dk', 'be', 'at', 'ch', 'cz'];
+  ['nl', 'se', 'es', 'it', 'pl', 'dk', 'be', 'at', 'ch', 'cz', 'cy'];
 
 /** First-wave countries — prioritized for active rollout coordination. */
 export const FIRST_WAVE_COUNTRIES: ExpansionCountryCode[] =
@@ -80,6 +80,7 @@ export const EXPANSION_COUNTRIES: Record<ExpansionCountryCode, ExpansionCountryP
   at: { code: 'at', name: 'Austria',         flag: '🇦🇹', localLabel: 'Österreich',        currency: 'EUR', locale: 'de-AT', wave: 'second', positioning: 'Second-wave marketplace — waitlisting providers across Wien, Graz, Linz, Salzburg, Innsbruck.',                              compliance: 'GüKG / KfG · WKO-registered.',                                     activationWindow: '2026 Q4 — second wave' },
   ch: { code: 'ch', name: 'Switzerland',     flag: '🇨🇭', localLabel: 'Schweiz · Suisse',  currency: 'CHF', locale: 'de-CH', wave: 'second', positioning: 'Second-wave marketplace — waitlisting providers across Zürich, Genève, Basel, Bern, Lausanne. DE/FR/IT trilingual coordination.', compliance: 'Strassenverkehrsamt / Bundesamt für Verkehr-registered.',          activationWindow: '2027 Q1 — second wave' },
   cz: { code: 'cz', name: 'Czech Republic',  flag: '🇨🇿', localLabel: 'Česko',             currency: 'CZK', locale: 'cs-CZ', wave: 'second', positioning: 'Second-wave marketplace — waitlisting providers across Praha, Brno, Ostrava, Plzeň, Liberec.',                                compliance: 'Koncese silniční dopravy · Ministerstvo dopravy-registered.',     activationWindow: '2027 Q1 — second wave' },
+  cy: { code: 'cy', name: 'Cyprus',          flag: '🇨🇾', localLabel: 'Κύπρος',            currency: 'EUR', locale: 'el-CY', wave: 'second', positioning: 'Second-wave marketplace — waitlisting providers across Lefkosia, Lemesos, Larnaka, Pafos, Famagusta.',                       compliance: 'Department of Road Transport-registered carriers.',                activationWindow: '2027 Q1 — second wave' },
 };
 
 export interface AnchorCity {
@@ -283,6 +284,25 @@ export const ANCHOR_CITIES: AnchorCity[] = [
   { slug: 'liberec',    city: 'Liberec',    country: 'cz', status: 'inactive', anchorFlag: false, dispatchPriority: 'low',    crossBorderCorridorFlag: true,
     paragraph: 'North-Bohemia anchor — corridor to Dresden + Wrocław.',
     rationale: ['Tri-border corridor (CZ/DE/PL)'] },
+
+  /* Cyprus — 5 anchor cities. EU member, ferry/air corridors to GR
+   * + IT carry the bulk of relocation flow; intra-island moves are
+   * the resident demand baseline. */
+  { slug: 'lefkosia',   city: 'Lefkosia',   country: 'cy', status: 'anchor',   anchorFlag: true,  dispatchPriority: 'high',   crossBorderCorridorFlag: false,
+    paragraph: 'Capital + administrative anchor — government + corporate relocation core.',
+    rationale: ['Capital city', 'Government + EU offices'] },
+  { slug: 'lemesos',    city: 'Lemesos',    country: 'cy', status: 'anchor',   anchorFlag: true,  dispatchPriority: 'high',   crossBorderCorridorFlag: true,
+    paragraph: 'Mediterranean port + financial hub — corridor to Athens, Tel Aviv, ferry to Italy.',
+    rationale: ['Largest port', 'Corporate / shipping HQ density'] },
+  { slug: 'larnaka',    city: 'Larnaka',    country: 'cy', status: 'promoted', anchorFlag: true,  dispatchPriority: 'medium', crossBorderCorridorFlag: true,
+    paragraph: 'International airport + relocation gateway — first arrival point for inbound talent.',
+    rationale: ['Main international airport', 'Inbound relocation gateway'] },
+  { slug: 'pafos',      city: 'Pafos',      country: 'cy', status: 'active',   anchorFlag: false, dispatchPriority: 'medium', crossBorderCorridorFlag: false,
+    paragraph: 'West-coast secondary hub — strong residential expat density.',
+    rationale: ['Expat residential cluster'] },
+  { slug: 'famagusta',  city: 'Famagusta',  country: 'cy', status: 'inactive', anchorFlag: false, dispatchPriority: 'low',    crossBorderCorridorFlag: false,
+    paragraph: 'East-coast anchor — university + tourism corridors.',
+    rationale: ['University relocation flow'] },
 ];
 
 /* ── Lookup helpers ──────────────────────────────────────── */

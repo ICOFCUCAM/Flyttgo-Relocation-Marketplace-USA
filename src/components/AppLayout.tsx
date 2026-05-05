@@ -220,7 +220,7 @@ useEffect(() => {
    * show it on customer-discovery surfaces (home, country pages,
    * marketplace, how-it-works). Suppressed on dashboards, auth, and
    * payment surfaces where it would distract. */
-  const showTicker = ['home','marketplace','how-it-works','providers','cities','enterprise-relocation','partners','about','universities','market-us','market-canada','market-germany','market-france','market-uk','market-norway','market-nl','market-se','market-es','market-it','market-pl','market-dk','market-be','market-at','market-ch','market-cz','moving-city','refer','provider-profile','providers-directory','compare','service-category','pricing','provider-requirements','government-programs','ngo-deployment','pilot-deployment-programs','vendor-pack','procurement-rfp','deployment-regions','capability-brief'].includes(currentPage);
+  const showTicker = ['home','marketplace','how-it-works','providers','cities','enterprise-relocation','partners','about','universities','market-us','market-canada','market-germany','market-france','market-uk','market-norway','market-nl','market-se','market-es','market-it','market-pl','market-dk','market-be','market-at','market-ch','market-cz','market-cy','moving-city','refer','provider-profile','providers-directory','compare','service-category','pricing','provider-requirements','government-programs','ngo-deployment','pilot-deployment-programs','vendor-pack','procurement-rfp','deployment-regions','capability-brief'].includes(currentPage);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -291,6 +291,7 @@ useEffect(() => {
       case 'market-at':              return <ExpansionCountryPage code="at" />;
       case 'market-ch':              return <ExpansionCountryPage code="ch" />;
       case 'market-cz':              return <ExpansionCountryPage code="cz" />;
+      case 'market-cy':              return <ExpansionCountryPage code="cy" />;
       case 'moving-city':            return <MovingCityPage />;
       case 'backoffice':             return <Backoffice />;
       case 'brand':                  return <BrandPage />;

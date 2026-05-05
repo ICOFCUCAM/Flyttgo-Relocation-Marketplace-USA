@@ -80,6 +80,7 @@ const STATIC_URLS = [
   { path: '/market-at',            changefreq: 'weekly',  priority: '0.80' },
   { path: '/market-ch',            changefreq: 'weekly',  priority: '0.80' },
   { path: '/market-cz',            changefreq: 'weekly',  priority: '0.80' },
+  { path: '/market-cy',            changefreq: 'weekly',  priority: '0.80' },
 
   /* Provider funnel */
   { path: '/providers',            changefreq: 'monthly', priority: '0.9' },

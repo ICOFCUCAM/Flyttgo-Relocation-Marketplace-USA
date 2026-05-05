@@ -71,6 +71,7 @@ const EXPANSION_PAGE_TO_CAPITAL_SLUG: Partial<Record<Page, string>> = {
   'market-at': 'vienna',
   'market-ch': 'zurich',
   'market-cz': 'prague',
+  'market-cy': 'nicosia',
 };
 
 /* ── Resolver ────────────────────────────────────────────── */
