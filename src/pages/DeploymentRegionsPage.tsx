@@ -28,7 +28,15 @@ import InstitutionalCTAs from '../components/global/InstitutionalCTAs';
 type Coverage = 'live' | 'partner' | 'expansion-ready';
 
 const COVERAGE_BY_COUNTRY: Record<string, Coverage> = {
+  /* Live markets — full booking + payment + autocomplete wired. */
   us: 'live', ca: 'live', gb: 'live', de: 'live', fr: 'live', no: 'live',
+  /* Activating markets — provider waitlist + rollout-status SEO
+   * landings up; bookings unlock per-city as supply density hits
+   * thresholds. Tagged 'partner' until promoted to 'live'. */
+  nl: 'partner', se: 'partner', es: 'partner', it: 'partner', pl: 'partner',
+  dk: 'partner', be: 'partner', at: 'partner', ch: 'partner',
+  cz: 'partner', cy: 'partner',
+  /* Strategic-partner markets outside the European expansion plan. */
   ae: 'partner',
   ng: 'partner', ke: 'partner',
 };
