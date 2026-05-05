@@ -9,7 +9,7 @@ import type { Page } from './store';
  * back when the user hits back / forward.
  *
  * Paths are chosen for SEO value rather than matching the Page id 1:1
- * (e.g. `driver-onboarding` → `/become-a-driver`, `subscriptions` →
+ * (e.g. `driver-onboarding` → `/drive`, `subscriptions` →
  * `/driver-subscriptions`). Add to both maps when introducing a new
  * page — pathToPage falls back to 'home' for unknown paths.
  */
@@ -24,7 +24,7 @@ const PAGE_TO_PATH: Record<Page, string> = {
   'van-guide':               '/van-size-guide',
   'checklist':               '/moving-checklist',
   'subscriptions':           '/driver-subscriptions',
-  'driver-onboarding':       '/become-a-driver',
+  'driver-onboarding':       '/drive',
 
   /* Authenticated dashboards */
   'customer-dashboard':      '/dashboard',
@@ -634,6 +634,13 @@ export function pathToPage(path: string): Page {
    * slug internally. */
   if (normalised === '/backoffice' || normalised.startsWith('/backoffice/')) {
     return 'backoffice';
+  }
+  /* Legacy redirect — the driver-onboarding route used to live at
+   * /become-a-driver. Map it to the new short path so existing
+   * bookmarks, Google search results, and inbound links still land
+   * on the right page. */
+  if (normalised === '/become-a-driver') {
+    return 'driver-onboarding';
   }
   /* Unknown paths resolve to 'not-found' rather than silently
    * serving the homepage. NotFoundPage sets robots=noindex so

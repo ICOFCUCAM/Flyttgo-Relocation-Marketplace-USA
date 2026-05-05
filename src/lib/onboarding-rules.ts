@@ -291,7 +291,7 @@ export const ONBOARDING_RULES: CountryOnboardingRules[] = [
 
   /* ── Wave-1 / Wave-2 expansion markets ────────────────────────
    * Stub onboarding rules so drivers in these countries can apply
-   * via /become-a-driver. Country-specific compliance fields are
+   * via /drive. Country-specific compliance fields are
    * intentionally minimal (`business-registration`) until each
    * jurisdiction's licensing review is completed; the universal
    * fields (license, vehicle reg, insurance) still gate the form.

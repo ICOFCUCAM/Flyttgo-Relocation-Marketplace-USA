@@ -186,7 +186,7 @@ export function ApplicationsTab({
           </p>
           <p className="text-xs text-slate-500 mt-1">
             New applications appear here automatically as drivers complete
-            the onboarding flow at /become-a-driver.
+            the onboarding flow at /drive.
           </p>
         </div>
       ) : (

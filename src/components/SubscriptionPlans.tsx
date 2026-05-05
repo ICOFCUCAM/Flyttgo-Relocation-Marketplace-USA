@@ -146,7 +146,7 @@ export default function SubscriptionPlans() {
       /* On error (network, RLS denial, etc.) fail open to the
        * not-applied branch so the user sees an actionable CTA
        * instead of an indefinite spinner. The button will route
-       * them to /become-a-driver where they can retry. */
+       * them to /drive where they can retry. */
       if (error) {
         console.error('[SubscriptionPlans] gate query failed:', error);
         setGate('not-applied');

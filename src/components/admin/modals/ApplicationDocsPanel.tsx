@@ -219,7 +219,7 @@ export function ApplicationDocsPanel({
               <p className="text-sm font-bold text-slate-700">No documents uploaded yet</p>
               <p className="text-xs text-slate-500 mt-1">
                 Drivers upload required documents during the
-                /become-a-driver onboarding flow. They'll appear
+                /drive onboarding flow. They'll appear
                 here as soon as they submit.
               </p>
             </div>
