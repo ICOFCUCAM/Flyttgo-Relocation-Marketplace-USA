@@ -277,6 +277,49 @@ async function alreadyProcessed(eventId: string, eventType: string): Promise<boo
 }
 
 async function handleEvent(event: StripeEvent) {
+  /* Stripe Connect account verification updates — keep our cached
+   * stripe_connect_accounts flags in sync with Stripe's truth so the
+   * driver portal renders the right state-machine card without
+   * polling the Connect API. */
+  if (event.type === 'account.updated') {
+    if (await alreadyProcessed(event.id, event.type)) {
+      return { ok: true, idempotent: true, reason: 'event already processed' };
+    }
+    const account = event.data.object as {
+      id?:                 string;
+      charges_enabled?:    boolean;
+      payouts_enabled?:    boolean;
+      details_submitted?:  boolean;
+      requirements?:       { currently_due?: string[] };
+      metadata?:           Record<string, string>;
+    };
+    if (!account.id) return { ok: true, ignored: true, reason: 'no account id' };
+
+    /* Match by stripe_account_id first (cheap), then fall back to
+     * the metadata.flyttgo_user_id we stamped at account creation. */
+    const update = {
+      charges_enabled:   Boolean(account.charges_enabled),
+      payouts_enabled:   Boolean(account.payouts_enabled),
+      details_submitted: Boolean(account.details_submitted),
+      requirements_due:  account.requirements?.currently_due ?? [],
+      updated_at:        new Date().toISOString(),
+    };
+
+    let { error } = await supabase
+      .from('stripe_connect_accounts')
+      .update(update)
+      .eq('stripe_account_id', account.id);
+
+    if (error && account.metadata?.flyttgo_user_id) {
+      ({ error } = await supabase
+        .from('stripe_connect_accounts')
+        .update({ ...update, stripe_account_id: account.id })
+        .eq('user_id', account.metadata.flyttgo_user_id));
+    }
+    if (error) return { ok: false, error: error.message };
+    return { ok: true, kind: 'account.updated', accountId: account.id };
+  }
+
   if (
     event.type !== 'checkout.session.completed' &&
     event.type !== 'checkout.session.async_payment_succeeded'

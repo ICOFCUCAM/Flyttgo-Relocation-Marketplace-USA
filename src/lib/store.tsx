@@ -28,6 +28,8 @@ export type Page =
   | 'market-france' | 'market-uk' | 'market-norway'
   /* Referral program surface. */
   | 'refer'
+  /* Public driver-earnings transparency page (acquisition funnel). */
+  | 'driver-earnings'
   /* Provider profile (slug carried via ?slug= query param). */
   | 'provider-profile'
   /* Provider directory (search + filter). */
@@ -250,6 +252,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     applyPageMeta(currentPage);
   }, [currentPage]);
+
+  /* Capture ?ref=CODE on first arrival and stash it in sessionStorage
+   * so it survives the OAuth round-trip. The /auth/callback page
+   * pulls it back out and records the referral once the new user's
+   * session lands. Runs once on mount; the param is left in the URL
+   * for analytics until the user navigates. */
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref');
+    if (ref && ref.length <= 32) {
+      window.sessionStorage.setItem('flyttgo:ref-code', ref.toUpperCase());
+    }
+    return undefined;
+  }, []);
 
   const setBookingData = (data: Partial<BookingData>) => {
     setBookingDataState(prev => ({ ...prev, ...data }));

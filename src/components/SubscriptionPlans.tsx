@@ -6,6 +6,7 @@ import { useApp } from '../lib/store';
 import { useAuth } from '../lib/auth';
 import { supabase } from '../lib/supabase';
 import MarketplaceBanner from './banners/MarketplaceBanner';
+import SubscriptionRoiCalculator from './SubscriptionRoiCalculator';
 import {
   findTier, localPriceForTier, PRIVILEGE_LABELS,
   type SubscriptionTierSlug,
@@ -411,6 +412,13 @@ export default function SubscriptionPlans() {
             )}
           </div>
         )}
+
+        {/* ROI calculator — interactive, market-aware. Pulls per-payout
+         *  baselines from the live earnings view so the math reflects
+         *  what drivers actually take home in the chosen country. */}
+        <div className="mb-16">
+          <SubscriptionRoiCalculator country={country} />
+        </div>
 
         {/* Earnings Comparison */}
         <div className="bg-white rounded-2xl border border-gray-100 p-8 mb-16">

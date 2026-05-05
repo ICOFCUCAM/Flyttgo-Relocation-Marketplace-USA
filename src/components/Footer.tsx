@@ -45,6 +45,7 @@ const PROVIDERS: LinkItem[] = [
   { label: 'For providers',          page: 'providers' },
   { label: 'Provider requirements',  page: 'provider-requirements' },
   { label: 'Join FlyttGo',           page: 'driver-onboarding' },
+  { label: 'What drivers earn',      page: 'driver-earnings' },
   { label: 'Application status',     page: 'driver-application-status' },
   { label: 'Subscription tiers',     page: 'subscriptions' },
   { label: 'Provider dashboard',     page: 'driver-portal' },

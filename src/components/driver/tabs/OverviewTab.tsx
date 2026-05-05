@@ -3,16 +3,19 @@ import { FOCUS_RING } from '../../ds';
 import { daysLeft } from '../utils';
 import type { WalletRow, SubscriptionRow } from '../../../services/driver';
 import { DemandHeatmap } from '../DemandHeatmap';
+import StripeConnectCard from '../StripeConnectCard';
 
 export function OverviewTab({
   wallet,
   subscription,
   country,
+  userId,
   onOpenSubscription,
 }: {
   wallet: WalletRow | null | undefined;
   subscription: SubscriptionRow | null | undefined;
   country: string;
+  userId: string | null | undefined;
   onOpenSubscription: () => void;
 }) {
   const subExpiry = subscription ? daysLeft(subscription.end_date) : null;
@@ -51,6 +54,12 @@ export function OverviewTab({
           </div>
         </div>
       )}
+
+      {/* Stripe Connect — self-serve KYC + bank collection. Renders
+       *  the right state-machine card based on the driver's
+       *  stripe_connect_accounts row (created automatically when
+       *  their application is approved). */}
+      {userId && <StripeConnectCard userId={userId} />}
 
       {/* Demand heatmap — top cities by recent booking volume in
        *  the driver's market. Helps the driver position for the

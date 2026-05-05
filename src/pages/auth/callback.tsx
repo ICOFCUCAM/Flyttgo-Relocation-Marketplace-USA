@@ -37,6 +37,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../lib/auth';
 import { useApp }  from '../../lib/store';
+import { recordReferralRedemption } from '../../services/referrals';
 
 /** Hard ceiling on how long we'll wait for the session before showing
  *  the error fallback. supabase-js usually populates the session in
@@ -91,6 +92,19 @@ export default function AuthCallbackPage() {
    * landing surface for their account type. */
   useEffect(() => {
     if (loading || !user) return undefined;
+
+    /* Redeem any pending referral code stashed at first link click.
+     * The ?ref= query param is captured into sessionStorage on the
+     * landing page (so it survives the OAuth round-trip), then
+     * cashed in once the new user's session lands here. Failures
+     * are silent — invalid code, self-referral, and duplicate are
+     * all expected no-ops handled by the service. */
+    const refCode = window.sessionStorage.getItem('flyttgo:ref-code');
+    if (refCode) {
+      void recordReferralRedemption(refCode, user.id)
+        .catch(() => undefined)
+        .finally(() => window.sessionStorage.removeItem('flyttgo:ref-code'));
+    }
 
     /* Drivers and admins have their own home — sending them to the
      * customer dashboard would just feel wrong. */

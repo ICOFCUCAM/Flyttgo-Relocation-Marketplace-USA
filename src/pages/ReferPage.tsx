@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   Gift, Copy, Check, MessageCircle, Mail, Twitter, QrCode, Share2,
-  TrendingUp, Wallet, Users,
+  Wallet, Users,
   type LucideIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -9,6 +9,7 @@ import { useAuth } from '../lib/auth';
 import { useApp } from '../lib/store';
 import { Section, Eyebrow, SectionHeading, Pill, AnimatedNumber } from '../components/ds';
 import { track } from '../lib/analytics';
+import { useReferralStats } from '../hooks/queries/useReferral';
 
 /* ─────────────────────────────────────────────────────────────────
  * /refer — Give £25, get £25 referral landing.
@@ -35,12 +36,13 @@ import { track } from '../lib/analytics';
 const REFERRAL_VALUE_GBP = 25;
 const REFERRAL_BASE_URL  = 'https://flyttgo.us';
 
-function deriveCode(seed: string): string {
-  /* DJB2-ish hash, 32-bit, base36. Stable per seed, no collisions
-   * within a marketplace-sized cohort. */
-  let h = 5381;
-  for (let i = 0; i < seed.length; i++) h = ((h << 5) + h) ^ seed.charCodeAt(i);
-  return (h >>> 0).toString(36).toUpperCase().padStart(7, '0').slice(0, 7);
+function deriveCode(userId: string): string {
+  /* The first 8 hex chars of the referrer's user_id — kept stable
+   * and deterministic so the redemption service in
+   * src/services/referrals.ts can id-prefix lookup the referrer
+   * without a separate codes table. ~4.3B distinct combinations,
+   * collision-safe within the marketplace cohort. */
+  return userId.replace(/-/g, '').slice(0, 8).toUpperCase();
 }
 
 function buildQR(text: string): string {
@@ -70,16 +72,17 @@ function buildQR(text: string): string {
 
 export default function ReferPage() {
   const { user } = useAuth();
-  const { setPage, setShowAuthModal, setAuthMode } = useApp();
+  const { setShowAuthModal, setAuthMode } = useApp();
   const [copied, setCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);
 
   /* Stable code per signed-in user. Anonymous visitors see a "join to
    * unlock" placeholder. */
   const code = useMemo(
-    () => user ? deriveCode(`flyttgo-ref:${user.id}`) : 'JOIN-TO-UNLOCK',
+    () => user ? deriveCode(user.id) : 'JOIN-TO-UNLOCK',
     [user],
   );
+  const { data: stats } = useReferralStats(user?.id);
   const shareUrl = `${REFERRAL_BASE_URL}/?ref=${code}`;
 
   useEffect(() => { track('refer_page_viewed', { signedIn: !!user }); }, [user]);
@@ -262,6 +265,22 @@ export default function ReferPage() {
         </div>
       </Section>
 
+      {/* LIVE STATS — only rendered for signed-in users with at least
+       *  one recorded redemption. Aggregated server-side via the
+       *  referrals table; refreshes every 60s while the page is open. */}
+      {user && (stats?.totalInvited ?? 0) > 0 && (
+        <Section tone="canvas">
+          <div className="grid grid-cols-3 gap-4 max-w-3xl mx-auto">
+            <StatCard label="Friends invited"  value={stats?.totalInvited ?? 0} />
+            <StatCard label="Bookings completed" value={stats?.totalConverted ?? 0} />
+            <StatCard
+              label="Earned in credit"
+              value={`£${Math.round((stats?.totalEarnedMinor ?? 0) / 100).toLocaleString()}`}
+            />
+          </div>
+        </Section>
+      )}
+
       {/* HOW IT WORKS */}
       <Section tone="canvas">
         <div className="text-center mb-10 max-w-2xl mx-auto">
@@ -311,21 +330,18 @@ export default function ReferPage() {
           ))}
         </ul>
 
-        <div className="text-center mt-10">
-          <p className="text-xs text-slate-500 mb-4">
-            <strong className="text-ink-900">Backend status:</strong> code redemption + payout
-            wiring lives in Supabase functions that haven't been deployed yet. The frontend
-            ships ready; flip the redemption flow on once your operations team approves the
-            credit ledger schema.
-          </p>
-          <button
-            onClick={() => { setPage('contact'); track('refer_contact_clicked'); }}
-            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-ink-900 hover:bg-ink-800 text-white font-bold text-sm transition-base ease-marketplace"
-          >
-            <TrendingUp size={14} /> Talk to ops about activating
-          </button>
-        </div>
       </Section>
     </main>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="bg-white border border-slate-200 rounded-2xl p-5 text-center">
+      <div className="text-3xl font-extrabold text-ink-900">
+        {typeof value === 'number' ? <AnimatedNumber value={value} /> : value}
+      </div>
+      <div className="text-xs uppercase tracking-wider text-slate-500 mt-1">{label}</div>
+    </div>
   );
 }

@@ -105,6 +105,9 @@ const PAGE_TO_PATH: Record<Page, string> = {
   /* Referral program landing. */
   'refer':                   '/refer',
 
+  /* Public driver-earnings transparency page. */
+  'driver-earnings':         '/driver-earnings',
+
   /* Provider profile (slug carried via ?slug=). */
   'provider-profile':        '/provider',
 
@@ -210,6 +213,7 @@ const PAGE_TITLES: Record<Page, string> = {
   'market-cy':                'Moving in Lefkosia · Lemesos · Larnaka · Pafos · Famagusta — Cyprus marketplace · FlyttGo',
   'moving-city':              'Moving services · FlyttGo Global',
   'refer':                    'Give £25, get £25 · FlyttGo referrals',
+  'driver-earnings':          'What drivers earn — live per-city payouts · FlyttGo',
   'provider-profile':         'Provider profile · FlyttGo Global',
   'providers-directory':      'Browse verified providers · FlyttGo Global',
   'compare':                  'Compare providers side by side · FlyttGo Global',
@@ -329,6 +333,8 @@ const PAGE_DESCRIPTIONS: Record<Page, string> = {
     "City-specific FlyttGo relocation services — verified local providers, transparent pricing, cross-border corridor connections, and escrow protection on every move.",
   'refer':
     "Invite a friend to FlyttGo — they get £25 off their first move, you get £25 in account credit when they complete it. Share your code by link, WhatsApp, email or QR.",
+  'driver-earnings':
+    "What drivers actually earn on FlyttGo — anonymized per-city payouts from the last 90 days, pulled live from the platform. No marketing numbers, just real escrow releases.",
   'provider-profile':
     "Verified provider on the FlyttGo marketplace — see ratings, services, sample jobs, and book directly with this licensed mover.",
   'providers-directory':

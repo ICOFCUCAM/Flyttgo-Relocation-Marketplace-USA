@@ -163,6 +163,7 @@ export default function DriverPortal() {
             wallet={wallet}
             subscription={subscription}
             country={driver?.zone ?? 'US'}
+            userId={user?.id ?? driver?.id}
             onOpenSubscription={() => setActiveTab('subscription')}
           />
         )}

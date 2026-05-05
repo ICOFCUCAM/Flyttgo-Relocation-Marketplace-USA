@@ -69,6 +69,7 @@ const MovingCityPage       = lazy(() => import('../pages/MovingCityPage'));
 const Backoffice           = lazy(() => import('../backoffice'));
 const BrandPage            = lazy(() => import('../pages/BrandPage'));
 const ReferPage          = lazy(() => import('../pages/ReferPage'));
+const DriverEarningsPage = lazy(() => import('../pages/DriverEarningsPage'));
 const ProviderProfilePage = lazy(() => import('../pages/ProviderProfilePage'));
 const ProvidersDirectoryPage = lazy(() => import('../pages/ProvidersDirectoryPage'));
 const ComparePage = lazy(() => import('../pages/ComparePage'));
@@ -296,6 +297,7 @@ useEffect(() => {
       case 'backoffice':             return <Backoffice />;
       case 'brand':                  return <BrandPage />;
       case 'refer':                  return <ReferPage />;
+      case 'driver-earnings':        return <DriverEarningsPage />;
       case 'provider-profile':       return <ProviderProfilePage />;
       case 'providers-directory':    return <ProvidersDirectoryPage />;
       case 'compare':                return <ComparePage />;
