@@ -19,10 +19,16 @@ import type { Permission } from './permissions';
  *   - isSuperAdmin: convenience for '*' wildcard holders
  *   - loading, isAuthenticated
  *
- * The hook cooperates with RLS: a user without any BOS role gets
- * empty arrays, hasPermission() returns false for everything, and
- * the BOS layout shows the "no access" view instead of failing
- * silently or leaking a partial UI.
+ * Bridge: a user with profiles.is_super_admin = true is treated as
+ * a back-office super-admin too — the platform has ONE super-admin
+ * tier. Without this bridge the bos_user_roles table would maintain
+ * a parallel super-admin world that's invisible to the platform's
+ * existing admin tooling.
+ *
+ * The hook cooperates with RLS: a user without any BOS role and
+ * without the platform super-admin flag gets empty arrays,
+ * hasPermission() returns false for everything, and the BOS layout
+ * shows the "no access" view.
  * ───────────────────────────────────────────────────────────────── */
 
 export interface BackofficeAuthState {
@@ -40,32 +46,53 @@ interface RolePermissionRow { role_id: string; permission: string }
 const QUERY_KEY = (uid: string | null | undefined) => ['bos', 'auth', uid ?? 'anon'] as const;
 
 async function fetchAuthContext(uid: string): Promise<{ roles: string[]; permissions: string[] }> {
+  /* 0. Platform super-admin bridge — anyone with
+   *    profiles.is_super_admin = true is treated as a back-office
+   *    super-admin (synthetic 'super_admin' role + '*' wildcard). */
+  const { data: profileRow } = await supabase
+    .from('profiles')
+    .select('is_super_admin')
+    .eq('user_id', uid)
+    .maybeSingle();
+  const platformSuper = profileRow?.is_super_admin === true;
+
   /* 1. Resolve the user's role assignments. */
   const { data: rolesData, error: rolesErr } = await supabase
     .from('bos_user_roles')
     .select('role_id')
     .eq('user_id', uid);
 
-  if (rolesErr) {
-    /* Tolerate the BOS schema not being installed yet — caller
-     * surfaces a "no access" view instead of crashing the app. */
-    return { roles: [], permissions: [] };
+  /* If the BOS tables aren't installed yet, the platform super-admin
+   * bridge still grants access. Otherwise return empty. */
+  const explicitRoles = rolesErr
+    ? []
+    : (rolesData as UserRoleRow[] | null)?.map(r => r.role_id) ?? [];
+
+  const bridgedRoles = platformSuper
+    ? Array.from(new Set([...explicitRoles, 'super_admin']))
+    : explicitRoles;
+
+  if (bridgedRoles.length === 0) return { roles: [], permissions: [] };
+
+  /* 2. Pull permissions for the explicit role assignments. The
+   *    platform super-admin gets the wildcard '*' added directly so
+   *    we don't depend on bos_role_permissions having a super_admin
+   *    row seeded. */
+  let permissions: string[] = [];
+  if (explicitRoles.length > 0) {
+    const { data: permsData, error: permsErr } = await supabase
+      .from('bos_role_permissions')
+      .select('role_id, permission')
+      .in('role_id', explicitRoles);
+    if (!permsErr) {
+      permissions = Array.from(new Set(
+        (permsData as RolePermissionRow[] | null)?.map(p => p.permission) ?? [],
+      ));
+    }
   }
-  const roles = (rolesData as UserRoleRow[] | null)?.map(r => r.role_id) ?? [];
-  if (roles.length === 0) return { roles: [], permissions: [] };
+  if (platformSuper && !permissions.includes('*')) permissions = ['*', ...permissions];
 
-  /* 2. Pull permissions for the assigned roles. */
-  const { data: permsData, error: permsErr } = await supabase
-    .from('bos_role_permissions')
-    .select('role_id, permission')
-    .in('role_id', roles);
-
-  if (permsErr) return { roles, permissions: [] };
-  const permissions = Array.from(new Set(
-    (permsData as RolePermissionRow[] | null)?.map(p => p.permission) ?? [],
-  ));
-
-  return { roles, permissions };
+  return { roles: bridgedRoles, permissions };
 }
 
 export function useBackofficeAuth(): BackofficeAuthState {

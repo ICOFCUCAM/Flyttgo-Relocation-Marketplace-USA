@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react';
 import BackofficeLayout from './layout/BackofficeLayout';
+import StepUpAuthGate from '../accounting/components/StepUpAuthGate';
 import { readBosSlug, bosSlugPath, type BosSlug } from './routes';
 
-import DashboardPage     from './pages/DashboardPage';
-import MarketRolloutPage from './pages/MarketRolloutPage';
-import PaymentsPage      from './pages/PaymentsPage';
-import AccountingPage    from './pages/AccountingPage';
-import InvoicesPage      from './pages/InvoicesPage';
-import SuperAdminPage    from './pages/SuperAdminPage';
-import AuditLogPage      from './pages/AuditLogPage';
-import FeatureFlagsPage  from './pages/FeatureFlagsPage';
+import DashboardPage         from './pages/DashboardPage';
+import MarketRolloutPage     from './pages/MarketRolloutPage';
+import PaymentsPage          from './pages/PaymentsPage';
+import AccountingWorkspace   from '../pages/AccountingWorkspace';
+import AuditWorkspace        from '../pages/AuditWorkspace';
+import InvoicesPage          from './pages/InvoicesPage';
+import SuperAdminPage        from './pages/SuperAdminPage';
+import AuditLogPage          from './pages/AuditLogPage';
+import FeatureFlagsPage      from './pages/FeatureFlagsPage';
 
 /* ─────────────────────────────────────────────────────────────────
  * Back-Office root
@@ -44,20 +46,27 @@ export default function Backoffice() {
   };
 
   return (
-    <BackofficeLayout activeSlug={slug} onNavigate={navigate}>
-      {(() => {
-        switch (slug) {
-          case 'dashboard':       return <DashboardPage />;
-          case 'markets':         return <MarketRolloutPage />;
-          case 'payments':        return <PaymentsPage />;
-          case 'accounting':      return <AccountingPage />;
-          case 'invoices':        return <InvoicesPage />;
-          case 'super-admin':     return <SuperAdminPage />;
-          case 'audit-log':       return <AuditLogPage />;
-          case 'feature-flags':   return <FeatureFlagsPage />;
-          default:                return <DashboardPage />;
-        }
-      })()}
-    </BackofficeLayout>
+    /* Single step-up gate at the back-office umbrella. One password
+     * confirmation unlocks every sub-route (accounting, audit,
+     * payments, super-admin etc.) for 30 minutes — the operator
+     * doesn't have to re-confirm jumping between sections. */
+    <StepUpAuthGate workspace="backoffice" workspaceLabel="Back office">
+      <BackofficeLayout activeSlug={slug} onNavigate={navigate}>
+        {(() => {
+          switch (slug) {
+            case 'dashboard':       return <DashboardPage />;
+            case 'markets':         return <MarketRolloutPage />;
+            case 'payments':        return <PaymentsPage />;
+            case 'accounting':      return <AccountingWorkspace />;
+            case 'audit':           return <AuditWorkspace />;
+            case 'invoices':        return <InvoicesPage />;
+            case 'super-admin':     return <SuperAdminPage />;
+            case 'audit-log':       return <AuditLogPage />;
+            case 'feature-flags':   return <FeatureFlagsPage />;
+            default:                return <DashboardPage />;
+          }
+        })()}
+      </BackofficeLayout>
+    </StepUpAuthGate>
   );
 }

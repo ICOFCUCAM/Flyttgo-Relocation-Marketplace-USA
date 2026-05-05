@@ -16,6 +16,10 @@ export const BOS_SLUGS = [
   'markets',
   'payments',
   'accounting',
+  /* `audit` = the auditor-facing read-only workspace (annotations,
+   * GL inspector, attachments register). Distinct from `audit-log`
+   * which is the platform-wide append-only mutation log. */
+  'audit',
   'invoices',
   'super-admin',
   'audit-log',

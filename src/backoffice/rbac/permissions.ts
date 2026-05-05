@@ -74,6 +74,10 @@ export const PAGE_PERMISSIONS: Record<string, Permission> = {
   markets:        PERMISSIONS.MARKETS_VIEW,
   payments:       PERMISSIONS.PAYMENTS_VIEW,
   accounting:     PERMISSIONS.ACCOUNTING_VIEW,
+  /* The auditor-facing workspace shares the audit-log read perm —
+   * if you can read the platform mutation log you can read the
+   * journal-line audit surface. */
+  audit:          PERMISSIONS.AUDIT_VIEW,
   invoices:       PERMISSIONS.INVOICES_VIEW,
   'super-admin':  PERMISSIONS.RBAC_ASSIGN,
   'audit-log':    PERMISSIONS.AUDIT_VIEW,

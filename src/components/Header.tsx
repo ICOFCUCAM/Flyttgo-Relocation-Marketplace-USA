@@ -827,20 +827,16 @@ export default function Header() {
                       {profile.role === 'admin' && (
                         <button onClick={() => handleNav('admin')} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">{t('header.adminDash')}</button>
                       )}
-                      {/* Finance workspaces — surfaced for any platform
-                       *  super-admin and any user who has been granted a
-                       *  finance role via users_roles. The corresponding
-                       *  pages re-check authorisation server-side via
-                       *  RLS and the step-up auth gate, so showing the
-                       *  link is informational, not authoritative. */}
-                      {financeAccess.accounting && (
-                        <button onClick={() => handleNav('accounting')} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
-                          Accounting workspace
-                        </button>
-                      )}
-                      {financeAccess.audit && (
-                        <button onClick={() => handleNav('audit')} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
-                          Audit workspace
+                      {/* Back office — single umbrella link for users
+                       *  who can enter the financial / regulatory
+                       *  surfaces. Accounting + Audit live inside the
+                       *  back-office now (/backoffice/accounting and
+                       *  /backoffice/audit) so we don't dual-list them.
+                       *  Step-up auth re-confirms their password once
+                       *  for the whole umbrella. */}
+                      {(financeAccess.accounting || financeAccess.audit) && (
+                        <button onClick={() => handleNav('backoffice')} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
+                          Back office
                         </button>
                       )}
                       <hr className="my-1 border-gray-100"/>

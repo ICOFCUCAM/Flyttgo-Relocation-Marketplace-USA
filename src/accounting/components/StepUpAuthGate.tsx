@@ -37,8 +37,10 @@ export default function StepUpAuthGate({
   children,
 }: {
   /** Stable id used for the sessionStorage key. Independent timers
-   *  per workspace so unlocking accounting doesn't unlock admin. */
-  workspace:      'accounting' | 'audit' | 'admin';
+   *  per workspace so unlocking accounting doesn't unlock admin.
+   *  'backoffice' covers the entire back-office umbrella (accounting,
+   *  audit, payments, super-admin, audit-log, feature-flags). */
+  workspace:      'accounting' | 'audit' | 'admin' | 'backoffice';
   /** Human label for the prompt headline. */
   workspaceLabel: string;
   children:       ReactNode;

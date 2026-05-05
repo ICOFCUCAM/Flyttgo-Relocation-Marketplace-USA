@@ -108,9 +108,13 @@ const PAGE_TO_PATH: Record<Page, string> = {
   /* Public driver-earnings transparency page. */
   'driver-earnings':         '/driver-earnings',
 
-  /* Enterprise accounting workspace + auditor read-only workspace. */
-  'accounting':              '/accounting',
-  'audit':                   '/audit',
+  /* Legacy stand-alone URLs preserved for routing tables. The
+   * accounting + audit workspaces actually live INSIDE the back-
+   * office umbrella now (/backoffice/accounting, /backoffice/audit)
+   * so the path here is a redirect target — pathToPage() rewrites
+   * /accounting and /audit to 'backoffice' below. */
+  'accounting':              '/backoffice/accounting',
+  'audit':                   '/backoffice/audit',
 
   /* Provider profile (slug carried via ?slug=). */
   'provider-profile':        '/provider',
@@ -649,6 +653,12 @@ export function pathToPage(path: string): Page {
    * /become-a-driver. Map it to the new short path so existing
    * bookmarks, Google search results, and inbound links still land
    * on the right page. */
+  /* Legacy /accounting + /audit URLs (shipped briefly before the
+   * back-office umbrella refactor) redirect to the canonical
+   * /backoffice/accounting and /backoffice/audit. */
+  if (normalised === '/accounting' || normalised === '/audit') {
+    return 'backoffice';
+  }
   if (normalised === '/become-a-driver') {
     return 'driver-onboarding';
   }

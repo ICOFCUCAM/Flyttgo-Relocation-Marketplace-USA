@@ -7,7 +7,6 @@ import { INPUT_FOCUS, FOCUS_RING } from '../components/ds';
 
 import WorkspaceShell, { type WorkspaceSection } from '../accounting/components/WorkspaceShell';
 import RolesAdmin from '../accounting/components/RolesAdmin';
-import StepUpAuthGate from '../accounting/components/StepUpAuthGate';
 import StatutoryReports from '../accounting/components/StatutoryReports';
 import {
   getMyFinanceRoles,
@@ -206,7 +205,9 @@ export default function AccountingWorkspace() {
   ];
 
   return (
-    <StepUpAuthGate workspace="accounting" workspaceLabel="Accounting">
+    /* Step-up auth lives at the back-office umbrella in
+     * src/backoffice/index.tsx — every workspace inside is unlocked
+     * once for 30 minutes, so we don't double-prompt here. */
     <WorkspaceShell
       workspaceLabel="Accounting"
       workspaceCode="AC"
@@ -228,7 +229,6 @@ export default function AccountingWorkspace() {
         </select>
       }
     />
-    </StepUpAuthGate>
   );
 }
 

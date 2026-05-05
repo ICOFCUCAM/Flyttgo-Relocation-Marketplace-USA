@@ -21,7 +21,10 @@ const NAV: NavItem[] = [
   { slug: 'dashboard',      label: 'Dashboard',       icon: LayoutDashboard },
   { slug: 'markets',        label: 'Market Rollout',  icon: Globe },
   { slug: 'payments',       label: 'Central Payments',icon: Wallet },
-  { slug: 'accounting',     label: 'US Accounting',   icon: BookOpenCheck },
+  /* Multi-jurisdiction accounting workspace (was '/accounting'). */
+  { slug: 'accounting',     label: 'Accounting',      icon: BookOpenCheck },
+  /* Read-only audit workspace + annotations (was '/audit'). */
+  { slug: 'audit',          label: 'Audit',           icon: ShieldCheck },
   { slug: 'invoices',       label: 'Invoices',        icon: Receipt },
   { slug: 'feature-flags',  label: 'Feature Flags',   icon: Flag },
   { slug: 'super-admin',    label: 'Super Admin',     icon: ShieldCheck },
