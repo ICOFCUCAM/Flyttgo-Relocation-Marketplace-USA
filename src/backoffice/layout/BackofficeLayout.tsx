@@ -105,7 +105,7 @@ export default function BackofficeLayout({ activeSlug, onNavigate, children }: P
               <button
                 key={item.slug}
                 onClick={() => onNavigate(item.slug)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-semibold text-left transition ${
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-semibold text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-inset ${
                   active
                     ? 'bg-amber-400/15 text-amber-200 border border-amber-300/30'
                     : 'text-white/75 hover:bg-white/5 hover:text-white border border-transparent'
