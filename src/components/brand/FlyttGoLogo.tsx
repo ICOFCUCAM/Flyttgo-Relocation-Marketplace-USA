@@ -53,9 +53,9 @@ interface SizePreset {
 }
 
 const SIZE_PRESETS: Record<FlyttGoLogoSize, SizePreset> = {
-  sm: { mark: 24, wordmark: 'text-base',  subtitle: 'text-[9px]',  tracking: 'tracking-tight',  gap: 'gap-2' },
-  md: { mark: 36, wordmark: 'text-xl',    subtitle: 'text-[10px]', tracking: 'tracking-tight',  gap: 'gap-2' },
-  lg: { mark: 56, wordmark: 'text-3xl',   subtitle: 'text-[11px]', tracking: 'tracking-tight',  gap: 'gap-3' },
+  sm: { mark: 24, wordmark: 'text-base',  subtitle: 'text-[9px]',  tracking: 'tracking-tight',  gap: 'gap-1.5' },
+  md: { mark: 36, wordmark: 'text-xl',    subtitle: 'text-[10px]', tracking: 'tracking-tight',  gap: 'gap-1.5' },
+  lg: { mark: 56, wordmark: 'text-3xl',   subtitle: 'text-[11px]', tracking: 'tracking-tight',  gap: 'gap-2' },
 };
 
 interface VariantTokens {
@@ -136,19 +136,35 @@ export default function FlyttGoLogo({
  * legible — set it inline. */
 const SUBTITLE_TRACKING: CSSProperties = { letterSpacing: '0.18em' };
 
-/* ── Raster mark (color + on-dark) ───────────────────────────── */
+/* ── Raster mark (color + on-dark) ───────────────────────────
+ *
+ * The brand-issued PNG ships with ~12% whitespace baked into each
+ * side. We render the img at 130% of the visible box and clip the
+ * overflow so the F-mark fills the square edge-to-edge — the
+ * wordmark beside it then sits flush against the actual mark, not
+ * against transparent margin. */
 
 function RasterMark({ size, alt }: { size: number; alt: string }) {
+  const overscale = size * 1.3;
+  const offset    = (size - overscale) / 2;
   return (
-    <img
-      src="/logo-mark.png"
-      alt={alt}
-      width={size}
-      height={size}
+    <span
+      className="relative inline-block flex-shrink-0 overflow-hidden rounded-lg"
       style={{ width: size, height: size }}
-      className="rounded-lg object-cover flex-shrink-0"
-      decoding="async"
-    />
+    >
+      <img
+        src="/logo-mark.png"
+        alt={alt}
+        decoding="async"
+        style={{
+          position: 'absolute',
+          width:  overscale,
+          height: overscale,
+          left:   offset,
+          top:    offset,
+        }}
+      />
+    </span>
   );
 }
 

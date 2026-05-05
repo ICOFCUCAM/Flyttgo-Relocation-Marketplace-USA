@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { X, Cookie } from 'lucide-react';
+import { X } from 'lucide-react';
+import { FlyttGoLogo } from './brand';
 
 const STORAGE_KEY = 'flyttgo_cookie_consent';
 export const REOPEN_CONSENT_EVENT = 'flyttgo:reopen-consent';
@@ -91,19 +92,12 @@ export default function CookieConsent() {
             className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-gradient-to-br from-amber-400/40 via-fuchsia-500/10 to-transparent blur-2xl"
           />
           <div className="relative flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-amber-400 text-ink-900 flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-500/30">
-                <Cookie className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300">
-                  FlyttGo · GDPR
-                </p>
-                <h2 className="text-sm font-extrabold text-white truncate">
-                  We use cookies
-                </h2>
-              </div>
-            </div>
+            <FlyttGoLogo
+              size="sm"
+              variant="on-dark"
+              subtitle="GDPR · We use cookies"
+              className="min-w-0"
+            />
             <button
               type="button"
               aria-label="Reject non-essential cookies"
