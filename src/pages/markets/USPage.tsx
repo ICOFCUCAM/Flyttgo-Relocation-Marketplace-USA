@@ -8,6 +8,7 @@ import type { Page } from '../../lib/store';
 import { PROVIDERS } from '../../lib/providers-catalogue';
 import { getProviderPublicIdentity } from '../../lib/provider-identity';
 import { track } from '../../lib/analytics';
+import { FOCUS_RING, INPUT_FOCUS } from '../../components/ds';
 
 /**
  * USPage — US marketplace shopfront.
@@ -94,7 +95,7 @@ export default function USPage() {
                 placeholder="Pickup ZIP"
                 aria-label="Pickup ZIP"
                 inputMode="numeric"
-                className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none"
+                className={`border border-slate-200 rounded-lg px-3 py-2 text-sm ${INPUT_FOCUS}`}
               />
               <input
                 value={dropoffZip}
@@ -102,20 +103,20 @@ export default function USPage() {
                 placeholder="Delivery ZIP"
                 aria-label="Delivery ZIP"
                 inputMode="numeric"
-                className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none"
+                className={`border border-slate-200 rounded-lg px-3 py-2 text-sm ${INPUT_FOCUS}`}
               />
               <input
                 type="date"
                 value={moveDate}
                 onChange={e => setMoveDate(e.target.value)}
                 aria-label="Move date"
-                className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none"
+                className={`border border-slate-200 rounded-lg px-3 py-2 text-sm ${INPUT_FOCUS}`}
               />
               <select
                 value={propertyType}
                 onChange={e => setPropertyType(e.target.value)}
                 aria-label="Property type"
-                className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none"
+                className={`border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white ${INPUT_FOCUS}`}
               >
                 <option>Apartment</option>
                 <option>House</option>
