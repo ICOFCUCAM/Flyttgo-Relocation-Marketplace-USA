@@ -73,7 +73,10 @@ export default function CookieConsent() {
       role="dialog"
       aria-live="polite"
       aria-label="Cookie consent"
-      className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:max-w-md z-50 animate-in slide-in-from-bottom-5"
+      /* Mobile: lift above MobileBottomNav (lg:hidden, ~64px tall +
+       * safe-area padding) so the banner doesn't cover the nav.
+       * Tablet+: standard 24px offset. */
+      className="fixed bottom-[5.5rem] left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:max-w-md z-50 animate-in slide-in-from-bottom-5"
     >
       {/* Brand-aligned container — ink-navy header band sets the
        *  marketplace tone, white body keeps the dialog readable.
