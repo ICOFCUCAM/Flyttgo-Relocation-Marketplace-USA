@@ -78,7 +78,7 @@ function extensionOf(name: string): string {
 
 export default function DriverOnboarding() {
   const { user, profile } = useAuth();
-  const { setPage } = useApp();
+  const { setPage, setShowAuthModal, setAuthMode } = useApp();
   const { t } = useTranslation();
 
   /* Steps list — built inside the component so titles translate
@@ -459,7 +459,31 @@ export default function DriverOnboarding() {
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
           {error && (
-            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm">{error}</div>
+            <div role="alert" className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-center justify-between gap-3 flex-wrap">
+              <span>{error}</span>
+              {/* When the failure mode is the unauthenticated submit,
+               *  surface the sign-in CTA inline so the operator
+               *  doesn't have to hunt for it in the header. The error
+               *  copy is the trigger — exact match keeps it scoped. */}
+              {!user && error.startsWith('Please sign in') && (
+                <div className="flex gap-2 flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => { setAuthMode('signin'); setShowAuthModal(true); }}
+                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+                  >
+                    Sign in
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setAuthMode('signup'); setShowAuthModal(true); }}
+                    className="px-3 py-1.5 bg-white border border-emerald-600 text-emerald-700 hover:bg-emerald-50 rounded-md text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+                  >
+                    Create account
+                  </button>
+                </div>
+              )}
+            </div>
           )}
 
           {/* STEP 1 — Personal Info */}
