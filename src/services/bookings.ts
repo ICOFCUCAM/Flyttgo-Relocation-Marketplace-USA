@@ -179,14 +179,24 @@ export async function getActiveBookingForCustomer(customerId: string): Promise<B
 }
 
 /** Find a booking by id-prefix or full id — supports the tracking
- *  search box that lets customers paste a partial id. */
+ *  search box that lets customers paste a partial id.
+ *
+ *  Implementation note: bookings.id is uuid, so `eq` would error
+ *  on a non-UUID partial. `ilike` works for both partials and full
+ *  UUIDs because Postgres casts uuid → text for the comparison.
+ *  Special chars (% and _) are escaped so a customer pasting
+ *  '%' as a wildcard doesn't accidentally match every row. */
 export async function findBookingByIdQuery(idQuery: string): Promise<BookingRow | null> {
   const q = idQuery.trim();
   if (!q) return null;
+  const safe = q.replace(/[%_,]/g, m => `\\${m}`);
+  /* PostgREST casts the uuid column to text for an ilike compare;
+   * the Supabase client doesn't expose that as a typed method, so
+   * we route through the generic `filter` API. */
   const { data, error } = await supabase
     .from('bookings')
     .select('*')
-    .or(`id.eq.${q},id.ilike.%${q}%`)
+    .filter('id::text', 'ilike', `%${safe}%`)
     .limit(1);
   if (error) throw error;
   return (data?.[0] as BookingRow) ?? null;
