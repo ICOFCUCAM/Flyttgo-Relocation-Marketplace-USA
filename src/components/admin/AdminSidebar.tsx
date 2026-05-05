@@ -31,11 +31,11 @@ export function AdminSidebar({
     <aside className="w-64 bg-ink-900 text-white flex-shrink-0 flex flex-col">
       <div className="p-6 border-b border-white/10">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-300 to-amber-500 flex items-center justify-center shadow-md shadow-amber-500/30">
-            <svg className="w-4 h-4 text-ink-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2-1 2 1 2-1 2 1 2-1zm0 0l2 1 2-1 2 1V6a1 1 0 00-1-1h-4"/>
-            </svg>
-          </div>
+          <img
+            src="/logo-mark.png"
+            alt="FlyttGo"
+            className="w-8 h-8 rounded-lg object-contain bg-white"
+          />
           <div>
             <p className="text-sm font-extrabold tracking-tight">FlyttGo</p>
             <p className="text-[10px] uppercase tracking-[0.18em] text-amber-300 font-bold">Admin</p>

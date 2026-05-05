@@ -528,11 +528,14 @@ export default function Header() {
              *  doesn't read as a different product than the rest of
              *  the site. */}
             <button onClick={() => handleNav('home')} className="flex items-center gap-2.5 flex-shrink-0 mr-4 lg:mr-10 group">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-300 to-amber-500 flex items-center justify-center shadow-md shadow-amber-500/30 ring-1 ring-amber-400/40">
-                <svg className="w-5 h-5 text-ink-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2-1 2 1 2-1 2 1 2-1zm0 0l2 1 2-1 2 1V6a1 1 0 00-1-1h-4"/>
-                </svg>
-              </div>
+              {/* Brand mark — public/logo-mark.png. Sized to match the
+               *  previous amber square so the wordmark beside it keeps
+               *  its existing alignment. */}
+              <img
+                src="/logo-mark.png"
+                alt="FlyttGo"
+                className="w-9 h-9 rounded-xl object-contain"
+              />
               <div className="flex flex-col leading-none">
                 <span className="text-xl font-extrabold text-slate-900 tracking-tight">Flytt<span className="text-amber-600">Go</span></span>
                 <span className="hidden sm:inline text-[10px] uppercase tracking-[0.18em] text-slate-500 mt-0.5 font-semibold">Global relocation marketplace</span>
