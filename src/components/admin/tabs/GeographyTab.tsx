@@ -26,19 +26,21 @@ export function GeographyTab() {
   const [compliance,   setCompliance]   = useState<any[]>([]);
   const [docExpiry,    setDocExpiry]    = useState<any[]>([]);
   const [bookings,     setBookings]     = useState<any[]>([]);
+  const [pricing,      setPricing]      = useState<any[]>([]);
   const [loading,      setLoading]      = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const [d, a, doc, c, e, b] = await Promise.all([
+      const [d, a, doc, c, e, b, p] = await Promise.all([
         supabase.from('admin_country_driver_stats').select('*'),
         supabase.from('admin_country_application_stats').select('*'),
         supabase.from('admin_country_document_stats').select('*'),
         supabase.from('admin_country_compliance').select('*'),
         supabase.from('admin_country_document_expiry').select('*'),
         supabase.from('admin_country_booking_stats').select('*'),
+        supabase.from('subscription_tier_pricing_by_country').select('tier_slug, display_name, country_code, currency, local_price, baseline_usd, price_source, position'),
       ]);
       if (cancelled) return;
       setDrivers(d.data ?? []);
@@ -47,6 +49,7 @@ export function GeographyTab() {
       setCompliance(c.data ?? []);
       setDocExpiry(e.data ?? []);
       setBookings(b.data ?? []);
+      setPricing(p.data ?? []);
       setLoading(false);
     })();
     return () => { cancelled = true; };
@@ -206,6 +209,49 @@ export function GeographyTab() {
               </tr>
             );
           })}
+        </Table>
+      </Section>
+
+      {/* Subscription pricing per country — sourced from the
+       *  subscription_tier_pricing_by_country view. Lets ops verify
+       *  the global rollout spec is applied: every cell should show
+       *  price_source='override' for the 16 spec'd markets.
+       *  Multiplier-derived rows mean the explicit USD wasn't set
+       *  for that country and the engine fell back to the baseline. */}
+      <Section title="Subscription pricing — per country" subtitle="Verifies the explicit per-country USD spec is in effect. price_source='override' = explicit; 'multiplier' = legacy fallback (baseline × country multiplier).">
+        <Table head={['Country', 'Silver', 'Silver Plus', 'Gold', 'Gold Pro', 'Infrastructure', 'Source']}>
+          {pricing.length === 0 ? (
+            <Empty colSpan={7}>No pricing rows.</Empty>
+          ) : (() => {
+            type Row = { tier_slug: string; country_code: string; currency: string; local_price: string | number; price_source: string };
+            const byCountry = (pricing as Row[]).reduce<Record<string, { ccy: string; tiers: Record<string, number>; sources: Set<string> }>>((acc, r) => {
+              const key = r.country_code;
+              acc[key] ??= { ccy: r.currency, tiers: {}, sources: new Set() };
+              acc[key].tiers[r.tier_slug] = Number(r.local_price);
+              acc[key].sources.add(r.price_source);
+              return acc;
+            }, {});
+            const rows = Object.entries(byCountry).sort(([a],[b]) => a.localeCompare(b));
+            return rows.map(([country, row]) => {
+              const fmt = (n: number | undefined) => n == null ? '—' : `${row.ccy} ${Number(n).toLocaleString()}`;
+              const allOverride = row.sources.size === 1 && row.sources.has('override');
+              return (
+                <tr key={country} className="border-t border-slate-100">
+                  <Td bold>{country.toUpperCase()}</Td>
+                  <Td right>{fmt(row.tiers.silver)}</Td>
+                  <Td right>{fmt(row.tiers.silver_plus)}</Td>
+                  <Td right>{fmt(row.tiers.gold)}</Td>
+                  <Td right>{fmt(row.tiers.gold_pro)}</Td>
+                  <Td right>{fmt(row.tiers.elite)}</Td>
+                  <Td>
+                    <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${allOverride ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                      {allOverride ? 'override' : 'mixed / multiplier'}
+                    </span>
+                  </Td>
+                </tr>
+              );
+            });
+          })()}
         </Table>
       </Section>
     </div>
