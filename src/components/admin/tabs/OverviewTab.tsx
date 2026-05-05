@@ -1,8 +1,18 @@
 import { Card } from '../Card';
 import { Inbox } from 'lucide-react';
 import type { AdminDashboardSnapshot } from '../../../services/admin';
+import { useAdminAnalyticsRealtime } from '../../../hooks/queries/useAdminAnalytics';
+import TimeSeriesSparklines from '../analytics/TimeSeriesSparklines';
+import FunnelView from '../analytics/FunnelView';
+import CohortRetention from '../analytics/CohortRetention';
+import PerCountryBreakdown from '../analytics/PerCountryBreakdown';
 
 export function OverviewTab({ data }: { data: AdminDashboardSnapshot }) {
+  /* Subscribe to bookings + applications + driver_profiles +
+   * commission_ledger so the analytics queries re-fire the moment a
+   * row mutates. The dashboard then feels real-time without polling
+   * harder than 60s. */
+  useAdminAnalyticsRealtime();
   const {
     drivers, bookings, applications, customerCount,
     activeDrivers, activeBookings, totalRevenue,
@@ -108,7 +118,26 @@ export function OverviewTab({ data }: { data: AdminDashboardSnapshot }) {
         <Card title="Released" value={revenueStats.releasedToDrivers} />
       </div>
 
-      <h2 className="mt-8 font-bold text-gray-700">Recent Activity</h2>
+      {/* ── Live KPI strip · last 30 days ─────────────────── */}
+      <h2 className="mt-10 font-bold text-gray-700">30-day trend</h2>
+      <div className="mt-2">
+        <TimeSeriesSparklines />
+      </div>
+
+      {/* ── Funnel + cohort side-by-side ──────────────────── */}
+      <h2 className="mt-10 font-bold text-gray-700">Acquisition health</h2>
+      <div className="grid lg:grid-cols-2 gap-4 mt-2">
+        <FunnelView />
+        <CohortRetention />
+      </div>
+
+      {/* ── Per-country drill-down with CSV export ────────── */}
+      <h2 className="mt-10 font-bold text-gray-700">By market</h2>
+      <div className="mt-2">
+        <PerCountryBreakdown />
+      </div>
+
+      <h2 className="mt-10 font-bold text-gray-700">Recent Activity</h2>
       <div className="bg-white rounded p-4 mt-2">
         {recentActivity.length === 0 ? (
           <div className="text-gray-500 text-sm">No recent activity yet</div>
