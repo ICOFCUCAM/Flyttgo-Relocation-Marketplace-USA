@@ -81,7 +81,7 @@ const HERO_PHOTOS: Record<BookingCountry, string> = {
   de: 'https://images.unsplash.com/photo-1560969184-10fe8719e047?auto=format&fit=crop&w=1920&q=70',
   fr: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1920&q=70',
   gb: 'https://images.unsplash.com/photo-1486299267070-83823f5448dd?auto=format&fit=crop&w=1920&q=70',
-  no: 'https://images.unsplash.com/photo-1513415564515-763d91423bdd?auto=format&fit=crop&w=1920&q=70',
+  no: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1920&q=70',
 };
 
 /* Default trust stats per country. Numbers are rough but shape the
