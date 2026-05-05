@@ -365,7 +365,7 @@ function SavedQuotesPanel({ onResume }: { onResume: (q: SavedQuote) => void }) {
  * <ShareQuoteButton> — copy-link button on each saved quote.
  *
  * Encodes the quote into a URL-safe token (saved-quotes-store
- * encoders), copies "https://flyttgo.us/?q=<token>" to the
+ * encoders), copies "https://flyttgo.com/?q=<token>" to the
  * clipboard, and flashes a 2s "Copied" tick. Recipients land on
  * the home page; AppLayout's inbound handler decodes the param
  * and saves it to their local store.

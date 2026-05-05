@@ -531,8 +531,8 @@ export function applyPageMeta(page: Page): void {
   if (typeof document === 'undefined') return;
   const meta  = pageMeta(page);
   const path  = pageToPath(page);
-  const url   = `https://flyttgo.us${path === '/' ? '' : path}`;
-  const image = 'https://flyttgo.us/og.svg';
+  const url   = `https://flyttgo.com${path === '/' ? '' : path}`;
+  const image = 'https://flyttgo.com/og.svg';
 
   document.title = meta.title;
   upsertMeta('name',     'description',      meta.description);
@@ -543,7 +543,7 @@ export function applyPageMeta(page: Page): void {
    * scripts/generate-og-cards.mjs. Falls back to /og.svg for
    * everything else. */
   const ogImage = page.startsWith('market-')
-    ? `https://flyttgo.us/og/${page}.svg`
+    ? `https://flyttgo.com/og/${page}.svg`
     : image;
 
   upsertMeta('property', 'og:title',        meta.title);

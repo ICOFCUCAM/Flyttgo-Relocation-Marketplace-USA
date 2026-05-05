@@ -1,5 +1,5 @@
 # FlyttGo Global Logistics & Relocation Marketplace
-# https://flyttgo.us
+# https://flyttgo.com
 #
 # Public crawl policy: customer-discovery + SEO surfaces are open.
 # Authenticated app shells, payment, and transient query-param URLs
@@ -32,4 +32,4 @@ Disallow: /*?q=
 Disallow: /*?utm_
 
 # ── Sitemap index — fans out to 4 category sub-sitemaps ─────────────
-Sitemap: https://flyttgo.us/sitemap.xml
+Sitemap: https://flyttgo.com/sitemap.xml

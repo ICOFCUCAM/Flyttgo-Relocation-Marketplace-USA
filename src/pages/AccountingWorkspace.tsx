@@ -7,6 +7,7 @@ import { INPUT_FOCUS, FOCUS_RING } from '../components/ds';
 
 import WorkspaceShell, { type WorkspaceSection } from '../accounting/components/WorkspaceShell';
 import RolesAdmin from '../accounting/components/RolesAdmin';
+import StepUpAuthGate from '../accounting/components/StepUpAuthGate';
 import {
   getMyFinanceRoles,
   getAccountingSettings, updateAccountingSettings,
@@ -209,6 +210,7 @@ export default function AccountingWorkspace() {
   ];
 
   return (
+    <StepUpAuthGate workspace="accounting" workspaceLabel="Accounting">
     <WorkspaceShell
       workspaceLabel="Accounting"
       workspaceCode="AC"
@@ -230,6 +232,7 @@ export default function AccountingWorkspace() {
         </select>
       }
     />
+    </StepUpAuthGate>
   );
 }
 

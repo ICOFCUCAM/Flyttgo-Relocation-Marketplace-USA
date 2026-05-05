@@ -134,7 +134,7 @@ export async function createBookingForCustomer(
       dropoffAddress: input.dropoff.address,
       moveDate:       input.moveDate ?? 'TBC',
       price:          input.priceTotal,
-      paymentLink:    `https://flyttgo.us/payment?bookingId=${data.id}`,
+      paymentLink:    `https://flyttgo.com/payment?bookingId=${data.id}`,
     },
   }).catch((e) => console.warn('admin payment-link email failed:', e));
 
@@ -160,7 +160,7 @@ export async function resendPaymentLink(bookingId: string): Promise<void> {
       dropoffAddress: data.dropoff_address,
       moveDate:       data.move_date ?? 'TBC',
       price:          data.price_estimate,
-      paymentLink:    `https://flyttgo.us/payment?bookingId=${bookingId}`,
+      paymentLink:    `https://flyttgo.com/payment?bookingId=${bookingId}`,
     },
   });
 }
@@ -208,7 +208,7 @@ export async function requestBookingEdit(
       bookingId,
       data: {
         bookingId,
-        reviewLink: `https://flyttgo.us/dashboard?confirm=${bookingId}`,
+        reviewLink: `https://flyttgo.com/dashboard?confirm=${bookingId}`,
       },
     }).catch((e) => console.warn('admin edit-request email failed:', e));
   }

@@ -21,7 +21,7 @@ import { useReferralStats } from '../hooks/queries/useReferral';
  * the customer authenticates.
  *
  * Sharing surfaces:
- *   - One-click copy of the share URL (https://flyttgo.us/?ref=XYZ)
+ *   - One-click copy of the share URL (https://flyttgo.com/?ref=XYZ)
  *   - WhatsApp deep link with templated message
  *   - Email with a templated subject + body
  *   - X / Twitter intent
@@ -34,7 +34,7 @@ import { useReferralStats } from '../hooks/queries/useReferral';
  * ───────────────────────────────────────────────────────────────── */
 
 const REFERRAL_VALUE_GBP = 25;
-const REFERRAL_BASE_URL  = 'https://flyttgo.us';
+const REFERRAL_BASE_URL  = 'https://flyttgo.com';
 
 function deriveCode(userId: string): string {
   /* The first 8 hex chars of the referrer's user_id — kept stable

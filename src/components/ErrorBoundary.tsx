@@ -95,7 +95,7 @@ export default class ErrorBoundary extends Component<Props, State> {
           </div>
 
           <p className="text-xs text-slate-400 mt-6">
-            If this keeps happening, contact <a href="mailto:support@flyttgo.us" className="text-brand-600 hover:underline">support@flyttgo.us</a>.
+            If this keeps happening, contact <a href="mailto:support@flyttgo.com" className="text-brand-600 hover:underline">support@flyttgo.com</a>.
           </p>
         </div>
       </div>

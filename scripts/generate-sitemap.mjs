@@ -26,7 +26,7 @@ import { dirname, resolve } from 'node:path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 
-const ORIGIN = 'https://flyttgo.us';
+const ORIGIN = 'https://flyttgo.com';
 const TODAY = new Date().toISOString().slice(0, 10);
 
 /* ─────────────────────────────────────────────────────────────────

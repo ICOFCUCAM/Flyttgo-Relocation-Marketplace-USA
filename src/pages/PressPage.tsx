@@ -104,7 +104,7 @@ export default function PressPage() {
       <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
         <h2 className="text-2xl font-extrabold text-[#0B2E59] mb-2">{t('press.enquiriesTitle')}</h2>
         <p className="text-gray-600 mb-2">{t('press.enquiriesBody1')}</p>
-        <a href="mailto:press@flyttgo.us" className="text-lg font-bold text-emerald-700 hover:underline">press@flyttgo.us</a>
+        <a href="mailto:press@flyttgo.com" className="text-lg font-bold text-emerald-700 hover:underline">press@flyttgo.com</a>
         <div className="mt-8">
           <button onClick={() => setPage('contact')}
             className="px-7 py-3 bg-[#0B2E59] text-white rounded-xl font-semibold hover:bg-[#1a4a8a] transition shadow-lg">

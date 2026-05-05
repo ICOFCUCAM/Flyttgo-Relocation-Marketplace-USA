@@ -128,7 +128,7 @@ function buildCard({ name, flag, subline, badgeText, badgeColor }) {
 
   <!-- Bottom URL strip -->
   <line x1="72" y1="556" x2="1128" y2="556" stroke="#ffffff" stroke-opacity="0.1"/>
-  <text x="72" y="592" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" font-weight="600" fill="#ffffff" fill-opacity="0.65">flyttgo.us</text>
+  <text x="72" y="592" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" font-weight="600" fill="#ffffff" fill-opacity="0.65">flyttgo.com</text>
   <text x="1128" y="592" text-anchor="end" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="16" font-weight="600" fill="#ffffff" fill-opacity="0.55">Verified providers · Escrow on every booking</text>
 </svg>
 `;

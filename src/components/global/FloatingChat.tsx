@@ -63,7 +63,7 @@ export default function FloatingChat() {
     },
     {
       label: 'Email',
-      href:  `mailto:support@flyttgo.us?subject=${encodeURIComponent('FlyttGo enquiry')}&body=${encodeURIComponent(greeting)}`,
+      href:  `mailto:support@flyttgo.com?subject=${encodeURIComponent('FlyttGo enquiry')}&body=${encodeURIComponent(greeting)}`,
       hint:  'Reply within 1 hour',
       brand: 'bg-amber-500 hover:bg-amber-600',
     },

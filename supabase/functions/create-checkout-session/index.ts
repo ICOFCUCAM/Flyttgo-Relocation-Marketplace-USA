@@ -24,7 +24,7 @@
 // REQUIRED SECRETS
 // ----------------
 //   supabase secrets set STRIPE_SECRET_KEY=<sk_test_... or sk_live_...>
-//   supabase secrets set FRONTEND_URL=https://flyttgo.us
+//   supabase secrets set FRONTEND_URL=https://flyttgo.com
 //
 // Optional (used by stripe-webhook, not read here):
 //   supabase secrets set STRIPE_WEBHOOK_SECRET=<whsec_...>
@@ -69,7 +69,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 /* ─── Env ──────────────────────────────────────────────────────── */
 const STRIPE_SECRET_KEY         = Deno.env.get('STRIPE_SECRET_KEY') ?? '';
-const FRONTEND_URL              = (Deno.env.get('FRONTEND_URL') ?? 'https://flyttgo.us').replace(/\/$/, '');
+const FRONTEND_URL              = (Deno.env.get('FRONTEND_URL') ?? 'https://flyttgo.com').replace(/\/$/, '');
 const SUPABASE_URL              = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 

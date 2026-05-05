@@ -342,7 +342,7 @@ function invoiceHtml(input: BookingInvoiceInput): string {
       confirm delivery.
       <br/><br/>
       Questions? Reply to your booking confirmation email or visit
-      <strong>flyttgo.us/help</strong>.
+      <strong>flyttgo.com/help</strong>.
     </div>
   </div>
 

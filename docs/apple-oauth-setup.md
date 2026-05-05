@@ -30,7 +30,7 @@ Sign in to <https://developer.apple.com/account>.
 4. **Primary App ID**: select the App ID from step 2.
 5. **Domains and Subdomains** — add every hostname that will host the
    sign-in UI. For this project:
-   - `flyttgo.us` (production, once DNS is set up)
+   - `flyttgo.com` (production, once DNS is set up)
    - `flyttgo-a6ag.vercel.app`
    - `flyttgo-qo46.vercel.app`
    - `flyttgo-vk8t.vercel.app`
@@ -74,7 +74,7 @@ Sign in to <https://developer.apple.com/account>.
 
 Supabase Dashboard → **Authentication → URL Configuration**:
 
-- **Site URL**: your production URL (e.g. `https://flyttgo.us`).
+- **Site URL**: your production URL (e.g. `https://flyttgo.com`).
 - **Redirect URLs**: add every origin from step 3's Domains list —
   one per line, including the `https://` scheme. These must match
   exactly what the browser sends, otherwise Supabase will reject

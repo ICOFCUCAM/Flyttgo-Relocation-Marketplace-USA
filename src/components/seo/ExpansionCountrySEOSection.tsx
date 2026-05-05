@@ -64,12 +64,12 @@ export default function ExpansionCountrySEOSection({ code }: Props) {
     name:       country.name,
     description: country.positioning,
     address:    { '@type': 'PostalAddress', addressCountry: country.code.toUpperCase() },
-    url:        `https://flyttgo.us/market-${country.code}`,
+    url:        `https://flyttgo.com/market-${country.code}`,
     containedInPlace: { '@type': 'Country', name: country.name },
     containsPlace: cities.map(c => ({
       '@type': 'Place',
       name:    c.city,
-      url:     `https://flyttgo.us/moving-${c.slug}`,
+      url:     `https://flyttgo.com/moving-${c.slug}`,
       description: c.paragraph,
     })),
   };

@@ -216,7 +216,7 @@ export function AuthProvider({
     const emailRedirectTo =
       typeof window !== "undefined"
         ? `${window.location.origin}/auth/callback`
-        : "https://flyttgo.us/auth/callback";
+        : "https://flyttgo.com/auth/callback";
 
     const { error } = await supabase.auth.signUp({
       email,

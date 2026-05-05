@@ -10,8 +10,13 @@ import {
 } from '../service';
 import type { FinanceRole } from '../types';
 
+/* `super_admin` is intentionally excluded from this dropdown.
+ * The platform has ONE super-admin tier (profiles.is_super_admin)
+ * which automatically inherits every finance role via the SQL
+ * bridge in fn_has_finance_role. Granting a second super_admin via
+ * users_roles would create a parallel identity that's harder to
+ * audit — promote the user via profiles.is_super_admin instead. */
 const ROLES: { value: FinanceRole; label: string; description: string }[] = [
-  { value: 'super_admin',    label: 'Super admin',     description: 'Full access to both workspaces; only super-admins can grant or revoke other roles.' },
   { value: 'admin',          label: 'Admin',           description: 'Edit accounting, manage tax codes / FX, no destructive operations on roles.' },
   { value: 'accountant',     label: 'Accountant',      description: 'Post journal entries, edit chart of accounts, run reports.' },
   { value: 'auditor',        label: 'Auditor',         description: 'Read-only access to /audit; can leave annotations.' },
@@ -30,6 +35,7 @@ export default function RolesAdmin() {
   const [rows,    setRows]    = useState<FinanceRoleAssignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [email,   setEmail]   = useState('');
+  /* Default to 'accountant' — the most common assignment. */
   const [role,    setRole]    = useState<FinanceRole>('accountant');
   const [busy,    setBusy]    = useState(false);
 

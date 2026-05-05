@@ -28,7 +28,7 @@ export default function ContactPage() {
 
   const channels = [
     { icon: CHANNEL_ICONS.phone,    title: t('contact.phoneTitle'),    line1: '+44 7432 112438', line2: t('contact.phoneLine2'),    href: 'tel:+447432112438' },
-    { icon: CHANNEL_ICONS.email,    title: t('contact.emailTitle'),    line1: 'support@flyttgo.us', line2: t('contact.emailLine2'),    href: 'mailto:support@flyttgo.us' },
+    { icon: CHANNEL_ICONS.email,    title: t('contact.emailTitle'),    line1: 'support@flyttgo.com', line2: t('contact.emailLine2'),    href: 'mailto:support@flyttgo.com' },
     { icon: CHANNEL_ICONS.whatsapp, title: t('contact.whatsappTitle'), line1: '+44 7432 112438', line2: t('contact.whatsappLine2'), href: 'https://wa.me/447432112438' },
     { icon: CHANNEL_ICONS.office,   title: t('contact.officeTitle'),   line1: t('contact.officeLine1'), line2: t('contact.officeLine2'), href: 'https://www.google.com/maps?q=Karl+Johans+gate+1+New York' },
   ];
@@ -42,7 +42,7 @@ export default function ContactPage() {
     if (!form.name || !form.email || !form.message) return;
     /* This is a client-stub until the send-contact-message Edge
      * Function is wired up. For now we pretend it went out and
-     * let ops triage from the inbox at support@flyttgo.us. */
+     * let ops triage from the inbox at support@flyttgo.com. */
     setSent(true);
   }
 

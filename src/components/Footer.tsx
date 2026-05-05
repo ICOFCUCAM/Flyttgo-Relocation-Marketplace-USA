@@ -226,7 +226,7 @@ export default function Footer() {
                   onClick={() => go('contact')}
                   className="inline-flex items-center gap-2 text-white/85 hover:text-amber-300 transition"
                 >
-                  <Mail size={14} className="text-amber-300/80" /> hello@flyttgo.us
+                  <Mail size={14} className="text-amber-300/80" /> hello@flyttgo.com
                 </button>
               </li>
               <li>

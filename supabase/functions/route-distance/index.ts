@@ -86,7 +86,7 @@ async function osrmRoute(from: LatLng, to: LatLng): Promise<{ distanceKm: number
   const url    = `${base}/route/v1/driving/${coords}?overview=false&alternatives=false&steps=false${PROVIDER_KEY ? `&key=${encodeURIComponent(PROVIDER_KEY)}` : ''}`;
 
   const res = await fetch(url, {
-    headers: { 'User-Agent': 'FlyttGo/1.0 (+https://flyttgo.us)' },
+    headers: { 'User-Agent': 'FlyttGo/1.0 (+https://flyttgo.com)' },
   });
   if (!res.ok) throw new Error(`osrm ${res.status}`);
   const data = await res.json();
@@ -117,7 +117,7 @@ async function orsRoute(from: LatLng, to: LatLng): Promise<{ distanceKm: number;
       'Authorization': PROVIDER_KEY,
       'Content-Type':  'application/json',
       'Accept':        'application/json',
-      'User-Agent':    'FlyttGo/1.0 (+https://flyttgo.us)',
+      'User-Agent':    'FlyttGo/1.0 (+https://flyttgo.com)',
     },
     body: JSON.stringify({
       coordinates: [[from.lng, from.lat], [to.lng, to.lat]],

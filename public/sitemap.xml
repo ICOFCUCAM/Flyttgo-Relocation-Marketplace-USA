@@ -8,19 +8,19 @@
 -->
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
-    <loc>https://flyttgo.us/sitemap-static.xml</loc>
+    <loc>https://flyttgo.com/sitemap-static.xml</loc>
     <lastmod>2026-05-05</lastmod>
   </sitemap>
   <sitemap>
-    <loc>https://flyttgo.us/sitemap-services.xml</loc>
+    <loc>https://flyttgo.com/sitemap-services.xml</loc>
     <lastmod>2026-05-05</lastmod>
   </sitemap>
   <sitemap>
-    <loc>https://flyttgo.us/sitemap-cities.xml</loc>
+    <loc>https://flyttgo.com/sitemap-cities.xml</loc>
     <lastmod>2026-05-05</lastmod>
   </sitemap>
   <sitemap>
-    <loc>https://flyttgo.us/sitemap-corridors.xml</loc>
+    <loc>https://flyttgo.com/sitemap-corridors.xml</loc>
     <lastmod>2026-05-05</lastmod>
   </sitemap>
 </sitemapindex>

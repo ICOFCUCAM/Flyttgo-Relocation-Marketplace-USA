@@ -10,11 +10,11 @@ import { hasAnalyticsConsent } from './CookieConsent';
  * Listens for the 'flyttgo:consent' window event so analytics start
  * the moment the user clicks "Accept all" — no page reload required.
  *
- * Replace `data-domain="flyttgo.us"` with your real domain, or wire
+ * Replace `data-domain="flyttgo.com"` with your real domain, or wire
  * to import.meta.env.VITE_PLAUSIBLE_DOMAIN if you want it env-driven.
  */
 const PLAUSIBLE_SCRIPT_ID = 'flyttgo-plausible';
-const PLAUSIBLE_DOMAIN = 'flyttgo.us';
+const PLAUSIBLE_DOMAIN = 'flyttgo.com';
 const PLAUSIBLE_SRC = 'https://plausible.io/js/script.js';
 
 function injectPlausible() {

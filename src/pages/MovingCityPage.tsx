@@ -58,7 +58,7 @@ export default function MovingCityPage() {
   useEffect(() => {
     if (typeof document === 'undefined' || !city) return undefined;
     const country = EXPANSION_COUNTRIES[city.country];
-    const url = `https://flyttgo.us/moving-${city.slug}`;
+    const url = `https://flyttgo.com/moving-${city.slug}`;
     const title = `Moving in ${city.city}, ${country.name} · FlyttGo marketplace`;
     const description = city.paragraph;
 
@@ -130,23 +130,23 @@ export default function MovingCityPage() {
     '@graph': [
       {
         '@type':       'Place',
-        '@id':         `https://flyttgo.us/moving-${city.slug}#place`,
+        '@id':         `https://flyttgo.com/moving-${city.slug}#place`,
         name:          city.city,
         description:   city.paragraph,
-        url:           `https://flyttgo.us/moving-${city.slug}`,
+        url:           `https://flyttgo.com/moving-${city.slug}`,
         address:       { '@type': 'PostalAddress', addressCountry: city.country.toUpperCase(), addressLocality: city.city },
         containedInPlace: {
           '@type': 'Country',
           name:    country.name,
-          url:     `https://flyttgo.us/market-${city.country}`,
+          url:     `https://flyttgo.com/market-${city.country}`,
         },
       },
       {
         '@type': 'BreadcrumbList',
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'FlyttGo',           item: 'https://flyttgo.us/' },
-          { '@type': 'ListItem', position: 2, name: country.name,         item: `https://flyttgo.us/market-${city.country}` },
-          { '@type': 'ListItem', position: 3, name: `Moving in ${city.city}`, item: `https://flyttgo.us/moving-${city.slug}` },
+          { '@type': 'ListItem', position: 1, name: 'FlyttGo',           item: 'https://flyttgo.com/' },
+          { '@type': 'ListItem', position: 2, name: country.name,         item: `https://flyttgo.com/market-${city.country}` },
+          { '@type': 'ListItem', position: 3, name: `Moving in ${city.city}`, item: `https://flyttgo.com/moving-${city.slug}` },
         ],
       },
     ],

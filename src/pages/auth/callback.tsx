@@ -19,7 +19,7 @@
  * ── Why a dedicated callback page? ─────────────────────────────
  * Putting the URL-hash handoff on its own route means:
  *   • Supabase's email template only ever points at one stable
- *     URL we control (https://flyttgo.us/auth/callback).
+ *     URL we control (https://flyttgo.com/auth/callback).
  *   • The home page doesn't have to mount any auth-callback logic
  *     and stays free of token-flash side effects.
  *   • If the session never arrives (expired link, broken email
