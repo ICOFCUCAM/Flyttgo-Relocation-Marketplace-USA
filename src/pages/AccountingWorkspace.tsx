@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Loader2, FileDown, Plus, Save, RefreshCw, Settings as SettingsIcon } from 'lucide-react';
+import { Loader2, Plus, Save, RefreshCw, Settings as SettingsIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../lib/auth';
 import { useApp }  from '../lib/store';
@@ -8,20 +8,19 @@ import { INPUT_FOCUS, FOCUS_RING } from '../components/ds';
 import WorkspaceShell, { type WorkspaceSection } from '../accounting/components/WorkspaceShell';
 import RolesAdmin from '../accounting/components/RolesAdmin';
 import StepUpAuthGate from '../accounting/components/StepUpAuthGate';
+import StatutoryReports from '../accounting/components/StatutoryReports';
 import {
   getMyFinanceRoles,
   getAccountingSettings, updateAccountingSettings,
   listAccounts, initializeChartOfAccounts,
   listJournalEntries, postJournalEntry,
   listTaxCodes, listExchangeRates, recordExchangeRate,
-  fetchTrialBalance,
 } from '../accounting/service';
-import { exportCsv, exportWord, exportPdf } from '../accounting/exports';
 import { JURISDICTIONS } from '../accounting/templates';
 import type {
   AccountRow, AccountingSettingsRow, ExchangeRateRow,
   Jurisdiction, JournalEntryRow, PostJournalLineInput,
-  TaxCodeRow, TrialBalanceRow,
+  TaxCodeRow,
 } from '../accounting/types';
 
 /**
@@ -100,20 +99,18 @@ export default function AccountingWorkspace() {
   const [accounts, setAccounts] = useState<AccountRow[]>([]);
   const [entries,  setEntries]  = useState<JournalEntryRow[]>([]);
   const [taxCodes, setTaxCodes] = useState<TaxCodeRow[]>([]);
-  const [tb,       setTb]       = useState<TrialBalanceRow[]>([]);
   const [fxRows,   setFxRows]   = useState<ExchangeRateRow[]>([]);
 
   async function refreshAll() {
     if (!allowed) return;
     try {
-      const [accs, ents, txs, tbRows, fx] = await Promise.all([
+      const [accs, ents, txs, fx] = await Promise.all([
         listAccounts(jurisdiction),
         listJournalEntries(jurisdiction, { limit: 50 }),
         listTaxCodes(jurisdiction === 'IFRS' ? 'IFRS' : jurisdiction),
-        fetchTrialBalance(jurisdiction),
         listExchangeRates(),
       ]);
-      setAccounts(accs); setEntries(ents); setTaxCodes(txs); setTb(tbRows); setFxRows(fx);
+      setAccounts(accs); setEntries(ents); setTaxCodes(txs); setFxRows(fx);
     } catch (e) {
       toast.error('Refresh failed', { description: e instanceof Error ? e.message : '' });
     }
@@ -178,8 +175,7 @@ export default function AccountingWorkspace() {
     },
     {
       code: 'AC.03', label: 'Reports',
-      actions: <ReportExports trialBalance={tb} jurisdiction={jurisdiction} />,
-      body: <TrialBalanceView rows={tb} />,
+      body: <StatutoryReports jurisdiction={jurisdiction} />,
     },
     {
       code: 'AC.04', label: 'VAT Center',
@@ -559,88 +555,6 @@ function ChartOfAccountsTable({ accounts }: { accounts: AccountRow[] }) {
           ))}
         </tbody>
       </table>
-    </div>
-  );
-}
-
-/* ── AC.03 — Trial balance ────────────────────────────── */
-
-function TrialBalanceView({ rows }: { rows: TrialBalanceRow[] }) {
-  if (rows.length === 0) {
-    return <p className="text-slate-500 text-sm">No posted entries yet — the trial balance will populate as journals are posted.</p>;
-  }
-  const totals = rows.reduce((acc, r) => {
-    acc.dr += Number(r.total_debit  ?? 0);
-    acc.cr += Number(r.total_credit ?? 0);
-    return acc;
-  }, { dr: 0, cr: 0 });
-
-  return (
-    <div className="overflow-x-auto border border-slate-200 rounded-lg">
-      <table className="w-full text-sm">
-        <thead className="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 font-mono">
-          <tr>
-            <th className="text-left  px-3 py-2">Code</th>
-            <th className="text-left  px-3 py-2">Account</th>
-            <th className="text-left  px-3 py-2">Type</th>
-            <th className="text-right px-3 py-2">Debit</th>
-            <th className="text-right px-3 py-2">Credit</th>
-            <th className="text-right px-3 py-2">Net</th>
-          </tr>
-        </thead>
-        <tbody className="tabular-nums">
-          {rows.map(r => (
-            <tr key={r.account_code} className="border-t border-slate-100">
-              <td className="px-3 py-1.5 font-mono">{r.account_code}</td>
-              <td className="px-3 py-1.5">{r.display_name}</td>
-              <td className="px-3 py-1.5 capitalize text-slate-500">{r.account_type}</td>
-              <td className="px-3 py-1.5 text-right">{Number(r.total_debit  ?? 0).toFixed(2)}</td>
-              <td className="px-3 py-1.5 text-right">{Number(r.total_credit ?? 0).toFixed(2)}</td>
-              <td className="px-3 py-1.5 text-right font-bold">{Number(r.net_balance ?? 0).toFixed(2)}</td>
-            </tr>
-          ))}
-        </tbody>
-        <tfoot>
-          <tr className="bg-slate-50 border-t border-slate-200 font-bold">
-            <td colSpan={3} className="px-3 py-2 text-xs">TOTALS</td>
-            <td className="px-3 py-2 text-right">{totals.dr.toFixed(2)}</td>
-            <td className="px-3 py-2 text-right">{totals.cr.toFixed(2)}</td>
-            <td className="px-3 py-2 text-right">
-              <span className={Math.abs(totals.dr - totals.cr) < 0.01 ? 'text-emerald-700' : 'text-red-600'}>
-                {Math.abs(totals.dr - totals.cr) < 0.01 ? 'Balanced ✓' : (totals.dr - totals.cr).toFixed(2)}
-              </span>
-            </td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-  );
-}
-
-function ReportExports({ trialBalance, jurisdiction }: { trialBalance: TrialBalanceRow[]; jurisdiction: Jurisdiction }) {
-  const filename = `flyttgo-trial-balance-${jurisdiction}-${new Date().toISOString().slice(0, 10)}`;
-  const cols = [
-    { header: 'Code',       value: (r: TrialBalanceRow) => r.account_code },
-    { header: 'Account',    value: (r: TrialBalanceRow) => r.display_name },
-    { header: 'Type',       value: (r: TrialBalanceRow) => r.account_type },
-    { header: 'Debit',      value: (r: TrialBalanceRow) => r.total_debit,  numeric: true },
-    { header: 'Credit',     value: (r: TrialBalanceRow) => r.total_credit, numeric: true },
-    { header: 'Net',        value: (r: TrialBalanceRow) => r.net_balance,  numeric: true },
-  ];
-  return (
-    <div className="flex items-center gap-2">
-      <button onClick={() => exportCsv(filename, trialBalance, cols)}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-700 hover:bg-slate-800 text-white">
-        <FileDown className="w-3 h-3" /> CSV
-      </button>
-      <button onClick={() => exportWord(filename, `Trial Balance · ${jurisdiction}`, trialBalance, cols)}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-700 hover:bg-blue-800 text-white">
-        <FileDown className="w-3 h-3" /> Word
-      </button>
-      <button onClick={() => exportPdf()}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-700 hover:bg-emerald-800 text-white">
-        <FileDown className="w-3 h-3" /> PDF
-      </button>
     </div>
   );
 }

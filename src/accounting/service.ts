@@ -11,8 +11,8 @@ import { supabase } from '../lib/supabase';
 import { TEMPLATES } from './templates';
 import type {
   AccountRow, AccountingSettingsRow, AuditAnnotationRow,
-  ExchangeRateRow, FinanceRole, GeneralLedgerRow,
-  Jurisdiction, JournalEntryRow, JournalLineRow,
+  BalanceSheetRow, ExchangeRateRow, FinanceRole, GeneralLedgerRow,
+  IncomeStatementRow, Jurisdiction, JournalEntryRow, JournalLineRow,
   PostJournalEntryInput, TaxCodeRow, TrialBalanceRow,
   UsersRoleRow, VatRateRow,
 } from './types';
@@ -281,6 +281,25 @@ export async function fetchTrialBalance(jurisdiction: Jurisdiction): Promise<Tri
     .eq('jurisdiction', jurisdiction);
   if (error) throw error;
   return (data ?? []) as TrialBalanceRow[];
+}
+
+export async function fetchIncomeStatement(
+  jurisdiction: Jurisdiction, fiscalYear?: number,
+): Promise<IncomeStatementRow[]> {
+  let q = supabase.from('v_income_statement').select('*').eq('jurisdiction', jurisdiction);
+  if (fiscalYear) q = q.eq('fiscal_year', fiscalYear);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as IncomeStatementRow[];
+}
+
+export async function fetchBalanceSheet(jurisdiction: Jurisdiction): Promise<BalanceSheetRow[]> {
+  const { data, error } = await supabase
+    .from('v_balance_sheet')
+    .select('*')
+    .eq('jurisdiction', jurisdiction);
+  if (error) throw error;
+  return (data ?? []) as BalanceSheetRow[];
 }
 
 export async function fetchGeneralLedger(

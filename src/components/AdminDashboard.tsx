@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useAuth } from '../lib/auth';
 import { useAdminSnapshot } from '../hooks/queries/useAdminDashboard';
 import { AdminSidebar } from './admin/AdminSidebar';
+import StepUpAuthGate from '../accounting/components/StepUpAuthGate';
 import type { AdminTab, AdminPanelHandlers } from './admin/types';
 import { OverviewTab }     from './admin/tabs/OverviewTab';
 import { FleetMapTab }     from './admin/tabs/FleetMapTab';
@@ -107,6 +108,7 @@ export default function AdminDashboard() {
   }
 
   return (
+    <StepUpAuthGate workspace="admin" workspaceLabel="Admin">
     <div className="min-h-screen flex bg-gray-50">
       <AdminSidebar current={tab} onSelect={setTab} badges={sidebarBadges} />
 
@@ -170,5 +172,6 @@ export default function AdminDashboard() {
         />
       )}
     </div>
+    </StepUpAuthGate>
   );
 }

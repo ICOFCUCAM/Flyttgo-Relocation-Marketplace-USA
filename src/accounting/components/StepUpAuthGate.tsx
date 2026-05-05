@@ -36,8 +36,9 @@ export default function StepUpAuthGate({
   workspaceLabel,
   children,
 }: {
-  /** Stable id used for the sessionStorage key — 'accounting' / 'audit'. */
-  workspace:      'accounting' | 'audit';
+  /** Stable id used for the sessionStorage key. Independent timers
+   *  per workspace so unlocking accounting doesn't unlock admin. */
+  workspace:      'accounting' | 'audit' | 'admin';
   /** Human label for the prompt headline. */
   workspaceLabel: string;
   children:       ReactNode;

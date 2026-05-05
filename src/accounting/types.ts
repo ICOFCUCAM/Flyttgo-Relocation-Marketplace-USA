@@ -107,6 +107,29 @@ export interface AuditAnnotationRow {
   created_at: string;
 }
 
+export interface IncomeStatementRow {
+  jurisdiction:  Jurisdiction;
+  fiscal_year:   number;
+  account_type:  'income' | 'expense';
+  account_code:  string;
+  account_name:  string;
+  base_currency: string;
+  credit_total:  number;
+  debit_total:   number;
+  period_total:  number;
+}
+
+export interface BalanceSheetRow {
+  jurisdiction:  Jurisdiction;
+  account_type:  'asset' | 'liability' | 'equity';
+  account_code:  string;
+  account_name:  string;
+  base_currency: string;
+  debit_total:   number;
+  credit_total:  number;
+  balance_total: number;
+}
+
 export interface TrialBalanceRow {
   jurisdiction:   Jurisdiction;
   account_code:   string;

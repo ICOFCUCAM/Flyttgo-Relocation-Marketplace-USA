@@ -614,6 +614,63 @@ order by e.entry_date, e.entry_number, l.line_number;
 
 grant select on public.v_general_ledger to authenticated;
 
+/* ── 12b. Income statement + balance sheet views ─────────
+ * Phase 9 reports beyond trial balance + GL.  Both group posted
+ * journal lines into the canonical statement structure: income
+ * statement = income − expense, balance sheet = asset vs liability
+ * + equity. Same security_invoker model. */
+
+drop view if exists public.v_income_statement cascade;
+create view public.v_income_statement
+  with (security_invoker = true) as
+select
+  e.jurisdiction,
+  e.fiscal_year,
+  a.account_type,
+  a.code           as account_code,
+  a.display_name   as account_name,
+  l.base_currency,
+  sum(case when l.side = 'credit' then l.amount_base_currency else 0 end) as credit_total,
+  sum(case when l.side = 'debit'  then l.amount_base_currency else 0 end) as debit_total,
+  sum(case
+        when a.account_type = 'income'  then  (case when l.side = 'credit' then l.amount_base_currency else -l.amount_base_currency end)
+        when a.account_type = 'expense' then -(case when l.side = 'credit' then l.amount_base_currency else -l.amount_base_currency end)
+        else 0
+      end) as period_total
+from public.journal_entries e
+join public.journal_lines   l on l.entry_id = e.id
+join public.accounts        a on a.id       = l.account_id
+where e.status = 'posted'
+  and a.account_type in ('income', 'expense')
+group by e.jurisdiction, e.fiscal_year, a.account_type, a.code, a.display_name, l.base_currency
+order by e.jurisdiction, e.fiscal_year desc, a.account_type, a.code;
+grant select on public.v_income_statement to authenticated;
+
+drop view if exists public.v_balance_sheet cascade;
+create view public.v_balance_sheet
+  with (security_invoker = true) as
+select
+  e.jurisdiction,
+  a.account_type,
+  a.code         as account_code,
+  a.display_name as account_name,
+  l.base_currency,
+  sum(case when l.side = 'debit'  then l.amount_base_currency else 0 end) as debit_total,
+  sum(case when l.side = 'credit' then l.amount_base_currency else 0 end) as credit_total,
+  sum(case
+        when a.account_type = 'asset'                       then  (case when l.side = 'debit'  then l.amount_base_currency else -l.amount_base_currency end)
+        when a.account_type in ('liability','equity')       then  (case when l.side = 'credit' then l.amount_base_currency else -l.amount_base_currency end)
+        else 0
+      end) as balance_total
+from public.journal_entries e
+join public.journal_lines   l on l.entry_id = e.id
+join public.accounts        a on a.id       = l.account_id
+where e.status = 'posted'
+  and a.account_type in ('asset','liability','equity')
+group by e.jurisdiction, a.account_type, a.code, a.display_name, l.base_currency
+order by e.jurisdiction, a.account_type, a.code;
+grant select on public.v_balance_sheet to authenticated;
+
 /* ── 13. Storage bucket for attachments ──────────────────── */
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)

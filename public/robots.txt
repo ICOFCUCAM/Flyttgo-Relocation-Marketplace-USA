@@ -16,6 +16,13 @@ Disallow: /my-bookings
 Disallow: /profile
 Disallow: /dashboard
 
+# ── Finance / regulator workspaces ───────────────────────────────────
+# Step-up authenticated; never expose to crawlers even via a 403/404
+# probe pattern.
+Disallow: /accounting
+Disallow: /audit
+Disallow: /backoffice
+
 # ── Transactional / transient surfaces ───────────────────────────────
 Disallow: /book
 Disallow: /payment

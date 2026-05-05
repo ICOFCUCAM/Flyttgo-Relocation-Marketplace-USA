@@ -277,6 +277,37 @@ export default function Header() {
   const { profile, signOut, user } = useAuth();
   const { setPage, currentPage, setShowAuthModal, setAuthMode } = useApp();
   const { t, i18n: i18nInstance } = useTranslation();
+
+  /* Finance-role discoverability flags — drive whether the avatar
+   * dropdown surfaces /accounting + /audit links. Platform super-
+   * admins (profiles.is_super_admin) see both; users granted finance
+   * roles via users_roles see the matching link. The corresponding
+   * pages re-check authorisation server-side, so this is just a
+   * navigation aid, never a security boundary. */
+  const [financeAccess, setFinanceAccess] = useState<{ accounting: boolean; audit: boolean }>({
+    accounting: false,
+    audit:      false,
+  });
+  useEffect(() => {
+    if (!user) { setFinanceAccess({ accounting: false, audit: false }); return undefined; }
+    const platformSuper = profile?.is_super_admin === true;
+    if (platformSuper) {
+      setFinanceAccess({ accounting: true, audit: true });
+      return undefined;
+    }
+    let cancelled = false;
+    void import('../accounting/service').then(({ getMyFinanceRoles }) =>
+      getMyFinanceRoles(user.id).then(roles => {
+        if (cancelled) return;
+        setFinanceAccess({
+          accounting: roles.some(r => r === 'super_admin' || r === 'admin' || r === 'accountant' || r === 'finance_viewer'),
+          audit:      roles.some(r => r === 'super_admin' || r === 'admin' || r === 'auditor'    || r === 'finance_viewer'),
+        });
+      }).catch(() => undefined),
+    );
+    return () => { cancelled = true; };
+  }, [user, profile?.is_super_admin]);
+
   const [mobileOpen,    setMobileOpen]    = useState(false);
   /* Single open-nav-dropdown state — exclusive across the four
    * Countries / Services / Providers / Enterprise dropdowns so only
@@ -795,6 +826,22 @@ export default function Header() {
                       )}
                       {profile.role === 'admin' && (
                         <button onClick={() => handleNav('admin')} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">{t('header.adminDash')}</button>
+                      )}
+                      {/* Finance workspaces — surfaced for any platform
+                       *  super-admin and any user who has been granted a
+                       *  finance role via users_roles. The corresponding
+                       *  pages re-check authorisation server-side via
+                       *  RLS and the step-up auth gate, so showing the
+                       *  link is informational, not authoritative. */}
+                      {financeAccess.accounting && (
+                        <button onClick={() => handleNav('accounting')} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
+                          Accounting workspace
+                        </button>
+                      )}
+                      {financeAccess.audit && (
+                        <button onClick={() => handleNav('audit')} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
+                          Audit workspace
+                        </button>
                       )}
                       <hr className="my-1 border-gray-100"/>
                       <button onClick={() => { signOut(); setPage('home'); closeAll(); }} className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition font-medium">{t('header.signOut')}</button>
