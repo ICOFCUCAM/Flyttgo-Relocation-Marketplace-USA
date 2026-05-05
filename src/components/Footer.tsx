@@ -1,11 +1,13 @@
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import {
-  Star, ShieldCheck, BadgeCheck, Truck, CreditCard, Cookie,
+  ShieldCheck, BadgeCheck, Truck, CreditCard, Cookie,
   Linkedin, Twitter, Instagram, Mail, Phone, Globe, Lock, ArrowRight,
 } from 'lucide-react';
 import { useApp, Page } from '../lib/store';
 import { reopenCookieConsent } from './CookieConsent';
 import { track } from '../lib/analytics';
+import { COUNTRY_PROFILES } from '../lib/country-profiles';
+import { ONBOARDING_RULES } from '../lib/onboarding-rules';
 
 interface LinkItem { label: string; page: Page; }
 
@@ -115,21 +117,44 @@ const LEGAL: LinkItem[] = [
   { label: 'File a dispute',    page: 'dispute' },
 ];
 
-/* Trust strip metrics — single source of truth so engineering can
- * swap in live numbers from a Supabase aggregation view later
- * without scattering hard-coded copy through the JSX. */
-const TRUST_METRICS = [
-  { icon: Star,        value: '4.8',         label: 'Average rating',      detail: 'Across 27,000+ verified moves' },
-  { icon: ShieldCheck, value: '$50,000',     label: 'Goods-in-transit cover', detail: 'Standard on every booking' },
-  { icon: BadgeCheck,  value: '5,400+',      label: 'Verified providers',  detail: 'Licensed across 16 countries' },
-  { icon: CreditCard,  value: 'Escrow',      label: 'On every booking',    detail: 'Released only on delivery confirmation' },
-] as const;
-
-const COVERAGE_CURRENCIES = ['USD','CAD','EUR','GBP','NOK','CHF','SEK','DKK','PLN','CZK'] as const;
+/* Trust strip metrics — every figure here is either:
+ *   - derived from a canonical source (markets, currencies,
+ *     compliance regimes), or
+ *   - a hard guarantee of the platform (escrow, GDPR posture).
+ *
+ * No invented "X completed moves" / "Y verified providers" copy.
+ * As soon as a Supabase aggregation view is wired, the dynamic
+ * counts can swap into the placeholders without touching JSX. */
 
 export default function Footer() {
   const { setPage } = useApp();
   const go = (p: Page) => setPage(p);
+
+  /* Every number on the trust strip is derived once from canonical
+   * sources so adding a market or compliance regime updates the
+   * footer automatically. The currency list comes from the same
+   * source as the pricing engine. */
+  const stats = useMemo(() => {
+    const currencies = Array.from(new Set(COUNTRY_PROFILES.map(c => c.currency))).sort();
+    return {
+      markets:        COUNTRY_PROFILES.length,
+      currencies,
+      currencyCount:  currencies.length,
+      regimes:        ONBOARDING_RULES.length,
+    };
+  }, []);
+
+  const trustMetrics: Array<{
+    icon:   typeof Globe;
+    value:  string;
+    label:  string;
+    detail: string;
+  }> = [
+    { icon: Globe,       value: `${stats.markets}`,        label: 'Markets activated',  detail: 'Native currency, native compliance' },
+    { icon: ShieldCheck, value: 'Escrow',                  label: 'On every booking',   detail: 'Released only on delivery confirmation' },
+    { icon: BadgeCheck,  value: `${stats.regimes}`,        label: 'Compliance regimes', detail: 'FMCSA · GVOL · GüKG · SIRET · Yrkestrafik & more' },
+    { icon: CreditCard,  value: `${stats.currencyCount}`,  label: 'Currencies supported', detail: 'No forced USD conversion at checkout' },
+  ];
 
   return (
     <footer className="bg-[#0b1f3a] text-slate-300">
@@ -137,10 +162,10 @@ export default function Footer() {
       {/* ── Trust strip ────────────────────────────────────────── */}
       <div className="bg-[#08182d] border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-7 grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-          {TRUST_METRICS.map(({ icon: Icon, value, label, detail }) => (
+          {trustMetrics.map(({ icon: Icon, value, label, detail }) => (
             <div key={label} className="flex items-start gap-3">
               <div className="w-11 h-11 rounded-xl bg-amber-400/15 text-amber-300 flex items-center justify-center flex-shrink-0">
-                <Icon size={18} className={Icon === Star ? 'fill-amber-300 text-amber-300' : ''} />
+                <Icon size={18} />
               </div>
               <div className="min-w-0">
                 <p className="text-white font-extrabold text-base leading-tight">{value}</p>
@@ -167,10 +192,11 @@ export default function Footer() {
             <p className="text-sm text-white/70 leading-relaxed max-w-md mb-6">
               FlyttGo Global Logistics &amp; Relocation Marketplace connects
               customers with independent licensed relocation providers across
-              16 countries. Service providers are responsible for compliance
-              with their national licensing, taxation, insurance, and
-              regulatory requirements. FlyttGo operates as a digital
-              coordination layer — not as a transportation carrier.
+              {' '}{stats.markets}{' '}countries. Service providers are
+              responsible for compliance with their national licensing,
+              taxation, insurance, and regulatory requirements. FlyttGo
+              operates as a digital coordination layer — not as a
+              transportation carrier.
             </p>
             <div className="flex items-center gap-3 text-xs text-white/55">
               <span className="inline-flex items-center gap-1.5">
@@ -178,7 +204,7 @@ export default function Footer() {
               </span>
               <span aria-hidden>·</span>
               <span className="inline-flex items-center gap-1.5">
-                <Globe size={12} className="text-emerald-400" /> 16 markets
+                <Globe size={12} className="text-emerald-400" /> {stats.markets} markets
               </span>
               <span aria-hidden>·</span>
               <span className="inline-flex items-center gap-1.5">
@@ -284,7 +310,7 @@ export default function Footer() {
               Currency coverage
             </p>
             <div className="flex flex-wrap gap-1.5">
-              {COVERAGE_CURRENCIES.map(c => (
+              {stats.currencies.map(c => (
                 <span
                   key={c}
                   className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold tracking-wider bg-white/5 border border-white/10 text-white/75"
@@ -301,47 +327,32 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* ── Bottom legal band ─────────────────────────────────── */}
+      {/* ── Bottom band ─ minimal: copyright + posture statement ──
+       *
+       * Legal links live in the dedicated Legal column above (Terms,
+       * Privacy, Liability, Provider terms, Dispute). Repeating them
+       * here turned the bottom band into a second nav row, which the
+       * spec calls out as "legal section minimal, not dominant". The
+       * Cookies preference reopener stays — it's a regulatory action,
+       * not a navigation link, and there's no equivalent surface for
+       * it elsewhere on the site. */}
       <div className="border-t border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs text-white/55">
           <div className="flex items-center gap-x-4 gap-y-1 flex-wrap">
             <p>© {new Date().getFullYear()} FlyttGo Global Logistics &amp; Relocation Marketplace</p>
             <p className="text-white/40">Coordination layer · Not a moving company · Not a motor carrier</p>
           </div>
-          <div className="flex items-center gap-4 flex-wrap">
-            <button
-              type="button"
-              onClick={() => go('compliance')}
-              className="text-white/65 hover:text-amber-300 transition"
-            >
-              Compliance
-            </button>
-            <button
-              type="button"
-              onClick={() => go('terms')}
-              className="text-white/65 hover:text-amber-300 transition"
-            >
-              Terms
-            </button>
-            <button
-              type="button"
-              onClick={() => go('privacy')}
-              className="text-white/65 hover:text-amber-300 transition"
-            >
-              Privacy
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                track('manage_cookies_clicked');
-                reopenCookieConsent();
-              }}
-              className="inline-flex items-center gap-1.5 text-white/65 hover:text-amber-300 transition"
-            >
-              <Cookie size={12} />
-              Cookies
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => {
+              track('manage_cookies_clicked');
+              reopenCookieConsent();
+            }}
+            className="inline-flex items-center gap-1.5 text-white/65 hover:text-amber-300 transition"
+          >
+            <Cookie size={12} />
+            Cookie preferences
+          </button>
         </div>
       </div>
     </footer>
