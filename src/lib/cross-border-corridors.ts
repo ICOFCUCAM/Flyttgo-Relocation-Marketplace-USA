@@ -39,8 +39,11 @@ export interface CrossBorderCorridor {
   /** Approximate driving distance in km (OSRM-derived; baseline
    *  for the route preview pill). */
   distanceKm:  number;
-  /** Approximate one-way drive time in minutes. */
-  driveMinutes: number;
+  /** Approximate one-way drive time in minutes. Optional — sea +
+   *  air corridors (e.g. Cyprus / island markets) don't have a
+   *  drive time and surface as freight-consolidated discovery
+   *  lanes rather than drivable routes. */
+  driveMinutes?: number;
   /** Whether the corridor connects an expansion country to an
    *  existing market — used for rollout-priority signalling. */
   bridgesToExistingMarket: boolean;
@@ -144,6 +147,27 @@ export const CROSS_BORDER_CORRIDORS: CrossBorderCorridor[] = [
     toCity: 'Lyon',      toCountry: 'fr', isHighFrequency: false, bridgesToExistingMarket: true,
     description: 'Lombardy → Auvergne-Rhône-Alpes corridor through the Alps.',
     distanceKm: 480, driveMinutes: 330 },
+
+  /* ── Cyprus corridors (sea + air; no overland routes off-island) ──
+   * These are the major mobility flows touching CY. Distances are
+   * great-circle (no driveMinutes since the moves go by sea-freight
+   * or air consolidation) — the registry surfaces them as discovery
+   * lanes rather than drivable corridors. Limited to in-network
+   * destinations (countries already in MarketCountryCode); Greece
+   * is the dominant CY mainland flow but isn't a marketplace
+   * country yet, so it's deferred until GR activates. */
+  { slug: 'lefkosia-london',    fromCity: 'Lefkosia',   fromCountry: 'cy',
+    toCity: 'London',    toCountry: 'gb', isHighFrequency: true,  bridgesToExistingMarket: true,
+    description: 'Anglo-Cypriot diaspora corridor — air-consolidated household moves.',
+    distanceKm: 3260 },
+  { slug: 'larnaka-frankfurt',  fromCity: 'Larnaka',    fromCountry: 'cy',
+    toCity: 'Frankfurt', toCountry: 'de', isHighFrequency: false, bridgesToExistingMarket: true,
+    description: 'Cyprus → Central Europe corridor — corporate relocation gateway.',
+    distanceKm: 2820 },
+  { slug: 'lemesos-paris',      fromCity: 'Lemesos',    fromCountry: 'cy',
+    toCity: 'Paris',     toCountry: 'fr', isHighFrequency: false, bridgesToExistingMarket: true,
+    description: 'Cyprus → France corridor — corporate + retiree mobility.',
+    distanceKm: 3000 },
 ];
 
 /* ── Lookup helpers ──────────────────────────────────────── */
