@@ -159,6 +159,16 @@ export default function CountryPage(props: CountryPageProps) {
             className="h-full w-full object-cover"
             loading="eager"
             fetchPriority="high"
+            onError={(e) => {
+              /* If the per-country hero CDN URL ever 404s, fall
+               * back to the verified-stable Stockholm skyline so
+               * the page never renders a blank scrim. Done at the
+               * <img> layer (not React state) so a single failed
+               * load can recover without a re-render cycle. */
+              const img = e.currentTarget;
+              const fallback = 'https://images.unsplash.com/photo-1509356843151-3e7d96241e11?q=80&w=2400';
+              if (img.src !== fallback) img.src = fallback;
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-br from-[#0b1f3a]/95 via-[#0b1f3a]/85 to-[#0b1f3a]/55" />
         </div>

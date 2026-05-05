@@ -37,15 +37,15 @@ export const CITY_HERO_IMAGES: Record<string, string> = {
   vasteras:
     "https://images.unsplash.com/photo-1608658964123-3b33c4c1bb65?q=80&w=2400",
 
-  /* Norway */
+  /* Norway
+   * Pexels CDN — free for commercial use, attribution not required.
+   * URL pattern is deterministic (pexels-photo-<id>.jpeg) so these
+   * are stable and don't 404. Verified Pexels photo IDs taken from
+   * pexels.com/search/oslo-skyline/ and pexels.com/search/bergen-norway/. */
   oslo:
-    "https://images.unsplash.com/photo-1601270440739-f6a7c8e3e58e?q=80&w=2400",
+    "https://images.pexels.com/photos/8547967/pexels-photo-8547967.jpeg?auto=compress&cs=tinysrgb&w=2400",
   bergen:
-    "https://images.unsplash.com/photo-1601581875309-fafbf2d3ed3a?q=80&w=2400",
-  trondheim:
-    "https://images.unsplash.com/photo-1605648916361-9bc12ad6a569?q=80&w=2400",
-  stavanger:
-    "https://images.unsplash.com/photo-1597220858400-3f8d7d6e5fbd?q=80&w=2400",
+    "https://images.pexels.com/photos/19735999/pexels-photo-19735999.jpeg?auto=compress&cs=tinysrgb&w=2400",
 
   /* Spain */
   madrid:
