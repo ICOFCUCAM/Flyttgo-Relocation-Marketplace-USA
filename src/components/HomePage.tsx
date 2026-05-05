@@ -15,6 +15,8 @@ import ReviewsCarousel from './global/ReviewsCarousel';
 import HomeFAQ from './global/HomeFAQ';
 import WorldDeploymentMap from './global/WorldDeploymentMap';
 import GlobalPresence from './global/GlobalPresence';
+import { SERVICE_CATEGORIES } from '../lib/service-categories';
+import { PROVIDERS } from '../lib/providers-catalogue';
 
 /* ────────────────────────────────────────────────────────────
  *  COUNTRY SHOPFRONT METADATA
@@ -258,40 +260,51 @@ export default function HomePage() {
             </h2>
           </div>
 
+          {/* Tiles derived from SERVICE_CATEGORIES → no drift between
+           * the home grid, the /services index, and the per-category
+           * landing pages. Provider count is the credibility signal:
+           * shows real depth per category instead of forcing the
+           * customer to click in to discover supply. */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {([
-              { slug: 'local',         title: 'Local moves',           sub: 'Same-city',                   photo: 'https://images.unsplash.com/photo-1568010967-7c3a4e0a59f7?auto=format&fit=crop&w=600&q=70' },
-              { slug: 'long-distance', title: 'Long-distance moves',   sub: 'Inter-state / Cross-country', photo: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=600&q=70' },
-              { slug: 'international', title: 'International moves',   sub: 'Cross-border',                photo: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=600&q=70' },
-              { slug: 'office',        title: 'Office relocation',     sub: 'For businesses',              photo: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=70' },
-              { slug: 'packing',       title: 'Packing services',      sub: 'Full / Partial',              photo: 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=600&q=70' },
-              { slug: 'storage',       title: 'Storage solutions',     sub: 'Self & bonded',               photo: 'https://images.unsplash.com/photo-1591375372226-9aa92be1d6f4?auto=format&fit=crop&w=600&q=70' },
-              { slug: 'truck-rental',  title: 'Truck rental',          sub: 'DIY-friendly',                photo: 'https://images.unsplash.com/photo-1601581875309-fafbf2d3ed3a?auto=format&fit=crop&w=600&q=70' },
-              { slug: 'student',       title: 'Student moves',         sub: 'University corridors',        photo: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=600&q=70' },
-            ] as const).map(c => (
-              <button
-                key={c.slug}
-                type="button"
-                onClick={() => {
-                  track('home_category_clicked', { category: c.title, slug: c.slug });
-                  if (typeof window !== 'undefined') {
-                    window.history.pushState({}, '', `/services/${c.slug}`);
-                  }
-                  go('service-category');
-                  if (typeof window !== 'undefined') {
-                    window.dispatchEvent(new PopStateEvent('popstate'));
-                  }
-                }}
-                className="relative h-48 rounded-2xl overflow-hidden group cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
-              >
-                <img src={c.photo} alt="" className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-                <div className="absolute bottom-4 left-4 right-4 text-white">
-                  <p className="text-[10px] font-bold uppercase tracking-wider opacity-80">{c.sub}</p>
-                  <h3 className="text-lg font-extrabold leading-tight">{c.title}</h3>
-                </div>
-              </button>
-            ))}
+            {SERVICE_CATEGORIES
+              .filter(c => c.homeTile)
+              .sort((a, b) => (a.homeTile!.order) - (b.homeTile!.order))
+              .map(c => {
+                const tile  = c.homeTile!;
+                const keys  = c.matches.map(s => s.toLowerCase());
+                const count = PROVIDERS.filter(p =>
+                  p.services.some(s => keys.some(k => s.toLowerCase().includes(k))),
+                ).length;
+                return (
+                  <button
+                    key={c.slug}
+                    type="button"
+                    onClick={() => {
+                      track('home_category_clicked', { category: c.name, slug: c.slug });
+                      if (typeof window !== 'undefined') {
+                        window.history.pushState({}, '', `/services/${c.slug}`);
+                      }
+                      go('service-category');
+                      if (typeof window !== 'undefined') {
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                      }
+                    }}
+                    className="relative h-48 rounded-2xl overflow-hidden group cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+                  >
+                    <img src={tile.photo} alt="" className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+                    {count > 0 && (
+                      <span className="absolute top-3 right-3 inline-flex items-center px-2 py-0.5 rounded-full bg-white/90 backdrop-blur text-[10px] font-bold text-slate-900 tracking-wide shadow-sm">
+                        {count} provider{count === 1 ? '' : 's'}
+                      </span>
+                    )}
+                    <div className="absolute bottom-4 left-4 right-4 text-white">
+                      <p className="text-[10px] font-bold uppercase tracking-wider opacity-80">{tile.sub}</p>
+                      <h3 className="text-lg font-extrabold leading-tight">{c.name}</h3>
+                    </div>
+                  </button>
+                );
+              })}
           </div>
         </div>
       </section>

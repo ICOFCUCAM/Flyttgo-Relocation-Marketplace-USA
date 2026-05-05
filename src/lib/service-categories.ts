@@ -26,11 +26,23 @@ export interface ServiceCategory {
   /** Pricing tier slug from us-pricing.ts. Used by ServiceCategoryPage
    *  to render the typical-rate card in the hero. */
   pricingTier?: string;
+  /** Home-page tile presentation. Only categories with a homeTile
+   *  appear in the home category grid; ordering and copy come from
+   *  this single source so the grid never drifts from the catalogue. */
+  homeTile?: {
+    /** Short subtitle under the category name on the tile. */
+    sub:    string;
+    /** Background image URL. Stable hosting recommended. */
+    photo:  string;
+    /** Sort order on the grid (lower = earlier). */
+    order:  number;
+  };
 }
 
 export const SERVICE_CATEGORIES: ServiceCategory[] = [
   {
     slug:    'long-distance',
+    homeTile: { sub: 'Inter-state / Cross-country', order: 20, photo: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=600&q=70' },
     name:    'Long-distance moves',
     tagline: 'Cross-state and cross-border relocations, coordinated end-to-end',
     intro:   "Long-distance moves coordinated through licensed interstate carriers. Every provider on this list is FMCSA-registered (US), GVOL-licensed (UK), or holds the equivalent operator-licence in their market. Get a binding quote, watch the load on a live map, and pay only after delivery is confirmed.",
@@ -48,6 +60,7 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
   },
   {
     slug:    'local',
+    homeTile: { sub: 'Same-city', order: 10, photo: 'https://images.unsplash.com/photo-1568010967-7c3a4e0a59f7?auto=format&fit=crop&w=600&q=70' },
     name:    'Local moves',
     tagline: 'Same-city moves, often same-day or next-day',
     intro:   "Local moves inside a single city or metro region. Most providers can fit you in within 24–48 hours during off-peak season; same-day slots are common in our six core markets. Book by the hour with a transparent two-hour minimum.",
@@ -65,6 +78,7 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
   },
   {
     slug:    'packing',
+    homeTile: { sub: 'Full / Partial', order: 50, photo: 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=600&q=70' },
     name:    'Packing services',
     tagline: 'Full-pack, partial-pack, and crating crews',
     intro:   "Packing crews who pack, label, and crate everything you don't want to box yourself. Includes materials (boxes, paper, tape, blankets), fragile-item protection, and full inventory records. Add it to a same-day booking or schedule a packing-only crew the day before.",
@@ -82,6 +96,7 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
   },
   {
     slug:    'storage',
+    homeTile: { sub: 'Self & bonded', order: 60, photo: 'https://images.unsplash.com/photo-1591375372226-9aa92be1d6f4?auto=format&fit=crop&w=600&q=70' },
     name:    'Storage staging',
     tagline: 'Short-term and long-term storage between move dates',
     intro:   "Storage between two move dates — for staged interstate moves, between-leases gaps, or extended-trip travelers. Climate-controlled units, 24/7 access partners, and integrated load-and-store crews so you only pay one provider end-to-end.",
@@ -98,6 +113,7 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
   },
   {
     slug:    'office',
+    homeTile: { sub: 'For businesses', order: 40, photo: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=70' },
     name:    'Office relocation',
     tagline: 'Workplace moves with weekend / out-of-hours options',
     intro:   "Workplace relocations done over a weekend or after-hours so the team is back at desks Monday morning. Includes IT decommissioning, asset tagging, secure document transit, and certificate-of-destruction options for old hardware.",
@@ -132,6 +148,7 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
   },
   {
     slug:    'international',
+    homeTile: { sub: 'Cross-border', order: 30, photo: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=600&q=70' },
     name:    'International relocation',
     tagline: 'Cross-border relocations with customs + freight forwarding',
     intro:   "Cross-border relocations coordinated through licensed international freight forwarders. Air, sea, and road consolidation; HS-code customs clearance; door-to-door insured transit; and a dedicated coordinator for every shipment.",
@@ -149,6 +166,7 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
   },
   {
     slug:    'truck-rental',
+    homeTile: { sub: 'DIY-friendly', order: 70, photo: 'https://images.unsplash.com/photo-1601581875309-fafbf2d3ed3a?auto=format&fit=crop&w=600&q=70' },
     name:    'Truck rental',
     tagline: 'DIY-friendly trucks with optional crew add-ons',
     intro:   "Rent a truck, drive yourself, save the labour line on your quote. Box trucks, lutons, and panel vans across all six markets — partnered with U-Haul, Penske, Enterprise, Sixt, and Movecar so you book through one funnel.",
@@ -166,6 +184,7 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
   },
   {
     slug:    'student',
+    homeTile: { sub: 'University corridors', order: 80, photo: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=600&q=70' },
     name:    'Student relocation',
     tagline: 'University-corridor moves, term-aware scheduling, summer-storage included',
     intro:   "Relocations for students moving in / out of halls, between universities, or onto a year abroad. Term-aware scheduling, university-corridor pricing, summer-storage add-ons, and ID-verified providers around campus zones.",
