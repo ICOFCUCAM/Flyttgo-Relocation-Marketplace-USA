@@ -1,6 +1,6 @@
 import { useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import {
-  ShieldCheck, BadgeCheck, Truck, CreditCard, Cookie,
+  ShieldCheck, BadgeCheck, CreditCard, Cookie,
   Linkedin, Twitter, Instagram, Mail, Phone, Globe, Lock, ArrowRight,
 } from 'lucide-react';
 import { useApp, Page } from '../lib/store';
@@ -185,9 +185,11 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid lg:grid-cols-12 gap-10">
           <div className="lg:col-span-5">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-9 h-9 bg-amber-400 rounded-lg flex items-center justify-center text-slate-900">
-                <Truck size={18} />
-              </div>
+              <img
+                src="/logo-mark.png"
+                alt="FlyttGo"
+                className="w-9 h-9 rounded-lg object-contain bg-white"
+              />
               <span className="text-xl font-extrabold text-white tracking-tight">
                 Flytt<span className="text-amber-300">Go</span>
               </span>
