@@ -18,6 +18,9 @@ interface UserProfile {
   role: "customer" | "driver" | "business" | "admin";
   phone?: string;
   avatar_url?: string;
+  /** Super-admin tier (install-admin-bookings-rbac.sql) — only true
+   *  for admins who can DELETE bookings + accounts. */
+  is_super_admin?: boolean;
 }
 
 /* Standard supabase-js auth result shape: every signIn/signUp helper

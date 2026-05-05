@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { toast } from 'sonner';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { downloadCsv, safeNumber } from '../utils';
 import {
   useAutoDispatch,
@@ -8,6 +10,9 @@ import {
 } from '../../../hooks/queries/useAdminDashboard';
 import type { BookingRow } from '../../../services/admin';
 import type { AdminPanelHandlers } from '../types';
+import { useAuth } from '../../../lib/auth';
+import { superAdminDeleteBooking } from '../../../services/adminBookings';
+import AdminBookingFormModal from '../modals/AdminBookingFormModal';
 
 const RECLAIM_REASONS: Record<string, string> = {
   no_candidates:         'No eligible drivers found within 15 km. Use manual Dispatch to override.',
@@ -27,6 +32,20 @@ export function BookingsTab({
   const reclaimStale    = useReclaimStaleDispatches();
   const releasePayment  = useReleaseBookingPayment();
   const refundPayment   = useRefundBookingPayment();
+
+  const { user, profile } = useAuth();
+  const isSuperAdmin = profile?.is_super_admin === true;
+  const [formMode, setFormMode] = useState<{ mode: 'create' | 'edit'; booking?: BookingRow } | null>(null);
+
+  async function runDelete(b: BookingRow) {
+    if (!confirm(`Permanently delete booking ${b.id.slice(0, 8)}? This cannot be undone.`)) return;
+    try {
+      await superAdminDeleteBooking(b.id);
+      toast.success('Booking deleted');
+    } catch (e) {
+      toast.error('Delete failed', { description: e instanceof Error ? e.message : '' });
+    }
+  }
 
   function exportCsv() {
     const rows = bookings.map(b => ({
@@ -97,6 +116,13 @@ export function BookingsTab({
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <h1 className="text-xl font-bold">Bookings ({bookings.length})</h1>
         <div className="flex gap-2">
+          <button
+            onClick={() => setFormMode({ mode: 'create' })}
+            className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded text-xs font-semibold"
+            title="Create a booking on behalf of a customer and email them the payment link"
+          >
+            <Plus className="w-3.5 h-3.5" /> New booking
+          </button>
           <button
             onClick={runReclaim}
             disabled={reclaimStale.isPending}
@@ -196,11 +222,40 @@ export function BookingsTab({
                 >
                   Timeline
                 </button>
+                <button
+                  onClick={() => setFormMode({ mode: 'edit', booking: b })}
+                  className="inline-flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-white px-2 py-1 text-xs rounded"
+                  title="Edit booking — sends the change to the customer for confirmation before it takes effect"
+                >
+                  <Pencil className="w-3 h-3" /> Edit
+                </button>
+                {/* Delete is gated to super-admins — RLS rejects it
+                 *  for regular admins server-side, so we hide the
+                 *  button here to avoid the dead-end click. */}
+                {isSuperAdmin && (
+                  <button
+                    onClick={() => runDelete(b)}
+                    className="inline-flex items-center gap-1 bg-red-700 hover:bg-red-800 text-white px-2 py-1 text-xs rounded"
+                    title="Super-admin only — permanent delete"
+                  >
+                    <Trash2 className="w-3 h-3" /> Delete
+                  </button>
+                )}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+
+      {formMode && user && (
+        <AdminBookingFormModal
+          mode={formMode.mode}
+          booking={formMode.booking}
+          adminUserId={user.id}
+          onClose={() => setFormMode(null)}
+          onSuccess={() => { /* the snapshot refetcher in the shell picks it up */ }}
+        />
+      )}
     </div>
   );
 }

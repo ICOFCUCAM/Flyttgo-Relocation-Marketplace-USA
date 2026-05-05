@@ -36,7 +36,14 @@
 import { serve } from 'https://deno.land/std@0.208.0/http/server.ts';
 
 interface EmailRequest {
-  template: 'booking_confirmed' | 'driver_assigned' | 'delivery_complete' | 'payment_released' | 'reset_password';
+  template:
+    | 'booking_confirmed'
+    | 'driver_assigned'
+    | 'delivery_complete'
+    | 'payment_released'
+    | 'reset_password'
+    | 'admin_payment_link'
+    | 'admin_edit_request';
   to: string;
   bookingId?: string;
   data?: Record<string, unknown>;
@@ -118,6 +125,61 @@ function tplResetPassword(d: Record<string, unknown>): TemplateOutput {
   };
 }
 
+/* Admin created a booking on behalf of the customer — sends a
+ * Stripe-Checkout payment link to the customer's email. */
+function tplAdminPaymentLink(d: Record<string, unknown>): TemplateOutput {
+  const pickup   = String(d.pickupAddress  ?? 'TBC');
+  const dropoff  = String(d.dropoffAddress ?? 'TBC');
+  const moveDate = String(d.moveDate       ?? 'TBC');
+  const price    = String(d.price          ?? '—');
+  const link     = String(d.paymentLink    ?? 'https://flyttgo.us/payment');
+  return {
+    subject: 'Complete your FlyttGo booking — payment link inside',
+    text: `Your FlyttGo team has prepared a booking for you.\n\nPickup: ${pickup}\nDelivery: ${dropoff}\nDate: ${moveDate}\nPrice: ${price}\n\nComplete payment here: ${link}\n\nThe booking confirms automatically once payment clears.`,
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: auto; color: #1a1a1a;">
+        <div style="background: linear-gradient(135deg, #0b1f3a, #1a4a8a); color: white; padding: 24px; border-radius: 12px 12px 0 0;">
+          <h1 style="margin: 0; font-size: 22px;">Your booking is ready — pay to confirm</h1>
+          <p style="margin: 4px 0 0; opacity: 0.85; font-size: 14px;">FlyttGo · Global relocation marketplace</p>
+        </div>
+        <div style="border: 1px solid #e5e7eb; border-top: 0; padding: 24px; border-radius: 0 0 12px 12px;">
+          <p>Your FlyttGo team prepared this booking on your behalf. Review the details and complete payment to confirm — we'll match you with a verified driver right after.</p>
+          <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+            <tr><td style="padding: 8px 0; color: #6b7280;">Pickup</td><td style="padding: 8px 0; font-weight: 600;">${pickup}</td></tr>
+            <tr><td style="padding: 8px 0; color: #6b7280;">Delivery</td><td style="padding: 8px 0; font-weight: 600;">${dropoff}</td></tr>
+            <tr><td style="padding: 8px 0; color: #6b7280;">Date</td><td style="padding: 8px 0; font-weight: 600;">${moveDate}</td></tr>
+            <tr><td style="padding: 8px 0; color: #6b7280;">Total</td><td style="padding: 8px 0; font-weight: 600;">${price}</td></tr>
+          </table>
+          <a href="${link}" style="display: inline-block; padding: 14px 28px; background: #f59e0b; color: #0b1f3a; text-decoration: none; border-radius: 10px; font-weight: 700;">Complete payment →</a>
+          <p style="color: #9ca3af; font-size: 12px; margin-top: 24px;">Payment held in escrow until your move completes — released to the driver only after both sides confirm.</p>
+        </div>
+      </div>`,
+  };
+}
+
+/* Admin staged a change to an existing booking — asks the customer
+ * to review + approve it on the dashboard. */
+function tplAdminEditRequest(d: Record<string, unknown>): TemplateOutput {
+  const link  = String(d.reviewLink ?? 'https://flyttgo.us/dashboard');
+  const refId = String(d.bookingId  ?? '').slice(0, 8).toUpperCase();
+  return {
+    subject: `Action needed — please confirm changes to booking ${refId}`,
+    text: `Your FlyttGo team has requested a change to booking ${refId}. Review and approve or decline at: ${link}\n\nThe change won't take effect until you confirm.`,
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: auto; color: #1a1a1a;">
+        <div style="background: linear-gradient(135deg, #92400e, #f59e0b); color: white; padding: 24px; border-radius: 12px 12px 0 0;">
+          <h1 style="margin: 0; font-size: 22px;">Confirm changes to your booking</h1>
+          <p style="margin: 4px 0 0; opacity: 0.85; font-size: 14px;">Booking #${refId}</p>
+        </div>
+        <div style="border: 1px solid #e5e7eb; border-top: 0; padding: 24px; border-radius: 0 0 12px 12px;">
+          <p>Your FlyttGo team requested a change to your booking. Open your dashboard to see the proposed update and approve or decline — the change won't take effect until you confirm.</p>
+          <a href="${link}" style="display: inline-block; padding: 12px 24px; background: #0b1f3a; color: white; text-decoration: none; border-radius: 10px; font-weight: 700; margin-top: 8px;">Review changes →</a>
+          <p style="color: #9ca3af; font-size: 12px; margin-top: 24px;">If you didn't request this, contact support immediately at support@flyttgo.us.</p>
+        </div>
+      </div>`,
+  };
+}
+
 function buildTemplate(template: EmailRequest['template'], data: Record<string, unknown> = {}): TemplateOutput {
   switch (template) {
     case 'booking_confirmed': return tplBookingConfirmed(data);
@@ -125,6 +187,8 @@ function buildTemplate(template: EmailRequest['template'], data: Record<string, 
     case 'delivery_complete': return tplDeliveryComplete(data);
     case 'payment_released':  return tplPaymentReleased(data);
     case 'reset_password':    return tplResetPassword(data);
+    case 'admin_payment_link': return tplAdminPaymentLink(data);
+    case 'admin_edit_request': return tplAdminEditRequest(data);
     default: throw new Error(`Unknown template: ${template}`);
   }
 }

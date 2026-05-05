@@ -3,6 +3,7 @@ import { FOCUS_RING, FOCUS_RING_TIGHT } from './ds';
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../lib/auth";
 import { useApp } from "../lib/store";
+import PendingAdminEditBanner from "./customer/PendingAdminEditBanner";
 import {
   useCustomerBookings,
   useActiveBookingEscrow,
@@ -131,6 +132,10 @@ export default function CustomerDashboard() {
           <h1 className="text-3xl font-bold text-gray-900">{t('dashboard.welcome', { name: profile?.first_name || 'Customer' })}</h1>
           <p className="text-gray-600 mt-1">{t('dashboard.trackMove')}</p>
         </div>
+
+        {/* Pending admin edits — only renders when there's at least one
+         *  booking with admin-staged changes awaiting customer approval. */}
+        {user && <PendingAdminEditBanner customerId={user.id} />}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[{ label: t('dashboard.totalBookings'), value: stats.total }, { label: t('dashboard.active'), value: stats.active }, { label: t('dashboard.completed'), value: stats.completed }, { label: t('dashboard.totalSpent'), value: `${fmt(stats.spent)} USD` }].map(s => (
             <div key={s.label} className="bg-white rounded-xl p-5 border">

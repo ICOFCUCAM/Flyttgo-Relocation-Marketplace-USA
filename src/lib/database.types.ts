@@ -148,6 +148,19 @@ export interface BookingRow {
   customer_confirmation: boolean | null;
   driver_confirmation:   boolean | null;
 
+  /* ── Admin booking management (install-admin-bookings-rbac.sql) ──
+   * When `pending_edit_status = 'pending_customer_approval'` the row
+   * has uncommitted changes staged in `pending_admin_edits`; the
+   * customer must approve via the approve_pending_admin_edit RPC
+   * for them to merge into the live columns. */
+  created_by_admin?:           boolean | null;
+  created_by_admin_user_id?:   UUID | null;
+  pending_admin_edits?:        JsonObject | null;
+  pending_edit_status?:        'pending_customer_approval' | 'declined' | null;
+  pending_edit_requested_by?:  UUID | null;
+  pending_edit_requested_at?:  Timestamptz | null;
+  pending_edit_resolved_at?:   Timestamptz | null;
+
   /* Optional realtime fields written by the driver beacon. Read by
    * TrackingPage to seed the live map; tolerable as null when no
    * position has been captured yet. */
@@ -224,6 +237,10 @@ export interface ProfileRow {
   avatar_url: string | null;
   role:       ProfileRole;
   created_at: Timestamptz;
+  /** Super-admin tier (install-admin-bookings-rbac.sql). Only true
+   *  for admins who are also super-admins; gates DELETE on bookings
+   *  + accounts. Falsy/missing means regular admin. */
+  is_super_admin?: boolean;
 }
 
 export type ProfileUpdate = Partial<ProfileRow>;
