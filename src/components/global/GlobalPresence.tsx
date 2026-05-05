@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Globe, ShieldCheck, Banknote, Building2 } from 'lucide-react';
 import { COUNTRY_PROFILES } from '../../lib/country-profiles';
+import { usePublicMarketplaceStats } from '../../hooks/usePublicMarketplaceStats';
 
 /**
  * <GlobalPresence>
@@ -28,24 +29,29 @@ import { COUNTRY_PROFILES } from '../../lib/country-profiles';
  * here — wiring left to a follow-up if desired).
  */
 export default function GlobalPresence() {
-  /* Derive live counts from the canonical rollout source so the
-   * panel doesn't drift out of sync as markets unlock. */
-  const stats = useMemo(() => {
-    const liveCountries = COUNTRY_PROFILES.length;
-    const currencies    = new Set(COUNTRY_PROFILES.map(c => c.currency)).size;
-    return { liveCountries, currencies };
-  }, []);
+  /* Two sources, composed:
+   *   - rollout config (COUNTRY_PROFILES) for the structural counts
+   *     that don't move minute-to-minute (markets, currencies)
+   *   - live SQL view for the operational counts the platform's
+   *     activity actually reflects (approved providers, recent
+   *     bookings). Falls back to config-derived numbers in the
+   *     fraction of a second before the network round-trip lands. */
+  const live   = usePublicMarketplaceStats();
+  const config = useMemo(() => ({
+    countries:   COUNTRY_PROFILES.length,
+    currencies:  new Set(COUNTRY_PROFILES.map(c => c.currency)).size,
+  }), []);
 
   const items = [
     {
       icon:  Globe,
-      value: `${stats.liveCountries}`,
+      value: `${live.countriesTotal || config.countries}`,
       label: 'Markets activated',
       caption: 'Across North America, Europe, MENA & Africa',
     },
     {
       icon:  Banknote,
-      value: `${stats.currencies}`,
+      value: `${live.currenciesTotal || config.currencies}`,
       label: 'Currencies supported',
       caption: 'Native settlement, no forced USD conversion',
     },
