@@ -9,6 +9,7 @@ import {
   useActiveBookingForCustomer,
   useTrackingBookingSearch,
   useTrackingDriver,
+  useBookingRealtime,
 } from '../hooks/queries/useCustomerBookings';
 
 interface Stage { label: string; time: string; done: boolean; icon: string; }
@@ -60,6 +61,11 @@ export default function TrackingPage() {
   const { data: activeBooking } = useActiveBookingForCustomer(user?.id);
   const { data: searchedBooking, isFetching: searchLoading } = useTrackingBookingSearch(searchTerm);
   const booking = searchTerm ? searchedBooking ?? null : activeBooking ?? null;
+
+  /* Live realtime stream — the moment dispatch flips status or the
+   * driver beacon writes a new lat/lng, the React Query cache for
+   * this booking is invalidated and the map + timeline re-render. */
+  useBookingRealtime(booking?.id ?? null);
 
   /* Pull real driver context for the tracking card. driver_id is
    * populated when dispatch has matched a booking; while it's null

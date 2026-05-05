@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '../../lib/supabase';
 import {
   listBookingsForCustomer,
   getEscrowForBooking,
@@ -153,6 +155,37 @@ export function useTrackingBookingSearch(idQuery: string) {
     enabled:  !!idQuery,
     queryFn:  () => findBookingByIdQuery(idQuery),
   });
+}
+
+/**
+ * Subscribe to live updates on a single bookings row. Invalidates
+ * any React Query keys that might cache it (active + tracked) so
+ * the tracking page re-renders the moment the driver beacon writes
+ * a new lat/lng or the dispatch flips status.
+ *
+ * No-op when bookingId is null — safe to call from a render path
+ * that may or may not have a tracked booking yet.
+ */
+export function useBookingRealtime(bookingId: string | null | undefined): void {
+  const qc = useQueryClient();
+  useEffect(() => {
+    if (!bookingId) return undefined;
+    const channel = supabase
+      .channel(`booking-${bookingId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'bookings', filter: `id=eq.${bookingId}` },
+        () => {
+          /* Bust both possible cache keys — the booking might be
+           * cached as the customer's active row OR as a searched
+           * row. Cheap to invalidate both. */
+          qc.invalidateQueries({ queryKey: ['bookings', 'active'] });
+          qc.invalidateQueries({ queryKey: trackedBookingKey(bookingId) });
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [bookingId, qc]);
 }
 
 /* ── Driver lookup for the tracking page ───────────────────────── */
