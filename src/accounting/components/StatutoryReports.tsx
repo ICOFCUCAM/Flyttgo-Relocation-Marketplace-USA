@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Loader2, FileDown } from 'lucide-react';
 import {
-  fetchTrialBalance, fetchIncomeStatement, fetchBalanceSheet,
+  fetchTrialBalance, fetchIncomeStatement, fetchBalanceSheet, fetchCashFlow,
 } from '../service';
 import { exportCsv, exportWord, exportPdf } from '../exports';
 import type {
-  BalanceSheetRow, IncomeStatementRow, Jurisdiction, TrialBalanceRow,
+  BalanceSheetRow, CashFlowRow, IncomeStatementRow, Jurisdiction, TrialBalanceRow,
 } from '../types';
 
-type Tab = 'tb' | 'is' | 'bs';
+type Tab = 'tb' | 'is' | 'bs' | 'cf';
 
 /**
  * AC.03 Reports — three tabbed statutory views: trial balance,
@@ -23,6 +23,7 @@ export default function StatutoryReports({ jurisdiction }: { jurisdiction: Juris
   const [tb, setTb] = useState<TrialBalanceRow[]>([]);
   const [is, setIs] = useState<IncomeStatementRow[]>([]);
   const [bs, setBs] = useState<BalanceSheetRow[]>([]);
+  const [cf, setCf] = useState<CashFlowRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,13 +31,17 @@ export default function StatutoryReports({ jurisdiction }: { jurisdiction: Juris
     (async () => {
       setLoading(true);
       try {
-        const [t, i, b] = await Promise.all([
+        /* Cash flow always reads PLATFORM (the marketplace's own
+         * books). Trial balance / IS / BS read the selected tenant
+         * jurisdiction. */
+        const [t, i, b, c] = await Promise.all([
           fetchTrialBalance(jurisdiction),
           fetchIncomeStatement(jurisdiction),
           fetchBalanceSheet(jurisdiction),
+          fetchCashFlow('PLATFORM'),
         ]);
         if (cancelled) return;
-        setTb(t); setIs(i); setBs(b);
+        setTb(t); setIs(i); setBs(b); setCf(c);
       } finally { if (!cancelled) setLoading(false); }
     })();
     return () => { cancelled = true; };
@@ -50,6 +55,7 @@ export default function StatutoryReports({ jurisdiction }: { jurisdiction: Juris
             { id: 'tb' as Tab, label: 'Trial Balance' },
             { id: 'is' as Tab, label: 'Income Statement' },
             { id: 'bs' as Tab, label: 'Balance Sheet' },
+            { id: 'cf' as Tab, label: 'Cash Flow' },
           ]).map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
               className={`px-3 py-1.5 transition ${
@@ -62,7 +68,7 @@ export default function StatutoryReports({ jurisdiction }: { jurisdiction: Juris
         <ReportExportButtons
           jurisdiction={jurisdiction}
           tab={tab}
-          tbRows={tb} isRows={is} bsRows={bs}
+          tbRows={tb} isRows={is} bsRows={bs} cfRows={cf}
         />
       </div>
 
@@ -72,8 +78,88 @@ export default function StatutoryReports({ jurisdiction }: { jurisdiction: Juris
         </p>
       ) : tab === 'tb' ? <TrialBalanceTable rows={tb} />
         : tab === 'is' ? <IncomeStatementTable rows={is} />
-        : <BalanceSheetTable rows={bs} />}
+        : tab === 'bs' ? <BalanceSheetTable rows={bs} />
+        :                <CashFlowTable rows={cf} />}
     </div>
+  );
+}
+
+/* ── Cash flow table ──────────────────────────────────── */
+
+function CashFlowTable({ rows }: { rows: CashFlowRow[] }) {
+  if (rows.length === 0) return <p className="text-slate-500 text-sm">No cash movements posted yet — entries appear here automatically as bookings settle.</p>;
+  const groups = {
+    operating: rows.filter(r => r.activity_section === 'operating'),
+    investing: rows.filter(r => r.activity_section === 'investing'),
+    financing: rows.filter(r => r.activity_section === 'financing'),
+  };
+  const sum = (rs: CashFlowRow[]) => rs.reduce((s, r) => s + Number(r.cash_delta ?? 0), 0);
+  const opTotal  = sum(groups.operating);
+  const invTotal = sum(groups.investing);
+  const finTotal = sum(groups.financing);
+  const net = opTotal + invTotal + finTotal;
+
+  return (
+    <div className="overflow-x-auto border border-slate-200 rounded-lg">
+      <table className="w-full text-sm">
+        <thead className="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 font-mono">
+          <tr>
+            <th className="text-left  px-3 py-2">Date</th>
+            <th className="text-left  px-3 py-2">Description</th>
+            <th className="text-left  px-3 py-2">Source</th>
+            <th className="text-right px-3 py-2">Δ Cash</th>
+          </tr>
+        </thead>
+        <tbody className="tabular-nums">
+          {(['operating','investing','financing'] as const).map(section => {
+            const list = groups[section];
+            if (list.length === 0) return null;
+            return (
+              <CashFlowSection
+                key={section}
+                label={section.toUpperCase()}
+                rows={list}
+                total={sum(list)}
+              />
+            );
+          })}
+        </tbody>
+        <tfoot>
+          <tr className="border-t-2 border-slate-300 font-extrabold">
+            <td colSpan={3} className="px-3 py-2 text-sm">NET CHANGE IN CASH</td>
+            <td className={`px-3 py-2 text-right ${net >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
+              {net.toFixed(2)}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  );
+}
+
+function CashFlowSection({
+  label, rows, total,
+}: { label: string; rows: CashFlowRow[]; total: number }) {
+  return (
+    <>
+      <tr className="bg-slate-50 text-[10px] uppercase tracking-[0.18em] font-mono text-slate-500">
+        <td colSpan={4} className="px-3 py-1.5">{label}</td>
+      </tr>
+      {rows.map(r => (
+        <tr key={r.entry_id} className="border-t border-slate-100">
+          <td className="px-3 py-1.5 font-mono text-xs">{r.entry_date}</td>
+          <td className="px-3 py-1.5 truncate max-w-[400px]">{r.description}</td>
+          <td className="px-3 py-1.5 text-slate-500 text-xs">{(r.source_type ?? 'manual').replace(/_/g, ' ')}</td>
+          <td className={`px-3 py-1.5 text-right ${r.cash_delta >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
+            {Number(r.cash_delta).toFixed(2)}
+          </td>
+        </tr>
+      ))}
+      <tr className="border-t border-slate-200 font-bold">
+        <td colSpan={3} className="px-3 py-1.5">Subtotal — {label.toLowerCase()}</td>
+        <td className="px-3 py-1.5 text-right">{total.toFixed(2)}</td>
+      </tr>
+    </>
   );
 }
 
@@ -269,10 +355,11 @@ function Subtotal({ label, value }: { label: string; value: number }) {
 /* ── Export buttons ─────────────────────────────────── */
 
 function ReportExportButtons({
-  jurisdiction, tab, tbRows, isRows, bsRows,
+  jurisdiction, tab, tbRows, isRows, bsRows, cfRows,
 }: {
   jurisdiction: Jurisdiction; tab: Tab;
   tbRows: TrialBalanceRow[]; isRows: IncomeStatementRow[]; bsRows: BalanceSheetRow[];
+  cfRows: CashFlowRow[];
 }) {
   const today = new Date().toISOString().slice(0, 10);
 
@@ -301,7 +388,7 @@ function ReportExportButtons({
       const fname = `flyttgo-income-statement-${jurisdiction}-${today}`;
       if (format === 'csv') exportCsv(fname, isRows, cols);
       else                  exportWord(fname, `Income Statement · ${jurisdiction}`, isRows, cols);
-    } else {
+    } else if (tab === 'bs') {
       const cols = [
         { header: 'Code',    value: (r: BalanceSheetRow) => r.account_code },
         { header: 'Account', value: (r: BalanceSheetRow) => r.account_name },
@@ -311,6 +398,17 @@ function ReportExportButtons({
       const fname = `flyttgo-balance-sheet-${jurisdiction}-${today}`;
       if (format === 'csv') exportCsv(fname, bsRows, cols);
       else                  exportWord(fname, `Balance Sheet · ${jurisdiction}`, bsRows, cols);
+    } else {
+      const cols = [
+        { header: 'Date',        value: (r: CashFlowRow) => r.entry_date },
+        { header: 'Description', value: (r: CashFlowRow) => r.description },
+        { header: 'Section',     value: (r: CashFlowRow) => r.activity_section },
+        { header: 'Source',      value: (r: CashFlowRow) => r.source_type ?? 'manual' },
+        { header: 'Δ Cash',      value: (r: CashFlowRow) => r.cash_delta, numeric: true },
+      ];
+      const fname = `flyttgo-cash-flow-PLATFORM-${today}`;
+      if (format === 'csv') exportCsv(fname, cfRows, cols);
+      else                  exportWord(fname, 'Cash Flow Statement · PLATFORM', cfRows, cols);
     }
   }
 

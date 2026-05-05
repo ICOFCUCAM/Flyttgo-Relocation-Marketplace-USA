@@ -187,7 +187,7 @@ export const TEMPLATES: Record<string, AccountTemplate[]> = {
 };
 
 export interface JurisdictionMeta {
-  code:          'NO' | 'GB' | 'US' | 'IFRS';
+  code:          'NO' | 'GB' | 'US' | 'IFRS' | 'PLATFORM';
   display_name:  string;
   base_currency: string;
   locale:        string;
@@ -195,8 +195,12 @@ export interface JurisdictionMeta {
 }
 
 export const JURISDICTIONS: JurisdictionMeta[] = [
+  /* Tenant jurisdictions — operators of regulated entities. */
+  { code: 'US',   display_name: 'United States',         base_currency: 'USD', locale: 'en-US', vat_regime: 'US'   },
   { code: 'NO',   display_name: 'Norway',                base_currency: 'NOK', locale: 'nb-NO', vat_regime: 'NO'   },
   { code: 'GB',   display_name: 'United Kingdom',        base_currency: 'GBP', locale: 'en-GB', vat_regime: 'GB'   },
-  { code: 'US',   display_name: 'United States',         base_currency: 'USD', locale: 'en-US', vat_regime: 'US'   },
   { code: 'IFRS', display_name: 'IFRS (international)',  base_currency: 'USD', locale: 'en',    vat_regime: 'IFRS' },
+  /* Platform — the marketplace's own books. Auto-posting triggers
+   * write here on every booking / subscription / refund. */
+  { code: 'PLATFORM', display_name: 'FlyttGo platform (auto)', base_currency: 'USD', locale: 'en', vat_regime: 'IFRS' },
 ];

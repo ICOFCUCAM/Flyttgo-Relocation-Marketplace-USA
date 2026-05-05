@@ -1,6 +1,6 @@
 /* Domain types shared across the accounting subsystem. */
 
-export type Jurisdiction      = 'NO' | 'GB' | 'US' | 'IFRS';
+export type Jurisdiction      = 'NO' | 'GB' | 'US' | 'IFRS' | 'PLATFORM';
 export type AccountType       = 'asset' | 'liability' | 'equity' | 'income' | 'expense';
 export type JournalStatus     = 'draft' | 'posted' | 'reversed' | 'adjusted';
 export type FinanceRole       = 'super_admin' | 'admin' | 'accountant' | 'auditor' | 'finance_viewer';
@@ -20,6 +20,14 @@ export interface AccountRow {
   updated_at:   string;
 }
 
+export type JournalSourceType =
+  | 'manual'
+  | 'booking_escrow_held'
+  | 'booking_escrow_released'
+  | 'booking_refund'
+  | 'subscription_payment'
+  | 'adjustment';
+
 export interface JournalEntryRow {
   id:             string;
   jurisdiction:   Jurisdiction;
@@ -34,8 +42,46 @@ export interface JournalEntryRow {
   posted_by:      string | null;
   posted_at:      string | null;
   reversed_by_id: string | null;
+  source_type:    JournalSourceType | null;
+  source_id:      string | null;
   created_at:     string;
   updated_at:     string;
+}
+
+export interface CashFlowRow {
+  jurisdiction:     Jurisdiction;
+  fiscal_year:      number;
+  fiscal_period:    number;
+  entry_date:       string;
+  entry_id:         string;
+  description:      string;
+  source_type:      JournalSourceType | null;
+  cash_delta:       number;
+  activity_section: 'operating' | 'investing' | 'financing';
+}
+
+export interface ProviderPayoutRow {
+  driver_id:      string;
+  driver_name:    string | null;
+  driver_country: string | null;
+  month:          string;
+  payout_count:   number;
+  gross_paid:     number;
+  credits_issued: number;
+  total_movement: number;
+}
+
+export interface ReconciliationRow {
+  booking_id:         string;
+  booking_created_at: string;
+  payment_status:     string;
+  booking_amount:     number;
+  entry_id:           string | null;
+  posted_at:          string | null;
+  source_type:        JournalSourceType | null;
+  ledger_debit:       number;
+  ledger_credit:      number;
+  has_mismatch:       boolean;
 }
 
 export interface JournalLineRow {

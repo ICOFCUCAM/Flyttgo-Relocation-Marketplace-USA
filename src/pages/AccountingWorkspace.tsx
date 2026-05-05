@@ -249,18 +249,34 @@ function JournalLog({
             <th className="text-left  px-3 py-2">Number</th>
             <th className="text-left  px-3 py-2">Date</th>
             <th className="text-left  px-3 py-2">Description</th>
-            <th className="text-left  px-3 py-2">Reference</th>
+            <th className="text-left  px-3 py-2">Source</th>
             <th className="text-left  px-3 py-2">Status</th>
             <th className="text-left  px-3 py-2">Posted</th>
           </tr>
         </thead>
         <tbody className="tabular-nums">
-          {entries.map(e => (
+          {entries.map(e => {
+            /* Auto-posted entries show the originating event
+             * (booking_escrow_held / booking_escrow_released /
+             * booking_refund / subscription_payment) so the
+             * accountant can see what triggered the entry. Manual
+             * entries fall back to the reference text. */
+            const isAuto = !!e.source_type && e.source_type !== 'manual';
+            return (
             <tr key={e.id} className="border-t border-slate-100 hover:bg-slate-50">
               <td className="px-3 py-2 font-mono">{e.entry_number}</td>
               <td className="px-3 py-2">{e.entry_date}</td>
               <td className="px-3 py-2">{e.description}</td>
-              <td className="px-3 py-2 text-slate-500">{e.reference || '—'}</td>
+              <td className="px-3 py-2">
+                {isAuto ? (
+                  <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700"
+                        title={`Auto-posted from ${e.source_type}`}>
+                    auto · {(e.source_type ?? '').replace('booking_', '').replace(/_/g, ' ')}
+                  </span>
+                ) : (
+                  <span className="text-slate-500 text-xs">{e.reference || '—'}</span>
+                )}
+              </td>
               <td className="px-3 py-2">
                 <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                   e.status === 'posted'   ? 'bg-emerald-100 text-emerald-700' :
@@ -273,7 +289,8 @@ function JournalLog({
                 {e.posted_at ? new Date(e.posted_at).toLocaleDateString() : '—'}
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>

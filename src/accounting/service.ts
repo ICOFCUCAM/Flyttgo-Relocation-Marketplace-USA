@@ -11,9 +11,10 @@ import { supabase } from '../lib/supabase';
 import { TEMPLATES } from './templates';
 import type {
   AccountRow, AccountingSettingsRow, AuditAnnotationRow,
-  BalanceSheetRow, ExchangeRateRow, FinanceRole, GeneralLedgerRow,
+  BalanceSheetRow, CashFlowRow, ExchangeRateRow, FinanceRole, GeneralLedgerRow,
   IncomeStatementRow, Jurisdiction, JournalEntryRow, JournalLineRow,
-  PostJournalEntryInput, TaxCodeRow, TrialBalanceRow,
+  PostJournalEntryInput, ProviderPayoutRow, ReconciliationRow,
+  TaxCodeRow, TrialBalanceRow,
   UsersRoleRow, VatRateRow,
 } from './types';
 
@@ -300,6 +301,35 @@ export async function fetchBalanceSheet(jurisdiction: Jurisdiction): Promise<Bal
     .eq('jurisdiction', jurisdiction);
   if (error) throw error;
   return (data ?? []) as BalanceSheetRow[];
+}
+
+/* ── Auto-posting reports (Phase: financial engine) ───────── */
+
+export async function fetchCashFlow(jurisdiction: Jurisdiction = 'PLATFORM'): Promise<CashFlowRow[]> {
+  const { data, error } = await supabase
+    .from('v_cash_flow_statement')
+    .select('*')
+    .eq('jurisdiction', jurisdiction)
+    .order('entry_date', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as CashFlowRow[];
+}
+
+export async function fetchProviderPayouts(): Promise<ProviderPayoutRow[]> {
+  const { data, error } = await supabase
+    .from('v_provider_payouts')
+    .select('*');
+  if (error) throw error;
+  return (data ?? []) as ProviderPayoutRow[];
+}
+
+export async function fetchReconciliation(): Promise<ReconciliationRow[]> {
+  const { data, error } = await supabase
+    .from('v_payment_reconciliation')
+    .select('*')
+    .limit(500);
+  if (error) throw error;
+  return (data ?? []) as ReconciliationRow[];
 }
 
 export async function fetchGeneralLedger(
