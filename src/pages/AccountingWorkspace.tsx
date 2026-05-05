@@ -6,6 +6,7 @@ import { useApp }  from '../lib/store';
 import { INPUT_FOCUS, FOCUS_RING } from '../components/ds';
 
 import WorkspaceShell, { type WorkspaceSection } from '../accounting/components/WorkspaceShell';
+import RolesAdmin from '../accounting/components/RolesAdmin';
 import {
   getMyFinanceRoles,
   getAccountingSettings, updateAccountingSettings,
@@ -41,23 +42,41 @@ export default function AccountingWorkspace() {
   const { user, profile, loading: authLoading } = useAuth();
   const { setPage } = useApp();
 
-  /* Authorisation gate. */
-  const [allowed,  setAllowed]  = useState<boolean | null>(null);
-  const [readOnly, setReadOnly] = useState(false);
+  /* Authorisation gate. Platform super-admins
+   * (profiles.is_super_admin) are honoured by the SQL bridge in
+   * fn_has_finance_role, so we treat profile.is_super_admin === true
+   * the same as a super_admin role row when deciding which sections
+   * to render. */
+  const [allowed,      setAllowed]      = useState<boolean | null>(null);
+  const [readOnly,     setReadOnly]     = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {
     if (authLoading) return undefined;
     if (!user) { setAllowed(false); return undefined; }
     let cancelled = false;
+    const platformSuper = profile?.is_super_admin === true;
     void getMyFinanceRoles(user.id).then(roles => {
       if (cancelled) return;
-      const editor = roles.includes('super_admin') || roles.includes('admin') || roles.includes('accountant');
+      const editor = platformSuper || roles.includes('super_admin') || roles.includes('admin') || roles.includes('accountant');
       const viewer = roles.includes('finance_viewer');
       setAllowed(editor || viewer);
       setReadOnly(!editor && viewer);
-    }).catch(() => { if (!cancelled) setAllowed(false); });
+      setIsSuperAdmin(platformSuper || roles.includes('super_admin'));
+    }).catch(() => {
+      if (cancelled) return;
+      /* Bridge fallback: platform super-admin still gets in even if
+       * the role-fetch query itself fails (RLS edge-case). */
+      if (platformSuper) {
+        setAllowed(true);
+        setReadOnly(false);
+        setIsSuperAdmin(true);
+      } else {
+        setAllowed(false);
+      }
+    });
     return () => { cancelled = true; };
-  }, [user, authLoading]);
+  }, [user, authLoading, profile?.is_super_admin]);
 
   /* Settings + jurisdiction context. */
   const [settings,    setSettings]    = useState<AccountingSettingsRow | null>(null);
@@ -180,6 +199,13 @@ export default function AccountingWorkspace() {
         />
       ),
     },
+    /* AC.07 Roles is rendered only for super-admins. Building the
+     * sections array via filter keeps the rail in sync with what's
+     * actually shown, without conditional indexes. */
+    ...(isSuperAdmin ? [{
+      code: 'AC.07', label: 'Roles',
+      body: <RolesAdmin />,
+    } as WorkspaceSection] : []),
   ];
 
   return (

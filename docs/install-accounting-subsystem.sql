@@ -338,11 +338,23 @@ end $$;
 
 create or replace function public.fn_has_finance_role(role_list text[]) returns boolean
 language sql stable as $$
-  select exists (
-    select 1 from public.users_roles
-    where user_id = auth.uid()
-      and role = any(role_list)
-  );
+  /* Bridge: platform super-admins (profiles.is_super_admin = true)
+   * are implicitly granted every finance role — they don't need a
+   * separate users_roles entry. Without this bridge the accounting
+   * subsystem would maintain a parallel role world that's invisible
+   * to the platform's existing admin tooling. */
+  select
+    exists (
+      select 1 from public.profiles
+       where user_id = auth.uid()
+         and role = 'admin'
+         and is_super_admin = true
+    )
+    or exists (
+      select 1 from public.users_roles
+       where user_id = auth.uid()
+         and role = any(role_list)
+    );
 $$;
 
 /* Helper for "any finance role" */

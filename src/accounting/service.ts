@@ -62,6 +62,51 @@ export async function revokeFinanceRole(
   if (error) throw error;
 }
 
+/* ── Email-based role administration ──────────────────────────
+ *
+ * Super-admin UI grants roles by email rather than by UUID. The
+ * find_user_by_email RPC is SECURITY DEFINER + admin-gated server
+ * side so non-admins can't enumerate the user table. */
+
+export interface FinanceRoleAssignment {
+  user_id:      string;
+  role:         FinanceRole;
+  jurisdiction: string;
+  granted_at:   string;
+  granted_by:   string | null;
+  user_email:   string | null;
+  first_name:   string | null;
+  last_name:    string | null;
+}
+
+export async function findUserByEmail(email: string): Promise<{ user_id: string; email: string } | null> {
+  const { data, error } = await supabase.rpc('find_user_by_email', { p_email: email.trim() });
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : null;
+  return row ? { user_id: row.user_id as string, email: row.email as string } : null;
+}
+
+export async function listRoleAssignments(): Promise<FinanceRoleAssignment[]> {
+  const { data, error } = await supabase
+    .from('v_finance_role_assignments')
+    .select('*')
+    .order('granted_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as FinanceRoleAssignment[];
+}
+
+/** Grant a role by email — convenience wrapper around
+ *  findUserByEmail + grantFinanceRole. Throws "User not found" if
+ *  no auth.users row matches. */
+export async function grantFinanceRoleByEmail(
+  email: string, role: FinanceRole, jurisdiction = '',
+): Promise<{ user_id: string; email: string }> {
+  const found = await findUserByEmail(email);
+  if (!found) throw new Error(`No user found for ${email}`);
+  await grantFinanceRole(found.user_id, role, jurisdiction);
+  return found;
+}
+
 /* ── Settings ────────────────────────────────────────────────── */
 
 export async function getAccountingSettings(): Promise<AccountingSettingsRow | null> {
