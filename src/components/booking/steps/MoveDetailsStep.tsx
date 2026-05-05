@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { FOCUS_RING, FOCUS_RING_TIGHT } from '../../ds';
 import { Check, Users } from 'lucide-react';
 import { VAN_TYPES } from '../../../lib/constants';
 

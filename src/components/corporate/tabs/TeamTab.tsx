@@ -1,3 +1,4 @@
+import { FOCUS_RING } from '../../ds';
 
 const MEMBERS = [
   { name: 'Ola Nordmann', role: 'Admin',   dept: 'Operations',   status: 'Active',  last: 'Now' },

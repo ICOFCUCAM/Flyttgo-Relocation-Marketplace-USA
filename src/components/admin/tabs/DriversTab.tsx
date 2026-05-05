@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { FOCUS_RING } from '../../ds';
 import { FileText } from 'lucide-react';
 import { downloadCsv } from '../utils';
 import {

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { FOCUS_RING, FOCUS_RING_TIGHT } from './ds';
 import { DollarSign } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../lib/auth';

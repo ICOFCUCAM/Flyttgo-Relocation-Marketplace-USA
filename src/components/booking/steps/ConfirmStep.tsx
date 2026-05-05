@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { FOCUS_RING } from '../../ds';
 import { CustomerLegalAcceptance } from '../../LegalAcceptance';
 import { formatAddress } from '../../../utils/formatAddress';
 import type { StructuredAddress } from '../types';

@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { FOCUS_RING } from '../../ds';
 import { toast } from 'sonner';
 import { safeNumber } from '../utils';
 import {

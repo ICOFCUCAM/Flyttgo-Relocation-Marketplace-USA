@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { FOCUS_RING, FOCUS_RING_TIGHT } from '../../ds';
 import { useTranslation } from 'react-i18next';
 import { INVENTORY_ITEMS, PROPERTY_PRESETS, VAN_TYPES, recommendVan } from '../../../lib/constants';
 

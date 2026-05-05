@@ -1,4 +1,5 @@
 import { Card } from '../Card';
+import { FOCUS_RING } from '../../ds';
 import { daysLeft } from '../utils';
 import type { WalletRow, SubscriptionRow } from '../../../services/driver';
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { FOCUS_RING, FOCUS_RING_TIGHT } from '../ds';
 import { Star, Truck, ShieldCheck, Award, ArrowRight, Zap, Flame } from 'lucide-react';
 import AddToCompareButton from './AddToCompareButton';
 import AvailabilityBadge from './AvailabilityBadge';

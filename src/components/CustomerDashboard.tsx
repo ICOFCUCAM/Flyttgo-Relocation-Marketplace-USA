@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { FOCUS_RING, FOCUS_RING_TIGHT } from './ds';
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../lib/auth";
 import { useApp } from "../lib/store";

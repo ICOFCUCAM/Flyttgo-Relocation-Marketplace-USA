@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { FOCUS_RING } from '../../ds';
 import { useApp } from '../../../lib/store';
 import { calculateProration, daysLeft } from '../utils';
 import { PLAN_OPTIONS, VAT_RATE, type PlanOption } from '../types';

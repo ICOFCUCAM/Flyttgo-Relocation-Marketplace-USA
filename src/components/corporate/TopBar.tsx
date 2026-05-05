@@ -1,4 +1,5 @@
 import { NAV_ITEMS, type DashTab } from './types';
+import { FOCUS_RING } from '../ds';
 
 export function TopBar({
   tab,

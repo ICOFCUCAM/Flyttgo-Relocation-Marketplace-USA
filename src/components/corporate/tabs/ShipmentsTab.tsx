@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { FOCUS_RING } from '../../ds';
 import { SHIPMENTS, STATUS_COLORS } from '../types';
 
 export function ShipmentsTab() {

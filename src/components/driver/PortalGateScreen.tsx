@@ -1,4 +1,5 @@
 import React from 'react';
+import { FOCUS_RING } from '../ds';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../../lib/store';
 import type { PortalGate } from './types';

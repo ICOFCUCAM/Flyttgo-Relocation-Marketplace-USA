@@ -1,4 +1,5 @@
 import { Star, MapPin, ArrowRight, Search } from 'lucide-react';
+import { FOCUS_RING } from '../ds';
 import { useApp } from '../../lib/store';
 import { DISCOVERY_PROVIDERS, type DiscoveryProvider } from '../../lib/discovery-providers';
 import { track } from '../../lib/analytics';

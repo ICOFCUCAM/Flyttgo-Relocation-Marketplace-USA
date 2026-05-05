@@ -1,3 +1,4 @@
+import { FOCUS_RING } from '../../ds';
 
 const SCHEDULES = [
   { name: 'Los Angeles Weekly Supply', freq: 'Every Monday 07:00',  route: 'New York → Los Angeles',                 status: 'Active', nextRun: 'Mon 07:00' },
