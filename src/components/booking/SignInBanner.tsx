@@ -1,3 +1,4 @@
+import { FOCUS_RING } from '../ds';
 
 export function SignInBanner({ onSignIn }: { onSignIn: () => void }) {
   return (
@@ -14,7 +15,7 @@ export function SignInBanner({ onSignIn }: { onSignIn: () => void }) {
       <button
         type="button"
         onClick={onSignIn}
-        className="flex-shrink-0 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+        className={`flex-shrink-0 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition ${FOCUS_RING}`}
       >
         Sign In
       </button>

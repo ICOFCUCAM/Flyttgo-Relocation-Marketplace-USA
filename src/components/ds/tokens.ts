@@ -24,6 +24,12 @@
 export const FOCUS_RING =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2';
 
+/** Tight variant — no offset. Use for inline text links and
+ *  controls that sit inside a tightly-bounded container where the
+ *  offset would clip against a sibling. Same colour, same width. */
+export const FOCUS_RING_TIGHT =
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400';
+
 /** Subtle press feedback for primary CTAs — translates 1px on
  *  active so the click registers physically without a colour shift
  *  that would conflict with the brand amber. */

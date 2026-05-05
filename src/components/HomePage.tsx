@@ -2,7 +2,7 @@ import { Star, ShieldCheck, Truck, Clock, BadgeCheck, MapPin, Users, MessageCirc
 import { useApp } from '../lib/store';
 import type { Page, BookingCountry } from '../lib/store';
 import { isoToMarketPage } from '../lib/pageRoutes';
-import { AnimatedNumber } from './ds';
+import { AnimatedNumber, FOCUS_RING, FOCUS_RING_TIGHT } from './ds';
 import { track } from '../lib/analytics';
 import PressStrip from './global/PressStrip';
 import CarbonOffset from './global/CarbonOffset';
@@ -178,7 +178,7 @@ export default function HomePage() {
                 <button
                   key={s.iso}
                   onClick={() => { track('country_tile_clicked', { country: s.iso, surface: 'home-hero' }); go(isoToMarketPage(s.iso)); }}
-                  className="group flex flex-col items-center justify-center gap-2 py-4 rounded-xl border border-transparent hover:border-amber-300 hover:bg-amber-50 hover:shadow-[0_8px_24px_-8px_rgba(245,158,11,0.55)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                  className={`group flex flex-col items-center justify-center gap-2 py-4 rounded-xl border border-transparent hover:border-amber-300 hover:bg-amber-50 hover:shadow-[0_8px_24px_-8px_rgba(245,158,11,0.55)] transition-all ${FOCUS_RING_TIGHT}`}
                   aria-label={`Go to ${s.name} marketplace`}
                 >
                   <span className="text-4xl sm:text-5xl leading-none transition-transform group-hover:scale-110">{s.flag}</span>
@@ -293,7 +293,7 @@ export default function HomePage() {
                         window.dispatchEvent(new PopStateEvent('popstate'));
                       }
                     }}
-                    className="relative h-48 rounded-2xl overflow-hidden group cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+                    className={`relative h-48 rounded-2xl overflow-hidden group cursor-pointer text-left ${FOCUS_RING}`}
                   >
                     <img src={tile.photo} alt="" className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
