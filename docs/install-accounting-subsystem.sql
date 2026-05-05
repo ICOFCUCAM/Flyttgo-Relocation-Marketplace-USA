@@ -216,10 +216,10 @@ create index if not exists annotations_entry_idx on public.audit_annotations (en
 
 create table if not exists public.accounting_settings (
   id              int primary key default 1,
-  default_jurisdiction text not null default 'NO',
+  default_jurisdiction text not null default 'US',
   base_currency        text not null references public.currencies(code) default 'USD',
   fiscal_year_start_month int not null default 1 check (fiscal_year_start_month between 1 and 12),
-  vat_reporting_period text not null default 'bimonthly' check (vat_reporting_period in ('monthly','bimonthly','quarterly','annual')),
+  vat_reporting_period text not null default 'quarterly' check (vat_reporting_period in ('monthly','bimonthly','quarterly','annual')),
   updated_at      timestamptz not null default now(),
   updated_by      uuid references auth.users(id),
   check (id = 1)
