@@ -1,0 +1,22 @@
+-- ─────────────────────────────────────────────────────────────────
+-- install-treasury-layer.sql
+--
+-- Layer 3 of the FlyttGo finance system. Adds wallet umbrella +
+-- KYC sync + treasury summary views on top of the auto-posting
+-- ledger from install-financial-engine.sql.
+--
+-- Surfaces:
+--   1. wallets table          provider / escrow / customer / treasury
+--   2. wallet_id on lines     ledger ←→ wallet relationship
+--   3. v_wallet_balances      live balance per wallet from journal_lines
+--   4. v_treasury_summary     totals by wallet_type + currency
+--   5. fn_check_payout_eligibility(driver_id)  KYC + risk gate
+--   6. KYC sync trigger       stripe_connect_accounts → wallet flags
+--
+-- Apply AFTER install-financial-engine.sql + install-financial-
+-- infrastructure.sql.
+--
+-- See applied migration in Supabase project ewzjsxsttsgflhcwjekc
+-- (treasury_layer) for the full DDL — truncated locally for
+-- readability.
+-- ─────────────────────────────────────────────────────────────────

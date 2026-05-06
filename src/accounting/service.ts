@@ -17,7 +17,7 @@ import type {
   JournalEntryRow, JournalLineRow, PostJournalEntryInput,
   ProviderPayoutRow, ProviderPayoutScheduleRow, ReconciliationRow,
   SubscriptionBillingRow, TaxCodeRow, TaxCollectedRow, TrialBalanceRow,
-  UsersRoleRow, VatRateRow,
+  TreasurySummaryRow, UsersRoleRow, VatRateRow, WalletBalanceRow,
 } from './types';
 
 /* ── Roles ───────────────────────────────────────────────────── */
@@ -437,6 +437,34 @@ export async function fetchSubscriptionBilling(): Promise<SubscriptionBillingRow
     .select('*');
   if (error) throw error;
   return (data ?? []) as SubscriptionBillingRow[];
+}
+
+/* ── Treasury (Phase: wallets + balances + KYC) ──────────── */
+
+export async function fetchWalletBalances(opts: {
+  walletType?: WalletBalanceRow['wallet_type'];
+  ownerId?:    string;
+  limit?:      number;
+} = {}): Promise<WalletBalanceRow[]> {
+  let q = supabase.from('v_wallet_balances').select('*');
+  if (opts.walletType) q = q.eq('wallet_type', opts.walletType);
+  if (opts.ownerId)    q = q.eq('owner_user_id', opts.ownerId);
+  q = q.order('wallet_balance', { ascending: false }).limit(opts.limit ?? 200);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as WalletBalanceRow[];
+}
+
+export async function fetchTreasurySummary(): Promise<TreasurySummaryRow[]> {
+  const { data, error } = await supabase.from('v_treasury_summary').select('*');
+  if (error) throw error;
+  return (data ?? []) as TreasurySummaryRow[];
+}
+
+export async function checkPayoutEligibility(driverId: string): Promise<string | null> {
+  const { data, error } = await supabase.rpc('fn_check_payout_eligibility', { p_driver_id: driverId });
+  if (error) throw error;
+  return (data as string | null) ?? null;
 }
 
 export async function fetchInvoiceForBooking(bookingId: string): Promise<InvoiceRow | null> {

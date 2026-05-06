@@ -8,6 +8,7 @@ import MarketRolloutPage     from './pages/MarketRolloutPage';
 import PaymentsPage          from './pages/PaymentsPage';
 import AccountingWorkspace   from '../pages/AccountingWorkspace';
 import AuditWorkspace        from '../pages/AuditWorkspace';
+import TreasuryPage          from './pages/TreasuryPage';
 import InvoicesPage          from './pages/InvoicesPage';
 import SuperAdminPage        from './pages/SuperAdminPage';
 import AuditLogPage          from './pages/AuditLogPage';
@@ -59,6 +60,7 @@ export default function Backoffice() {
             case 'payments':        return <PaymentsPage />;
             case 'accounting':      return <AccountingWorkspace />;
             case 'audit':           return <AuditWorkspace />;
+            case 'treasury':        return <TreasuryPage />;
             case 'invoices':        return <InvoicesPage />;
             case 'super-admin':     return <SuperAdminPage />;
             case 'audit-log':       return <AuditLogPage />;

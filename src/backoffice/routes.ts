@@ -20,6 +20,10 @@ export const BOS_SLUGS = [
    * GL inspector, attachments register). Distinct from `audit-log`
    * which is the platform-wide append-only mutation log. */
   'audit',
+  /* Treasury layer — wallet balances, escrow held, payout queue,
+   * KYC status. Distinct from `payments` (which is the central
+   * payment-processor view) and `accounting` (the ledger). */
+  'treasury',
   'invoices',
   'super-admin',
   'audit-log',

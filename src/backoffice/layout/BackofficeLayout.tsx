@@ -25,6 +25,8 @@ const NAV: NavItem[] = [
   { slug: 'accounting',     label: 'Accounting',      icon: BookOpenCheck },
   /* Read-only audit workspace + annotations (was '/audit'). */
   { slug: 'audit',          label: 'Audit',           icon: ShieldCheck },
+  /* Treasury — wallets, escrow held, payout queue, KYC. */
+  { slug: 'treasury',       label: 'Treasury',        icon: Wallet },
   { slug: 'invoices',       label: 'Invoices',        icon: Receipt },
   { slug: 'feature-flags',  label: 'Feature Flags',   icon: Flag },
   { slug: 'super-admin',    label: 'Super Admin',     icon: ShieldCheck },

@@ -78,6 +78,10 @@ export const PAGE_PERMISSIONS: Record<string, Permission> = {
    * if you can read the platform mutation log you can read the
    * journal-line audit surface. */
   audit:          PERMISSIONS.AUDIT_VIEW,
+  /* Treasury — wallets / escrow / payout queue. Reuses the
+   * payments view permission so anyone who can see central
+   * payments can see the treasury totals. */
+  treasury:       PERMISSIONS.PAYMENTS_VIEW,
   invoices:       PERMISSIONS.INVOICES_VIEW,
   'super-admin':  PERMISSIONS.RBAC_ASSIGN,
   'audit-log':    PERMISSIONS.AUDIT_VIEW,

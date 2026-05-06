@@ -71,6 +71,38 @@ export interface ProviderPayoutRow {
   total_movement: number;
 }
 
+export type WalletType   = 'provider' | 'escrow' | 'customer' | 'treasury';
+export type KycStatus    = 'pending' | 'submitted' | 'approved' | 'rejected' | 'not_required';
+export type WalletStatus = 'active' | 'suspended' | 'closed';
+
+export interface WalletRow {
+  id:                  string;
+  wallet_type:         WalletType;
+  owner_user_id:       string | null;
+  booking_id:          string | null;
+  currency:            string;
+  virtual_account_id:  string | null;
+  kyc_status:          KycStatus;
+  payout_blocked:      boolean;
+  block_reason:        string | null;
+  status:              WalletStatus;
+  created_at:          string;
+}
+
+export interface WalletBalanceRow extends WalletRow {
+  wallet_balance:       number;
+  transaction_count:    number;
+  last_transaction_at:  string | null;
+}
+
+export interface TreasurySummaryRow {
+  wallet_type:    WalletType | 'pending_payouts';
+  currency:       string;
+  balance_total:  number;
+  wallet_count:   number;
+  funded_count:   number;
+}
+
 export interface ProviderPayoutScheduleRow {
   id:             string;
   driver_id:      string;
