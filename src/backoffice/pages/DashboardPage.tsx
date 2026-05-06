@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { Globe, Wallet, Receipt, ScrollText } from 'lucide-react';
+import { Globe, Wallet, Receipt, ScrollText, ShieldAlert, Coins } from 'lucide-react';
 import { listMarketRollout } from '../services/market-rollout-service';
 import { listTransactions } from '../services/payments-service';
 import { listInvoices } from '../services/invoices-service';
 import { listAudit } from '../services/audit-service';
 import { useBackofficeAuth } from '../rbac/useBackofficeAuth';
+import { fetchTreasurySummary, listFraudAlerts } from '../../accounting/service';
 
 export default function DashboardPage() {
   const auth = useBackofficeAuth();
@@ -13,12 +14,22 @@ export default function DashboardPage() {
   const txs     = useQuery({ queryKey: ['bos', 'tx', 'recent'],   queryFn: () => listTransactions({ limit: 50 }), enabled: auth.hasPermission('payments.view') });
   const invs    = useQuery({ queryKey: ['bos', 'inv', 'recent'],  queryFn: () => listInvoices({ limit: 50 }),     enabled: auth.hasPermission('invoices.view') });
   const audits  = useQuery({ queryKey: ['bos', 'audit', 'recent'],queryFn: () => listAudit({ limit: 10 }),         enabled: auth.hasPermission('audit.view') });
+  /* Treasury + fraud are gated behind payments.view since the
+   * intelligence overlap is identical (anyone reading central
+   * payments needs the wallet/risk surface too). */
+  const treasury = useQuery({ queryKey: ['bos', 'treasury', 'summary'], queryFn: () => fetchTreasurySummary(), enabled: auth.hasPermission('payments.view'), refetchInterval: 60_000 });
+  const alerts   = useQuery({ queryKey: ['bos', 'fraud', 'open'],       queryFn: () => listFraudAlerts('open'),  enabled: auth.hasPermission('payments.view'), refetchInterval: 60_000 });
 
   const liveCount     = (markets.data ?? []).filter(m => m.status === 'live').length;
   const pilotCount    = (markets.data ?? []).filter(m => m.status === 'pilot').length;
   const lockedCount   = (markets.data ?? []).filter(m => m.status === 'locked').length;
   const txTotal       = (txs.data     ?? []).reduce((s, t) => s + Number(t.amount), 0);
   const invTotal      = (invs.data    ?? []).reduce((s, i) => s + Number(i.amount), 0);
+  const treasurySum   = (t: string) =>
+    (treasury.data ?? []).filter(r => r.wallet_type === t).reduce((s, r) => s + Number(r.balance_total ?? 0), 0);
+  const escrowHeld    = treasurySum('escrow');
+  const providerBal   = treasurySum('provider');
+  const openCritical  = (alerts.data ?? []).filter(a => a.severity === 'critical' || a.severity === 'high').length;
 
   return (
     <div className="space-y-8">
@@ -61,7 +72,46 @@ export default function DashboardPage() {
             secondary="Last 10 captured"
           />
         )}
+        {auth.hasPermission('payments.view') && (
+          <>
+            <KpiCard
+              icon={Coins}
+              label="Escrow held"
+              primary={`${Math.round(escrowHeld).toLocaleString()} USD`}
+              secondary={`Provider AP: ${Math.round(providerBal).toLocaleString()}`}
+            />
+            <KpiCard
+              icon={ShieldAlert}
+              label="Open alerts"
+              primary={(alerts.data?.length ?? 0).toString()}
+              secondary={openCritical > 0 ? `${openCritical} high/critical` : 'No high-severity'}
+            />
+          </>
+        )}
       </div>
+
+      {/* Open high-severity fraud alerts get a dedicated strip so
+       *  they can't get lost below the fold. */}
+      {auth.hasPermission('payments.view') && (alerts.data ?? []).filter(a => a.severity === 'critical' || a.severity === 'high').length > 0 && (
+        <section className="bg-red-50 border border-red-200 rounded-2xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <ShieldAlert className="w-4 h-4 text-red-600" />
+            <h2 className="text-xs font-bold uppercase tracking-wider text-red-700">Open high-severity alerts</h2>
+          </div>
+          <ul className="text-sm space-y-1.5">
+            {(alerts.data ?? [])
+              .filter(a => a.severity === 'critical' || a.severity === 'high')
+              .slice(0, 5)
+              .map(a => (
+                <li key={a.id} className="flex items-baseline gap-3">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-red-700 w-20">{a.severity}</span>
+                  <span className="font-semibold text-slate-800">{a.category.replace(/_/g, ' ')}</span>
+                  <span className="text-xs text-slate-500 truncate">{a.message}</span>
+                </li>
+              ))}
+          </ul>
+        </section>
+      )}
 
       {auth.hasPermission('audit.view') && (
         <section className="bg-white rounded-2xl border border-slate-200 p-5">

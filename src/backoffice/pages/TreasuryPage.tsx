@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Loader2, Wallet, ShieldCheck, AlertOctagon, Send } from 'lucide-react';
+import { Loader2, Wallet, ShieldCheck, AlertOctagon, Send, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   fetchWalletBalances, fetchTreasurySummary, listProviderPayouts,
-  markPayoutStatus, checkPayoutEligibility,
+  markPayoutStatus, checkPayoutEligibility, fetchReconciliation,
 } from '../../accounting/service';
 import type {
-  ProviderPayoutScheduleRow, TreasurySummaryRow, WalletBalanceRow,
+  ProviderPayoutScheduleRow, ReconciliationRow, TreasurySummaryRow, WalletBalanceRow,
 } from '../../accounting/types';
 
 /**
@@ -24,18 +24,21 @@ export default function TreasuryPage() {
   const [providers,  setProviders]  = useState<WalletBalanceRow[]>([]);
   const [escrows,    setEscrows]    = useState<WalletBalanceRow[]>([]);
   const [payouts,    setPayouts]    = useState<ProviderPayoutScheduleRow[]>([]);
+  const [reconcile,  setReconcile]  = useState<ReconciliationRow[]>([]);
   const [eligibility,setEligibility]= useState<Record<string, string | null>>({});
   const [loading,    setLoading]    = useState(true);
 
   async function refresh() {
     try {
-      const [s, p, e, q] = await Promise.all([
+      const [s, p, e, q, r] = await Promise.all([
         fetchTreasurySummary(),
         fetchWalletBalances({ walletType: 'provider' }),
         fetchWalletBalances({ walletType: 'escrow', limit: 50 }),
         listProviderPayouts('all'),
+        fetchReconciliation(),
       ]);
       setSummary(s); setProviders(p); setEscrows(e); setPayouts(q);
+      setReconcile(r);
 
       /* Eligibility verdicts for the providers visible on screen. */
       const checks = await Promise.all(
@@ -71,6 +74,64 @@ export default function TreasuryPage() {
       <ProviderWalletsTable rows={providers} eligibility={eligibility} />
       <EscrowWalletsTable rows={escrows} />
       <PendingPayoutsQueue rows={payouts} onChanged={() => void refresh()} />
+      <ReconciliationPanel rows={reconcile} />
+    </div>
+  );
+}
+
+/* ── Reconciliation panel ─────────────────────────── */
+
+function ReconciliationPanel({ rows }: { rows: ReconciliationRow[] }) {
+  const mismatches = rows.filter(r => r.has_mismatch);
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+      <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-amber-600" />
+          <h2 className="font-bold">Ledger ↔ booking reconciliation</h2>
+          {mismatches.length > 0 && (
+            <span className="bg-red-100 text-red-700 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
+              {mismatches.length} mismatch{mismatches.length === 1 ? '' : 'es'}
+            </span>
+          )}
+        </div>
+        <span className="text-xs text-slate-500">{rows.length} bookings checked</span>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 font-mono">
+            <tr>
+              <th className="text-left  px-3 py-2">Booking</th>
+              <th className="text-left  px-3 py-2">Status</th>
+              <th className="text-right px-3 py-2">Booking amt</th>
+              <th className="text-right px-3 py-2">Ledger DR</th>
+              <th className="text-right px-3 py-2">Ledger CR</th>
+              <th className="text-left  px-3 py-2">Match</th>
+            </tr>
+          </thead>
+          <tbody className="tabular-nums">
+            {/* Mismatches first; clean rows below for context. */}
+            {[...mismatches, ...rows.filter(r => !r.has_mismatch).slice(0, 30)].map((r, i) => (
+              <tr key={`${r.booking_id}-${i}`} className="border-t border-slate-100">
+                <td className="px-3 py-1.5 font-mono text-xs">{r.booking_id.slice(0, 8)}…</td>
+                <td className="px-3 py-1.5 text-xs">{r.payment_status}</td>
+                <td className="px-3 py-1.5 text-right">{Number(r.booking_amount).toFixed(2)}</td>
+                <td className="px-3 py-1.5 text-right">{Number(r.ledger_debit ?? 0).toFixed(2)}</td>
+                <td className="px-3 py-1.5 text-right">{Number(r.ledger_credit ?? 0).toFixed(2)}</td>
+                <td className="px-3 py-1.5">
+                  {r.has_mismatch ? (
+                    <span className="inline-flex items-center gap-1 text-red-600 text-xs font-bold">
+                      <AlertOctagon className="w-3 h-3" /> mismatch
+                    </span>
+                  ) : (
+                    <span className="text-emerald-600 text-xs font-bold">ok</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

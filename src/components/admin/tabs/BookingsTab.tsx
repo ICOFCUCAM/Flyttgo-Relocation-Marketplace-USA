@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, FileText } from 'lucide-react';
 import { downloadCsv, safeNumber } from '../utils';
 import {
   useAutoDispatch,
@@ -13,6 +13,7 @@ import type { AdminPanelHandlers } from '../types';
 import { useAuth } from '../../../lib/auth';
 import { superAdminDeleteBooking } from '../../../services/adminBookings';
 import AdminBookingFormModal from '../modals/AdminBookingFormModal';
+import BookingInvoicePrintable from '../../../accounting/components/BookingInvoicePrintable';
 
 const RECLAIM_REASONS: Record<string, string> = {
   no_candidates:         'No eligible drivers found within 15 km. Use manual Dispatch to override.',
@@ -36,6 +37,7 @@ export function BookingsTab({
   const { user, profile } = useAuth();
   const isSuperAdmin = profile?.is_super_admin === true;
   const [formMode, setFormMode] = useState<{ mode: 'create' | 'edit'; booking?: BookingRow } | null>(null);
+  const [invoiceBookingId, setInvoiceBookingId] = useState<string | null>(null);
 
   async function runDelete(b: BookingRow) {
     if (!confirm(`Permanently delete booking ${b.id.slice(0, 8)}? This cannot be undone.`)) return;
@@ -223,6 +225,13 @@ export function BookingsTab({
                   Timeline
                 </button>
                 <button
+                  onClick={() => setInvoiceBookingId(b.id)}
+                  className="inline-flex items-center gap-1 bg-slate-600 hover:bg-slate-700 text-white px-2 py-1 text-xs rounded"
+                  title="View / print invoice for this booking"
+                >
+                  <FileText className="w-3 h-3" /> Invoice
+                </button>
+                <button
                   onClick={() => setFormMode({ mode: 'edit', booking: b })}
                   className="inline-flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-white px-2 py-1 text-xs rounded"
                   title="Edit booking — sends the change to the customer for confirmation before it takes effect"
@@ -246,6 +255,13 @@ export function BookingsTab({
           ))}
         </tbody>
       </table>
+
+      {invoiceBookingId && (
+        <BookingInvoicePrintable
+          bookingId={invoiceBookingId}
+          onClose={() => setInvoiceBookingId(null)}
+        />
+      )}
 
       {formMode && user && (
         <AdminBookingFormModal

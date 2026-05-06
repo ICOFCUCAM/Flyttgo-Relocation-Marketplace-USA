@@ -6,16 +6,28 @@ import { PERMISSIONS } from '../rbac/permissions';
 
 export default function AuditLogPage() {
   const [actionPrefix, setActionPrefix] = useState('');
-  const [targetType, setTargetType]     = useState('');
+  const [targetType,   setTargetType]   = useState('');
+  /* Date-range filter — defaults to "last 30 days". Empty string =
+   * unbounded, so the operator can clear either end. */
+  const [dateFrom, setDateFrom] = useState(() => {
+    const d = new Date(); d.setDate(d.getDate() - 30); return d.toISOString().slice(0, 10);
+  });
+  const [dateTo,   setDateTo]   = useState('');
 
   const audit = useQuery({
-    queryKey: ['bos', 'audit', { actionPrefix, targetType }],
+    queryKey: ['bos', 'audit', { actionPrefix, targetType, dateFrom, dateTo }],
     queryFn:  () => listAudit({
       action:     actionPrefix || undefined,
       targetType: targetType   || undefined,
+      from:       dateFrom     || undefined,
+      to:         dateTo       || undefined,
       limit:      200,
     }),
   });
+
+  function reset() {
+    setActionPrefix(''); setTargetType(''); setDateFrom(''); setDateTo('');
+  }
 
   return (
     <RequirePermission perm={PERMISSIONS.AUDIT_VIEW}>
@@ -37,6 +49,15 @@ export default function AuditLogPage() {
             <span className="text-xs font-bold text-slate-600 block mb-1">Target type</span>
             <input value={targetType} onChange={e => setTargetType(e.target.value)} placeholder="e.g. invoice" className="border border-slate-200 rounded-md px-3 py-1.5 text-sm w-56" />
           </label>
+          <label className="block text-sm">
+            <span className="text-xs font-bold text-slate-600 block mb-1">From</span>
+            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="border border-slate-200 rounded-md px-3 py-1.5 text-sm" />
+          </label>
+          <label className="block text-sm">
+            <span className="text-xs font-bold text-slate-600 block mb-1">To</span>
+            <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="border border-slate-200 rounded-md px-3 py-1.5 text-sm" />
+          </label>
+          <button onClick={reset} className="text-xs text-slate-500 hover:text-slate-700 underline self-center mt-4">Reset</button>
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">

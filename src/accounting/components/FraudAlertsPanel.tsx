@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { AlertTriangle, Loader2, RefreshCw, Check, X } from 'lucide-react';
+import { AlertTriangle, Loader2, RefreshCw, Check, X, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { listFraudAlerts, runFraudScan, updateFraudAlertStatus } from '../service';
 import type { FraudAlertRow } from '../types';
+import BookingInvoicePrintable from './BookingInvoicePrintable';
 
 const SEVERITY_TONE: Record<FraudAlertRow['severity'], string> = {
   low:      'bg-slate-100  text-slate-700',
@@ -23,6 +24,7 @@ export default function FraudAlertsPanel() {
   const [rows,    setRows]    = useState<FraudAlertRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy,    setBusy]    = useState(false);
+  const [openInvoiceId, setOpenInvoiceId] = useState<string | null>(null);
 
   async function refresh() {
     try {
@@ -94,6 +96,17 @@ export default function FraudAlertsPanel() {
                 </p>
               </div>
               <div className="flex gap-1.5 shrink-0">
+                {/* For booking subjects we can open the invoice
+                 *  printable straight from the alert. Driver and
+                 *  customer subjects don't have a 1-click target
+                 *  yet — the message + UID is enough for ops to
+                 *  jump into the right tab manually. */}
+                {a.subject_type === 'booking' && (
+                  <button onClick={() => setOpenInvoiceId(a.subject_id)}
+                    className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 text-slate-700">
+                    <FileText className="w-3 h-3" /> Invoice
+                  </button>
+                )}
                 <button onClick={() => resolve(a.id, 'dismissed')}
                   className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 text-slate-600">
                   <X className="w-3 h-3" /> Dismiss
@@ -106,6 +119,12 @@ export default function FraudAlertsPanel() {
             </li>
           ))}
         </ul>
+      )}
+      {openInvoiceId && (
+        <BookingInvoicePrintable
+          bookingId={openInvoiceId}
+          onClose={() => setOpenInvoiceId(null)}
+        />
       )}
     </div>
   );
