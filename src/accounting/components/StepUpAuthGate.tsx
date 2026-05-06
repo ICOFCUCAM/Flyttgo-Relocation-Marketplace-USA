@@ -1,57 +1,57 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Lock, Loader2, ShieldCheck } from 'lucide-react';
+import { Lock, Loader2, ShieldCheck, Mail, ArrowLeft } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../lib/auth';
+import { callEdgeFunction } from '../../services/_edge';
 import { FlyttGoLogo } from '../../components/brand';
 import { INPUT_FOCUS, FOCUS_RING } from '../../components/ds';
 
 /**
- * Step-up authentication gate for sensitive workspaces.
+ * Two-factor step-up authentication gate.
  *
- * Even when the caller is already signed in (and authorised by RLS),
- * the accounting + audit workspaces require a fresh password
- * confirmation. This is the standard enterprise pattern for
- * regulated finance UIs: an unattended browser tab can't be used
- * to read the ledger or post entries without a recent challenge.
+ * Step A — password
+ *   The user re-enters their password. We validate it via
+ *   supabase.auth.signInWithPassword (which doesn't disturb the
+ *   existing session token); on success we move to step B and ask
+ *   the backoffice-otp-issue edge function to email a code.
  *
- * Implementation:
- *   • On mount, check sessionStorage for a recent step-up timestamp
- *     (per-workspace key, ttl 30 min).
- *   • If absent or stale: render the password prompt.
- *   • Re-validate by calling supabase.auth.signInWithPassword with
- *     the user's own email — this verifies the password without
- *     creating a second session (the existing session token stays
- *     valid).
- *   • On success: stamp sessionStorage and reveal the children.
+ * Step B — 6-digit OTP
+ *   The user types the code that landed in their inbox. We verify
+ *   server-side via the SECURITY DEFINER verify_backoffice_otp RPC
+ *   which checks SHA-256 hash equality, attempt count (≤5), and
+ *   expiry (6 minutes after issue).
  *
- * The TTL is enforced server-side too via the workspace's RLS
- * policies — this gate only adds a UX-level fence.
+ * On success we stamp sessionStorage with a 30-minute TTL — same
+ * as before — so jumping between back-office sub-routes doesn't
+ * re-prompt. Independent timers per workspace.
  */
 
 const TTL_MS = 30 * 60 * 1000;
 const KEY    = (workspace: string) => `flyttgo:stepup:${workspace}`;
+
+type Phase = 'password' | 'otp';
 
 export default function StepUpAuthGate({
   workspace,
   workspaceLabel,
   children,
 }: {
-  /** Stable id used for the sessionStorage key. Independent timers
-   *  per workspace so unlocking accounting doesn't unlock admin.
-   *  'backoffice' covers the entire back-office umbrella (accounting,
-   *  audit, payments, super-admin, audit-log, feature-flags). */
   workspace:      'accounting' | 'audit' | 'admin' | 'backoffice';
-  /** Human label for the prompt headline. */
   workspaceLabel: string;
   children:       ReactNode;
 }) {
   const { user } = useAuth();
   const [confirmed, setConfirmed] = useState<boolean | null>(null);
-  const [password,  setPassword]  = useState('');
-  const [busy,      setBusy]      = useState(false);
-  const [error,     setError]     = useState<string | null>(null);
+  const [phase, setPhase]         = useState<Phase>('password');
+  const [password, setPassword]   = useState('');
+  const [code,     setCode]       = useState('');
+  const [maskedTo, setMaskedTo]   = useState('');
+  const [busy,     setBusy]       = useState(false);
+  const [error,    setError]      = useState<string | null>(null);
+  const [info,     setInfo]       = useState<string | null>(null);
 
-  /* Look for a recent step-up confirmation in sessionStorage. */
+  /* Honour an already-confirmed session if it's still inside the
+   * 30-minute window. */
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
     const raw = window.sessionStorage.getItem(KEY(workspace));
@@ -66,35 +66,55 @@ export default function StepUpAuthGate({
     return undefined;
   }, [workspace]);
 
-  async function challenge(e: React.FormEvent) {
+  async function submitPassword(e: React.FormEvent) {
     e.preventDefault();
-    if (!user?.email) {
-      setError('No active session — sign in again.');
-      return;
-    }
-    if (!password) {
-      setError('Enter your password to continue.');
-      return;
-    }
-    setBusy(true);
-    setError(null);
+    if (!user?.email) { setError('No active session — sign in again.'); return; }
+    if (!password)    { setError('Enter your password to continue.');   return; }
+    setBusy(true); setError(null);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email:    user.email,
-        password,
-      });
-      if (error) {
-        setError('Incorrect password.');
-        return;
+      const { error } = await supabase.auth.signInWithPassword({ email: user.email, password });
+      if (error) { setError('Incorrect password.'); return; }
+      /* Password ok — issue an OTP and move to step B. */
+      try {
+        const r = await callEdgeFunction<{ ok: boolean; sent_to_masked?: string }>(
+          'backoffice-otp-issue', {},
+        );
+        setMaskedTo(r.sent_to_masked ?? user.email);
+        setPhase('otp');
+        setInfo('We just emailed you a 6-digit code. It expires in 6 minutes.');
+      } catch (issueErr) {
+        setError(issueErr instanceof Error ? issueErr.message : 'Could not issue code.');
       }
-      window.sessionStorage.setItem(KEY(workspace), String(Date.now()));
-      setConfirmed(true);
-      setPassword('');
     } catch {
       setError('Could not verify — try again.');
-    } finally {
-      setBusy(false);
-    }
+    } finally { setBusy(false); }
+  }
+
+  async function submitCode(e: React.FormEvent) {
+    e.preventDefault();
+    const cleaned = code.replace(/\D/g, '');
+    if (cleaned.length !== 6) { setError('Enter the 6-digit code from the email.'); return; }
+    setBusy(true); setError(null);
+    try {
+      const { data, error } = await supabase.rpc('verify_backoffice_otp', { p_code: cleaned });
+      if (error)         { setError(error.message);                     return; }
+      if (data !== true) { setError('Code incorrect, expired, or too many attempts.'); return; }
+      window.sessionStorage.setItem(KEY(workspace), String(Date.now()));
+      setConfirmed(true);
+      setPassword(''); setCode('');
+    } finally { setBusy(false); }
+  }
+
+  async function resendCode() {
+    setError(null); setInfo(null); setBusy(true);
+    try {
+      const r = await callEdgeFunction<{ sent_to_masked?: string }>('backoffice-otp-issue', {});
+      setMaskedTo(r.sent_to_masked ?? maskedTo);
+      setInfo('Sent a new 6-digit code.');
+      setCode('');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not resend.');
+    } finally { setBusy(false); }
   }
 
   if (confirmed === null) {
@@ -104,62 +124,116 @@ export default function StepUpAuthGate({
       </main>
     );
   }
-
   if (confirmed) return <>{children}</>;
 
   return (
     <main className="min-h-screen bg-[#0b1f3a] text-white flex items-center justify-center p-4">
-      <form
-        onSubmit={challenge}
-        className="bg-white text-slate-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
-      >
+      <div className="bg-white text-slate-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
         <div className="bg-gradient-to-br from-[#0b1f3a] to-[#1a4a8a] px-6 pt-6 pb-5 text-white">
           <FlyttGoLogo variant="on-dark" subtitle={`${workspaceLabel} Workspace`} />
         </div>
 
-        <div className="p-6 space-y-4">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0">
-              <Lock className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="font-extrabold text-lg leading-tight">Confirm your identity</h1>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                The {workspaceLabel.toLowerCase()} workspace handles ledger-grade financial data.
-                Re-enter your password to unlock this session for the next 30 minutes.
-              </p>
-            </div>
-          </div>
-
-          <label className="block">
-            <span className="block text-[10px] uppercase tracking-[0.22em] text-slate-500 font-mono mb-1">Password</span>
-            <input
+        {phase === 'password' ? (
+          <form onSubmit={submitPassword} className="p-6 space-y-4">
+            <Header
+              icon={<Lock className="w-5 h-5" />}
+              title="Confirm your identity"
+              body={`The ${workspaceLabel.toLowerCase()} workspace handles ledger-grade financial data. Re-enter your password — the next step emails you a one-time code.`}
+            />
+            <Field
+              label="Password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
+              onChange={setPassword}
               autoFocus
-              className={`w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm ${INPUT_FOCUS}`}
+              autoComplete="current-password"
             />
-          </label>
-
-          {error && <p className="text-red-600 text-xs">{error}</p>}
-
-          <button
-            type="submit"
-            disabled={busy || !password}
-            className={`w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-[#0B2E59] hover:bg-[#0F3558] text-white disabled:opacity-60 ${FOCUS_RING}`}
-          >
-            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-            Unlock {workspaceLabel.toLowerCase()}
-          </button>
-
-          <p className="text-[11px] text-slate-400 leading-relaxed text-center">
-            Signed in as <strong className="text-slate-600">{user?.email ?? '—'}</strong>.
-            Your existing session stays valid; this only confirms physical presence.
-          </p>
-        </div>
-      </form>
+            {error && <p className="text-red-600 text-xs">{error}</p>}
+            <button
+              type="submit" disabled={busy || !password}
+              className={`w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-[#0B2E59] hover:bg-[#0F3558] text-white disabled:opacity-60 ${FOCUS_RING}`}
+            >
+              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+              Continue
+            </button>
+            <p className="text-[11px] text-slate-400 leading-relaxed text-center">
+              Signed in as <strong className="text-slate-600">{user?.email ?? '—'}</strong>.
+            </p>
+          </form>
+        ) : (
+          <form onSubmit={submitCode} className="p-6 space-y-4">
+            <Header
+              icon={<Mail className="w-5 h-5" />}
+              title="Enter your verification code"
+              body={`We sent a 6-digit code to ${maskedTo || 'your email'}. It expires in 6 minutes.`}
+            />
+            <Field
+              label="6-digit code"
+              type="text"
+              value={code}
+              onChange={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
+              autoFocus
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              monospace
+              maxLength={6}
+            />
+            {info  && <p className="text-emerald-700 text-xs">{info}</p>}
+            {error && <p className="text-red-600 text-xs">{error}</p>}
+            <button
+              type="submit" disabled={busy || code.length !== 6}
+              className={`w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-[#0B2E59] hover:bg-[#0F3558] text-white disabled:opacity-60 ${FOCUS_RING}`}
+            >
+              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+              Unlock {workspaceLabel.toLowerCase()}
+            </button>
+            <div className="flex items-center justify-between text-xs">
+              <button type="button" onClick={() => { setPhase('password'); setError(null); setInfo(null); }}
+                className="inline-flex items-center gap-1 text-slate-500 hover:text-slate-700">
+                <ArrowLeft className="w-3 h-3" /> Use password again
+              </button>
+              <button type="button" onClick={resendCode} disabled={busy}
+                className="text-[#0B2E59] hover:underline font-bold disabled:opacity-60">
+                Resend code
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
     </main>
+  );
+}
+
+function Header({ icon, title, body }: { icon: ReactNode; title: string; body: string }) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0">
+        {icon}
+      </div>
+      <div>
+        <h1 className="font-extrabold text-lg leading-tight">{title}</h1>
+        <p className="text-xs text-slate-500 mt-1 leading-relaxed">{body}</p>
+      </div>
+    </div>
+  );
+}
+
+function Field({
+  label, type, value, onChange, autoFocus, autoComplete, inputMode, monospace, maxLength,
+}: {
+  label: string; type: string; value: string; onChange: (v: string) => void;
+  autoFocus?: boolean; autoComplete?: string; inputMode?: 'numeric' | 'text';
+  monospace?: boolean; maxLength?: number;
+}) {
+  return (
+    <label className="block">
+      <span className="block text-[10px] uppercase tracking-[0.22em] text-slate-500 font-mono mb-1">{label}</span>
+      <input
+        type={type} value={value} onChange={(e) => onChange(e.target.value)}
+        autoFocus={autoFocus} autoComplete={autoComplete} inputMode={inputMode}
+        maxLength={maxLength}
+        className={`w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm ${monospace ? 'font-mono tracking-widest text-center text-lg' : ''} ${INPUT_FOCUS}`}
+      />
+    </label>
   );
 }
