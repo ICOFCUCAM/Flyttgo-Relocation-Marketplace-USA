@@ -8,6 +8,7 @@ import FunnelView from '../analytics/FunnelView';
 import CohortRetention from '../analytics/CohortRetention';
 import PerCountryBreakdown from '../analytics/PerCountryBreakdown';
 import WeeklyReportModal from '../analytics/WeeklyReportModal';
+import FraudAlertsPanel from '../../../accounting/components/FraudAlertsPanel';
 
 export function OverviewTab({ data }: { data: AdminDashboardSnapshot }) {
   /* Subscribe to bookings + applications + driver_profiles +
@@ -150,6 +151,12 @@ export function OverviewTab({ data }: { data: AdminDashboardSnapshot }) {
       <h2 className="mt-10 font-bold text-gray-700">By market</h2>
       <div className="mt-2">
         <PerCountryBreakdown />
+      </div>
+
+      {/* ── Fraud + anomaly alerts ──────────────────────── */}
+      <h2 className="mt-10 font-bold text-gray-700">Trust &amp; safety</h2>
+      <div className="mt-2">
+        <FraudAlertsPanel />
       </div>
 
       <h2 className="mt-10 font-bold text-gray-700">Recent Activity</h2>

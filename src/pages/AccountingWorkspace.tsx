@@ -8,6 +8,7 @@ import { INPUT_FOCUS, FOCUS_RING } from '../components/ds';
 import WorkspaceShell, { type WorkspaceSection } from '../accounting/components/WorkspaceShell';
 import RolesAdmin from '../accounting/components/RolesAdmin';
 import StatutoryReports from '../accounting/components/StatutoryReports';
+import IntelligenceSection from '../accounting/components/IntelligenceSection';
 import {
   getMyFinanceRoles,
   getAccountingSettings, updateAccountingSettings,
@@ -28,10 +29,12 @@ import type {
  * Sections (editorial codes per Phase 17):
  *   AC.01  Journal Entries
  *   AC.02  Chart of Accounts
- *   AC.03  Reports — Trial Balance + Statutory exports
+ *   AC.03  Reports — Trial Balance, IS, BS, Cash Flow
  *   AC.04  VAT Center
  *   AC.05  Multi-currency / Exchange rates
- *   AC.06  Settings
+ *   AC.06  Intelligence — top corridors, earnings dist, tax, subs
+ *   AC.07  Settings
+ *   AC.08  Roles (super-admin only)
  *
  * Gate: only users with super_admin / admin / accountant can land
  * here. Anyone else gets a "Not authorised" card with a link back
@@ -186,7 +189,11 @@ export default function AccountingWorkspace() {
       body: <FxRatesTable rows={fxRows} />,
     },
     {
-      code: 'AC.06', label: 'Settings',
+      code: 'AC.06', label: 'Intelligence',
+      body: <IntelligenceSection jurisdiction={jurisdiction} />,
+    },
+    {
+      code: 'AC.07', label: 'Settings',
       body: settings && (
         <SettingsPanel
           settings={settings}
@@ -199,7 +206,7 @@ export default function AccountingWorkspace() {
      * sections array via filter keeps the rail in sync with what's
      * actually shown, without conditional indexes. */
     ...(isSuperAdmin ? [{
-      code: 'AC.07', label: 'Roles',
+      code: 'AC.08', label: 'Roles',
       body: <RolesAdmin />,
     } as WorkspaceSection] : []),
   ];

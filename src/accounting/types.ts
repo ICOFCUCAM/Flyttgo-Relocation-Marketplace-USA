@@ -71,6 +71,107 @@ export interface ProviderPayoutRow {
   total_movement: number;
 }
 
+export interface ProviderPayoutScheduleRow {
+  id:             string;
+  driver_id:      string;
+  booking_id:     string | null;
+  amount:         number;
+  currency:       string;
+  status:         'scheduled' | 'processing' | 'paid' | 'failed' | 'cancelled';
+  schedule_kind:  'instant' | 'weekly' | 'monthly' | 'manual';
+  scheduled_for:  string;
+  processed_at:   string | null;
+  failure_reason: string | null;
+  external_ref:   string | null;
+  created_at:     string;
+}
+
+export interface FraudAlertRow {
+  id:           string;
+  detected_at:  string;
+  severity:     'low' | 'medium' | 'high' | 'critical';
+  category:     string;
+  subject_type: 'booking' | 'driver' | 'customer';
+  subject_id:   string;
+  amount:       number | null;
+  metric_value: number | null;
+  message:      string;
+  status:       'open' | 'reviewing' | 'dismissed' | 'confirmed_fraud';
+  resolved_by:  string | null;
+  resolved_at:  string | null;
+}
+
+export interface CorridorIntelligenceRow {
+  country:        string;
+  corridor:       string;
+  bookings_total: number;
+  bookings_30d:   number;
+  gmv_total:      number;
+  gmv_30d:        number;
+  avg_value:      number;
+}
+
+export interface EarningsDistributionRow {
+  bucket:            string;
+  drivers_in_bucket: number;
+  bucket_total:      number;
+  bucket_mean:       number;
+}
+
+export interface TaxCollectedRow {
+  jurisdiction:    Jurisdiction;
+  fiscal_year:     number;
+  fiscal_period:   number;
+  tax_code:        string;
+  tax_name:        string;
+  rate_percent:    number | null;
+  taxable_credit:  number;
+  taxable_debit:   number;
+}
+
+export interface SubscriptionBillingRow {
+  driver_id:           string;
+  plan:                string | null;
+  subscription_status: string | null;
+  start_date:          string | null;
+  end_date:            string | null;
+  health:              'healthy' | 'expiring_soon' | 'expired' | 'cancelled';
+  payments_total:      number;
+  last_payment_at:     string | null;
+  payments_30d:        number;
+}
+
+export interface InvoiceRow {
+  booking_id:        string;
+  invoice_date:      string;
+  customer_id:       string;
+  customer_name:     string | null;
+  customer_email:    string | null;
+  customer_phone:    string | null;
+  country:           string | null;
+  pickup_address:    string | null;
+  pickup_city:       string | null;
+  pickup_postcode:   string | null;
+  dropoff_address:   string | null;
+  dropoff_city:      string | null;
+  dropoff_postcode:  string | null;
+  move_date:         string | null;
+  move_type:         string | null;
+  van_type:          string | null;
+  helpers:           number | null;
+  distance_km:       number | null;
+  estimated_hours:   number | null;
+  actual_hours:      number | null;
+  subtotal:          number;
+  original_subtotal: number | null;
+  payment_status:    string | null;
+  status:            string | null;
+  tax_amount:        number;
+  tax_code:          string;
+  provider_name:     string | null;
+  provider_country:  string | null;
+}
+
 export interface ReconciliationRow {
   booking_id:         string;
   booking_created_at: string;

@@ -11,10 +11,12 @@ import { supabase } from '../lib/supabase';
 import { TEMPLATES } from './templates';
 import type {
   AccountRow, AccountingSettingsRow, AuditAnnotationRow,
-  BalanceSheetRow, CashFlowRow, ExchangeRateRow, FinanceRole, GeneralLedgerRow,
-  IncomeStatementRow, Jurisdiction, JournalEntryRow, JournalLineRow,
-  PostJournalEntryInput, ProviderPayoutRow, ReconciliationRow,
-  TaxCodeRow, TrialBalanceRow,
+  BalanceSheetRow, CashFlowRow, CorridorIntelligenceRow,
+  EarningsDistributionRow, ExchangeRateRow, FinanceRole, FraudAlertRow,
+  GeneralLedgerRow, IncomeStatementRow, InvoiceRow, Jurisdiction,
+  JournalEntryRow, JournalLineRow, PostJournalEntryInput,
+  ProviderPayoutRow, ProviderPayoutScheduleRow, ReconciliationRow,
+  SubscriptionBillingRow, TaxCodeRow, TaxCollectedRow, TrialBalanceRow,
   UsersRoleRow, VatRateRow,
 } from './types';
 
@@ -330,6 +332,121 @@ export async function fetchReconciliation(): Promise<ReconciliationRow[]> {
     .limit(500);
   if (error) throw error;
   return (data ?? []) as ReconciliationRow[];
+}
+
+/* ── Financial-infrastructure (Phase 2) ─────────────────── */
+
+export async function listFraudAlerts(
+  status: FraudAlertRow['status'] | 'all' = 'open',
+): Promise<FraudAlertRow[]> {
+  let q = supabase.from('fraud_alerts').select('*').order('detected_at', { ascending: false }).limit(200);
+  if (status !== 'all') q = q.eq('status', status);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as FraudAlertRow[];
+}
+
+export async function runFraudScan(): Promise<number> {
+  const { data, error } = await supabase.rpc('fn_run_fraud_scan');
+  if (error) throw error;
+  return Number(data ?? 0);
+}
+
+export async function updateFraudAlertStatus(
+  id: string, status: FraudAlertRow['status'],
+): Promise<void> {
+  const patch: Record<string, unknown> = { status };
+  if (status === 'dismissed' || status === 'confirmed_fraud') {
+    patch.resolved_at = new Date().toISOString();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) patch.resolved_by = user.id;
+  }
+  const { error } = await supabase.from('fraud_alerts').update(patch).eq('id', id);
+  if (error) throw error;
+}
+
+export async function listProviderPayouts(
+  status: ProviderPayoutScheduleRow['status'] | 'all' = 'all',
+): Promise<ProviderPayoutScheduleRow[]> {
+  let q = supabase.from('provider_payouts').select('*').order('scheduled_for', { ascending: false }).limit(200);
+  if (status !== 'all') q = q.eq('status', status);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as ProviderPayoutScheduleRow[];
+}
+
+export async function schedulePayout(input: {
+  driverId:     string;
+  amount:       number;
+  currency?:    string;
+  bookingId?:   string;
+  scheduleKind?: ProviderPayoutScheduleRow['schedule_kind'];
+  scheduledFor?: string;
+}): Promise<string> {
+  const { data, error } = await supabase
+    .from('provider_payouts')
+    .insert({
+      driver_id:     input.driverId,
+      booking_id:    input.bookingId ?? null,
+      amount:        input.amount,
+      currency:      input.currency ?? 'USD',
+      schedule_kind: input.scheduleKind ?? 'instant',
+      scheduled_for: input.scheduledFor ?? new Date().toISOString(),
+    })
+    .select('id')
+    .single();
+  if (error) throw error;
+  return data.id as string;
+}
+
+export async function markPayoutStatus(
+  payoutId: string, status: ProviderPayoutScheduleRow['status'], opts: { reason?: string; externalRef?: string } = {},
+): Promise<void> {
+  const patch: Record<string, unknown> = { status, updated_at: new Date().toISOString() };
+  if (status === 'paid' || status === 'failed') patch.processed_at = new Date().toISOString();
+  if (opts.reason)      patch.failure_reason = opts.reason;
+  if (opts.externalRef) patch.external_ref   = opts.externalRef;
+  const { error } = await supabase.from('provider_payouts').update(patch).eq('id', payoutId);
+  if (error) throw error;
+}
+
+export async function fetchTopCorridors(): Promise<CorridorIntelligenceRow[]> {
+  const { data, error } = await supabase.from('v_top_corridors').select('*');
+  if (error) throw error;
+  return (data ?? []) as CorridorIntelligenceRow[];
+}
+
+export async function fetchEarningsDistribution(): Promise<EarningsDistributionRow[]> {
+  const { data, error } = await supabase.from('v_provider_earnings_distribution').select('*');
+  if (error) throw error;
+  return (data ?? []) as EarningsDistributionRow[];
+}
+
+export async function fetchTaxCollected(jurisdiction: Jurisdiction): Promise<TaxCollectedRow[]> {
+  const { data, error } = await supabase
+    .from('v_tax_collected')
+    .select('*')
+    .eq('jurisdiction', jurisdiction);
+  if (error) throw error;
+  return (data ?? []) as TaxCollectedRow[];
+}
+
+export async function fetchSubscriptionBilling(): Promise<SubscriptionBillingRow[]> {
+  const { data, error } = await supabase
+    .from('v_subscription_billing_status')
+    .select('*');
+  if (error) throw error;
+  return (data ?? []) as SubscriptionBillingRow[];
+}
+
+export async function fetchInvoiceForBooking(bookingId: string): Promise<InvoiceRow | null> {
+  const { data, error } = await supabase
+    .from('v_invoice_lines')
+    .select('*')
+    .eq('booking_id', bookingId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as InvoiceRow) ?? null;
 }
 
 export async function fetchGeneralLedger(
