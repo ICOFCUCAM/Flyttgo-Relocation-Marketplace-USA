@@ -1,9 +1,18 @@
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 import CountryPage from '../../components/global/CountryPage';
+import CountrySEOSection from '../../components/seo/CountrySEOSection';
 
 export default function CanadaPage() {
+  /* Canada is bilingual EN/FR. The CountrySEOSection switches its
+   * native-language content from the active i18next locale, so the
+   * Header language switcher (FR | EN) flips the SEO copy without
+   * needing a separate /ca/en vs /ca/fr URL split. */
+  const { i18n } = useTranslation();
+  const lang = i18n.language === 'fr' ? 'fr' : 'en';
+
   return (
     <CountryPage
+      seoSlot={<CountrySEOSection countryCode="ca" languageCode={lang} />}
       iso2="ca" flag="🇨🇦"
       name="Canada"
       localLabel="Canada deployment node"

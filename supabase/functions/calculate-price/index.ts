@@ -155,7 +155,7 @@ async function osrmRoute(
     `${lng1},${lat1};${lng2},${lat2}?overview=false&alternatives=false&steps=false`;
 
   const res = await fetch(url, {
-    headers: { 'User-Agent': 'FlyttGo/1.0 (+https://flyttgo.us)' },
+    headers: { 'User-Agent': 'FlyttGo/1.0 (+https://flyttgo.com)' },
   });
   if (!res.ok) throw new Error(`OSRM ${res.status}`);
 

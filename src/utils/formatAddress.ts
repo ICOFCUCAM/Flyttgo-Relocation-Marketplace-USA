@@ -1,15 +1,11 @@
 /**
- * formatNorwegianAddress.ts
+ * formatAddress.ts
  *
- * Standard US address format:
- *   Street number + Street name (+ Unit)
- *   City, State ZIP
- *   USA
- *
- * Example:
- *   350 5th Ave
- *   New York, NY 10118
- *   USA
+ * Multi-country address formatter. The marketplace operates in
+ * the US, Canada, UK, Germany, France, Norway, and beyond, so the
+ * function builds whatever lines the address fields support and
+ * skips the rest. Falls back to a single-line string when only
+ * `formatted` is available.
  *
  * Use this function everywhere addresses are displayed:
  *   - Booking summary
@@ -17,9 +13,6 @@
  *   - Admin panel
  *   - Invoice preview
  *   - Confirmation page
- *
- * Filename kept as `formatNorwegianAddress.ts` to avoid breaking existing
- * imports across the app — the export names below are the public API.
  */
 
 export interface AddressInput {
@@ -82,28 +75,28 @@ export function formatAddress(
   const p = prefix ? `${prefix}_` : '';
 
   const streetName =
-    (address as any)[`${p}street_name`] ||
-    (address as any)[`${p}street`] ||
+    (address as Record<string, string | undefined>)[`${p}street_name`] ||
+    (address as Record<string, string | undefined>)[`${p}street`] ||
     address.street_name ||
     '';
 
   const houseNumber =
-    (address as any)[`${p}house_number`] ||
+    (address as Record<string, string | undefined>)[`${p}house_number`] ||
     address.house_number ||
     '';
 
   const postcode =
-    (address as any)[`${p}postcode`] ||
+    (address as Record<string, string | undefined>)[`${p}postcode`] ||
     address.postcode ||
     '';
 
   const rawCity =
-    (address as any)[`${p}city`] ||
+    (address as Record<string, string | undefined>)[`${p}city`] ||
     address.city ||
     '';
 
   const state =
-    (address as any)[`${p}state`] ||
+    (address as Record<string, string | undefined>)[`${p}state`] ||
     address.state ||
     '';
 
@@ -139,9 +132,6 @@ export function formatAddress(
   return { line1, line2, line3, full, short, oneLine };
 }
 
-/* Backward compatibility export (temporary safety layer) */
-export const formatNorwegianAddress = formatAddress;
-
 export function formatAddressLines(
   address: AddressInput | string | null | undefined,
   prefix: 'pickup' | 'delivery' | '' = ''
@@ -160,7 +150,7 @@ export interface AddressValidationResult {
   };
 }
 
-export function validateNorwegianAddress(
+export function validateAddress(
   address: Partial<AddressInput> | null | undefined
 ): AddressValidationResult {
   const errors: AddressValidationResult['errors'] = {};
@@ -177,10 +167,10 @@ export function validateNorwegianAddress(
     };
   }
 
-  const street = address.street_name || (address as any).pickup_street || '';
-  const postcode = address.postcode || (address as any).pickup_postcode || '';
-  const city = address.city || (address as any).pickup_city || '';
-  const state = address.state || (address as any).pickup_state || '';
+  const street = address.street_name || (address as Record<string, string | undefined>).pickup_street || '';
+  const postcode = address.postcode || (address as Record<string, string | undefined>).pickup_postcode || '';
+  const city = address.city || (address as Record<string, string | undefined>).pickup_city || '';
+  const state = address.state || (address as Record<string, string | undefined>).pickup_state || '';
 
   if (!street || street.trim().length < 2) {
     errors.street = 'Street name is required';
@@ -210,7 +200,7 @@ export function addressToDisplayString(
   address: AddressInput | string | null | undefined,
   prefix: 'pickup' | 'delivery' | '' = ''
 ): string {
-  return formatNorwegianAddress(address, prefix).oneLine;
+  return formatAddress(address, prefix).oneLine;
 }
 
-export default formatNorwegianAddress;
+export default formatAddress;

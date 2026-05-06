@@ -1,6 +1,6 @@
-import React from 'react';
 import { useApp } from '../lib/store';
 import { SectionIndex } from '../components/global/CountryPage';
+import MarketplaceBanner from '../components/banners/MarketplaceBanner';
 
 const STEPS = [
   {
@@ -35,21 +35,22 @@ export default function HowItWorksPage() {
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
-      <section className="border-b border-slate-200 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-6 py-20">
-          <SectionIndex id="GLRM.01" label="Customer workflow" />
-          <h1 className="font-serif text-5xl lg:text-6xl leading-[1.05] tracking-tight">
-            How the global marketplace works
-          </h1>
-          <p className="mt-6 text-lg leading-relaxed text-slate-700 max-w-3xl">
-            FlyttGo Global Logistics &amp; Relocation Marketplace is a coordination
-            layer, not a moving company and not a trucking carrier. Customers
-            describe their relocation; the platform matches them with
-            independent licensed providers across the United States, Canada,
-            Germany, France, the United Kingdom, and Norway.
-          </p>
-        </div>
-      </section>
+      <MarketplaceBanner
+        eyebrow="Customer workflow"
+        breadcrumb={{ id: 'GLRM.01', label: 'How booking works' }}
+        headline="How the global marketplace works"
+        lead="FlyttGo is a coordination layer, not a moving company and not a trucking carrier. Customers describe their relocation; the platform matches them with independent licensed providers across the United States, Canada, Germany, France, the United Kingdom, and Norway."
+        compliancePills={[
+          { label: 'Distance-priced quotes' },
+          { label: 'Country-licensed providers' },
+          { label: 'Escrow on every booking' },
+          { label: 'Audit-ready records' },
+        ]}
+        ctas={[
+          { label: 'Get an instant price →', onClick: () => setPage('booking'), primary: true },
+          { label: 'See pricing engine',     onClick: () => setPage('pricing') },
+        ]}
+      />
 
       <section>
         <div className="max-w-7xl mx-auto px-6 py-20">

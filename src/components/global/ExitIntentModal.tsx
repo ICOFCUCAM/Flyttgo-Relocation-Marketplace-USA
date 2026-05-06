@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { INPUT_FOCUS } from '../ds';
 import { X, Mail, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { track } from '../../lib/analytics';
@@ -23,22 +24,22 @@ export default function ExitIntentModal() {
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return undefined;
 
     /* Touch devices have no mouseleave for the URL bar — skip. */
     const isTouch = window.matchMedia('(pointer: coarse)').matches;
-    if (isTouch) return;
+    if (isTouch) return undefined;
 
     /* Once per session. We could be smarter (per browser, with a
      * 7-day cooldown) but the value of nudging once is high; the
      * cost of nudging twice per session is annoying. Once it is. */
-    if (window.localStorage.getItem(STORAGE_KEY)) return;
+    if (window.localStorage.getItem(STORAGE_KEY)) return undefined;
 
     const onLeave = (e: MouseEvent) => {
       /* Only fire when cursor exits through the top of the viewport.
        * Bottom / left / right exits are too noisy (people scroll
        * outside the window all the time). */
-      if (e.clientY > 0 || e.relatedTarget) return;
+      if (e.clientY > 0 || e.relatedTarget) return undefined;
       window.localStorage.setItem(STORAGE_KEY, '1');
       setOpen(true);
       track('exit_intent_modal_shown');
@@ -59,7 +60,7 @@ export default function ExitIntentModal() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email || !email.includes('@')) return;
+    if (!email || !email.includes('@')) return undefined;
     /* Stub — wire to /functions/v1/subscribe-newsletter when ready.
      * For now we just record locally and show the success state so
      * the conversion path stays consistent during pre-launch. */
@@ -114,7 +115,7 @@ export default function ExitIntentModal() {
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="w-full pl-9 pr-3 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-400 outline-none text-sm"
+                    className={`w-full pl-9 pr-3 py-3 border border-slate-200 rounded-xl ${INPUT_FOCUS} text-sm`}
                   />
                 </div>
               </label>

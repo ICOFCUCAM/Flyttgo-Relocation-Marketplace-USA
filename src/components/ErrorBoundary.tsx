@@ -3,6 +3,10 @@ import { captureError } from '../lib/analytics';
 
 interface Props {
   children: ReactNode;
+  /** When this value changes the boundary resets its error state.
+   *  Pass currentPage so navigating to a new route clears a prior
+   *  error without forcing a hard reload. */
+  resetKey?: unknown;
 }
 
 interface State {
@@ -32,6 +36,16 @@ export default class ErrorBoundary extends Component<Props, State> {
     /* Forwarded to the analytics facade — no-op until VITE_SENTRY_DSN
      * is set + the customer has granted analytics consent. */
     captureError(error, { componentStack: info.componentStack });
+  }
+
+  componentDidUpdate(prev: Props) {
+    /* Soft-reset on navigation. When resetKey changes (e.g. the
+     * route the host App is rendering) we drop the error state so
+     * the new page gets a fresh render. The user no longer has to
+     * click Reload — clicking a nav link is enough. */
+    if (this.state.hasError && prev.resetKey !== this.props.resetKey) {
+      this.setState({ hasError: false, error: null });
+    }
   }
 
   handleReload = () => {
@@ -81,7 +95,7 @@ export default class ErrorBoundary extends Component<Props, State> {
           </div>
 
           <p className="text-xs text-slate-400 mt-6">
-            If this keeps happening, contact <a href="mailto:support@flyttgo.us" className="text-brand-600 hover:underline">support@flyttgo.us</a>.
+            If this keeps happening, contact <a href="mailto:support@flyttgo.com" className="text-brand-600 hover:underline">support@flyttgo.com</a>.
           </p>
         </div>
       </div>

@@ -7,7 +7,7 @@ to actually send mail.
 ## 1. Resend account
 
 1. Sign up at <https://resend.com> (free tier: 3 000 emails/month, 100/day).
-2. **Add a domain** → enter `flyttgo.us` (or whichever you own).
+2. **Add a domain** → enter `flyttgo.com` (or whichever you own).
 3. Add the DNS records Resend gives you (TXT for SPF, CNAMEs for DKIM)
    to your DNS host. Wait for them to verify (~5 min).
 4. Once the domain shows green, go to <https://resend.com/api-keys>
@@ -22,8 +22,8 @@ Functions → Secrets**, add:
 | Name | Value |
 |---|---|
 | `RESEND_API_KEY` | `re_…` from step 1 |
-| `FLYTTGO_FROM` | `FlyttGo <bookings@flyttgo.us>` |
-| `FLYTTGO_REPLY_TO` | `support@flyttgo.us` |
+| `FLYTTGO_FROM` | `FlyttGo <bookings@flyttgo.com>` |
+| `FLYTTGO_REPLY_TO` | `support@flyttgo.com` |
 
 ## 3. Deploy the function
 

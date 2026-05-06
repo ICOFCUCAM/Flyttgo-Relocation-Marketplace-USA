@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Landmark, FileCheck, ShieldCheck, ArrowRight, MapPin, Clock,
   type LucideIcon,

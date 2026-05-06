@@ -1,6 +1,6 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../lib/store';
+import MarketplaceBanner from '../components/banners/MarketplaceBanner';
 
 const INITIATIVES = [
   {
@@ -54,22 +54,18 @@ export default function SustainabilityPage() {
   return (
     <div className="min-h-screen bg-white">
 
-      {/* HERO */}
-      <section className="relative bg-gradient-to-br from-emerald-700 via-emerald-800 to-[#0B2E59] text-white py-24 overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 left-10 w-96 h-96 bg-emerald-300 rounded-full blur-3xl"/>
-          <div className="absolute bottom-10 right-10 w-64 h-64 bg-white rounded-full blur-3xl"/>
-        </div>
-        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 text-xs font-medium px-4 py-2 rounded-full mb-6">
-            🌱 {t('sustainability.heroBadge')}
-          </div>
-          <h1 className="text-5xl sm:text-6xl font-extrabold mb-5 leading-tight">{t('sustainability.heroTitle')}</h1>
-          <p className="text-white/75 text-lg sm:text-xl max-w-2xl mx-auto">
-            {t('sustainability.heroSubtitle')}
-          </p>
-        </div>
-      </section>
+      <MarketplaceBanner
+        variant="inverse"
+        eyebrow={t('sustainability.heroBadge')}
+        breadcrumb={{ id: 'GLRM.SU', label: 'Sustainability' }}
+        headline={t('sustainability.heroTitle')}
+        lead={t('sustainability.heroSubtitle')}
+        compliancePills={[
+          { label: 'Carbon offset · every Elite booking' },
+          { label: 'Route-optimised dispatch' },
+          { label: 'Single-trip consolidation' },
+        ]}
+      />
 
       {/* BY THE NUMBERS */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-10 mb-16">

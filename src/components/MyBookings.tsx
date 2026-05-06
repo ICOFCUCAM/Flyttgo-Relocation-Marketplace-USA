@@ -1,11 +1,17 @@
-import React, { useState, useEffect, lazy, Suspense } from "react";
+import { useState, lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
-import { PackageSearch, Bookmark, MapPin, Calendar, X, Share2 } from "lucide-react";
+import { PackageSearch, Bookmark, MapPin, Calendar, X, Share2, Download } from "lucide-react";
 import { toast } from "sonner";
-import { supabase, supabaseFunctionUrl } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
 import { useApp } from "../lib/store";
+import { openBookingInvoice } from "../lib/bookingInvoice";
 import { EmptyState } from "./ds";
+import {
+  useMyBookings,
+  useCancelBooking,
+  useConfirmCompletion,
+  useApproveEscrowAdjustment,
+} from "../hooks/queries/useCustomerBookings";
 import {
   useSavedQuotesStore,
   removeSavedQuote,
@@ -23,7 +29,7 @@ const DriverTrackingMap = lazy(() => import("./DriverTrackingMap"));
  * booking id off to PaymentPage. See CustomerDashboard.tsx. */
 const PAYMENT_HANDOFF_KEY = "flyttgo:payment-booking-id";
 
-function safeNumber(value: any): number {
+function safeNumber(value: unknown): number {
   const n = Number(value ?? 0);
   return isNaN(n) ? 0 : n;
 }
@@ -36,82 +42,52 @@ function formatDuration(start?: string | null, end?: string | null) {
   return `${Math.floor(diff / 3600)}h ${Math.floor((diff % 3600) / 60)}m`;
 }
 
-interface Booking {
-  id: string; pickup_address: string | null; dropoff_address: string | null;
-  pickup_lat?: number | null; pickup_lng?: number | null;
-  dropoff_lat?: number | null; dropoff_lng?: number | null;
-  driver_id?: string | null;
-  van_type: string | null; status: string | null; payment_status: string | null;
-  price_estimate: number | null; original_price?: number | null; final_price?: number | null;
-  estimated_hours?: number | null; actual_hours?: number | null;
-  start_time?: string | null; end_time?: string | null;
-  price_adjusted?: boolean | null; move_date: string | null; created_at: string | null;
-  customer_confirmation?: boolean | null; driver_confirmation?: boolean | null;
-}
+/* Local Booking shape kept for documentation of the columns the UI
+ * actually reads. The hook returns BookingRow (loose Record-based)
+ * and the few helpers below take that wider type. */
+import type { BookingRow as Booking } from "../services/bookings";
 
 export default function MyBookings() {
   const { user } = useAuth();
   const { setPage, setBookingData } = useApp();
   const { t } = useTranslation();
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
-  const [escrowMap, setEscrowMap] = useState<any>({});
 
-  useEffect(() => { if (!user) return; fetchBookings(); }, [user]);
+  const { bookings, escrowMap, isLoading } = useMyBookings(user?.id);
+  const cancelMut             = useCancelBooking(user?.id);
+  const confirmCompletionMut  = useConfirmCompletion(user?.id);
+  const approveAdjustmentMut  = useApproveEscrowAdjustment(user?.id);
 
   if (!user) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><p className="text-gray-500">Please sign in to view your bookings.</p></div>;
 
-  async function fetchBookings() {
-    setLoading(true);
-    const { data } = await supabase.from("bookings").select("*").eq("customer_id", user?.id).order("created_at", { ascending: false });
-    const rows = (data as Booking[]) || [];
-    setBookings(rows);
-    const ids = rows.map(r => r.id);
-    if (ids.length > 0) {
-      const { data: escrow } = await supabase.from("escrow_payments").select("*").in("booking_id", ids);
-      const map: any = {};
-      escrow?.forEach(e => { map[e.booking_id] = e; });
-      setEscrowMap(map);
-    }
-    setLoading(false);
-  }
-
-  async function cancelBooking(id: string) {
+  function cancelBooking(id: string) {
     if (!confirm("Cancel this booking?")) return;
-    const { error } = await supabase.from("bookings").update({ status: "cancelled" }).eq("id", id);
-    if (error) {
-      toast.error('Could not cancel booking', { description: error.message });
-    } else {
-      toast.success('Booking cancelled', { description: 'Refund (if any) is processed by ops within 24 hours.' });
-    }
-    fetchBookings();
+    cancelMut.mutate(id, {
+      onSuccess: () => toast.success('Booking cancelled', { description: 'Refund (if any) is processed by ops within 24 hours.' }),
+      onError:   e => toast.error('Could not cancel booking', { description: e instanceof Error ? e.message : '' }),
+    });
   }
 
-  async function confirmCompletion(bookingId: string) {
-    // 'customer_confirmed' is not in the bookings.status CHECK constraint —
-    // rely on the customer_confirmation boolean + DB trigger instead.
-    const { error } = await supabase.from("bookings").update({ customer_confirmation: true }).eq("id", bookingId);
-    if (error) {
-      toast.error('Could not confirm completion', { description: error.message });
-      return;
-    }
-    const { data: booking } = await supabase.from("bookings").select("driver_confirmation").eq("id", bookingId).single();
-    if (booking?.driver_confirmation === true) {
-      await fetch(supabaseFunctionUrl("process-payment"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "release_escrow", bookingId }) });
-      toast.success('Job complete', { description: 'Payment released to your driver.' });
-    } else {
-      toast('Waiting for driver confirmation', {
-        description: 'We\'ll release payment as soon as both sides confirm.',
-        icon: '⏳',
-      });
-    }
-    fetchBookings();
+  function confirmCompletion(bookingId: string) {
+    confirmCompletionMut.mutate(bookingId, {
+      onSuccess: ({ driverDone }) => {
+        if (driverDone) {
+          toast.success('Job complete', { description: 'Payment released to your driver.' });
+        } else {
+          toast('Waiting for driver confirmation', {
+            description: "We'll release payment as soon as both sides confirm.",
+            icon: '⏳',
+          });
+        }
+      },
+      onError: e => toast.error('Could not confirm completion', { description: e instanceof Error ? e.message : '' }),
+    });
   }
 
-  async function approveAdjustment(escrowId: string) {
-    await supabase.from("escrow_payments").update({ adjustment_approved: true }).eq("id", escrowId);
-    fetchBookings();
+  function approveAdjustment(escrowId: string) {
+    approveAdjustmentMut.mutate(escrowId, {
+      onError: e => toast.error('Could not approve adjustment', { description: e instanceof Error ? e.message : '' }),
+    });
   }
 
   function repeatBooking(booking: Booking) {
@@ -138,11 +114,11 @@ export default function MyBookings() {
     pending: "bg-yellow-100 text-yellow-700", confirmed: "bg-blue-100 text-blue-700",
     driver_assigned: "bg-indigo-100 text-indigo-700", pickup_arrived: "bg-sky-100 text-sky-700",
     loading: "bg-cyan-100 text-cyan-700", in_transit: "bg-purple-100 text-purple-700",
-    completed: "bg-emerald-100 text-emerald-700", cancelled: "bg-red-100 text-red-700",
+    completed: "bg-amber-100 text-amber-700", cancelled: "bg-red-100 text-red-700",
   };
   const paymentColors: Record<string, string> = {
     pending: "bg-gray-100 text-gray-600", paid: "bg-blue-100 text-blue-700", escrow: "bg-blue-100 text-blue-700",
-    released: "bg-emerald-100 text-emerald-700", refunded: "bg-red-100 text-red-700",
+    released: "bg-amber-100 text-amber-700", refunded: "bg-red-100 text-red-700",
   };
 
   return (
@@ -172,10 +148,10 @@ export default function MyBookings() {
         />
         <div className="flex flex-wrap gap-2 mb-6">
           {["all","pending","driver_assigned","in_transit","completed","cancelled"].map(f => (
-            <button key={f} onClick={() => setFilter(f)} className={`px-4 py-2 rounded text-sm ${filter === f ? "bg-emerald-600 text-white" : "bg-white border"}`}>{f.replace(/_/g, " ")}</button>
+            <button key={f} onClick={() => setFilter(f)} className={`px-4 py-2 rounded text-sm ${filter === f ? "bg-amber-600 text-white" : "bg-white border"}`}>{f.replace(/_/g, " ")}</button>
           ))}
         </div>
-        {loading ? (
+        {isLoading ? (
           <div className="space-y-4 animate-pulse">
             {[0, 1, 2].map(i => (
               <div key={i} className="bg-white p-6 rounded-xl border border-gray-100">
@@ -247,7 +223,7 @@ export default function MyBookings() {
               {booking.move_date && <p className="text-sm text-gray-500 mb-2">Move date: <span className="font-medium">{booking.move_date}</span></p>}
               <div className="text-sm text-gray-600 mb-1">Timer: {formatDuration(booking.start_time, booking.end_time)}</div>
               <div className="text-sm text-gray-600 mb-3">Estimated: {booking.estimated_hours ?? "-"} hrs | Actual: {booking.actual_hours ?? "Running"}</div>
-              <div className="text-xl font-bold text-emerald-600 mb-2">{safeNumber(price).toFixed(0)} USD</div>
+              <div className="text-xl font-bold text-amber-600 mb-2">{safeNumber(price).toFixed(0)} USD</div>
               {booking.price_adjusted && <div className="bg-orange-50 border border-orange-200 rounded p-3 mb-3"><p className="text-orange-700 text-sm font-semibold">Extra time added — price updated</p></div>}
               {escrow?.adjustment_required && !escrow.adjustment_approved && <button onClick={() => approveAdjustment(escrow.id)} className="mb-3 bg-orange-600 text-white px-4 py-2 rounded text-sm">Approve additional charge</button>}
               {/* Payment-required banner — a pending payment_status
@@ -268,14 +244,24 @@ export default function MyBookings() {
                 {booking.payment_status === "pending" && booking.status !== "cancelled" && (
                   <button
                     onClick={() => completePayment(booking.id)}
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm font-semibold"
+                    className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded text-sm font-semibold"
                   >
                     {t('myBookings.completePayment')}
                   </button>
                 )}
                 {booking.status === "pending" && <button onClick={() => cancelBooking(booking.id)} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">{t('myBookings.cancel')}</button>}
-                {booking.status === "completed" && !booking.customer_confirmation && <button onClick={() => confirmCompletion(booking.id)} className="px-4 py-2 bg-emerald-600 text-white rounded text-sm">{t('myBookings.confirmCompletion')}</button>}
+                {booking.status === "completed" && !booking.customer_confirmation && <button onClick={() => confirmCompletion(booking.id)} className="px-4 py-2 bg-amber-600 text-white rounded text-sm">{t('myBookings.confirmCompletion')}</button>}
                 <button onClick={() => repeatBooking(booking)} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">{t('myBookings.repeatBooking')}</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const ok = openBookingInvoice({ booking });
+                    if (!ok) toast.error('Allow pop-ups to download the invoice.');
+                  }}
+                  className="px-4 py-2 border rounded text-sm hover:bg-gray-50 inline-flex items-center gap-1.5"
+                >
+                  <Download size={14} /> Invoice
+                </button>
               </div>
               <div className="text-xs text-gray-400 mt-3">{t('myBookings.loyaltyPoints')}: {Math.floor(Number(price || 0) / 100)}</div>
             </div>
@@ -334,7 +320,7 @@ function SavedQuotesPanel({ onResume }: { onResume: (q: SavedQuote) => void }) {
 
             <div className="text-sm space-y-1 mb-3">
               <p className="flex items-start gap-1.5 text-slate-700">
-                <MapPin size={12} className="text-emerald-500 mt-0.5 flex-shrink-0" />
+                <MapPin size={12} className="text-amber-500 mt-0.5 flex-shrink-0" />
                 <span className="truncate">{q.pickupAddress}</span>
               </p>
               <p className="flex items-start gap-1.5 text-slate-700">
@@ -379,7 +365,7 @@ function SavedQuotesPanel({ onResume }: { onResume: (q: SavedQuote) => void }) {
  * <ShareQuoteButton> — copy-link button on each saved quote.
  *
  * Encodes the quote into a URL-safe token (saved-quotes-store
- * encoders), copies "https://flyttgo.us/?q=<token>" to the
+ * encoders), copies "https://flyttgo.com/?q=<token>" to the
  * clipboard, and flashes a 2s "Copied" tick. Recipients land on
  * the home page; AppLayout's inbound handler decodes the param
  * and saves it to their local store.

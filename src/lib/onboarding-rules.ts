@@ -288,6 +288,95 @@ export const ONBOARDING_RULES: CountryOnboardingRules[] = [
       'moving-labor','packing','vehicle-rental','university-relocation','corporate-relocation',
     ],
   },
+
+  /* ── Wave-1 / Wave-2 expansion markets ────────────────────────
+   * Stub onboarding rules so drivers in these countries can apply
+   * via /drive. Country-specific compliance fields are
+   * intentionally minimal (`business-registration`) until each
+   * jurisdiction's licensing review is completed; the universal
+   * fields (license, vehicle reg, insurance) still gate the form.
+   * Replace with the full regulatory rule set per country before
+   * formally activating that market. */
+  {
+    country: 'nl', countryName: 'Netherlands',
+    subtitle: 'KvK registration plus a Tachograph card for >3.5 t vehicles.',
+    countryFields: [
+      { slug: 'business-registration', label: 'KvK number', requirement: 'required' },
+    ],
+    supportedCategories: ['licensed-carrier','moving-labor','packing','storage','vehicle-rental','freight-forwarding','international-relocation','corporate-relocation'],
+  },
+  {
+    country: 'se', countryName: 'Sweden',
+    subtitle: 'Yrkestrafiktillstånd carriers; sole-trader F-skatt accepted for crew-only.',
+    countryFields: [
+      { slug: 'business-registration', label: 'Org-nummer', requirement: 'required' },
+    ],
+    supportedCategories: ['licensed-carrier','moving-labor','packing','storage','international-relocation','corporate-relocation'],
+  },
+  {
+    country: 'dk', countryName: 'Denmark',
+    subtitle: 'CVR-registered carriers; Vejdirektoratet operator licence for heavy goods.',
+    countryFields: [
+      { slug: 'business-registration', label: 'CVR number', requirement: 'required' },
+    ],
+    supportedCategories: ['licensed-carrier','moving-labor','packing','storage','international-relocation','corporate-relocation'],
+  },
+  {
+    country: 'at', countryName: 'Austria',
+    subtitle: 'Gewerbeanmeldung at the Bezirkshauptmannschaft.',
+    countryFields: [
+      { slug: 'business-registration', label: 'Firmenbuch / Gewerbe-Nummer', requirement: 'required' },
+    ],
+    supportedCategories: ['licensed-carrier','moving-labor','packing','storage','international-relocation','corporate-relocation'],
+  },
+  {
+    country: 'be', countryName: 'Belgium',
+    subtitle: 'BCE/KBO-registered carriers; ETC licence for cross-border heavy transport.',
+    countryFields: [
+      { slug: 'business-registration', label: 'BCE / KBO number', requirement: 'required' },
+    ],
+    supportedCategories: ['licensed-carrier','moving-labor','packing','storage','international-relocation','corporate-relocation'],
+  },
+  {
+    country: 'es', countryName: 'Spain',
+    subtitle: 'Tarjeta de transporte for >3.5 t carriers; sole-trader autónomo accepted otherwise.',
+    countryFields: [
+      { slug: 'business-registration', label: 'NIF / CIF', requirement: 'required' },
+    ],
+    supportedCategories: ['licensed-carrier','moving-labor','packing','storage','international-relocation','corporate-relocation'],
+  },
+  {
+    country: 'it', countryName: 'Italy',
+    subtitle: 'Albo Autotrasportatori for licensed carriers; Camera di Commercio for crew-only.',
+    countryFields: [
+      { slug: 'business-registration', label: 'P.IVA / REA', requirement: 'required' },
+    ],
+    supportedCategories: ['licensed-carrier','moving-labor','packing','storage','international-relocation','corporate-relocation'],
+  },
+  {
+    country: 'pl', countryName: 'Poland',
+    subtitle: 'GITD operator licence for >3.5 t carriers.',
+    countryFields: [
+      { slug: 'business-registration', label: 'NIP / REGON', requirement: 'required' },
+    ],
+    supportedCategories: ['licensed-carrier','moving-labor','packing','storage','international-relocation','corporate-relocation'],
+  },
+  {
+    country: 'cz', countryName: 'Czech Republic',
+    subtitle: 'Živnostenský list trade licence; ÚSOK heavy-transport authorisation for licensed carriers.',
+    countryFields: [
+      { slug: 'business-registration', label: 'IČO', requirement: 'required' },
+    ],
+    supportedCategories: ['licensed-carrier','moving-labor','packing','storage','international-relocation','corporate-relocation'],
+  },
+  {
+    country: 'cy', countryName: 'Cyprus',
+    subtitle: 'Department of Road Transport licence for licensed carriers.',
+    countryFields: [
+      { slug: 'business-registration', label: 'TIC / Companies-Section number', requirement: 'required' },
+    ],
+    supportedCategories: ['licensed-carrier','moving-labor','packing','storage','international-relocation','corporate-relocation'],
+  },
 ];
 
 export type OnboardingCountryCode = CountryOnboardingRules['country'];

@@ -1,12 +1,13 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { INPUT_FOCUS } from '../ds';
 import {
   Calculator, Users, Truck, Package, Clock, Sun, Snowflake, Building2,
-  AlertTriangle, ArrowDownRight, Wrench, TrendingUp, ShieldCheck,
+  AlertTriangle, ArrowDownRight, TrendingUp, ShieldCheck,
   type LucideIcon,
 } from 'lucide-react';
 import {
   calculateQuote, COUNTRY_BASELINES, CITY_MULTIPLIERS,
-  type QuoteInput, type ServiceType, type InsuranceTier, type PricingCountry,
+  type QuoteInput, type ServiceType, type InsuranceTier,
 } from '../../lib/pricing-engine';
 import { COUNTRY_PROFILES, formatPrice } from '../../lib/country-profiles';
 import { track } from '../../lib/analytics';
@@ -153,7 +154,7 @@ export default function LivePriceCalculator() {
             value={state.city}
             onChange={e => patch('city', e.target.value)}
             placeholder="e.g. New York, Berlin, Toronto…"
-            className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none"
+            className={`w-full px-3 py-2 text-sm border border-slate-300 rounded-lg ${INPUT_FOCUS}`}
           />
           <datalist id={`city-options-${state.country}`}>
             {cityList.map(c => <option key={c} value={c} />)}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Download, X, Smartphone } from 'lucide-react';
 import { track } from '../../lib/analytics';
 
@@ -31,19 +31,33 @@ export default function PWAInstallPrompt() {
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    /* Already installed → never show. */
-    if (window.matchMedia('(display-mode: standalone)').matches) return;
+    if (typeof window === 'undefined') return undefined;
+
+    /* Already installed → never show. Cover three install signals:
+     *   1. CSS display-mode (Chrome / Edge / desktop PWAs)
+     *   2. (navigator as any).standalone (iOS Safari home-screen)
+     *   3. ?source=pwa launch URL (manifest start_url)
+     * Any one is enough to suppress the prompt. */
+    const inStandaloneCSS = window.matchMedia('(display-mode: standalone)').matches;
+    const iosStandalone   = (navigator as unknown as { standalone?: boolean }).standalone === true;
+    const launchedFromPWA = new URLSearchParams(window.location.search).get('source')?.startsWith('pwa');
+    if (inStandaloneCSS || iosStandalone || launchedFromPWA) return undefined;
 
     /* Honour the cooldown if recently dismissed. */
     const dismissedAt = Number(window.localStorage.getItem(STORAGE_KEY) ?? 0);
-    if (dismissedAt && Date.now() - dismissedAt < COOLDOWN_DAYS * 24 * 60 * 60 * 1000) return;
+    if (dismissedAt && Date.now() - dismissedAt < COOLDOWN_DAYS * 24 * 60 * 60 * 1000) return undefined;
 
     const onBefore = (e: Event) => {
       e.preventDefault();
       setEvt(e as BeforeInstallPromptEvent);
+      track('pwa_install_prompt_shown', { surface: 'native' });
     };
     window.addEventListener('beforeinstallprompt', onBefore);
+
+    /* Fire-and-forget analytics if the browser later confirms install.
+     * The event fires once when the user accepts the OS dialog. */
+    const onInstalled = () => track('pwa_installed');
+    window.addEventListener('appinstalled', onInstalled);
 
     /* iOS Safari fallback — show a soft hint after 20s on the
      * marketing surfaces. UA-sniffing is the practical path here;
@@ -52,11 +66,15 @@ export default function PWAInstallPrompt() {
     const isIOSSafari = /iPhone|iPad|iPod/.test(ua) && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua);
     let iosTimer: ReturnType<typeof setTimeout> | undefined;
     if (isIOSSafari) {
-      iosTimer = setTimeout(() => setIosTip(true), 20000);
+      iosTimer = setTimeout(() => {
+        setIosTip(true);
+        track('pwa_install_prompt_shown', { surface: 'ios-soft-hint' });
+      }, 20000);
     }
 
     return () => {
       window.removeEventListener('beforeinstallprompt', onBefore);
+      window.removeEventListener('appinstalled', onInstalled);
       if (iosTimer) clearTimeout(iosTimer);
     };
   }, []);
@@ -69,7 +87,7 @@ export default function PWAInstallPrompt() {
   }
 
   async function install() {
-    if (!evt) return;
+    if (!evt) return undefined;
     track('pwa_install_prompted');
     await evt.prompt();
     const { outcome } = await evt.userChoice;

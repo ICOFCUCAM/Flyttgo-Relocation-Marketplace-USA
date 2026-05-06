@@ -1,12 +1,14 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  ArrowRight, Star, Truck, ShieldCheck, MapPin, ArrowLeft, CheckCircle2, Award,
+  ArrowRight, Star, Truck, ShieldCheck, CheckCircle2,
 } from 'lucide-react';
 import { useApp } from '../lib/store';
 import { findServiceCategory, SERVICE_CATEGORIES, type ServiceCategory } from '../lib/service-categories';
 import { findPricingTier, formatPricingRange } from '../lib/us-pricing';
 import { PROVIDERS, type ProviderRecord } from '../lib/providers-catalogue';
+import { getProviderPublicIdentity } from '../lib/provider-identity';
 import { Section, Eyebrow, Pill, EmptyState } from '../components/ds';
+import MarketplaceBanner from '../components/banners/MarketplaceBanner';
 import AvailabilityBadge from '../components/global/AvailabilityBadge';
 import AddToCompareButton from '../components/global/AddToCompareButton';
 import { track } from '../lib/analytics';
@@ -81,7 +83,7 @@ export default function ServiceCategoryPage() {
           body={
             <span>
               We couldn't find that service category. Pick one of the
-              six categories below to see providers who offer it.
+              categories below to see providers who offer it.
             </span>
           }
           primaryAction={{ label: 'See all services', onClick: () => setPage('services') }}
@@ -101,21 +103,41 @@ export default function ServiceCategoryPage() {
 
   return (
     <main className="bg-white text-ink-900">
-      {/* HERO */}
-      <Section tone="ink" size="default">
-        <button
-          onClick={() => setPage('services')}
-          className="inline-flex items-center gap-1.5 text-amber-300 hover:text-amber-200 text-xs font-bold uppercase tracking-wider mb-6 transition"
-        >
-          <ArrowLeft size={12} /> All services
-        </button>
-        <Pill tone="brand" className="mb-3"><Award size={12} /> Service category</Pill>
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-[1.05] mb-3">
-          {category.name}
-        </h1>
-        <p className="text-amber-200 text-lg font-semibold mb-2">{category.tagline}</p>
-        <p className="text-white/75 max-w-2xl leading-relaxed">{category.intro}</p>
-      </Section>
+      <MarketplaceBanner
+        variant="inverse"
+        eyebrow="Service category"
+        breadcrumb={{ id: 'GLRM.04', label: category.name }}
+        headline={category.name}
+        lead={category.intro}
+        compliancePills={[
+          { label: 'Licensed providers' },
+          { label: 'Distance-priced' },
+          { label: 'Escrow-protected' },
+          { label: 'Insured in transit' },
+        ]}
+        ctas={[
+          { label: 'Get a binding quote →', onClick: () => setPage('booking'), primary: true },
+          { label: '← All services', onClick: () => setPage('services') },
+        ]}
+        aside={
+          <div className="bg-white/5 border border-white/15 backdrop-blur rounded-2xl p-5">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-amber-300 mb-2">
+              Tagline
+            </p>
+            <p className="text-white text-lg font-semibold leading-snug">{category.tagline}</p>
+            <div className="mt-4 pt-4 border-t border-white/10 text-xs text-white/70 grid grid-cols-2 gap-3">
+              <div>
+                <p className="font-bold text-white">{category.howItWorks.length} steps</p>
+                <p>How it works</p>
+              </div>
+              <div>
+                <p className="font-bold text-white">{category.faq.length} FAQs</p>
+                <p>Service-specific</p>
+              </div>
+            </div>
+          </div>
+        }
+      />
 
       {/* TYPICAL US RATES — Wave US-pricing.
           Renders only when the category links to a us-pricing tier
@@ -243,7 +265,13 @@ export default function ServiceCategoryPage() {
           />
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {matchingProviders.map(p => (
+            {matchingProviders.map(p => {
+              /* White-label public identity — same masking rule as
+               * every other public surface (TopProviders, profile,
+               * directory). Customer never sees the real brand
+               * before booking confirmation. */
+              const id = getProviderPublicIdentity(p);
+              return (
               <article
                 key={p.slug}
                 onClick={() => openProfile(p.slug)}
@@ -255,13 +283,13 @@ export default function ServiceCategoryPage() {
                       <Truck size={16} className="text-brand-600" />
                     </div>
                     <div className="min-w-0">
-                      <p className="font-extrabold text-ink-900 truncate">{p.name}</p>
-                      <p className="text-xs text-slate-500 inline-flex items-center gap-1 truncate">
-                        <span aria-hidden>{p.flag}</span>{p.city}
+                      <p className="font-extrabold text-ink-900 truncate">{id.displayName}</p>
+                      <p className="text-xs text-slate-500 font-mono truncate">
+                        <span aria-hidden className="mr-1">{p.flag}</span>{id.operatorId}
                       </p>
                     </div>
                   </div>
-                  {p.badge && <Pill tone="brand" size="sm">{p.badge}</Pill>}
+                  <Pill tone="brand" size="sm">{id.tierLabel}</Pill>
                 </div>
 
                 <div className="flex items-center gap-2 mb-3 text-sm flex-wrap">
@@ -307,19 +335,20 @@ export default function ServiceCategoryPage() {
                   <AddToCompareButton
                     item={{
                       id:        p.slug,
-                      name:      p.name,
-                      city:      p.city,
+                      name:      id.displayName,
+                      city:      id.region,
                       flag:      p.flag,
                       rating:    p.rating,
                       reviews:   p.reviews,
                       fromPrice: p.fromPrice,
-                      badge:     p.badge,
+                      badge:     id.tierLabel,
                       verified:  p.verified,
                     }}
                   />
                 </div>
               </article>
-            ))}
+              );
+            })}
           </div>
         )}
       </Section>

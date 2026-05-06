@@ -1,14 +1,19 @@
-import React, { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../lib/auth';
 import { useApp } from '../lib/store';
 import { supabase } from '../lib/supabase';
+import MarketplaceBanner from './banners/MarketplaceBanner';
 import {
-  ONBOARDING_RULES, findOnboardingRules, applyConditions,
+  findOnboardingRules, applyConditions,
   COMPLIANCE_DISCLOSURE,
+  ONBOARDING_RULES,
   type OnboardingCountryCode,
 } from '../lib/onboarding-rules';
+import { POPULAR_CITIES } from '../lib/popular-cities';
+import { ANCHOR_CITIES } from '../lib/expansion-cities';
+import type { BookingCountry } from '../lib/store';
 
 const VEHICLE_TYPES = [
   { id: 'small_van', label: 'Small Van (3–4 m³)', examples: 'Ford Transit Connect, VW Caddy' },
@@ -42,14 +47,24 @@ const PROVIDER_CATEGORIES = [
  * Each key is the canonical document_type value we write to
  * driver_documents. The admin dashboard approval flow already reads
  * those exact strings (see AdminDashboard REQUIRED_DOCS), so we stay
- * aligned by not renaming them. The fourth type (identity_document)
- * is new — admin doesn't currently require it, but uploading it
- * costs nothing and matches the spec. */
+ * aligned by not renaming them. */
+/** Flag emojis keyed on the lowercase country code in ONBOARDING_RULES.
+ *  Lookup-only — the rules file holds the canonical name + compliance
+ *  fields, this just decorates the dropdown. Add a row when introducing
+ *  a new country to onboarding-rules.ts. */
+const COUNTRY_FLAG: Record<string, string> = {
+  us: '🇺🇸', ca: '🇨🇦', gb: '🇬🇧', de: '🇩🇪', fr: '🇫🇷', no: '🇳🇴',
+  ae: '🇦🇪', ng: '🇳🇬', ke: '🇰🇪', in: '🇮🇳',
+  nl: '🇳🇱', se: '🇸🇪', dk: '🇩🇰', at: '🇦🇹', be: '🇧🇪',
+  es: '🇪🇸', it: '🇮🇹', pl: '🇵🇱', cz: '🇨🇿', cy: '🇨🇾',
+};
+
 const DOCUMENT_TYPES = [
   { key: 'driver_license',       label: "Driver's License",   desc: 'Valid US or EU/EEA driver\u2019s license (front + back)' },
   { key: 'insurance',             label: 'Vehicle Insurance',  desc: 'Comprehensive insurance covering commercial use' },
   { key: 'vehicle_registration', label: 'Vehicle Registration', desc: 'Current vehicle registration document' },
   { key: 'identity_document',    label: 'ID / Passport',      desc: 'Government-issued photo ID or passport' },
+  { key: 'vehicle_photo',        label: 'Vehicle Photo',      desc: 'Clear exterior photo of the vehicle you will use for jobs' },
 ] as const;
 type DocumentType = typeof DOCUMENT_TYPES[number]['key'];
 
@@ -63,7 +78,7 @@ function extensionOf(name: string): string {
 
 export default function DriverOnboarding() {
   const { user, profile } = useAuth();
-  const { setPage } = useApp();
+  const { setPage, setShowAuthModal, setAuthMode } = useApp();
   const { t } = useTranslation();
 
   /* Steps list — built inside the component so titles translate
@@ -85,7 +100,7 @@ export default function DriverOnboarding() {
   const [lastName, setLastName] = useState(profile?.last_name || '');
   const [phone, setPhone] = useState(profile?.phone || '');
   const [city, setCity] = useState('');
-  const [country, setCountry] = useState<'US' | 'CA' | 'DE' | 'FR' | 'GB' | 'NO' | 'NG' | 'KE' | 'AE' | 'IN' | ''>('');
+  const [country, setCountry] = useState<string>('');
   const [providerCategory, setProviderCategory] = useState('');
   /* Country-specific compliance answers — keyed by the rule's
    * field slug (e.g. 'usdot-number', 'siret', 'gewerbeanmeldung').
@@ -109,6 +124,7 @@ export default function DriverOnboarding() {
     insurance:            null,
     vehicle_registration: null,
     identity_document:    null,
+    vehicle_photo:        null,
   });
 
   // Step 4 — Terms
@@ -188,7 +204,13 @@ export default function DriverOnboarding() {
   }
 
   async function handleSubmit() {
-    if (!user) return;
+    if (!user) {
+      /* Silent-return was masking the most common failure mode —
+       * the operator filled out four steps without signing up. Be
+       * explicit so they can fix it. */
+      setError('Please sign in or create an account before submitting.');
+      return;
+    }
     setLoading(true);
     setError('');
 
@@ -202,42 +224,100 @@ export default function DriverOnboarding() {
        *    user_id, email, first_name, last_name, phone, address,
        *    license_number, license_expiry, years_experience,
        *    vehicle_type, vehicle_model, vehicle_year (int),
-       *    vehicle_registration, cargo_capacity, city, zone, status.
-       *    UI collects make + model separately; we concatenate them
-       *    into the single `vehicle_model` column. */
-      /* Provider category and country are appended to existing columns so we
-       * don't depend on a schema migration. The admin dashboard reads
-       * `zone` (country) and `vehicle_model` (with the category prefix)
-       * to surface the marketplace classification per applicant. */
+       *    vehicle_registration, cargo_capacity, city, zone, status,
+       *    plus structured compliance columns added by
+       *    docs/install-application-compliance-columns.sql. */
       const categoryLabel = PROVIDER_CATEGORIES.find(c => c.id === providerCategory)?.label ?? '';
-      /* Country-specific compliance answers serialized as a tiny
-       * JSON suffix so the admin dashboard sees them inline. We
-       * only emit the suffix when at least one answer is non-empty. */
-      const compliancePayload = Object.entries(complianceAnswers)
-        .filter(([, v]) => v && v.trim() !== '');
-      const complianceSuffix  = compliancePayload.length > 0
-        ? `· compliance=${JSON.stringify(Object.fromEntries(compliancePayload))}`
+
+      /* Compliance routing — known onboarding slugs map to dedicated
+       * columns. Unmapped slugs (province, business-permit, etc.)
+       * are still serialised into the cram-string suffix on
+       * vehicle_model so we don't lose data on jurisdictions that
+       * don't yet have first-class columns. The reader in
+       * src/lib/application-compliance.ts prefers structured
+       * columns; the parser is the legacy fallback. */
+      const SLUG_TO_COL: Record<string, string> = {
+        'usdot-number':                'usdot_number',
+        'mc-number':                   'mc_number',
+        'cargo-insurance':             'cargo_insurance',
+        'operator-licence-uk':         'gvol_number',
+        'gewerbeanmeldung':            'gukg_licence',
+        'commercial-transport-licence': 'ca_provincial_licence',
+        'siret':                       'siret',
+        'vat-number':                  'tva',
+        'organisation-number':         'yrkestransport',
+      };
+
+      const structuredCompliance: Record<string, string> = {};
+      const unmappedCompliance:   Record<string, string> = {};
+      for (const [slug, raw] of Object.entries(complianceAnswers)) {
+        const trimmed = (raw ?? '').trim();
+        if (!trimmed) continue;
+        const col = SLUG_TO_COL[slug];
+        if (col) structuredCompliance[col] = trimmed;
+        else     unmappedCompliance[slug]  = trimmed;
+      }
+
+      /* Cram-string suffix only carries unmapped slugs now. When
+       * every supported jurisdiction has a column, this branch
+       * collapses and we can write a clean vehicle_model. */
+      const unmappedEntries  = Object.entries(unmappedCompliance);
+      const complianceSuffix = unmappedEntries.length > 0
+        ? `· compliance=${JSON.stringify(Object.fromEntries(unmappedEntries))}`
         : '';
       const vehicleField  = [categoryLabel, `${vehicleMake} ${vehicleModel}`.trim(), complianceSuffix]
         .filter(Boolean)
         .join(' · ');
 
-      const { error: appError } = await supabase
-        .from('driver_applications')
-        .insert({
-          user_id: user.id,
-          email: user.email ?? null,
-          first_name: firstName,
-          last_name: lastName,
-          phone,
-          city,
-          zone: country || null,
-          vehicle_type: vehicleType,
-          vehicle_model: vehicleField,
-          vehicle_year: vehicleYear ? parseInt(vehicleYear, 10) : null,
-          vehicle_registration: licensePlate,
-          status: 'pending',
-        });
+      /* Insert with tolerant fallback. PostgREST rejects inserts
+       * referencing columns that don't exist (400 PGRST204), so
+       * the first attempt sends the structured columns; if the
+       * migration in docs/install-application-compliance-columns.
+       * sql hasn't been applied yet we retry with just the legacy
+       * columns. Either way the cram-string carries the same
+       * compliance data so no data is lost.
+       *
+       * Once the migration is universally applied, drop the
+       * fallback branch + unmappedCompliance suffix.
+       */
+      const legacyRow = {
+        user_id: user.id,
+        email: user.email ?? null,
+        first_name: firstName,
+        last_name: lastName,
+        phone,
+        city,
+        zone: country || null,
+        vehicle_type: vehicleType,
+        vehicle_model: vehicleField,
+        vehicle_year: vehicleYear ? parseInt(vehicleYear, 10) : null,
+        vehicle_registration: licensePlate,
+        status: 'pending',
+      };
+      const structuredRow = {
+        ...legacyRow,
+        provider_category: providerCategory || null,
+        ...structuredCompliance,
+      };
+
+      let appError: Error | null = null;
+      const firstAttempt = await supabase.from('driver_applications').insert(structuredRow);
+      if (firstAttempt.error) {
+        /* PGRST204 = "Could not find the X column of Y in the
+         * schema cache". We treat any column-shape error as a
+         * signal the migration hasn't applied and retry legacy. */
+        const msg = (firstAttempt.error.message ?? '').toLowerCase();
+        const looksLikeMissingColumn =
+          msg.includes('column') ||
+          firstAttempt.error.code === 'PGRST204' ||
+          firstAttempt.error.code === '42703';
+        if (looksLikeMissingColumn) {
+          const retry = await supabase.from('driver_applications').insert(legacyRow);
+          appError = retry.error as Error | null;
+        } else {
+          appError = firstAttempt.error as Error | null;
+        }
+      }
 
       if (appError) throw appError;
 
@@ -267,8 +347,8 @@ export default function DriverOnboarding() {
        *    client-side role update that silently fails under RLS. */
 
       setSubmitted(true);
-    } catch (e: any) {
-      setError(e.message || 'Submission failed. Please try again.');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Submission failed. Please try again.');
     }
     setLoading(false);
   }
@@ -308,12 +388,25 @@ export default function DriverOnboarding() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-[#1A365D] to-[#2D4A7A] text-white py-10">
-        <div className="max-w-3xl mx-auto px-4 text-center">
-          <h1 className="text-3xl font-bold mb-2">{t('driverOnboarding.heroTitle')}</h1>
-          <p className="text-white/70 mb-5">{t('driverOnboarding.heroSubtitle')}</p>
-          <p className="text-white/70 text-sm leading-relaxed bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-left">
+      <MarketplaceBanner
+        variant="inverse"
+        eyebrow="Provider onboarding"
+        breadcrumb={{ id: 'GLRM.05', label: 'Apply as a provider' }}
+        headline={<>Drive for Flytt<span className="text-amber-300">Go</span>. Country-licensed dispatch.</>}
+        lead={t('driverOnboarding.heroSubtitle')}
+        compliancePills={[
+          { label: 'USDOT / GVOL / GüKG eligible' },
+          { label: 'Document-verified' },
+          { label: 'Escrow-protected payouts' },
+          { label: 'Tier-based commission' },
+        ]}
+      />
+
+      {/* Coordination-layer disclosure — sits below the banner so the
+          platform's posture is unambiguous before any field is touched. */}
+      <div className="border-b border-slate-200 bg-white">
+        <div className="max-w-3xl mx-auto px-4 py-5">
+          <p className="text-slate-600 text-sm leading-relaxed">
             FlyttGo Global Logistics &amp; Relocation Marketplace operates as a
             digital coordination platform connecting customers with independent
             licensed relocation providers across multiple jurisdictions worldwide.
@@ -342,7 +435,7 @@ export default function DriverOnboarding() {
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-10">
           {STEPS.map((s, i) => (
-            <React.Fragment key={s.id}>
+            <Fragment key={s.id}>
               {i > 0 && (
                 <div className={`flex-1 h-0.5 mx-2 ${step > s.id - 1 ? 'bg-emerald-500' : 'bg-gray-200'}`} />
               )}
@@ -360,13 +453,37 @@ export default function DriverOnboarding() {
                 </div>
                 <div className="text-xs font-medium text-gray-600 mt-1 hidden sm:block">{s.title}</div>
               </div>
-            </React.Fragment>
+            </Fragment>
           ))}
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
           {error && (
-            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm">{error}</div>
+            <div role="alert" className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-center justify-between gap-3 flex-wrap">
+              <span>{error}</span>
+              {/* When the failure mode is the unauthenticated submit,
+               *  surface the sign-in CTA inline so the operator
+               *  doesn't have to hunt for it in the header. The error
+               *  copy is the trigger — exact match keeps it scoped. */}
+              {!user && error.startsWith('Please sign in') && (
+                <div className="flex gap-2 flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => { setAuthMode('signin'); setShowAuthModal(true); }}
+                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+                  >
+                    Sign in
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setAuthMode('signup'); setShowAuthModal(true); }}
+                    className="px-3 py-1.5 bg-white border border-emerald-600 text-emerald-700 hover:bg-emerald-50 rounded-md text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+                  >
+                    Create account
+                  </button>
+                </div>
+              )}
+            </div>
           )}
 
           {/* STEP 1 — Personal Info */}
@@ -395,25 +512,59 @@ export default function DriverOnboarding() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Country of operation</label>
-                    <select value={country} onChange={e => setCountry(e.target.value as typeof country)}
+                    <select value={country} onChange={e => { setCountry(e.target.value as typeof country); setCity(''); }}
                       className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm bg-white">
                       <option value="">Select country</option>
-                      <option value="US">🇺🇸 United States</option>
-                      <option value="CA">🇨🇦 Canada</option>
-                      <option value="GB">🇬🇧 United Kingdom</option>
-                      <option value="DE">🇩🇪 Germany</option>
-                      <option value="FR">🇫🇷 France</option>
-                      <option value="NO">🇳🇴 Norway</option>
-                      <option value="AE">🇦🇪 United Arab Emirates</option>
-                      <option value="NG">🇳🇬 Nigeria</option>
-                      <option value="KE">🇰🇪 Kenya</option>
-                      <option value="IN">🇮🇳 India</option>
+                      {/* Driven by ONBOARDING_RULES so adding a new
+                       *  country in src/lib/onboarding-rules.ts unlocks
+                       *  it on the driver form automatically. Ordered
+                       *  by display name for predictable UX. */}
+                      {[...ONBOARDING_RULES]
+                        .sort((a, b) => a.countryName.localeCompare(b.countryName))
+                        .map(r => (
+                          <option key={r.country} value={r.country.toUpperCase()}>
+                            {COUNTRY_FLAG[r.country] ?? ''} {r.countryName}
+                          </option>
+                        ))}
                     </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">{t('driverOnboarding.cityLabel')}</label>
-                    <input value={city} onChange={e => setCity(e.target.value)} placeholder="City / metro"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm" />
+                    {(() => {
+                      /* Per-country city list. Active markets pull from
+                       *  POPULAR_CITIES (the curated shopfront set);
+                       *  expansion markets pull from ANCHOR_CITIES
+                       *  (5 anchor cities per country). When neither
+                       *  has a list (AE/NG/KE/IN) or the driver picks
+                       *  "Other", fall back to free-text. */
+                      const lc = country.toLowerCase();
+                      const popular = POPULAR_CITIES[lc as BookingCountry] ?? [];
+                      const anchor = ANCHOR_CITIES.filter(c => c.country === lc).map(c => c.city);
+                      const list = popular.length > 0 ? popular : anchor;
+                      const inList = list.includes(city);
+                      const useFreeText = list.length === 0 || (city && !inList);
+                      if (useFreeText) {
+                        return (
+                          <input
+                            value={city}
+                            onChange={e => setCity(e.target.value)}
+                            placeholder="City / metro"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
+                          />
+                        );
+                      }
+                      return (
+                        <select
+                          value={city}
+                          onChange={e => setCity(e.target.value === '__other' ? ' ' : e.target.value)}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm bg-white"
+                        >
+                          <option value="">Select city</option>
+                          {list.map(c => <option key={c} value={c}>{c}</option>)}
+                          <option value="__other">Other (type below)</option>
+                        </select>
+                      );
+                    })()}
                   </div>
                 </div>
 
