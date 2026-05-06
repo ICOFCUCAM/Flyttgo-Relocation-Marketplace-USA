@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../lib/store';
 import { PROVIDERS, type ProviderRecord } from '../lib/providers-catalogue';
+import { getProviderPublicIdentity } from '../lib/provider-identity';
 import type { BookingCountry } from '../lib/store';
 import { Section, Eyebrow, Pill, EmptyState } from '../components/ds';
 import AddToCompareButton from '../components/global/AddToCompareButton';
@@ -52,6 +53,22 @@ const COUNTRY_FLAGS: Record<BookingCountry, string> = {
  * fromPrice string ("from $480" → 480, "fra 4 200 kr" → 4200,
  * "à partir de 460 €" → 460). Used only for sort ordering, never
  * displayed to the customer. */
+/** Subscription-tier rank for the search ranking boost. Higher
+ *  ranks float to the top of every result set per the global
+ *  rollout spec ("Infrastructure -> always top"). Provider badges
+ *  that don't map to a paid tier (e.g. 'Home market', 'Bilingual')
+ *  sort below all tiered providers. */
+function tierRank(badge: string | undefined | null): number {
+  if (!badge) return 0;
+  const b = badge.toLowerCase();
+  if (b.includes('infrastructure') || b === 'elite' || b === 'cip') return 50;
+  if (b === 'gold pro' || b === 'gold-pro')                          return 40;
+  if (b === 'gold')                                                  return 30;
+  if (b === 'silver plus' || b === 'silver+')                        return 20;
+  if (b === 'silver')                                                return 10;
+  return 0;
+}
+
 function parsePrice(s: string): number {
   const m = s.replace(/\s+/g, '').match(/(\d[\d.,]*)/);
   if (!m) return Number.POSITIVE_INFINITY;
@@ -77,7 +94,7 @@ export default function ProvidersDirectoryPage() {
 
   /* Hydrate from URL on mount + persist on change. */
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return undefined;
     const sp = new URLSearchParams(window.location.search);
     if (sp.get('q'))         setText(sp.get('q') ?? '');
     if (sp.get('country'))   setCountries(sp.get('country')!.split(',').filter(Boolean) as BookingCountry[]);
@@ -88,13 +105,13 @@ export default function ProvidersDirectoryPage() {
   }, []);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return undefined;
     const sp = new URLSearchParams(window.location.search);
-    text          ? sp.set('q', text)              : sp.delete('q');
-    countries.length ? sp.set('country', countries.join(',')) : sp.delete('country');
-    tiers.length     ? sp.set('tier',    tiers.join(','))     : sp.delete('tier');
-    services.length  ? sp.set('service', services.join(','))  : sp.delete('service');
-    sort !== 'rating' ? sp.set('sort', sort) : sp.delete('sort');
+    if (text) sp.set('q', text); else sp.delete('q');
+    if (countries.length) sp.set('country', countries.join(',')); else sp.delete('country');
+    if (tiers.length) sp.set('tier', tiers.join(',')); else sp.delete('tier');
+    if (services.length) sp.set('service', services.join(',')); else sp.delete('service');
+    if (sort !== 'rating') sp.set('sort', sort); else sp.delete('sort');
     const qs = sp.toString();
     const target = `${window.location.pathname}${qs ? `?${qs}` : ''}`;
     if (target !== window.location.pathname + window.location.search) {
@@ -118,15 +135,28 @@ export default function ProvidersDirectoryPage() {
       if (tiers.length     && (!p.badge || !tiers.includes(p.badge))) return false;
       if (services.length  && !services.every(s => p.services.includes(s))) return false;
       if (q) {
+        /* Search is over the public identity + structural data —
+         * customers can't search the underlying brand name because
+         * they never see it. about/services/fleet/verified stay
+         * indexable since they're factual non-brand content. */
+        const id = getProviderPublicIdentity(p);
         const hay = [
-          p.name, p.city, p.country, p.badge ?? '',
-          p.about, ...p.services, ...p.fleet, ...p.verified,
+          id.displayName, id.region, id.operatorId, id.tierLabel,
+          p.country, p.about, ...p.services, ...p.fleet, ...p.verified,
         ].join(' ').toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
     list = list.sort((a, b) => {
+      /* Tier-priority dominates: Infrastructure / Elite ranks at the
+       * top of every result set, then Gold Pro, Gold, Silver Plus,
+       * Silver. The user's chosen sort (rating / reviews / price)
+       * applies as the tie-breaker within each tier band so a
+       * higher-rated Silver provider can never displace a lower-
+       * rated Gold Pro on the same list. */
+      const tierDelta = tierRank(b.badge) - tierRank(a.badge);
+      if (tierDelta !== 0) return tierDelta;
       if (sort === 'rating')  return b.rating - a.rating;
       if (sort === 'reviews') return b.reviews - a.reviews;
       return parsePrice(a.fromPrice) - parsePrice(b.fromPrice);
@@ -143,13 +173,16 @@ export default function ProvidersDirectoryPage() {
     if (q.length < 2) return [];
     return PROVIDERS
       .map(p => {
-        const hay = `${p.name} ${p.city} ${p.services.join(' ')}`.toLowerCase();
+        /* Suggest list ranks against the public identity — same
+         * masking rule as the main filter. */
+        const id  = getProviderPublicIdentity(p);
+        const hay = `${id.displayName} ${id.region} ${id.tierLabel} ${p.services.join(' ')}`.toLowerCase();
         const i   = hay.indexOf(q);
         if (i < 0) return null;
-        /* Earlier matches score higher; name-prefix beats city-prefix
-         * beats service-substring. */
-        const namePrefix = p.name.toLowerCase().startsWith(q) ? 100 : 0;
-        const cityPrefix = p.city.toLowerCase().startsWith(q) ? 50  : 0;
+        /* Earlier matches score higher; display-name prefix beats
+         * region prefix beats service substring. */
+        const namePrefix = id.displayName.toLowerCase().startsWith(q) ? 100 : 0;
+        const cityPrefix = id.region.toLowerCase().startsWith(q) ? 50  : 0;
         return { p, score: namePrefix + cityPrefix - i };
       })
       .filter((x): x is { p: ProviderRecord; score: number } => x !== null)
@@ -160,7 +193,7 @@ export default function ProvidersDirectoryPage() {
 
   /* Click-outside closes the dropdown. */
   useEffect(() => {
-    if (!taOpen) return;
+    if (!taOpen) return undefined;
     const onDown = (e: MouseEvent) => {
       if (taRef.current && !taRef.current.contains(e.target as Node)) {
         setTaOpen(false);
@@ -230,7 +263,7 @@ export default function ProvidersDirectoryPage() {
               onChange={e => { setText(e.target.value); setTaOpen(true); }}
               onFocus={() => setTaOpen(true)}
               onKeyDown={e => {
-                if (!taOpen || typeaheadCandidates.length === 0) return;
+                if (!taOpen || typeaheadCandidates.length === 0) return undefined;
                 if (e.key === 'ArrowDown') {
                   e.preventDefault();
                   setTaActive(a => Math.min(a + 1, typeaheadCandidates.length - 1));
@@ -271,6 +304,7 @@ export default function ProvidersDirectoryPage() {
             >
               {typeaheadCandidates.map((p, i) => {
                 const isActive = i === taActive;
+                const id = getProviderPublicIdentity(p);
                 return (
                   <li
                     id={`ta-${p.slug}`}
@@ -292,9 +326,9 @@ export default function ProvidersDirectoryPage() {
                       <Truck size={14} className="text-brand-600" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-ink-900 truncate">{p.name}</p>
+                      <p className="text-sm font-bold text-ink-900 truncate">{id.displayName}</p>
                       <p className="text-xs text-slate-500 inline-flex items-center gap-1 truncate">
-                        <span aria-hidden>{p.flag}</span>{p.city}
+                        <span aria-hidden>{p.flag}</span>{id.region}
                       </p>
                     </div>
                     <div className="flex flex-col items-end flex-shrink-0">
@@ -464,6 +498,9 @@ function Chip({
 }
 
 function ProviderCard({ provider: p, onOpen }: { provider: ProviderRecord; onOpen: (slug: string) => void }) {
+  /* Public identity — masks the underlying brand. Same rule
+   * everywhere a customer sees a provider before booking. */
+  const id = getProviderPublicIdentity(p);
   return (
     <article
       onClick={() => onOpen(p.slug)}
@@ -475,13 +512,13 @@ function ProviderCard({ provider: p, onOpen }: { provider: ProviderRecord; onOpe
             <Truck size={20} className="text-brand-600" />
           </div>
           <div className="min-w-0">
-            <p className="font-extrabold text-ink-900 leading-tight truncate">{p.name}</p>
-            <p className="text-xs text-slate-500 flex items-center gap-1 truncate">
-              <span aria-hidden>{p.flag}</span>{p.city}
+            <p className="font-extrabold text-ink-900 leading-tight truncate">{id.displayName}</p>
+            <p className="text-xs text-slate-500 font-mono truncate">
+              <span aria-hidden className="mr-1">{p.flag}</span>{id.operatorId}
             </p>
           </div>
         </div>
-        {p.badge && <Pill tone="brand" size="sm"><Award size={10} />{p.badge}</Pill>}
+        <Pill tone="brand" size="sm"><Award size={10} />{id.tierLabel}</Pill>
       </div>
 
       <p className="text-xs text-slate-600 leading-relaxed line-clamp-2 mb-3">
@@ -532,13 +569,13 @@ function ProviderCard({ provider: p, onOpen }: { provider: ProviderRecord; onOpe
         <AddToCompareButton
           item={{
             id:        p.slug,
-            name:      p.name,
-            city:      p.city,
+            name:      id.displayName,
+            city:      id.region,
             flag:      p.flag,
             rating:    p.rating,
             reviews:   p.reviews,
             fromPrice: p.fromPrice,
-            badge:     p.badge,
+            badge:     id.tierLabel,
             verified:  p.verified,
           }}
         />

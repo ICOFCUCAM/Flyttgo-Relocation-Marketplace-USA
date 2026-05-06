@@ -26,7 +26,12 @@ export interface CountryBaseline {
   perKm:      number;
 }
 
-export const COUNTRY_BASELINES: Record<PricingCountry, CountryBaseline> = {
+/* Partial: the 10 expansion-market codes (nl/se/dk/at/be/es/it/pl/cz/cy)
+ * are valid PricingCountry values but don't have move-pricing baselines
+ * yet — the marketplace is open for subscriptions there before booking
+ * goes live. Lookups should fall back via COUNTRY_BASELINES[code] ?? a
+ * sensible default at the call site. */
+export const COUNTRY_BASELINES: Partial<Record<PricingCountry, CountryBaseline>> = {
   us: { baseHourly: 75,    currency: 'USD', symbol: '$',   perKm: 1.4 },
   ca: { baseHourly: 70,    currency: 'CAD', symbol: 'C$',  perKm: 1.5 },
   gb: { baseHourly: 55,    currency: 'GBP', symbol: '£',   perKm: 1.2 },
@@ -47,7 +52,7 @@ export const COUNTRY_BASELINES: Record<PricingCountry, CountryBaseline> = {
  * city slug. Lookup is case-insensitive and tolerant of "City, ST"
  * suffixes (we strip after the first comma). Cities not listed
  * fall through to multiplier 1.0 (= country baseline). */
-export const CITY_MULTIPLIERS: Record<PricingCountry, Record<string, number>> = {
+export const CITY_MULTIPLIERS: Partial<Record<PricingCountry, Record<string, number>>> = {
   us: {
     'new york':     1.6,
     'manhattan':    1.65,

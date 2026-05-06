@@ -26,11 +26,23 @@ export interface ServiceCategory {
   /** Pricing tier slug from us-pricing.ts. Used by ServiceCategoryPage
    *  to render the typical-rate card in the hero. */
   pricingTier?: string;
+  /** Home-page tile presentation. Only categories with a homeTile
+   *  appear in the home category grid; ordering and copy come from
+   *  this single source so the grid never drifts from the catalogue. */
+  homeTile?: {
+    /** Short subtitle under the category name on the tile. */
+    sub:    string;
+    /** Background image URL. Stable hosting recommended. */
+    photo:  string;
+    /** Sort order on the grid (lower = earlier). */
+    order:  number;
+  };
 }
 
 export const SERVICE_CATEGORIES: ServiceCategory[] = [
   {
     slug:    'long-distance',
+    homeTile: { sub: 'Inter-state / Cross-country', order: 20, photo: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=600&q=70' },
     name:    'Long-distance moves',
     tagline: 'Cross-state and cross-border relocations, coordinated end-to-end',
     intro:   "Long-distance moves coordinated through licensed interstate carriers. Every provider on this list is FMCSA-registered (US), GVOL-licensed (UK), or holds the equivalent operator-licence in their market. Get a binding quote, watch the load on a live map, and pay only after delivery is confirmed.",
@@ -48,6 +60,7 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
   },
   {
     slug:    'local',
+    homeTile: { sub: 'Same-city', order: 10, photo: 'https://images.unsplash.com/photo-1568010967-7c3a4e0a59f7?auto=format&fit=crop&w=600&q=70' },
     name:    'Local moves',
     tagline: 'Same-city moves, often same-day or next-day',
     intro:   "Local moves inside a single city or metro region. Most providers can fit you in within 24–48 hours during off-peak season; same-day slots are common in our six core markets. Book by the hour with a transparent two-hour minimum.",
@@ -65,6 +78,7 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
   },
   {
     slug:    'packing',
+    homeTile: { sub: 'Full / Partial', order: 50, photo: 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=600&q=70' },
     name:    'Packing services',
     tagline: 'Full-pack, partial-pack, and crating crews',
     intro:   "Packing crews who pack, label, and crate everything you don't want to box yourself. Includes materials (boxes, paper, tape, blankets), fragile-item protection, and full inventory records. Add it to a same-day booking or schedule a packing-only crew the day before.",
@@ -82,6 +96,7 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
   },
   {
     slug:    'storage',
+    homeTile: { sub: 'Self & bonded', order: 60, photo: 'https://images.unsplash.com/photo-1591375372226-9aa92be1d6f4?auto=format&fit=crop&w=600&q=70' },
     name:    'Storage staging',
     tagline: 'Short-term and long-term storage between move dates',
     intro:   "Storage between two move dates — for staged interstate moves, between-leases gaps, or extended-trip travelers. Climate-controlled units, 24/7 access partners, and integrated load-and-store crews so you only pay one provider end-to-end.",
@@ -98,6 +113,7 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
   },
   {
     slug:    'office',
+    homeTile: { sub: 'For businesses', order: 40, photo: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=70' },
     name:    'Office relocation',
     tagline: 'Workplace moves with weekend / out-of-hours options',
     intro:   "Workplace relocations done over a weekend or after-hours so the team is back at desks Monday morning. Includes IT decommissioning, asset tagging, secure document transit, and certificate-of-destruction options for old hardware.",
@@ -129,6 +145,60 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
       { q: 'Do they bring blankets + dollies?',   a: 'Yes — every labor-only crew comes equipped with moving blankets, straps, and at least one wheeled dolly.' },
     ],
     pricingTier: 'labor-only',
+  },
+  {
+    slug:    'international',
+    homeTile: { sub: 'Cross-border', order: 30, photo: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=600&q=70' },
+    name:    'International relocation',
+    tagline: 'Cross-border relocations with customs + freight forwarding',
+    intro:   "Cross-border relocations coordinated through licensed international freight forwarders. Air, sea, and road consolidation; HS-code customs clearance; door-to-door insured transit; and a dedicated coordinator for every shipment.",
+    matches: ['international', 'cross-border', 'freight forwarding'],
+    howItWorks: [
+      { title: 'Customs-aware quote',  body: 'Quote includes export packing, customs clearance, and destination-country duties so the price you see is the price you pay.' },
+      { title: 'Mode + transit choice', body: 'Air for speed, sea container for volume, consolidated road for the EU. Side-by-side timeline and price.' },
+      { title: 'Door-to-door tracking', body: 'One coordinator from origin pickup to destination delivery; live status on every leg.' },
+    ],
+    faq: [
+      { q: 'Do you handle customs paperwork?',     a: 'Yes — every international provider on FlyttGo employs licensed customs brokers and submits the EAD/MRN, ENS, and destination clearance docs on your behalf.' },
+      { q: 'How is duty + tax calculated?',        a: "Duty is computed from the destination country's tariff schedule against the inventory HS-codes; the quote shows it as a separate line so you can budget accurately." },
+    ],
+    pricingTier: 'long-distance',
+  },
+  {
+    slug:    'truck-rental',
+    homeTile: { sub: 'DIY-friendly', order: 70, photo: 'https://images.unsplash.com/photo-1601581875309-fafbf2d3ed3a?auto=format&fit=crop&w=600&q=70' },
+    name:    'Truck rental',
+    tagline: 'DIY-friendly trucks with optional crew add-ons',
+    intro:   "Rent a truck, drive yourself, save the labour line on your quote. Box trucks, lutons, and panel vans across all six markets — partnered with U-Haul, Penske, Enterprise, Sixt, and Movecar so you book through one funnel.",
+    matches: ['truck rental', 'rental', 'self-drive'],
+    howItWorks: [
+      { title: 'Pick truck + window',  body: 'Same booking flow as a full-service move; pick "Truck rental only" for the truck on its own.' },
+      { title: 'Add a loading crew',   body: 'Most renters add a 2-helper labour-only crew at the pickup end — booking flow surfaces local crews automatically.' },
+      { title: 'One-way returns',      body: 'One-way drop-off at any partner depot in the destination city; hourly + daily mileage shown upfront.' },
+    ],
+    faq: [
+      { q: 'Do I need a special licence?',         a: 'For trucks under 3.5t / 7.5t (depending on market) a standard car licence is sufficient; the booking flow checks against the country licence rules at quote time.' },
+      { q: 'Is insurance included?',               a: 'Liability + damage waiver included; full goods-in-transit cover is an optional upsell at checkout.' },
+    ],
+    pricingTier: 'local',
+  },
+  {
+    slug:    'student',
+    homeTile: { sub: 'University corridors', order: 80, photo: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=600&q=70' },
+    name:    'Student relocation',
+    tagline: 'University-corridor moves, term-aware scheduling, summer-storage included',
+    intro:   "Relocations for students moving in / out of halls, between universities, or onto a year abroad. Term-aware scheduling, university-corridor pricing, summer-storage add-ons, and ID-verified providers around campus zones.",
+    matches: ['student', 'university', 'campus'],
+    howItWorks: [
+      { title: 'Term-aware date picker', body: 'Booking flow flags peak move-in / move-out windows so you avoid surge pricing during freshers week.' },
+      { title: 'Summer-storage option',  body: 'Pack out before exams, recall when term resumes — providers offer 3 / 6 / 12-week storage blocks at student rates.' },
+      { title: 'Verified campus crews',  body: 'Providers in the Student tier are ID-verified for halls of residence and follow university security check-in procedures.' },
+    ],
+    faq: [
+      { q: 'Do you have a student discount?',      a: 'Yes — verified .edu / .ac.uk / university email addresses unlock a 10% Welcome credit on the first booking.' },
+      { q: 'Can I pack a single room?',            a: 'Single-room moves are the typical student booking; the widget defaults to "1 room" so you get an indicative total in seconds.' },
+    ],
+    pricingTier: 'local',
   },
 ];
 

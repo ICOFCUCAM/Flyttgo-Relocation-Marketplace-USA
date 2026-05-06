@@ -1,7 +1,9 @@
 import React, { Suspense, lazy, useEffect } from 'react';
 import { useApp } from '../lib/store';
+import { isoToMarketPage } from '../lib/pageRoutes';
 import Header from './Header';
 import AuthModal from './AuthModal';
+import RouteErrorBoundary from './ErrorBoundary';
 
 const HomePage           = lazy(() => import('./HomePage'));
 const BookingFlow        = lazy(() => import('./BookingFlow'));
@@ -55,11 +57,26 @@ const MarketGermanyPage  = lazy(() => import('../pages/markets/GermanyPage'));
 const MarketFrancePage   = lazy(() => import('../pages/markets/FrancePage'));
 const MarketUKPage       = lazy(() => import('../pages/markets/UKPage'));
 const MarketNorwayPage   = lazy(() => import('../pages/markets/NorwayPage'));
+/* Expansion-country shopfronts (Phase 13). Each is a rollout-status
+ * shopfront; the underlying template reads from EXPANSION_COUNTRIES
+ * keyed by country code, so we don't need a wrapper file per country. */
+const ExpansionCountryPage = lazy(() => import('./global/ExpansionCountryPage'));
+const MovingCityPage       = lazy(() => import('../pages/MovingCityPage'));
+/* Back-Office System (BOS) — operator-only console. Single Page id
+ * 'backoffice' fans out to /backoffice/<slug> via the sub-router in
+ * src/backoffice/index.tsx. Permission-gated; unauthorised users
+ * see a denial panel inside the BOS layout. */
+const Backoffice           = lazy(() => import('../backoffice'));
+const BrandPage            = lazy(() => import('../pages/BrandPage'));
 const ReferPage          = lazy(() => import('../pages/ReferPage'));
+const DriverEarningsPage   = lazy(() => import('../pages/DriverEarningsPage'));
+const AccountingWorkspace  = lazy(() => import('../pages/AccountingWorkspace'));
+const AuditWorkspace       = lazy(() => import('../pages/AuditWorkspace'));
 const ProviderProfilePage = lazy(() => import('../pages/ProviderProfilePage'));
 const ProvidersDirectoryPage = lazy(() => import('../pages/ProvidersDirectoryPage'));
 const ComparePage = lazy(() => import('../pages/ComparePage'));
 const ServiceCategoryPage = lazy(() => import('../pages/ServiceCategoryPage'));
+const CorridorPage = lazy(() => import('../pages/CorridorPage'));
 const PricingPage = lazy(() => import('../pages/PricingPage'));
 const ProviderPricingSettingsPage = lazy(() => import('../pages/provider/PricingSettingsPage'));
 const ProviderRequirementsPage = lazy(() => import('../pages/ProviderRequirementsPage'));
@@ -148,19 +165,19 @@ useEffect(() => {
    * shopfront, and clean the URL so a refresh doesn't re-trigger.
    * Runs once at boot. */
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return undefined;
     const params = new URLSearchParams(window.location.search);
     const token  = params.get('q');
-    if (!token) return;
+    if (!token) return undefined;
 
     let cancelled = false;
     void Promise.all([
       import('../lib/saved-quotes-store'),
       import('../lib/analytics'),
     ]).then(([store, analytics]) => {
-      if (cancelled) return;
+      if (cancelled) return undefined;
       const payload = store.decodeSharedQuote(token);
-      if (!payload) return;
+      if (!payload) return undefined;
       store.saveQuote({ ...payload, label: payload.label ?? 'Shared with you' });
       analytics.track('shared_quote_received', { country: payload.country });
 
@@ -171,8 +188,11 @@ useEffect(() => {
       window.history.replaceState({}, '', cleanedPath);
 
       /* Land on the matching country shopfront — the imported quote
-       * sits in MyBookings → Saved quotes ready to resume. */
-      setPage(`market-${payload.country}` as typeof currentPage);
+       * sits in MyBookings → Saved quotes ready to resume. Use
+       * isoToMarketPage so legacy ISOs (ca/de/fr/gb/no) map to the
+       * correct Page id (market-canada / market-germany / …) instead
+       * of falling through to /not-found. */
+      setPage(isoToMarketPage(payload.country));
     });
     return () => { cancelled = true; };
   }, [setPage]);
@@ -194,17 +214,16 @@ useEffect(() => {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  const legalPages = ['terms', 'privacy', 'liability', 'driver-terms'];
   /* The auth callback page is a transient, full-screen landing surface
    * for Supabase email-confirmation / OAuth redirects — chrome would
    * just be visual noise during the ~100 ms session handoff. */
-  const showHeader = currentPage !== 'auth-callback';
-  const showFooter = !['booking', 'driver-portal', 'admin', 'auth-callback'].includes(currentPage);
+  const showHeader = !['auth-callback', 'backoffice'].includes(currentPage);
+  const showFooter = !['booking', 'driver-portal', 'admin', 'auth-callback', 'backoffice'].includes(currentPage);
   /* Live booking ticker is a marketplace social-proof element — only
    * show it on customer-discovery surfaces (home, country pages,
    * marketplace, how-it-works). Suppressed on dashboards, auth, and
    * payment surfaces where it would distract. */
-  const showTicker = ['home','marketplace','how-it-works','providers','cities','enterprise-relocation','partners','about','universities','market-us','market-canada','market-germany','market-france','market-uk','market-norway','refer','provider-profile','providers-directory','compare','service-category','pricing','provider-requirements','government-programs','ngo-deployment','pilot-deployment-programs','vendor-pack','procurement-rfp','deployment-regions','capability-brief'].includes(currentPage);
+  const showTicker = ['home','marketplace','how-it-works','providers','cities','enterprise-relocation','partners','about','universities','market-us','market-canada','market-germany','market-france','market-uk','market-norway','market-nl','market-se','market-es','market-it','market-pl','market-dk','market-be','market-at','market-ch','market-cz','market-cy','moving-city','refer','provider-profile','providers-directory','compare','service-category','pricing','provider-requirements','government-programs','ngo-deployment','pilot-deployment-programs','vendor-pack','procurement-rfp','deployment-regions','capability-brief'].includes(currentPage);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -251,17 +270,43 @@ useEffect(() => {
       case 'compliance':             return <CompliancePage />;
       case 'partners':               return <PartnersPage />;
       case 'universities':           return <UniversitiesPage />;
+      /* Legacy markets — these pages own their hero photos via
+       * src/components/global/CountryPage.tsx → HERO_PHOTOS. The
+       * visualResolver explicitly bypasses these (LEGACY_COUNTRIES)
+       * so the existing imagery is never overridden. Do NOT route
+       * them through ExpansionCountryPage. */
       case 'market-us':              return <MarketUSPage />;
       case 'market-canada':          return <MarketCanadaPage />;
       case 'market-germany':         return <MarketGermanyPage />;
       case 'market-france':          return <MarketFrancePage />;
       case 'market-uk':              return <MarketUKPage />;
       case 'market-norway':          return <MarketNorwayPage />;
+      /* Expansion markets — visualResolver routes these through the
+       * skyline registry. Adding a new ExpansionCountryPage entry
+       * automatically inherits a capital skyline via the resolver. */
+      case 'market-nl':              return <ExpansionCountryPage code="nl" />;
+      case 'market-se':              return <ExpansionCountryPage code="se" />;
+      case 'market-es':              return <ExpansionCountryPage code="es" />;
+      case 'market-it':              return <ExpansionCountryPage code="it" />;
+      case 'market-pl':              return <ExpansionCountryPage code="pl" />;
+      case 'market-dk':              return <ExpansionCountryPage code="dk" />;
+      case 'market-be':              return <ExpansionCountryPage code="be" />;
+      case 'market-at':              return <ExpansionCountryPage code="at" />;
+      case 'market-ch':              return <ExpansionCountryPage code="ch" />;
+      case 'market-cz':              return <ExpansionCountryPage code="cz" />;
+      case 'market-cy':              return <ExpansionCountryPage code="cy" />;
+      case 'moving-city':            return <MovingCityPage />;
+      case 'backoffice':             return <Backoffice />;
+      case 'brand':                  return <BrandPage />;
       case 'refer':                  return <ReferPage />;
+      case 'driver-earnings':        return <DriverEarningsPage />;
+      case 'accounting':             return <AccountingWorkspace />;
+      case 'audit':                  return <AuditWorkspace />;
       case 'provider-profile':       return <ProviderProfilePage />;
       case 'providers-directory':    return <ProvidersDirectoryPage />;
       case 'compare':                return <ComparePage />;
       case 'service-category':       return <ServiceCategoryPage />;
+      case 'corridor':               return <CorridorPage />;
       case 'pricing':                return <PricingPage />;
       case 'provider-pricing-settings': return <ProviderPricingSettingsPage />;
       case 'provider-requirements':  return <ProviderRequirementsPage />;
@@ -298,9 +343,15 @@ useEffect(() => {
       {showHeader && <Header />}
       <AuthModal />
       <main id="main-content" tabIndex={-1}>
-        <Suspense fallback={<Loading />}>
-          {renderPage()}
-        </Suspense>
+        {/* Per-route ErrorBoundary so a thrown render on one page
+         *  doesn't blank the entire app. resetKey={currentPage}
+         *  clears the error when the user navigates away — they can
+         *  click a nav link instead of having to reload. */}
+        <RouteErrorBoundary resetKey={currentPage}>
+          <Suspense fallback={<Loading />}>
+            {renderPage()}
+          </Suspense>
+        </RouteErrorBoundary>
       </main>
       {showFooter && (
         <Suspense fallback={null}>
@@ -313,7 +364,7 @@ useEffect(() => {
         </Suspense>
       )}
       {/* Floating support widget — present on every page except auth-callback */}
-      {currentPage !== 'auth-callback' && (
+      {!['auth-callback', 'backoffice'].includes(currentPage) && (
         <Suspense fallback={null}>
           <FloatingChat />
         </Suspense>
@@ -332,7 +383,7 @@ useEffect(() => {
       </Suspense>
       {/* PWA install prompt — fires on the beforeinstallprompt event
           when the manifest qualifies; falls back to a soft iOS hint. */}
-      {currentPage !== 'auth-callback' && (
+      {!['auth-callback', 'backoffice'].includes(currentPage) && (
         <Suspense fallback={null}>
           <PWAInstallPrompt />
         </Suspense>
@@ -354,7 +405,7 @@ useEffect(() => {
       {/* ⌘K / Ctrl-K command palette. Mounted globally so power
           users can navigate from any page. Hidden on auth-callback
           (full-screen Supabase handoff). */}
-      {currentPage !== 'auth-callback' && (
+      {!['auth-callback', 'backoffice'].includes(currentPage) && (
         <Suspense fallback={null}>
           <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
         </Suspense>
@@ -362,7 +413,7 @@ useEffect(() => {
       {/* Global "Get a quote" slide-over. Listens for the
           `flyttgo:open-quick-quote` event so any CTA in the app can
           pop the booking widget without navigating away. */}
-      {currentPage !== 'auth-callback' && currentPage !== 'booking' && (
+      {!['auth-callback', 'backoffice'].includes(currentPage) && currentPage !== 'booking' && (
         <Suspense fallback={null}>
           <QuickQuoteDrawer />
         </Suspense>

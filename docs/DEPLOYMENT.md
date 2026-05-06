@@ -35,7 +35,7 @@ Set on your laptop via `supabase secrets set` after `supabase link --project-ref
 
 ### Core
 ```bash
-supabase secrets set FRONTEND_URL=https://flyttgo.us
+supabase secrets set FRONTEND_URL=https://flyttgo.com
 ```
 
 ### Routing (real driving distance)
@@ -53,8 +53,8 @@ supabase secrets set ROUTE_PROVIDER_URL=https://router.project-osrm.org
 ### Email (Resend)
 ```bash
 supabase secrets set RESEND_API_KEY=re_...
-supabase secrets set FLYTTGO_FROM="FlyttGo <bookings@flyttgo.us>"
-supabase secrets set FLYTTGO_REPLY_TO=support@flyttgo.us
+supabase secrets set FLYTTGO_FROM="FlyttGo <bookings@flyttgo.com>"
+supabase secrets set FLYTTGO_REPLY_TO=support@flyttgo.com
 ```
 
 ### Stripe
@@ -161,7 +161,7 @@ Review every table in section above and make sure:
 
 ### Resend (email)
 - Sign up: [resend.com](https://resend.com)
-- Verify `flyttgo.us` domain (add SPF + DKIM DNS records)
+- Verify `flyttgo.com` domain (add SPF + DKIM DNS records)
 - Generate API key → set as `RESEND_API_KEY`
 
 ---
@@ -197,6 +197,6 @@ Use this the first time you push to production.
 - [ ] Replace the three `TODO` values in `Footer.tsx` with real Delaware EIN, sales tax registration, and insurance carrier name
 - [ ] Enable Supabase point-in-time recovery (Settings → Database → PITR)
 - [ ] Configure Vercel rate limiting on `/api` routes
-- [ ] Set up uptime monitoring (BetterUptime / UptimeRobot) on `https://flyttgo.us`, `/booking`, `/tracking`
+- [ ] Set up uptime monitoring (BetterUptime / UptimeRobot) on `https://flyttgo.com`, `/booking`, `/tracking`
 - [ ] Subscribe ops to the Resend webhook events for bounced emails
 - [ ] Add monitoring dashboards for: Edge Function error rate, p95 latency, Stripe payment failure rate

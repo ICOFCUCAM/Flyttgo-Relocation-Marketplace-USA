@@ -1,17 +1,23 @@
-import React from 'react';
 import { Star, ShieldCheck, Truck, Clock, BadgeCheck, MapPin, Users, MessageCircle } from 'lucide-react';
 import { useApp } from '../lib/store';
 import type { Page, BookingCountry } from '../lib/store';
-import { AnimatedNumber } from './ds';
+import { isoToMarketPage } from '../lib/pageRoutes';
+import { AnimatedNumber, FOCUS_RING, FOCUS_RING_TIGHT } from './ds';
 import { track } from '../lib/analytics';
-import LiveBookingTicker from './global/LiveBookingTicker';
 import PressStrip from './global/PressStrip';
-import WhyFlyttGo from './global/WhyFlyttGo';
-import HomeFAQ from './global/HomeFAQ';
-import SmartMatchingSection from './global/SmartMatchingSection';
 import CarbonOffset from './global/CarbonOffset';
 import TopProviders from './global/TopProviders';
-import RecentlyViewedRail from './global/RecentlyViewedRail';
+import DiscoveryProvidersSection from './global/DiscoveryProvidersSection';
+import PopularCorridorsSection from './global/PopularCorridorsSection';
+import LiveBookingTicker from './global/LiveBookingTicker';
+import EarningsSimulator from './global/EarningsSimulator';
+import ReviewsCarousel from './global/ReviewsCarousel';
+import HomeFAQ from './global/HomeFAQ';
+import WorldDeploymentMap from './global/WorldDeploymentMap';
+import GlobalPresence from './global/GlobalPresence';
+import MobilityIntelligence from './global/MobilityIntelligence';
+import { SERVICE_CATEGORIES } from '../lib/service-categories';
+import { PROVIDERS } from '../lib/providers-catalogue';
 
 /* ────────────────────────────────────────────────────────────
  *  COUNTRY SHOPFRONT METADATA
@@ -82,7 +88,12 @@ export default function HomePage() {
     <main className="bg-white text-slate-900">
       {/* ─── HERO ──────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
-        {/* Background photo with warm overlay */}
+        {/* Background photo with warm overlay + a soft amber/violet
+         *  gradient orb. The orb is purely decorative — sits behind
+         *  the headline, blurred to the point of being a glow rather
+         *  than a shape, and signals "next-gen" without competing
+         *  with the photo. Pointer-events disabled so it never
+         *  intercepts a click on the country picker. */}
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1600518464441-9154a4dea21b?auto=format&fit=crop&w=1920&q=70"
@@ -92,6 +103,14 @@ export default function HomePage() {
             fetchPriority="high"
           />
           <div className="absolute inset-0 bg-gradient-to-br from-[#0b1f3a]/95 via-[#0b1f3a]/85 to-[#0b1f3a]/70" />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-24 -left-24 h-[28rem] w-[28rem] rounded-full bg-gradient-to-br from-amber-400/30 via-fuchsia-500/15 to-transparent blur-3xl"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -bottom-32 -right-24 h-[34rem] w-[34rem] rounded-full bg-gradient-to-br from-sky-400/20 via-amber-400/10 to-transparent blur-3xl"
+          />
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-28">
@@ -104,25 +123,50 @@ export default function HomePage() {
                 <Star size={12} className="fill-amber-400 text-amber-400" />
                 <Star size={12} className="fill-amber-400 text-amber-400" />
               </span>
-              <span>4.8 average · 27,000+ moves coordinated · 6 countries</span>
+              <span>
+                4.8 average ·{' '}
+                <AnimatedNumber value={27000} format={(n: number) => `${Math.round(n).toLocaleString()}+`} />
+                {' '}moves coordinated · 6 countries
+              </span>
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white leading-[1.05] tracking-tight mb-5">
               Move anywhere.<br />
               <span className="text-amber-300">Book a licensed mover in 60&nbsp;seconds.</span>
             </h1>
-            <p className="text-lg sm:text-xl text-white/85 leading-relaxed max-w-2xl mb-8">
+            <p className="text-lg sm:text-xl text-white/85 leading-relaxed max-w-2xl mb-6">
               Compare licensed movers, labour crews, packers, storage and rental
               partners in six countries. Transparent prices, escrow protection
               on every booking, real reviews from real customers.
             </p>
+
+            {/* Enterprise + university CTAs — activates the institutional
+             *  revenue channel directly from the hero. */}
+            <div className="flex flex-wrap gap-3 mb-8">
+              <button
+                onClick={() => { track('home_enterprise_cta_clicked'); go('enterprise-relocation'); }}
+                className="bg-white text-slate-900 px-5 py-3 rounded-xl font-bold hover:bg-slate-100 transition"
+              >
+                Enterprise relocation →
+              </button>
+              <button
+                onClick={() => { track('home_universities_cta_clicked'); go('universities'); }}
+                className="bg-white/10 border border-white/20 text-white px-5 py-3 rounded-xl font-bold hover:bg-white/20 transition"
+              >
+                Student moves →
+              </button>
+            </div>
           </div>
 
-          {/* Country picker — primary CTA */}
-          <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-6 max-w-3xl">
-            <div className="flex items-center justify-between mb-4">
+          {/* Formal country picker — primary entry per Section 2 of
+           *  the marketplace spec. Six large-flag chips routing into
+           *  each country's localised marketplace. Hover glow + fast
+           *  click targets (py-4 = 64-px touch surface) so the country
+           *  decision is friction-free on mobile. */}
+          <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-6 max-w-4xl mb-4">
+            <div className="flex items-center justify-between mb-5 gap-3 flex-wrap">
               <div>
-                <p className="text-sm font-bold text-slate-900">Pick the country you’re moving in</p>
-                <p className="text-xs text-slate-500">Each country opens its own booking portal in the local language.</p>
+                <p className="text-base font-bold text-slate-900">Pick the country you’re moving in</p>
+                <p className="text-xs text-slate-500 mt-0.5">Each country opens its own booking portal.</p>
               </div>
               <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500">
                 <ShieldCheck size={14} className="text-emerald-500" />
@@ -133,11 +177,11 @@ export default function HomePage() {
               {SHOPFRONTS.map(s => (
                 <button
                   key={s.iso}
-                  onClick={() => { track('country_tile_clicked', { country: s.iso, surface: 'home' }); go(`market-${s.iso}` as Page); }}
-                  className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl hover:bg-amber-50 hover:ring-1 hover:ring-amber-300 transition group"
+                  onClick={() => { track('country_tile_clicked', { country: s.iso, surface: 'home-hero' }); go(isoToMarketPage(s.iso)); }}
+                  className={`group flex flex-col items-center justify-center gap-2 py-4 rounded-xl border border-transparent hover:border-amber-300 hover:bg-amber-50 hover:shadow-[0_8px_24px_-8px_rgba(245,158,11,0.55)] transition-all ${FOCUS_RING_TIGHT}`}
                   aria-label={`Go to ${s.name} marketplace`}
                 >
-                  <span className="text-3xl leading-none">{s.flag}</span>
+                  <span className="text-4xl sm:text-5xl leading-none transition-transform group-hover:scale-110">{s.flag}</span>
                   <span className="text-[10px] sm:text-xs font-bold text-slate-700 group-hover:text-amber-700 uppercase tracking-wide">
                     {s.iso.toUpperCase()}
                   </span>
@@ -145,6 +189,11 @@ export default function HomePage() {
               ))}
             </div>
           </div>
+
+          {/* Quick-booking entry removed — the formal country picker
+           *  above is the primary conversion path; the per-country
+           *  shopfronts host the full address widget with autocomplete
+           *  + OSRM distance preview. */}
 
           {/* Trust strip */}
           <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl">
@@ -160,14 +209,141 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+
+          {/* Live marketplace activity ticker — surfaces "someone in
+           *  Austin booked 3 minutes ago" social proof under the trust
+           *  strip. The component self-suppresses on touch devices and
+           *  in low-traffic windows. */}
+          <div className="mt-6 max-w-3xl">
+            <LiveBookingTicker />
+          </div>
         </div>
       </section>
 
-      {/* ─── COUNTRY SHOPFRONTS ──────────────────────────── */}
+      {/* ─────────────────────────────────────────────────────────
+       *   The homepage now follows the marketplace-narrative spec:
+       *
+       *     1  Hero (with country selector chip grid above)
+       *     2  Categories — "What you can book"
+       *     3  Popular corridors — flagship per country, links to
+       *        /corridor/<country>/<slug> SEO landing pages
+       *     4  Top verified providers — onboarded, instant-bookable
+       *     5  Discovery providers — non-onboarded acquisition
+       *        signals with claim-listing CTAs
+       *     6  Country marketplace cards — photo-grid exploration
+       *        of the six country storefronts
+       *     7  Press / trust strip
+       *     8  Reviews carousel (standalone)
+       *     9  Carbon offset
+       *    10  Earnings simulator
+       *    11  FAQ (standalone)
+       *    12+ Trust stats · Provider CTA · Final CTA
+       *
+       *   Featured-providers tier (between Top + Discovery in the
+       *   spec) is held back as a future expansion — the curated
+       *   PROVIDERS catalogue is small enough that splitting it
+       *   into Top vs Featured today creates artificial scarcity.
+       *   The DiscoveryProvidersSection's "claim & onboard" CTAs
+       *   already serve the supply-acquisition role the Featured
+       *   tier was meant to occupy.
+       * ───────────────────────────────────────────────────────── */}
+
+      {/* ─── 1.5 · GLOBAL PRESENCE ─ at-a-glance trust signals ── */}
+      <GlobalPresence />
+
+      {/* ─── 1.7 · MOBILITY INTELLIGENCE ─ corridor + season read */}
+      <MobilityIntelligence />
+
+      {/* ─── 2 · CATEGORIES ─ "What you can book" ───────────── */}
+      <section className="bg-[#fafaf7] py-16 sm:py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-10 max-w-2xl">
+            <p className="text-amber-600 text-xs font-bold uppercase tracking-[0.18em] mb-3">What you can book</p>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+              Every kind of move, one marketplace.
+            </h2>
+          </div>
+
+          {/* Tiles derived from SERVICE_CATEGORIES → no drift between
+           * the home grid, the /services index, and the per-category
+           * landing pages. Provider count is the credibility signal:
+           * shows real depth per category instead of forcing the
+           * customer to click in to discover supply. */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {SERVICE_CATEGORIES
+              .filter(c => c.homeTile)
+              .sort((a, b) => (a.homeTile!.order) - (b.homeTile!.order))
+              .map(c => {
+                const tile  = c.homeTile!;
+                const keys  = c.matches.map(s => s.toLowerCase());
+                const count = PROVIDERS.filter(p =>
+                  p.services.some(s => keys.some(k => s.toLowerCase().includes(k))),
+                ).length;
+                return (
+                  <button
+                    key={c.slug}
+                    type="button"
+                    onClick={() => {
+                      track('home_category_clicked', { category: c.name, slug: c.slug });
+                      if (typeof window !== 'undefined') {
+                        window.history.pushState({}, '', `/services/${c.slug}`);
+                      }
+                      go('service-category');
+                      if (typeof window !== 'undefined') {
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                      }
+                    }}
+                    className={`relative h-48 rounded-2xl overflow-hidden group cursor-pointer text-left ${FOCUS_RING}`}
+                  >
+                    <img src={tile.photo} alt="" className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+                    {count > 0 && (
+                      <span className="absolute top-3 right-3 inline-flex items-center px-2 py-0.5 rounded-full bg-white/90 backdrop-blur text-[10px] font-bold text-slate-900 tracking-wide shadow-sm">
+                        {count} provider{count === 1 ? '' : 's'}
+                      </span>
+                    )}
+                    <div className="absolute bottom-4 left-4 right-4 text-white">
+                      <p className="text-[10px] font-bold uppercase tracking-wider opacity-80">{tile.sub}</p>
+                      <h3 className="text-lg font-extrabold leading-tight">{c.name}</h3>
+                    </div>
+                  </button>
+                );
+              })}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 3 · POPULAR CORRIDORS ─────────────────────────── */}
+      <PopularCorridorsSection />
+
+      {/* ─── 4 · TOP VERIFIED PROVIDERS ────────────────────── */}
+      <div className="bg-white pt-12 pb-0 text-center">
+        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-50 to-fuchsia-50 border border-amber-200 text-[11px] font-bold uppercase tracking-[0.18em] text-amber-700">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75" />
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500" />
+          </span>
+          AI-routed dispatch · Live OSRM pricing
+        </span>
+      </div>
+      <TopProviders />
+
+      {/* ─── 5 · DISCOVERY PROVIDERS (exploration tier) ─────
+       *   Non-onboarded movers surfaced as acquisition signals.
+       *   Every card carries the "Not yet onboarded" badge and a
+       *   provider-funnel CTA — never a booking action. */}
+      <DiscoveryProvidersSection />
+
+      {/* ─── 6 · COUNTRY MARKETPLACE CARDS ──────────────────
+       *   Photo-grid country shopfronts. Tile click routes into
+       *   the localised /market-<iso> shopfront. */}
       <section className="bg-[#fafaf7] py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-10 gap-4 flex-wrap">
             <div>
+              <p className="text-amber-600 text-xs font-bold uppercase tracking-[0.18em] mb-2">
+                Country marketplaces
+              </p>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight">
                 Where are you moving?
               </h2>
@@ -182,7 +358,7 @@ export default function HomePage() {
             {SHOPFRONTS.map(s => (
               <button
                 key={s.iso}
-                onClick={() => { track('country_tile_clicked', { country: s.iso, surface: 'home' }); go(`market-${s.iso}` as Page); }}
+                onClick={() => { track('country_tile_clicked', { country: s.iso, surface: 'home' }); go(isoToMarketPage(s.iso)); }}
                 className="group relative text-left bg-white rounded-2xl overflow-hidden border border-slate-200 hover:border-amber-300 hover:shadow-2xl transition-all hover:-translate-y-1"
               >
                 <div className="relative h-52 overflow-hidden">
@@ -202,6 +378,9 @@ export default function HomePage() {
                     )}
                   </div>
                   <div className="absolute bottom-3 left-4 right-4 text-white">
+                    <p className="text-xs font-bold text-amber-300">
+                      Instant price available
+                    </p>
                     <p className="text-xs font-medium uppercase tracking-wider opacity-90">
                       {s.iso.toUpperCase()} marketplace
                     </p>
@@ -235,166 +414,66 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── HOW IT WORKS ──────────────────────────────────── */}
-      <section className="bg-white py-16 sm:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 max-w-2xl mx-auto">
-            <p className="text-amber-600 text-xs font-bold uppercase tracking-wider mb-3">How it works</p>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-              Three steps. One stress-free move.
-            </h2>
-          </div>
-
-          <div className="grid sm:grid-cols-3 gap-6">
-            {[
-              {
-                n: '1',
-                title: 'Tell us about your move',
-                body: 'Pickup, drop-off, date — country-scoped address search makes it easy.',
-                photo: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=900&q=70',
-              },
-              {
-                n: '2',
-                title: 'Compare verified providers',
-                body: 'Licensed movers, labour crews, packers — with prices, ratings, and real reviews.',
-                photo: 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=900&q=70',
-              },
-              {
-                n: '3',
-                title: 'Book in 60 seconds',
-                body: 'Pay under escrow, track your move live, and rate the team after delivery.',
-                photo: 'https://images.unsplash.com/photo-1591088398332-8a7791972843?auto=format&fit=crop&w=900&q=70',
-              },
-            ].map(s => (
-              <article key={s.n} className="group">
-                <div className="relative h-56 rounded-2xl overflow-hidden mb-5">
-                  <img src={s.photo} alt="" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-                  <div className="absolute top-4 left-4 w-10 h-10 rounded-full bg-amber-400 text-slate-900 flex items-center justify-center text-xl font-extrabold shadow-lg">
-                    {s.n}
-                  </div>
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">{s.title}</h3>
-                <p className="text-slate-600 leading-relaxed">{s.body}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── SERVICE CATEGORIES ──────────────────────────── */}
-      <section className="bg-[#fafaf7] py-16 sm:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-10 max-w-2xl">
-            <p className="text-amber-600 text-xs font-bold uppercase tracking-wider mb-3">What you can book</p>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-              Every kind of move, one marketplace.
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { title: 'Local moves',           sub: 'Same-city',         photo: 'https://images.unsplash.com/photo-1568010967-7c3a4e0a59f7?auto=format&fit=crop&w=600&q=70' },
-              { title: 'Long-distance moves',   sub: 'Inter-state / Cross-country', photo: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=600&q=70' },
-              { title: 'International moves',   sub: 'Cross-border',      photo: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=600&q=70' },
-              { title: 'Office relocation',     sub: 'For businesses',    photo: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=70' },
-              { title: 'Packing services',      sub: 'Full / Partial',    photo: 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=600&q=70' },
-              { title: 'Storage solutions',     sub: 'Self & bonded',     photo: 'https://images.unsplash.com/photo-1591375372226-9aa92be1d6f4?auto=format&fit=crop&w=600&q=70' },
-              { title: 'Truck rental',          sub: 'DIY-friendly',      photo: 'https://images.unsplash.com/photo-1601581875309-fafbf2d3ed3a?auto=format&fit=crop&w=600&q=70' },
-              { title: 'Student moves',         sub: 'University corridors', photo: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=600&q=70' },
-            ].map(c => (
-              <div key={c.title} className="relative h-48 rounded-2xl overflow-hidden group cursor-pointer">
-                <img src={c.photo} alt="" className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-                <div className="absolute bottom-4 left-4 right-4 text-white">
-                  <p className="text-[10px] font-bold uppercase tracking-wider opacity-80">{c.sub}</p>
-                  <h3 className="text-lg font-extrabold leading-tight">{c.title}</h3>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── PRESS STRIP ───────────────────────────────────── */}
+      {/* ─── 7 · PRESS / TRUST STRIP ───────────────────────── */}
       <PressStrip />
 
-      {/* ─── SMART MATCHING (2030 AI angle) ────────────────── */}
-      <SmartMatchingSection />
+      {/* ─── 8 · REVIEWS CAROUSEL (standalone) ─────────────── */}
+      <ReviewsCarousel />
 
-      {/* ─── WHY FLYTTGO ───────────────────────────────────── */}
-      <WhyFlyttGo />
-
-      {/* ─── RECENTLY VIEWED (Wave 25) ───────────────────────
-          Renders only if the customer has opened a provider profile
-          before — otherwise self-suppresses, so first-time visitors
-          don't see an empty rail. */}
-      <RecentlyViewedRail />
-
-      {/* ─── TOP-RATED PROVIDERS ───────────────────────────── */}
-      <TopProviders />
-
-      {/* ─── CARBON OFFSET ─────────────────────────────────── */}
+      {/* ─── 9 · CARBON OFFSET ─────────────────────────────── */}
       <CarbonOffset />
 
-      {/* ─── REVIEWS ──────────────────────────────────────── */}
-      <section className="bg-white py-16 sm:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 max-w-2xl mx-auto">
-            <p className="text-amber-600 text-xs font-bold uppercase tracking-wider mb-3">Real customers, real moves</p>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-              4.8 average from 27,000+ moves
-            </h2>
-            <div className="mt-4 inline-flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-full px-4 py-1.5">
-              <span className="flex gap-0.5">
-                {[1,2,3,4,5].map(i => <Star key={i} size={14} className="fill-emerald-600 text-emerald-600" />)}
-              </span>
-              <span className="text-sm font-bold text-emerald-700">Trustpilot</span>
-              <span className="text-sm text-emerald-700">·</span>
-              <span className="text-sm text-emerald-700">4.8 / 5 from 12,800+ reviews</span>
-            </div>
-          </div>
+      {/* ─── 10 · EARNINGS SIMULATOR ────────────────────────
+       *   Supply-side acquisition lever sits below the social-proof
+       *   block so customers see income transparency right before
+       *   the FAQ closing. Same component the /providers page mounts. */}
+      <EarningsSimulator />
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              { name: 'Emily Johnson',  city: 'Austin → Atlanta',         flag: '🇺🇸', text: 'Booked a licensed long-distance carrier in under five minutes. The price held, escrow released exactly when the team finished unloading.' },
-              { name: 'Lukas Müller',   city: 'Berlin → München',         flag: '🇩🇪', text: 'Drei Anbieter im Vergleich, faire Preise, transparente Versicherung. Genau das, was Umzüge in Deutschland gebraucht haben.' },
-              { name: 'Sophie Dubois',  city: 'Paris → Lyon',             flag: '🇫🇷', text: 'Devis instantané, déménageurs licenciés, paiement sécurisé. Le déménagement le plus simple que j’ai jamais fait.' },
-              { name: 'James Walker',   city: 'London → Manchester',      flag: '🇬🇧', text: 'Used the cash-on-delivery option for our office move. Slick — 30% online, the rest paid in cash to a brilliant GVOL operator.' },
-              { name: 'Erik Hansen',    city: 'Oslo → Bergen',            flag: '🇳🇴', text: 'Norsk språk gjennom hele bestillingen. Lisensiert flytteselskap, sporing i sanntid, raskt utbetalt fra escrow.' },
-              { name: 'Ava Tremblay',   city: 'Toronto → Montréal',       flag: '🇨🇦', text: 'Bilingual coordination across two provinces, federally compliant carrier, transparent total — no surprises at the dock.' },
-              { name: 'Marco Drechsler', city: 'Hamburg → München',       flag: '🇩🇪', text: 'Konzernumzug für 18 Mitarbeiter in einer Buchung. Audit-Trail war Gold wert für unsere Procurement-Abteilung.' },
-              { name: 'Olivia Reyes',   city: 'Brooklyn → LA',            flag: '🇺🇸', text: 'Cross-country with a USDOT carrier, full $50k goods-in-transit cover, real-time GPS the whole way. Five stars, no hesitation.' },
-              { name: 'Camille Bernard', city: 'Marseille → Bordeaux',    flag: '🇫🇷', text: 'Calcul de prix instantané, déménageur noté 4,9, escrow libéré dès que j’ai confirmé à l’arrivée. Très professionnel.' },
-            ].map(r => (
-              <article key={r.name} className="bg-[#fafaf7] rounded-2xl p-6 border border-slate-100 hover:shadow-lg hover:border-amber-200 transition">
-                <div className="flex gap-1 mb-3">
-                  {[1,2,3,4,5].map(i => <Star key={i} size={16} className="fill-amber-400 text-amber-400" />)}
-                </div>
-                <p className="text-slate-700 leading-relaxed mb-5">“{r.text}”</p>
-                <div className="flex items-center gap-3 pt-3 border-t border-slate-200">
-                  <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold">
-                    {r.name.charAt(0)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
-                      {r.name}
-                      <span aria-hidden className="text-base leading-none">{r.flag}</span>
-                    </p>
-                    <p className="text-xs text-slate-500">{r.city}</p>
-                  </div>
-                </div>
-              </article>
-            ))}
+      {/* ─── 11 · FAQ + DEPLOYMENT MAP ──────────────────────
+       *   Last informational block before the closing trust /
+       *   provider / final-CTA stack. Two-column trust row at lg+:
+       *   global-deployment world map on the left exposes the
+       *   six country nodes as one visual; FAQ accordion sits
+       *   adjacent on the right. Stacks on mobile (map first). */}
+      <section className="bg-[#fafaf7] py-16 sm:py-20" aria-label="Global deployment and frequently asked questions">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
+            <div>
+              <p className="text-amber-700 text-xs font-bold uppercase tracking-[0.18em] mb-2">
+                Global deployment
+              </p>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-3">
+                Six active country nodes
+              </h2>
+              <p className="text-sm text-slate-600 leading-relaxed mb-6 max-w-md">
+                Each marker opens its country shopfront — country-licensed
+                providers, distance-priced quotes, escrow on every booking.
+                Dotted corridors trace the Phase 4 intercontinental routes
+                planned through 2030.
+              </p>
+              <WorldDeploymentMap />
+            </div>
+            <div>
+              <HomeFAQ inline />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ─── FAQ ───────────────────────────────────────────── */}
-      <HomeFAQ />
-
-      {/* ─── TRUST + STATS ───────────────────────────────── */}
-      <section className="bg-ink-900 text-white py-14">
+      {/* ─── POSITION 11 ─ TRUST STATS STRIP ────────────────
+       *   Live KPI bar showing marketplace strength with a pulsing
+       *   "Live marketplace" indicator. */}
+      <section className="bg-ink-900 text-white py-12 sm:py-14 border-y border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center gap-2 mb-6">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+            </span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-300">
+              Live marketplace
+            </span>
+          </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               { icon: Truck,       n: 27000, format: (n: number) => `${Math.round(n).toLocaleString()}+`, label: 'Moves coordinated' },
@@ -407,7 +486,7 @@ export default function HomePage() {
                   <Icon size={20} />
                 </div>
                 <div>
-                  <p className="text-2xl sm:text-3xl font-extrabold">
+                  <p className="text-2xl sm:text-3xl font-extrabold tabular-nums">
                     <AnimatedNumber value={n} format={format} />
                   </p>
                   <p className="text-sm text-white/70">{label}</p>
@@ -418,7 +497,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── PROVIDERS-SIDE CTA — balance the marketplace ─── */}
+      {/* ─── POSITION 12 ─ PROVIDER ONBOARDING CTA ──────────
+       *   Supply-side acquisition surface with subscription tiers. */}
       <section className="bg-[#0b1f3a] text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
           <div className="grid lg:grid-cols-12 gap-10 items-center">
@@ -491,7 +571,7 @@ export default function HomePage() {
             {SHOPFRONTS.map(s => (
               <button
                 key={s.iso}
-                onClick={() => { track('country_tile_clicked', { country: s.iso, surface: 'home' }); go(`market-${s.iso}` as Page); }}
+                onClick={() => { track('country_tile_clicked', { country: s.iso, surface: 'home' }); go(isoToMarketPage(s.iso)); }}
                 className="inline-flex items-center gap-2 bg-white hover:bg-slate-900 hover:text-white px-5 py-3 rounded-xl text-sm font-bold shadow-lg transition"
               >
                 <span aria-hidden>{s.flag}</span>

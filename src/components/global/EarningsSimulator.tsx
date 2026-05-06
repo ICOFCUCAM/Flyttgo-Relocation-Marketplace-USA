@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { INPUT_FOCUS } from '../ds';
 import {
   TrendingUp, Users, Truck, Package, Boxes, MapPin,
   CalendarDays, ArrowRight, Sparkles, type LucideIcon,
@@ -150,7 +151,7 @@ export default function EarningsSimulator({ compact = false, initial }: Props) {
             value={city}
             onChange={e => patch(() => setCity(e.target.value))}
             placeholder="Type a city to apply the metro multiplier…"
-            className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none"
+            className={`w-full px-3 py-2 text-sm border border-slate-300 rounded-lg ${INPUT_FOCUS}`}
           />
           <datalist id={`sim-city-${country}`}>
             {cityList.map(c => <option key={c} value={c} />)}
@@ -275,19 +276,19 @@ export default function EarningsSimulator({ compact = false, initial }: Props) {
       </div>
 
       {/* OUTPUT */}
-      <aside className={`lg:col-span-5 bg-gradient-to-br from-emerald-700 to-emerald-900 text-white rounded-2xl ${padX} relative overflow-hidden self-start sticky top-6`}>
+      <aside className={`lg:col-span-5 bg-gradient-to-br from-ink-800 to-ink-950 text-white rounded-2xl ${padX} relative overflow-hidden self-start sticky top-6`}>
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-5">
-            <TrendingUp size={16} className="text-emerald-200" />
-            <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-200">
+            <TrendingUp size={16} className="text-amber-300" />
+            <p className="text-[10px] font-bold uppercase tracking-wider text-amber-300">
               Estimated earnings · post-commission
             </p>
           </div>
 
-          <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-200/80 mb-1">Hourly</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-amber-300/80 mb-1">Hourly</p>
           <p className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-1">
             {formatPrice(breakdown.providerHourly, country)}
-            <span className="text-emerald-200/70 text-base font-normal ml-1">/hr</span>
+            <span className="text-amber-300/70 text-base font-normal ml-1">/hr</span>
           </p>
           {/* Country context strip — currency · tax mode · service
               model so prospects understand why the number differs
@@ -295,7 +296,7 @@ export default function EarningsSimulator({ compact = false, initial }: Props) {
           {(() => {
             const profile = findCountryProfile(country);
             return (
-              <p className="text-[10px] text-emerald-100/70 mb-4 inline-flex items-center gap-1.5 flex-wrap">
+              <p className="text-[10px] text-amber-100/70 mb-4 inline-flex items-center gap-1.5 flex-wrap">
                 <span>{profile.currency}</span>
                 <span aria-hidden>·</span>
                 <span>{profile.taxMode === 'vat-included' ? 'VAT included' : profile.taxMode === 'sales-tax-added' ? 'Sales tax at checkout' : 'Net quote'}</span>
@@ -312,7 +313,7 @@ export default function EarningsSimulator({ compact = false, initial }: Props) {
           </div>
 
           <details className="bg-black/15 rounded-lg overflow-hidden">
-            <summary className="cursor-pointer px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-emerald-100 flex items-center justify-between">
+            <summary className="cursor-pointer px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-amber-100 flex items-center justify-between">
               How is this computed?
               <ArrowRight size={11} className="opacity-60" />
             </summary>
@@ -321,7 +322,7 @@ export default function EarningsSimulator({ compact = false, initial }: Props) {
                 <li key={i} className="flex items-baseline justify-between text-[11px]">
                   <div className="min-w-0">
                     <p className="font-bold">{c.label}</p>
-                    {c.detail && <p className="text-emerald-200/70 text-[10px] truncate">{c.detail}</p>}
+                    {c.detail && <p className="text-amber-300/70 text-[10px] truncate">{c.detail}</p>}
                   </div>
                   <span className="font-mono text-white flex-shrink-0">
                     {c.amount < 0 ? '−' : '+'}
@@ -351,13 +352,13 @@ export default function EarningsSimulator({ compact = false, initial }: Props) {
             <ArrowRight size={14} />
           </button>
 
-          <p className="mt-3 text-[10px] text-emerald-100/70 text-center leading-relaxed">
+          <p className="mt-3 text-[10px] text-amber-100/70 text-center leading-relaxed">
             Estimate · actual earnings vary with your accepted-job mix, commission tier, and local demand.
           </p>
         </div>
 
         {/* Decorative accent */}
-        <div className="absolute -right-12 -bottom-12 w-48 h-48 rounded-full bg-emerald-400/10 blur-2xl" aria-hidden />
+        <div className="absolute -right-12 -bottom-12 w-48 h-48 rounded-full bg-amber-400/15 blur-2xl" aria-hidden />
       </aside>
     </div>
   );
@@ -417,7 +418,7 @@ function Stat({ label, value, country, highlight = false }: {
 }) {
   return (
     <div className={`flex items-baseline justify-between gap-3 ${highlight ? 'pt-3 border-t border-white/15' : ''}`}>
-      <span className="text-xs text-emerald-100/80 uppercase tracking-wider font-bold">{label}</span>
+      <span className="text-xs text-amber-100/80 uppercase tracking-wider font-bold">{label}</span>
       <span className={`font-extrabold tracking-tight ${highlight ? 'text-3xl' : 'text-xl'} text-white`}>
         {formatPrice(value, country)}
       </span>

@@ -12,7 +12,7 @@ import {
 import {
   PROVIDER_CATEGORIES, findProviderCategory, type ProviderCategorySlug,
 } from '../lib/provider-categories';
-import { Section, Eyebrow, Pill } from '../components/ds';
+import { Section, Eyebrow, Pill , INPUT_FOCUS} from '../components/ds';
 import { track } from '../lib/analytics';
 
 /* ─────────────────────────────────────────────────────────────────
@@ -36,7 +36,11 @@ import { track } from '../lib/analytics';
  * for unauthenticated visitors who haven't yet signed up.
  * ───────────────────────────────────────────────────────────────── */
 
-const COUNTRY_FLAGS: Record<OnboardingCountryCode, string> = {
+/* Partial: ONBOARDING_RULES drives the actual list of countries at
+ * runtime, but the type `OnboardingCountryCode` widened to all 16+1
+ * PricingCountry codes when the rollout expanded — flags only exist
+ * for jurisdictions that have rules today. */
+const COUNTRY_FLAGS: Partial<Record<OnboardingCountryCode, string>> = {
   us: '🇺🇸', ca: '🇨🇦', gb: '🇬🇧', de: '🇩🇪', fr: '🇫🇷',
   no: '🇳🇴', ng: '🇳🇬', ke: '🇰🇪', ae: '🇦🇪', in: '🇮🇳',
 };
@@ -118,7 +122,7 @@ export default function ProviderRequirementsPage() {
               <select
                 value={country}
                 onChange={e => setCountry(e.target.value as OnboardingCountryCode)}
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none bg-white"
+                className={`w-full px-3 py-2 text-sm border border-slate-300 rounded-lg ${INPUT_FOCUS} bg-white`}
               >
                 {ONBOARDING_RULES.map(r => (
                   <option key={r.country} value={r.country}>

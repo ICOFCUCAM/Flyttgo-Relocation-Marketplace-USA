@@ -1,16 +1,42 @@
-# FlyttGo USA — robots.txt
-# https://flyttgo.us
+# FlyttGo Global Logistics & Relocation Marketplace
+# https://flyttgo.com
 #
-# Allow all search engines to crawl public pages.
-# Block authentication / dashboard surfaces from being indexed.
+# Public crawl policy: customer-discovery + SEO surfaces are open.
+# Authenticated app shells, payment, and transient query-param URLs
+# are blocked so we don't leak session-scoped state to the index.
 
 User-agent: *
 Allow: /
+
+# ── Authenticated app shells ─────────────────────────────────────────
 Disallow: /customer-dashboard
 Disallow: /driver-portal
 Disallow: /admin
 Disallow: /my-bookings
 Disallow: /profile
+Disallow: /dashboard
 
-# Sitemap
-Sitemap: https://flyttgo.us/sitemap.xml
+# ── Finance / regulator workspaces ───────────────────────────────────
+# Step-up authenticated; never expose to crawlers even via a 403/404
+# probe pattern.
+Disallow: /accounting
+Disallow: /audit
+Disallow: /backoffice
+
+# ── Transactional / transient surfaces ───────────────────────────────
+Disallow: /book
+Disallow: /payment
+Disallow: /track
+Disallow: /auth/
+
+# ── Internal acceptance URLs + invite tokens ─────────────────────────
+Disallow: /invite
+Disallow: /accept-invite
+Disallow: /driver-application-status
+
+# ── Tracking / share URLs (carry ?q= or ?utm tokens) ─────────────────
+Disallow: /*?q=
+Disallow: /*?utm_
+
+# ── Sitemap index — fans out to 4 category sub-sitemaps ─────────────
+Sitemap: https://flyttgo.com/sitemap.xml

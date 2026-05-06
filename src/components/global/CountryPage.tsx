@@ -1,12 +1,17 @@
-import React, { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { Star, ShieldCheck, Truck, BadgeCheck, MapPin } from 'lucide-react';
 import { useApp } from '../../lib/store';
 import type { Page, BookingCountry } from '../../lib/store';
 import { applyCountryLanguage } from '../../lib/i18n';
 import BookingShortcut from './BookingShortcut';
 import CountrySchema from './CountrySchema';
-import { POPULAR_CITIES } from '../../lib/popular-cities';
+import EarningsSimulator from './EarningsSimulator';
+import {
+  POPULAR_CORRIDORS, COUNTRY_COMPLIANCE_PILLS, PROVIDER_AVAILABILITY_THIS_WEEK,
+} from '../../lib/popular-cities';
 import { track } from '../../lib/analytics';
+import { corridorsForCountry, type MarketCountryCode } from '../../lib/cross-border-corridors';
+import { CITY_HERO_IMAGES } from '../../config/cityHeroImages';
 
 /**
  * Section-index label — kept for backward compatibility with editorial
@@ -63,16 +68,28 @@ export interface CountryPageProps {
   regions?: string[];
   /** Optional country-specific stats — defaults shown if absent. */
   stats?: { value: string; label: string }[];
+  /** Optional SEO slot rendered between the operator/compliance
+   *  block and the Final CTA. Country pages pass in
+   *  <CountrySEOSection countryCode="…" languageCode="…" /> to
+   *  surface localized corridor SEO. */
+  seoSlot?: ReactNode;
 }
 
-/* Default cityscape photo per country. Stable Unsplash CDN URLs. */
+/* Default cityscape photo per country.
+ *
+ * Norway sources from the shared CITY_HERO_IMAGES skyline registry
+ * so the legacy market matches the same visual system the expansion
+ * markets use (one source of truth for capital-city skylines).
+ * The other legacy markets keep their bespoke marketing photos for
+ * now — those were art-directed against a specific shopfront layout
+ * and not just "capital skyline." */
 const HERO_PHOTOS: Record<BookingCountry, string> = {
   us: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=1920&q=70',
   ca: 'https://images.unsplash.com/photo-1503614472-8c93d56e92ce?auto=format&fit=crop&w=1920&q=70',
   de: 'https://images.unsplash.com/photo-1560969184-10fe8719e047?auto=format&fit=crop&w=1920&q=70',
   fr: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1920&q=70',
   gb: 'https://images.unsplash.com/photo-1486299267070-83823f5448dd?auto=format&fit=crop&w=1920&q=70',
-  no: 'https://images.unsplash.com/photo-1513415564515-763d91423bdd?auto=format&fit=crop&w=1920&q=70',
+  no: CITY_HERO_IMAGES.oslo,
 };
 
 /* Default trust stats per country. Numbers are rough but shape the
@@ -142,6 +159,16 @@ export default function CountryPage(props: CountryPageProps) {
             className="h-full w-full object-cover"
             loading="eager"
             fetchPriority="high"
+            onError={(e) => {
+              /* If the per-country hero CDN URL ever 404s, fall
+               * back to the verified-stable Stockholm skyline so
+               * the page never renders a blank scrim. Done at the
+               * <img> layer (not React state) so a single failed
+               * load can recover without a re-render cycle. */
+              const img = e.currentTarget;
+              const fallback = 'https://images.unsplash.com/photo-1509356843151-3e7d96241e11?q=80&w=2400';
+              if (img.src !== fallback) img.src = fallback;
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-br from-[#0b1f3a]/95 via-[#0b1f3a]/85 to-[#0b1f3a]/55" />
         </div>
@@ -167,24 +194,54 @@ export default function CountryPage(props: CountryPageProps) {
                 {props.name} Moves &amp;{' '}
                 <span className="text-amber-300">Logistics Marketplace</span>
               </h1>
-              <p className="text-lg text-white/85 leading-relaxed max-w-xl mb-7">
+              <p className="text-lg text-white/85 leading-relaxed max-w-xl mb-4">
                 {props.positioning}
               </p>
 
-              {POPULAR_CITIES[props.iso2]?.length > 0 && (
+              {/* Country-aware compliance pills — surfaces the
+               *  regulator each market actually recognises (USDOT in
+               *  the US, GVOL in the UK, GüKG in Germany, etc.) plus
+               *  the universal escrow + cover amount. */}
+              <div className="flex flex-wrap gap-2 mb-4 text-xs text-white/80">
+                {COUNTRY_COMPLIANCE_PILLS[props.iso2]?.map(pill => (
+                  <span
+                    key={pill}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/10"
+                  >
+                    <ShieldCheck size={11} className="text-amber-300 flex-shrink-0" />
+                    {pill}
+                  </span>
+                ))}
+              </div>
+
+              {/* Provider supply signal — creates urgency + reassures
+               *  on supply depth. Numbers come from a curated table
+               *  for now; a Supabase aggregation view can replace them. */}
+              <p className="text-xs text-white/60 mb-6">
+                <strong className="text-white/85">
+                  {PROVIDER_AVAILABILITY_THIS_WEEK[props.iso2].toLocaleString()}
+                </strong>{' '}
+                licensed movers available this week
+              </p>
+
+              {POPULAR_CORRIDORS[props.iso2]?.length > 0 && (
                 <div className="mb-6">
                   <p className="text-xs font-bold uppercase tracking-wider text-amber-300/80 mb-2">
                     Popular {props.name} moves
                   </p>
                   <div className="flex flex-wrap gap-1.5">
-                    {POPULAR_CITIES[props.iso2].map(city => (
+                    {POPULAR_CORRIDORS[props.iso2].map(c => (
                       <button
-                        key={city}
+                        key={`${c.from}-${c.to}`}
                         type="button"
                         onClick={() => {
-                          track('country_popular_city_clicked', { country: props.iso2, city });
+                          track('country_popular_corridor_clicked', {
+                            country: props.iso2,
+                            from:    c.from,
+                            to:      c.to,
+                          });
                           if (typeof window !== 'undefined') {
-                            const qs = new URLSearchParams({ country: props.iso2, q: city });
+                            const qs = new URLSearchParams({ country: props.iso2, q: c.from });
                             window.history.pushState({}, '', `/providers/directory?${qs}`);
                           }
                           go('providers-directory');
@@ -192,10 +249,12 @@ export default function CountryPage(props: CountryPageProps) {
                             window.dispatchEvent(new PopStateEvent('popstate'));
                           }
                         }}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold transition"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold transition"
                       >
                         <MapPin size={11} className="text-amber-300" />
-                        {city}
+                        <span>{c.from} → {c.to}</span>
+                        <span className="text-amber-300 font-extrabold">·</span>
+                        <span className="text-amber-200">{c.price}</span>
                       </button>
                     ))}
                   </div>
@@ -218,19 +277,44 @@ export default function CountryPage(props: CountryPageProps) {
                   <strong className="text-white">{stats[1]?.value}</strong>
                   <span className="text-white/70">{stats[1]?.label.toLowerCase()}</span>
                 </span>
-                <span className="flex items-center gap-1.5">
+                <span
+                  className="flex items-center gap-1.5 cursor-help"
+                  title="Escrow holds your payment until you confirm delivery. The driver only gets paid after both sides confirm the move is complete — protection both ways."
+                >
                   <ShieldCheck size={14} className="text-amber-300" />
-                  <span className="text-white/70">Escrow on every booking</span>
+                  <span className="text-white/70 underline decoration-dotted underline-offset-2">
+                    Escrow on every booking
+                  </span>
                 </span>
               </div>
             </div>
 
             <div className="lg:col-span-6">
               <BookingShortcut country={props.iso2} />
+
+              {/* Enterprise / institutional shortcut — sits directly
+               *  under the booking widget so HR / mobility / university
+               *  buyers see the right path on the first scroll. */}
+              <p className="mt-3 text-xs text-white/70">
+                Moving employees or students?{' '}
+                <button
+                  onClick={() => { track('country_enterprise_shortcut_clicked', { country: props.iso2 }); go('enterprise-relocation'); }}
+                  className="text-amber-300 font-semibold hover:text-amber-200 underline underline-offset-2"
+                >
+                  Request enterprise quote →
+                </button>
+              </p>
             </div>
           </div>
         </div>
       </section>
+
+      {/* ─── PROVIDER EARNINGS SIMULATOR ─────────────────────
+       *   Sits directly under the hero (and its booking widget) so
+       *   prospective providers see projected earnings on the same
+       *   country page customers use to book. Pairs supply-side
+       *   acquisition with demand-side discovery on a single scroll. */}
+      <EarningsSimulator />
 
       {/* ─── STATS STRIP ────────────────────────────────── */}
       <section className="bg-white border-b border-slate-200">
@@ -381,6 +465,20 @@ export default function CountryPage(props: CountryPageProps) {
         </div>
       </section>
 
+      {/* ─── CROSS-BORDER CORRIDORS ──────────────────────────
+       *   Surfaces every CROSS_BORDER_CORRIDOR that touches this
+       *   country. Anchors the SEO body with concrete, in-network
+       *   move pairs — high-frequency corridors get an Amber tag.
+       *   Hidden when the country isn't part of any corridor. */}
+      <CrossBorderCorridorsForCountry iso2={props.iso2} name={props.name} />
+
+      {/* ─── COUNTRY SEO SLOT ────────────────────────────────
+       *   Optional multilingual SEO + corridor block injected by
+       *   each country page. Sits just before the Final CTA so the
+       *   localized headline + corridor copy is the last thing
+       *   crawlers see before the closing conversion module. */}
+      {props.seoSlot}
+
       {/* ─── FINAL CTA ───────────────────────────────────── */}
       <section className="bg-gradient-to-br from-amber-400 to-amber-500 text-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
@@ -406,5 +504,68 @@ export default function CountryPage(props: CountryPageProps) {
         </div>
       </section>
     </main>
+  );
+}
+
+/**
+ * <CrossBorderCorridorsForCountry>
+ *
+ * Lists every CROSS_BORDER_CORRIDORS entry that originates in or
+ * terminates at the country. High-frequency corridors get an amber
+ * tag; corridors that bridge into an existing market get a small
+ * 'In-network' note. Renders nothing when the country isn't part
+ * of any corridor (clean fall-through, no empty section).
+ *
+ * Hoisted to CountryPage rather than each market shopfront so all 6
+ * legacy markets pick it up uniformly.
+ */
+function CrossBorderCorridorsForCountry({ iso2, name }: { iso2: string; name: string }) {
+  const corridors = corridorsForCountry(iso2.toLowerCase() as MarketCountryCode);
+  if (corridors.length === 0) return null;
+
+  return (
+    <section className="bg-white border-t border-slate-200/70">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16">
+        <div className="mb-8">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-amber-600 mb-2">
+            Cross-border corridors
+          </p>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            In-network moves touching {name}
+          </h2>
+          <p className="text-sm text-slate-600 mt-2 max-w-2xl">
+            Corridors with active dispatch coordination. High-frequency lanes
+            carry guaranteed weekly capacity; in-network bridges connect
+            expansion markets to a fully-activated FlyttGo shopfront.
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {corridors.map(c => (
+            <div
+              key={c.slug}
+              className="border border-slate-200 rounded-xl p-4 bg-white hover:shadow-sm transition"
+            >
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <p className="text-sm font-bold text-slate-900 leading-tight">
+                  {c.fromCity} <span className="text-slate-400">→</span> {c.toCity}
+                </p>
+                {c.isHighFrequency && (
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider bg-amber-100 text-amber-800 uppercase">
+                    High-frequency
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-slate-500 uppercase tracking-wider font-bold">
+                {c.fromCountry.toUpperCase()} → {c.toCountry.toUpperCase()}
+                {c.bridgesToExistingMarket && (
+                  <span className="ml-2 text-emerald-700 normal-case font-semibold">· In-network bridge</span>
+                )}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }

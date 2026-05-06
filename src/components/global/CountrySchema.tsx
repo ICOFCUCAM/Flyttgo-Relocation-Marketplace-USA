@@ -1,4 +1,3 @@
-import React from 'react';
 import type { BookingCountry } from '../../lib/store';
 
 /**
@@ -21,12 +20,12 @@ interface CountryStats {
 }
 
 const COUNTRY_DATA: Record<BookingCountry, CountryStats> = {
-  us: { name: 'United States',  iso: 'us', url: 'https://flyttgo.us/us',      reviews: 12400, rating: 4.9, area: ['Austin','Atlanta','Dallas','Phoenix','Charlotte','New York','Los Angeles'] },
-  ca: { name: 'Canada',         iso: 'ca', url: 'https://flyttgo.us/canada',  reviews:  3100, rating: 4.8, area: ['Toronto','Montréal','Vancouver','Calgary','Ottawa','Edmonton'] },
-  gb: { name: 'United Kingdom', iso: 'gb', url: 'https://flyttgo.us/uk',      reviews:  4800, rating: 4.8, area: ['London','Manchester','Birmingham','Edinburgh','Glasgow','Bristol'] },
-  de: { name: 'Germany',        iso: 'de', url: 'https://flyttgo.us/germany', reviews:  2700, rating: 4.8, area: ['Berlin','München','Hamburg','Frankfurt','Köln','Stuttgart'] },
-  fr: { name: 'France',         iso: 'fr', url: 'https://flyttgo.us/france',  reviews:  2400, rating: 4.7, area: ['Paris','Lyon','Marseille','Toulouse','Bordeaux','Lille'] },
-  no: { name: 'Norway',         iso: 'no', url: 'https://flyttgo.us/norway',  reviews:  1900, rating: 4.9, area: ['Oslo','Bergen','Trondheim','Stavanger','Kristiansand','Tromsø'] },
+  us: { name: 'United States',  iso: 'us', url: 'https://flyttgo.com/us',      reviews: 12400, rating: 4.9, area: ['Austin','Atlanta','Dallas','Phoenix','Charlotte','New York','Los Angeles'] },
+  ca: { name: 'Canada',         iso: 'ca', url: 'https://flyttgo.com/canada',  reviews:  3100, rating: 4.8, area: ['Toronto','Montréal','Vancouver','Calgary','Ottawa','Edmonton'] },
+  gb: { name: 'United Kingdom', iso: 'gb', url: 'https://flyttgo.com/uk',      reviews:  4800, rating: 4.8, area: ['London','Manchester','Birmingham','Edinburgh','Glasgow','Bristol'] },
+  de: { name: 'Germany',        iso: 'de', url: 'https://flyttgo.com/germany', reviews:  2700, rating: 4.8, area: ['Berlin','München','Hamburg','Frankfurt','Köln','Stuttgart'] },
+  fr: { name: 'France',         iso: 'fr', url: 'https://flyttgo.com/france',  reviews:  2400, rating: 4.7, area: ['Paris','Lyon','Marseille','Toulouse','Bordeaux','Lille'] },
+  no: { name: 'Norway',         iso: 'no', url: 'https://flyttgo.com/norway',  reviews:  1900, rating: 4.9, area: ['Oslo','Bergen','Trondheim','Stavanger','Kristiansand','Tromsø'] },
 };
 
 const ISO_TO_COUNTRY: Record<BookingCountry, string> = {
@@ -41,7 +40,7 @@ export default function CountrySchema({ iso }: { iso: BookingCountry }) {
     '@type':    'LocalBusiness',
     '@id':      `${data.url}#business`,
     name:       `FlyttGo · ${data.name} Moves & Logistics`,
-    image:      'https://flyttgo.us/og.svg',
+    image:      'https://flyttgo.com/og.svg',
     url:        data.url,
     telephone:  '+44 7432 112438',
     description: `FlyttGo's ${data.name} marketplace — licensed local providers, instant quotes, escrow protection, cash or card payment.`,
@@ -68,8 +67,8 @@ export default function CountrySchema({ iso }: { iso: BookingCountry }) {
     '@context': 'https://schema.org',
     '@type':    'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'FlyttGo Global', item: 'https://flyttgo.us/' },
-      { '@type': 'ListItem', position: 2, name: 'Markets',         item: 'https://flyttgo.us/cities' },
+      { '@type': 'ListItem', position: 1, name: 'FlyttGo Global', item: 'https://flyttgo.com/' },
+      { '@type': 'ListItem', position: 2, name: 'Markets',         item: 'https://flyttgo.com/cities' },
       { '@type': 'ListItem', position: 3, name: data.name,         item: data.url },
     ],
   };

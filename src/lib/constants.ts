@@ -178,7 +178,7 @@ export function calculatePrice(vanType: string, hours: number, distanceKm: numbe
   const basePrice = (van?.pricePerHour ?? 85) * safeHours;
   const distanceCharge = extraKm * PRICING.distancePricing.extraPerKm;
   const helpersCharge = helpers * PRICING.extras.extra_helper * safeHours;
-  const extrasCharge = extras.reduce((sum, extra) => sum + ((PRICING.extras as any)[extra] ?? 0), 0);
+  const extrasCharge = extras.reduce((sum, extra) => sum + ((PRICING.extras as Record<string, number>)[extra] ?? 0), 0);
   const subtotal = basePrice + distanceCharge + helpersCharge + extrasCharge;
   const vat = subtotal * PRICING.vat;
   return { basePrice, distanceCharge, helpersCharge, extrasCharge, subtotal, vat, total: subtotal + vat };

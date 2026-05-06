@@ -19,7 +19,7 @@
  * ── Why a dedicated callback page? ─────────────────────────────
  * Putting the URL-hash handoff on its own route means:
  *   • Supabase's email template only ever points at one stable
- *     URL we control (https://flyttgo.us/auth/callback).
+ *     URL we control (https://flyttgo.com/auth/callback).
  *   • The home page doesn't have to mount any auth-callback logic
  *     and stays free of token-flash side effects.
  *   • If the session never arrives (expired link, broken email
@@ -37,6 +37,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../lib/auth';
 import { useApp }  from '../../lib/store';
+import { recordReferralRedemption } from '../../services/referrals';
+import { getMyFinanceRoles, routeForFinanceRoles } from '../../accounting/service';
 
 /** Hard ceiling on how long we'll wait for the session before showing
  *  the error fallback. supabase-js usually populates the session in
@@ -90,24 +92,60 @@ export default function AuthCallbackPage() {
    * profile so we know the role), bounce the user into the right
    * landing surface for their account type. */
   useEffect(() => {
-    if (loading || !user) return;
+    if (loading || !user) return undefined;
 
-    /* Drivers and admins have their own home — sending them to the
-     * customer dashboard would just feel wrong. */
-    if (profile?.role === 'driver') {
-      setPage('driver-portal');
-    } else if (profile?.role === 'admin') {
-      setPage('admin');
-    } else {
-      setPage('customer-dashboard');
+    /* Redeem any pending referral code stashed at first link click.
+     * The ?ref= query param is captured into sessionStorage on the
+     * landing page (so it survives the OAuth round-trip), then
+     * cashed in once the new user's session lands here. Failures
+     * are silent — invalid code, self-referral, and duplicate are
+     * all expected no-ops handled by the service. */
+    const refCode = window.sessionStorage.getItem('flyttgo:ref-code');
+    if (refCode) {
+      void recordReferralRedemption(refCode, user.id)
+        .catch(() => undefined)
+        .finally(() => window.sessionStorage.removeItem('flyttgo:ref-code'));
     }
+
+    /* Finance-role routing (Phase 16): accountants land at /accounting,
+     * auditors land at /audit. Admins keep their existing /admin home
+     * even when they ALSO carry a finance role. The lookup is async,
+     * so we run it inline; defaults to the existing role-based
+     * routing below if no finance role is found. */
+    let cancelled = false;
+    void getMyFinanceRoles(user.id).then(roles => {
+      if (cancelled) return;
+      const target = routeForFinanceRoles(roles);
+      if (target === 'accounting') { setPage('accounting'); return; }
+      if (target === 'audit')      { setPage('audit');      return; }
+      /* target === 'admin' or null → fall through to legacy routing */
+      if (profile?.role === 'driver') {
+        setPage('driver-portal');
+      } else if (profile?.role === 'admin') {
+        setPage('admin');
+      } else {
+        setPage('customer-dashboard');
+      }
+    }).catch(() => {
+      /* Finance-role lookup failed (RLS or network) — fall back to
+       * the legacy routing so the user is never stranded. */
+      if (cancelled) return;
+      if (profile?.role === 'driver') {
+        setPage('driver-portal');
+      } else if (profile?.role === 'admin') {
+        setPage('admin');
+      } else {
+        setPage('customer-dashboard');
+      }
+    });
+    return () => { cancelled = true; };
   }, [loading, user, profile, setPage]);
 
   /* Safety net — if no session ever materialises, surface an error
    * instead of leaving the user spinning forever. Skipped when we
    * already know from the URL that this is an error callback. */
   useEffect(() => {
-    if (user || urlError) return;
+    if (user || urlError) return undefined;
     const id = window.setTimeout(() => setTimedOut(true), SESSION_TIMEOUT_MS);
     return () => window.clearTimeout(id);
   }, [user, urlError]);

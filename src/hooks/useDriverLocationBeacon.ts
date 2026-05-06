@@ -51,7 +51,7 @@ export function useDriverLocationBeacon({ driverId, jobs }: Options) {
   const watchId = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!driverId || typeof navigator === 'undefined' || !navigator.geolocation) return;
+    if (!driverId || typeof navigator === 'undefined' || !navigator.geolocation) return undefined;
 
     const hasActiveJob = (jobs ?? []).some(
       j => j.driver_id === driverId && j.status && ACTIVE_STATUSES.includes(j.status)
@@ -62,15 +62,15 @@ export function useDriverLocationBeacon({ driverId, jobs }: Options) {
         navigator.geolocation.clearWatch(watchId.current);
         watchId.current = null;
       }
-      return;
+      return undefined;
     }
 
     /* Already watching — let the existing watch keep running. */
-    if (watchId.current != null) return;
+    if (watchId.current != null) return undefined;
 
     const handleSuccess = async (pos: GeolocationPosition) => {
       const now = Date.now();
-      if (now - lastPushAt.current < MIN_INTERVAL_MS) return;
+      if (now - lastPushAt.current < MIN_INTERVAL_MS) return undefined;
       lastPushAt.current = now;
 
       try {

@@ -132,7 +132,7 @@ export function relativeTimeFromMs(ms: number): string {
  * Shareable-quote URL helpers
  *
  * Encodes a quote into a URL-safe base64 string so a customer can
- * forward "https://flyttgo.us/?q=ABC123…" to a partner / spouse /
+ * forward "https://flyttgo.com/?q=ABC123…" to a partner / spouse /
  * housemate. The recipient lands on the home page; an effect in
  * AppLayout (see Wave 19 wiring) decodes the param, drops the
  * quote into their local store, and routes them to the matching
@@ -191,7 +191,7 @@ export function decodeSharedQuote(token: string | null | undefined): SharedQuote
 }
 
 /** Build the canonical share URL for a saved quote. */
-export function buildShareUrl(quote: SavedQuote, base = 'https://flyttgo.us'): string {
+export function buildShareUrl(quote: SavedQuote, base = 'https://flyttgo.com'): string {
   const token = encodeSharedQuote({
     country:         quote.country,
     pickupAddress:   quote.pickupAddress,

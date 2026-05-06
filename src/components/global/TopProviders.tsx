@@ -1,22 +1,127 @@
-import React from 'react';
-import { Star, Truck, ShieldCheck, Award, ArrowRight } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { FOCUS_RING, FOCUS_RING_TIGHT } from '../ds';
+import { Star, Truck, ShieldCheck, Award, ArrowRight, Zap, Flame } from 'lucide-react';
 import AddToCompareButton from './AddToCompareButton';
 import AvailabilityBadge from './AvailabilityBadge';
 import { useApp } from '../../lib/store';
-import { PROVIDERS } from '../../lib/providers-catalogue';
+import { PROVIDERS, type ProviderRecord } from '../../lib/providers-catalogue';
+import { getProviderPublicIdentity } from '../../lib/provider-identity';
 import { track } from '../../lib/analytics';
+import { estimateRoutePrice, formatRoutePrice, type RoutePriceResult } from '../../lib/route-price-estimator';
+import { resolveRoute, kmToMiles, type ResolvedRoute } from '../../services/route-cache';
+import type { PricingCountry } from '../../lib/pricing-engine';
 
-/**
- * "Top-rated providers" card row. Sources from lib/providers-catalogue
- * so the home grid + the per-provider profile pages stay in sync —
+/* ─────────────────────────────────────────────────────────────────
+ * <TopProviders> — dispatch-style provider strip on the homepage +
+ * country shopfronts.
+ *
+ * Today's data source: lib/providers-catalogue (curated TS records)
+ * so the home grid + per-provider profile pages stay in sync —
  * one record edits both surfaces.
  *
- * Each card now navigates to /provider?slug=<slug> on click; the
- * AddToCompare button still toggles the compare-store snapshot
- * without leaving the home page.
- */
+ * ── TODO(supabase) ──────────────────────────────────────────────
+ * The card design below is shaped to match what a future
+ * `public.providers` view would return:
+ *
+ *   id, company_name (→ name), rating, completed_jobs (→ reviews),
+ *   primary_corridor, instant_book, tier (→ badge),
+ *   availability_status (→ availability), service_zip_codes,
+ *   base_hourly_rate, from_price.
+ *
+ * Replacement is a one-call swap: replace the `PROVIDERS` import
+ * with a useQuery({ queryKey: ['providers', ...] }) that calls
+ * supabase.from('providers').select(...).order('tier desc, rating desc').
+ *
+ * Pickup-ZIP-based corridor filtering still needs a
+ * service_zip_codes column on the providers view + a
+ * `.contains('service_zip_codes', [zip])` clause when set.
+ * BookingShortcut now writes pickup/dropoff coords + postcodes
+ * to bookingData on every autocomplete selection so the strip
+ * can react without forcing the customer through the funnel.
+ *
+ * Route-aware pricing IS now wired:
+ *   - estimateRoutePrice (lib/route-price-estimator) applies
+ *     country baseline × tier × metro surge × distance bucket
+ *   - resolveRoute (services/route-cache) prefers a Supabase
+ *     route_corridor_cache row, falls back to live OSRM, and
+ *     tolerates the cache table not existing.
+ *   - The OSRM call fires ONCE per route, shared across all
+ *     provider cards.
+ * ───────────────────────────────────────────────────────────────── */
+
+/* Crude but transparent corridor picker — first sampleJob's route
+ * is what the provider has actually moved before, so it doubles as
+ * a "specializes in" line without needing a new schema column. */
+function primaryCorridor(p: ProviderRecord): string {
+  return p.sampleJobs?.[0]?.route ?? p.coverage ?? p.city;
+}
+
+/* Best-effort estimator — multiplies the catalogue's fromPrice
+ * (parsed numerically) by a typical 2-mover × 4-hour relocation.
+ * Replace with a lib/pricing-engine call once pickup + dropoff ZIPs
+ * are in the store. */
+function parseFromPriceMajor(s: string): number {
+  const m = s.replace(/\s+/g, '').match(/(\d[\d.,]*)/);
+  if (!m) return 0;
+  return Number(m[1].replace(/[.,]/g, '')) || 0;
+}
+
+/* Map the catalogue's availability enum to a customer-facing line.
+ * Matches the labels we'd surface from a future Supabase view's
+ * availability_status column. */
+function availabilityLabel(a: ProviderRecord['availability']): string {
+  switch (a) {
+    case 'available_now': return 'Available this week';
+    case 'books_fast':    return 'Next-day availability';
+    case 'slots_left':    return 'Limited slots this week';
+    case 'busy':          return 'Joining waitlist';
+    default:              return 'Available this week';
+  }
+}
+
+const BADGE =
+  'inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md';
+
 export default function TopProviders() {
-  const { setPage } = useApp();
+  const { setPage, setBookingData, bookingData } = useApp();
+
+  /* Resolve real driving distance ONCE per route, not once per
+   * provider card. Every card on the strip shares the same OSRM
+   * answer, fed in via `miles` to estimateRoutePrice. The hook
+   * fires on coord OR ZIP changes — coords win when present, ZIPs
+   * route through the corridor cache when applied. */
+  const [route, setRoute] = useState<ResolvedRoute | null>(null);
+
+  const pickupLat  = bookingData.pickupLat;
+  const pickupLng  = bookingData.pickupLng;
+  const dropoffLat = bookingData.dropoffLat;
+  const dropoffLng = bookingData.dropoffLng;
+  const pickupZip  = bookingData.pickupPostcode;
+  const dropoffZip = bookingData.dropoffPostcode;
+
+  useEffect(() => {
+    let cancelled = false;
+    const hasCoords = pickupLat != null && pickupLng != null
+                   && dropoffLat != null && dropoffLng != null;
+    const hasZips   = Boolean(pickupZip && dropoffZip);
+
+    if (!hasCoords && !hasZips) {
+      setRoute(null);
+      return undefined;
+    }
+
+    void (async () => {
+      const resolved = await resolveRoute({
+        from:    hasCoords ? { lat: pickupLat!,  lng: pickupLng!  } : null,
+        to:      hasCoords ? { lat: dropoffLat!, lng: dropoffLng! } : null,
+        fromZip: pickupZip,
+        toZip:   dropoffZip,
+      });
+      if (!cancelled) setRoute(resolved);
+    })();
+
+    return () => { cancelled = true; };
+  }, [pickupLat, pickupLng, dropoffLat, dropoffLng, pickupZip, dropoffZip]);
 
   function openProfile(slug: string) {
     track('top_provider_clicked', { slug });
@@ -29,108 +134,225 @@ export default function TopProviders() {
     }
   }
 
+  /* "Book this operator" → primes the BookingFlow with the
+   *  provider's country as the pickup hint, then opens the funnel.
+   *  Notably, we do NOT pass a city / address pre-fill any more —
+   *  the whole point of the white-label model is that the customer's
+   *  intent is to book through FlyttGo, not against a specific
+   *  operator's home base. The matching engine still pre-favours
+   *  this provider via slug forwarding once the schema has a real
+   *  provider_id field. */
+  function bookProvider(p: ProviderRecord) {
+    track('top_provider_book_clicked', { slug: p.slug });
+    setBookingData({
+      country: p.country,
+    });
+    setPage('booking');
+  }
+
   return (
     <section className="bg-white py-16 sm:py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10 max-w-2xl mx-auto">
-          <p className="text-amber-600 text-xs font-bold uppercase tracking-wider mb-2">
-            Top-rated providers worldwide
+          <p className="text-amber-600 text-xs font-bold uppercase tracking-[0.18em] mb-2">
+            Top verified providers
           </p>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            Six countries. One trusted shortlist.
+            Top relocation companies operating in your corridor
           </h2>
           <p className="mt-3 text-slate-600">
-            Every provider is verified against its national operator-licence
-            registry and ranked by completion rate, on-time record, and
-            customer rating.
+            Onboarded providers with corridor experience, distance-priced
+            quotes, and escrow protection on every booking. Discovery-tier
+            (non-onboarded) movers appear in a separate section below.
           </p>
+          {route && (
+            <p className="mt-2 inline-flex items-center gap-2 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-3 py-1">
+              <span>
+                Route resolved · {Math.round(route.distanceKm)} km
+                {route.durationMinutes > 0 ? ` · ${Math.floor(route.durationMinutes / 60)}h ${route.durationMinutes % 60}m` : ''}
+              </span>
+              <span className="uppercase tracking-wider text-[10px] text-emerald-600">{route.source}</span>
+            </p>
+          )}
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {PROVIDERS.map(p => (
-            <article
-              key={p.slug}
-              className="group bg-[#fafaf7] hover:bg-white border border-slate-200 hover:border-amber-300 hover:shadow-lg rounded-2xl p-5 transition cursor-pointer"
-              onClick={() => openProfile(p.slug)}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center">
-                    <Truck size={20} className="text-amber-700" />
-                  </div>
-                  <div>
-                    <p className="font-extrabold text-slate-900 leading-tight">{p.name}</p>
-                    <p className="text-xs text-slate-500 flex items-center gap-1">
-                      <span aria-hidden>{p.flag}</span>
-                      {p.city}
-                    </p>
+          {PROVIDERS.map(p => {
+            const fromMajor   = parseFromPriceMajor(p.fromPrice);
+            const corridor    = primaryCorridor(p);
+            const availLabel  = availabilityLabel(p.availability);
+            const isInstant   = p.availability === 'available_now';
+
+            /* Public identity — the white-label display layer.
+             * Customer sees "FlyttGo Elite Carrier · NYC Metro"
+             * + opaque operator id, never the underlying brand. */
+            const identity    = getProviderPublicIdentity(p);
+
+            /* Dynamic price preview — real OSRM miles when we have
+             * coords, ZIP-prefix bucket when we don't, baseline
+             * day-rate when we have neither. estimateRoutePrice
+             * never throws so this is render-safe. */
+            const miles: number | null = route ? Math.round(kmToMiles(route.distanceKm)) : null;
+            const dynamic: RoutePriceResult = estimateRoutePrice({
+              miles,
+              fromZip: pickupZip,
+              toZip:   dropoffZip,
+              country: p.country as PricingCountry,
+              tier:    p.badge,
+            });
+            const showDynamic = dynamic.source === 'route';
+
+            return (
+              <article
+                key={p.slug}
+                className="group bg-[#fafaf7] hover:bg-white border border-slate-200 hover:border-amber-300 hover:shadow-xl rounded-2xl p-5 transition flex flex-col"
+              >
+                {/* HEADER — FlyttGo-fronted identity (white-label).
+                 *  Real provider name is hidden until booking
+                 *  confirmation per the marketplace model — see
+                 *  src/lib/provider-identity.ts. */}
+                <div className="flex items-start justify-between mb-3 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => openProfile(p.slug)}
+                    className={`flex items-center gap-3 text-left flex-1 min-w-0 ${FOCUS_RING_TIGHT} rounded`}
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center flex-shrink-0">
+                      <Truck size={20} className="text-amber-700" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-extrabold text-slate-900 leading-tight truncate">{identity.displayName}</p>
+                      <p className="text-xs text-slate-500 font-mono">
+                        <span aria-hidden="true" className="mr-1">{p.flag}</span>
+                        {identity.operatorId}
+                      </p>
+                    </div>
+                  </button>
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    {/* Verified marketplace pill — present on every
+                     *  TopProviders card. Differentiates this tier
+                     *  from the Discovery (non-onboarded) tier
+                     *  rendered further down the homepage. */}
+                    <span className={`${BADGE} bg-emerald-50 text-emerald-700 border border-emerald-200`}>
+                      <ShieldCheck size={10} />
+                      Verified · Onboarded
+                    </span>
+                    {isInstant && (
+                      <span className={`${BADGE} bg-emerald-100 text-emerald-700`}>
+                        <Zap size={10} />
+                        Instant book
+                      </span>
+                    )}
                   </div>
                 </div>
-                {p.badge && (
-                  <span className="inline-flex items-center gap-1 bg-amber-400/15 text-amber-700 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md">
+
+                {/* RATING */}
+                <div className="flex items-center gap-2 mb-3 text-sm flex-wrap">
+                  <Star size={15} className="fill-amber-400 text-amber-400" />
+                  <strong className="text-slate-900">{p.rating.toFixed(2)}</strong>
+                  <span className="text-slate-500">·</span>
+                  <span className="text-slate-500">{p.reviews.toLocaleString()} jobs</span>
+                  {p.availability && !isInstant && (
+                    <AvailabilityBadge
+                      availability={p.availability}
+                      slotsLeft={p.slotsLeft}
+                      size="sm"
+                      className="ml-auto"
+                    />
+                  )}
+                </div>
+
+                {/* CORRIDOR SPECIALIZATION */}
+                <div className="mb-3">
+                  <p className="text-xs text-slate-400">Best corridor</p>
+                  <p className="font-semibold text-slate-900 text-sm">{corridor}</p>
+                </div>
+
+                {/* PRICE PREVIEW — when both pickup + drop-off resolve
+                 *  to coords or ZIPs the customer sees the route-aware
+                 *  number (OSRM distance × tier × metro surge). With no
+                 *  route data we fall back to the catalogue's "from"
+                 *  rate so the card always renders a price. */}
+                <div className="mb-3">
+                  <div className="flex items-baseline gap-2 flex-wrap">
+                    <p className="text-base font-extrabold text-amber-700">
+                      {showDynamic ? formatRoutePrice(dynamic) : p.fromPrice}
+                    </p>
+                    {dynamic.surgeApplied && (
+                      <span className={`${BADGE} bg-rose-50 text-rose-700`}>
+                        <Flame size={10} />
+                        {dynamic.metroCode ?? 'Surge'} demand
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    {showDynamic
+                      ? `2 movers · 1 truck · ~${dynamic.hours}h${dynamic.miles != null ? ` · ${dynamic.miles} mi` : ''}`
+                      : (
+                        <>
+                          2 movers · 1 truck · 4 hours typical
+                          {fromMajor > 0 ? ` · est. ${fromMajor * 2}+ for full day` : ''}
+                        </>
+                      )}
+                  </p>
+                </div>
+
+                {/* TRUST + TIER BADGES */}
+                <div className="flex flex-wrap gap-1.5 mb-3 pt-3 border-t border-slate-200">
+                  <span className={`${BADGE} bg-amber-400/15 text-amber-700`}>
                     <Award size={10} />
-                    {p.badge}
+                    Tier · {identity.tierLabel}
                   </span>
-                )}
-              </div>
+                  {p.verified.slice(0, 3).map(v => (
+                    <span key={v} className={`${BADGE} bg-emerald-50 text-emerald-700`}>
+                      <ShieldCheck size={10} />
+                      {v}
+                    </span>
+                  ))}
+                </div>
 
-              <div className="flex items-center gap-2 mb-3 text-sm flex-wrap">
-                <Star size={15} className="fill-amber-400 text-amber-400" />
-                <strong className="text-slate-900">{p.rating.toFixed(2)}</strong>
-                <span className="text-slate-500">·</span>
-                <span className="text-slate-500">{p.reviews.toLocaleString()} reviews</span>
-                {p.availability && (
-                  <AvailabilityBadge
-                    availability={p.availability}
-                    slotsLeft={p.slotsLeft}
-                    size="sm"
-                    className="ml-auto"
-                  />
-                )}
-              </div>
+                {/* AVAILABILITY LABEL */}
+                <p className="text-xs text-emerald-600 font-semibold mb-4">
+                  {availLabel}
+                </p>
 
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs text-slate-500">Booking from</span>
-                <span className="font-extrabold text-amber-700">{p.fromPrice}</span>
-              </div>
-
-              <div className="flex flex-wrap gap-1.5 pt-3 border-t border-slate-200">
-                {p.verified.map(v => (
-                  <span key={v} className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md">
-                    <ShieldCheck size={10} />
-                    {v}
-                  </span>
-                ))}
-              </div>
-
-              <div
-                className="mt-3 flex items-center justify-between gap-2"
-                onClick={e => e.stopPropagation()}
-              >
+                {/* PRIMARY CTA — book + secondary actions */}
                 <button
                   type="button"
-                  onClick={() => openProfile(p.slug)}
-                  className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 group-hover:text-amber-700"
+                  onClick={() => bookProvider(p)}
+                  className={`mt-auto w-full bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold py-2.5 rounded-lg text-sm transition ${FOCUS_RING}`}
                 >
-                  Open profile
-                  <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
+                  Book this operator →
                 </button>
-                <AddToCompareButton
-                  item={{
-                    id:        p.slug,
-                    name:      p.name,
-                    city:      p.city,
-                    flag:      p.flag,
-                    rating:    p.rating,
-                    reviews:   p.reviews,
-                    fromPrice: p.fromPrice,
-                    badge:     p.badge,
-                    verified:  p.verified,
-                  }}
-                />
-              </div>
-            </article>
-          ))}
+
+                <div className="mt-3 flex items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    onClick={() => openProfile(p.slug)}
+                    className={`inline-flex items-center gap-1 text-xs font-bold text-slate-700 hover:text-amber-700 ${FOCUS_RING_TIGHT} rounded`}
+                  >
+                    Open profile
+                    <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+                  <AddToCompareButton
+                    item={{
+                      id:        p.slug,
+                      /* Compare list also uses the white-label
+                       * identity — every public surface is masked. */
+                      name:      identity.displayName,
+                      city:      identity.region,
+                      flag:      p.flag,
+                      rating:    p.rating,
+                      reviews:   p.reviews,
+                      fromPrice: p.fromPrice,
+                      badge:     identity.tierLabel,
+                      verified:  p.verified,
+                    }}
+                  />
+                </div>
+              </article>
+            );
+          })}
         </div>
       </div>
     </section>

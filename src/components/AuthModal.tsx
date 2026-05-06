@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { INPUT_FOCUS } from './ds';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../lib/store';
 import { useAuth } from '../lib/auth';
@@ -103,7 +104,7 @@ export default function AuthModal() {
            * code lives at error.code in supabase-js v2; older
            * versions only set the message string, so we fall back
            * to a substring match. */
-          const code = (error as any)?.code ?? '';
+          const code = (error as { code?: string })?.code ?? '';
           const msg  = String(error.message ?? '').toLowerCase();
           if (code === 'email_not_confirmed' || msg.includes('not confirmed') || msg.includes('email not confirmed')) {
             setNeedsConfirmation(true);
@@ -170,10 +171,10 @@ export default function AuthModal() {
   }
 
   const fieldCls =
-    'w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition';
+    `w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 ${INPUT_FOCUS} transition`;
 
   const primaryBtnCls =
-    'w-full py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition disabled:opacity-60 shadow-sm';
+    'w-full py-3 bg-amber-600 text-white rounded-xl font-semibold hover:bg-amber-700 transition disabled:opacity-60 shadow-sm';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -190,8 +191,8 @@ export default function AuthModal() {
         {isSignIn && !forgotMode && (
           <>
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <LogIn className="w-4 h-4 text-emerald-600" />
+              <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                <LogIn className="w-4 h-4 text-amber-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900">{t('auth.signInTitle')}</h2>
             </div>
@@ -250,7 +251,7 @@ export default function AuthModal() {
              * at which point we want the user to see "check your
              * inbox" not the original red error. */}
             {confirmationSent && (
-              <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl p-3 text-sm mb-4">
+              <div className="bg-amber-50 border border-amber-200 text-amber-700 rounded-xl p-3 text-sm mb-4">
                 <p className="font-semibold">Confirmation email sent</p>
                 <p className="text-xs mt-1 leading-relaxed">
                   Check your inbox for <strong>{email}</strong> (including the spam folder).
@@ -277,7 +278,7 @@ export default function AuthModal() {
                   <button
                     type="button"
                     onClick={() => { setForgotMode(true); setError(''); setResetSent(false); }}
-                    className="text-xs text-emerald-600 hover:underline font-medium"
+                    className="text-xs text-amber-600 hover:underline font-medium"
                   >
                     {t('auth.forgot')}
                   </button>
@@ -311,7 +312,7 @@ export default function AuthModal() {
               <button
                 type="button"
                 onClick={() => { setAuthMode('signup'); setError(''); setSignupStep('choose'); }}
-                className="text-emerald-600 font-semibold hover:underline"
+                className="text-amber-600 font-semibold hover:underline"
               >
                 {t('header.signUp')}
               </button>
@@ -331,8 +332,8 @@ export default function AuthModal() {
             </button>
 
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <KeyRound className="w-4 h-4 text-emerald-600" />
+              <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                <KeyRound className="w-4 h-4 text-amber-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900">{t('auth.resetTitle')}</h2>
             </div>
@@ -347,9 +348,9 @@ export default function AuthModal() {
             )}
 
             {resetSent ? (
-              <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-4 text-sm">
+              <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 text-sm">
                 <p className="font-semibold mb-1">{t('auth.resetSentTitle')}</p>
-                <p className="text-emerald-700">
+                <p className="text-amber-700">
                   {t('auth.resetSentBody1')} <span className="font-mono">{email}</span>, {t('auth.resetSentBody2')}
                 </p>
               </div>
@@ -378,8 +379,8 @@ export default function AuthModal() {
         {!isSignIn && signupStep === 'choose' && (
           <>
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <UserPlus className="w-4 h-4 text-emerald-600" />
+              <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                <UserPlus className="w-4 h-4 text-amber-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900">{t('auth.createAccount')}</h2>
             </div>
@@ -393,16 +394,16 @@ export default function AuthModal() {
                     key={option.id}
                     type="button"
                     onClick={() => { setSelectedRole(option.id); setSignupStep('form'); setError(''); }}
-                    className="w-full flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-xl text-left hover:border-emerald-500 hover:bg-emerald-50/40 transition group"
+                    className="w-full flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-xl text-left hover:border-amber-500 hover:bg-amber-50/40 transition group"
                   >
-                    <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-100 transition">
-                      <Icon className="w-5 h-5 text-emerald-600" />
+                    <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-amber-100 transition">
+                      <Icon className="w-5 h-5 text-amber-600" />
                     </div>
                     <div className="flex-1">
                       <div className="font-semibold text-gray-900">{t(option.titleKey)}</div>
                       <div className="text-xs text-gray-500 mt-0.5">{t(option.descKey)}</div>
                     </div>
-                    <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-emerald-600 flex-shrink-0 transition" />
+                    <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-amber-600 flex-shrink-0 transition" />
                   </button>
                 );
               })}
@@ -413,7 +414,7 @@ export default function AuthModal() {
               <button
                 type="button"
                 onClick={() => { setAuthMode('signin'); setError(''); }}
-                className="text-emerald-600 font-semibold hover:underline"
+                className="text-amber-600 font-semibold hover:underline"
               >
                 {t('header.signIn')}
               </button>
@@ -433,10 +434,10 @@ export default function AuthModal() {
             </button>
 
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-                {selectedRole === 'customer' && <Home      className="w-4 h-4 text-emerald-600" />}
-                {selectedRole === 'driver'   && <Truck     className="w-4 h-4 text-emerald-600" />}
-                {selectedRole === 'business' && <Building2 className="w-4 h-4 text-emerald-600" />}
+              <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                {selectedRole === 'customer' && <Home      className="w-4 h-4 text-amber-600" />}
+                {selectedRole === 'driver'   && <Truck     className="w-4 h-4 text-amber-600" />}
+                {selectedRole === 'business' && <Building2 className="w-4 h-4 text-amber-600" />}
               </div>
               <h2 className="text-2xl font-bold text-gray-900">{t('auth.createAccount')}</h2>
             </div>
@@ -541,7 +542,7 @@ export default function AuthModal() {
               <button
                 type="button"
                 onClick={() => { setAuthMode('signin'); setError(''); }}
-                className="text-emerald-600 font-semibold hover:underline"
+                className="text-amber-600 font-semibold hover:underline"
               >
                 {t('header.signIn')}
               </button>

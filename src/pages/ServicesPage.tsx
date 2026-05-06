@@ -1,72 +1,10 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../lib/store';
+import { SERVICE_CATEGORIES } from '../lib/service-categories';
+import { PROVIDERS } from '../lib/providers-catalogue';
+import { track } from '../lib/analytics';
+import { FOCUS_RING } from '../components/ds';
 
-const SERVICES = [
-  {
-    icon: '🛋️', title: 'Furniture Moving', slug: 'furniture',
-    image: 'https://d64gsuwffb70l.cloudfront.net/69b1b470fdd1af7483a60acc_1773254286622_a82a1d1b.jpg',
-    tagline: 'Your furniture, handled with care',
-    desc: 'Professional furniture movers across the USA. We disassemble, wrap, transport, and reassemble your furniture — from single items to full home contents.',
-    features: ['Disassembly & reassembly', 'Protective wrapping', 'Multi-floor buildings', 'Same-day availability'],
-    price: 'From $85/hr', time: '2–6 hours typical',
-    color: 'emerald',
-  },
-  {
-    icon: '🏠', title: 'House Moving', slug: 'house',
-    image: 'https://d64gsuwffb70l.cloudfront.net/69b1b470fdd1af7483a60acc_1773254153053_d6599513.jpg',
-    tagline: 'Full home relocations, stress-free',
-    desc: 'Complete house and apartment moving service. Our verified drivers handle everything from packing assistance to final placement in your new home.',
-    features: ['Full inventory management', 'Long-distance moves', 'Storage options', 'Insurance covered'],
-    price: 'From $115/hr', time: 'Half-day to 2 days',
-    color: 'blue',
-  },
-  {
-    icon: '🔌', title: 'Appliance Delivery', slug: 'appliance',
-    image: 'https://d64gsuwffb70l.cloudfront.net/69b9877aa085bb4df2a9da28_1773766826645_9815a390.jpg',
-    tagline: 'Heavy appliances delivered safely',
-    desc: 'White-glove delivery for washing machines, fridges, dishwashers, and large electronics. Includes installation positioning and packaging removal.',
-    features: ['Stair carry included', 'Packaging removal', 'Installation positioning', 'Same-day slots'],
-    price: 'From $65', time: '1–2 hours',
-    color: 'purple',
-  },
-  {
-    icon: '📦', title: 'Cargo Transport', slug: 'cargo',
-    image: 'https://d64gsuwffb70l.cloudfront.net/69b1b470fdd1af7483a60acc_1773254050705_a292f56d.jpg',
-    tagline: 'Reliable cargo, any size',
-    desc: 'Commercial and personal cargo transport across the USA. From small parcels to full van loads — tracked, insured, on time.',
-    features: ['Real-time GPS tracking', 'Commercial freight', 'Pallet capable', 'Proof of delivery'],
-    price: 'From $75/hr', time: 'Flexible scheduling',
-    color: 'orange',
-  },
-  {
-    icon: '🏪', title: 'Store Delivery', slug: 'store',
-    image: 'https://d64gsuwffb70l.cloudfront.net/69b1b470fdd1af7483a60acc_1773254193383_798495ed.jpg',
-    tagline: 'Retail to door, last-mile sorted',
-    desc: 'Last-mile delivery for furniture stores, IKEA runs, and online retailers. We collect from any store and deliver to your address.',
-    features: ['Store collection', 'IKEA compatible', 'Assembly on request', 'Flexible time slots'],
-    price: 'From $55', time: '2–4 hours',
-    color: 'teal',
-  },
-  {
-    icon: '🏢', title: 'Business Logistics', slug: 'business',
-    image: 'https://d64gsuwffb70l.cloudfront.net/69b4405628b40c8fdc7aad59_1773420953628_819790d3.png',
-    tagline: 'Office moves & B2B freight',
-    desc: 'Corporate office relocation, regular B2B freight runs, and warehouse-to-customer delivery. Dedicated account managers for business clients.',
-    features: ['Dedicated account manager', 'Recurring bookings', 'Invoicing available', 'Priority dispatch'],
-    price: 'Custom pricing', time: 'SLA-backed delivery',
-    color: 'slate',
-  },
-];
-
-const colorMap: Record<string, { bg: string; badge: string; btn: string; icon: string }> = {
-  emerald: { bg: 'bg-emerald-50', badge: 'bg-emerald-100 text-emerald-700', btn: 'bg-emerald-600 hover:bg-emerald-700', icon: 'text-emerald-600' },
-  blue:    { bg: 'bg-blue-50',    badge: 'bg-blue-100 text-blue-700',       btn: 'bg-blue-600 hover:bg-blue-700',       icon: 'text-blue-600' },
-  purple:  { bg: 'bg-purple-50',  badge: 'bg-purple-100 text-purple-700',   btn: 'bg-purple-600 hover:bg-purple-700',   icon: 'text-purple-600' },
-  orange:  { bg: 'bg-orange-50',  badge: 'bg-orange-100 text-orange-700',   btn: 'bg-orange-600 hover:bg-orange-700',   icon: 'text-orange-600' },
-  teal:    { bg: 'bg-teal-50',    badge: 'bg-teal-100 text-teal-700',       btn: 'bg-teal-600 hover:bg-teal-700',       icon: 'text-teal-600' },
-  slate:   { bg: 'bg-slate-50',   badge: 'bg-slate-100 text-slate-700',     btn: 'bg-slate-700 hover:bg-slate-800',     icon: 'text-slate-700' },
-};
 
 export default function ServicesPage() {
   const { setPage } = useApp();
@@ -99,48 +37,71 @@ export default function ServicesPage() {
         </div>
       </section>
 
-      {/* SERVICES GRID */}
+      {/* ─── SERVICE CATEGORIES ────────────────────────────────
+       *   Single source of truth: SERVICE_CATEGORIES. Same catalogue
+       *   the home grid + per-category landing pages read from, so
+       *   the customer sees a consistent set of categories whether
+       *   they land here, on /, or on /services/<slug>.
+       *
+       *   Each card routes to /services/<slug> (not /booking) so the
+       *   customer reads the SEO body + provider list before
+       *   committing to a quote — matches the funnel design. */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <h2 className="text-3xl font-extrabold text-[#0B2E59] text-center mb-3">{t('services.sectionTitle')}</h2>
         <p className="text-gray-500 text-center mb-12 max-w-xl mx-auto">{t('services.sectionSubtitle')}</p>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {SERVICES.map(svc => {
-            const c = colorMap[svc.color];
+          {SERVICE_CATEGORIES.map(cat => {
+            /* Provider count per category — same matches[] keys the
+             * landing page uses for filtering, so the number on the
+             * tile equals what the customer will see when they land. */
+            const keys  = cat.matches.map(s => s.toLowerCase());
+            const count = PROVIDERS.filter(p =>
+              p.services.some(s => keys.some(k => s.toLowerCase().includes(k))),
+            ).length;
             return (
-              <div key={svc.slug} className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl transition group flex flex-col">
-                <div className="relative h-48 overflow-hidden">
-                  <img src={svc.image} alt={svc.title} width={600} height={384} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <div className="absolute top-3 left-3 w-11 h-11 bg-white/95 backdrop-blur rounded-xl flex items-center justify-center shadow-md text-2xl">
-                    {svc.icon}
+              <button
+                key={cat.slug}
+                type="button"
+                onClick={() => {
+                  track('services_category_clicked', { slug: cat.slug });
+                  if (typeof window !== 'undefined') {
+                    window.history.pushState({}, '', `/services/${cat.slug}`);
+                  }
+                  setPage('service-category');
+                  if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                  }
+                }}
+                className={`text-left bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl hover:border-amber-300 transition group flex flex-col ${FOCUS_RING}`}
+              >
+                {cat.homeTile && (
+                  <div className="relative h-44 overflow-hidden">
+                    <img
+                      src={cat.homeTile.photo}
+                      alt=""
+                      width={600}
+                      height={352}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    {count > 0 && (
+                      <span className="absolute top-3 right-3 inline-flex items-center px-2 py-0.5 rounded-full bg-white/90 backdrop-blur text-[10px] font-bold text-slate-900 tracking-wide shadow-sm">
+                        {count} provider{count === 1 ? '' : 's'}
+                      </span>
+                    )}
+                  </div>
+                )}
+                <div className="p-6 flex-1 flex flex-col">
+                  <h3 className="text-xl font-bold text-gray-900 mb-1">{cat.name}</h3>
+                  <p className="text-xs font-semibold mb-3 text-amber-600">{cat.tagline}</p>
+                  <p className="text-gray-600 text-sm leading-relaxed mb-4 flex-1">{cat.intro}</p>
+                  <div className="mt-auto inline-flex items-center justify-between text-sm font-semibold">
+                    <span className="text-[#0B2E59]">View providers →</span>
+                    <span className="text-xs text-gray-400">{cat.howItWorks.length} steps · {cat.faq.length} FAQs</span>
                   </div>
                 </div>
-                <div className={`${c.bg} p-6 flex-1 flex flex-col`}>
-                  <h3 className="text-xl font-bold text-gray-900 mb-1">{svc.title}</h3>
-                  <p className={`text-xs font-semibold mb-3 ${c.icon}`}>{svc.tagline}</p>
-                  <p className="text-gray-600 text-sm leading-relaxed mb-4">{svc.desc}</p>
-                  <ul className="space-y-1.5 mb-5">
-                    {svc.features.map(f => (
-                      <li key={f} className="flex items-center gap-2 text-xs text-gray-600">
-                        <span className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${c.btn.split(' ')[0]}`}>✓</span>
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-auto">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <div className="font-bold text-gray-900 text-sm">{svc.price}</div>
-                        <div className="text-xs text-gray-400">{svc.time}</div>
-                      </div>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${c.badge}`}>{t('services.availableNow')}</span>
-                    </div>
-                    <button onClick={() => setPage('booking')}
-                      className={`w-full py-2.5 ${c.btn} text-white rounded-xl text-sm font-semibold transition`}>
-                      {t('services.bookPrefix')} {svc.title} →
-                    </button>
-                  </div>
-                </div>
-              </div>
+              </button>
             );
           })}
         </div>

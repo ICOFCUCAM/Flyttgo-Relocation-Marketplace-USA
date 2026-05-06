@@ -17,7 +17,7 @@ import {
 } from '../../lib/pricing-engine';
 import type { PricingCountry } from '../../lib/pricing-engine';
 import { COUNTRY_PROFILES } from '../../lib/country-profiles';
-import { Section, Eyebrow, Pill } from '../../components/ds';
+import { Section, Eyebrow, Pill , INPUT_FOCUS} from '../../components/ds';
 import EarningsSimulator from '../../components/global/EarningsSimulator';
 import { track } from '../../lib/analytics';
 
@@ -332,7 +332,7 @@ export default function PricingSettingsPage() {
                   placeholder={`Inherit (${baseline.symbol}${baseline.baseHourly}/hr per mover)`}
                   value={row.hourly_base_override ?? ''}
                   onChange={e => patch('hourly_base_override', e.target.value === '' ? null : Number(e.target.value))}
-                  className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none"
+                  className={`flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg ${INPUT_FOCUS}`}
                 />
                 {row.hourly_base_override != null && (
                   <button
@@ -360,7 +360,7 @@ export default function PricingSettingsPage() {
                   placeholder="Inherit (1.12 default)"
                   value={row.weekend_multiplier_override ?? ''}
                   onChange={e => patch('weekend_multiplier_override', e.target.value === '' ? null : Number(e.target.value))}
-                  className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none"
+                  className={`flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg ${INPUT_FOCUS}`}
                 />
                 {row.weekend_multiplier_override != null && (
                   <button
@@ -388,7 +388,7 @@ export default function PricingSettingsPage() {
                     placeholder="Inherit (60 default)"
                     value={row.truck_per_hour_override ?? ''}
                     onChange={e => patch('truck_per_hour_override', e.target.value === '' ? null : Number(e.target.value))}
-                    className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none"
+                    className={`flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg ${INPUT_FOCUS}`}
                   />
                 </div>
               </Field>
@@ -405,7 +405,7 @@ export default function PricingSettingsPage() {
                     placeholder="Inherit (25 default)"
                     value={row.packing_per_hour_override ?? ''}
                     onChange={e => patch('packing_per_hour_override', e.target.value === '' ? null : Number(e.target.value))}
-                    className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none"
+                    className={`flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg ${INPUT_FOCUS}`}
                   />
                 </div>
               </Field>

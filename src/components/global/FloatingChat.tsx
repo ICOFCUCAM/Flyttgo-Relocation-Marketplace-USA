@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { MessageCircle, X } from 'lucide-react';
 import { useApp } from '../../lib/store';
 
@@ -63,14 +63,20 @@ export default function FloatingChat() {
     },
     {
       label: 'Email',
-      href:  `mailto:support@flyttgo.us?subject=${encodeURIComponent('FlyttGo enquiry')}&body=${encodeURIComponent(greeting)}`,
+      href:  `mailto:support@flyttgo.com?subject=${encodeURIComponent('FlyttGo enquiry')}&body=${encodeURIComponent(greeting)}`,
       hint:  'Reply within 1 hour',
       brand: 'bg-amber-500 hover:bg-amber-600',
     },
   ], [greeting]);
 
   return (
-    <div className="fixed right-4 bottom-4 z-30 flex flex-col items-end gap-2">
+    <div
+      // Lift above MobileBottomNav on small screens (lg:hidden, ~64px
+      // tall) so the chat bubble doesn't sit ON the nav. Reverts to
+      // the standard 16px offset on lg+ where the bottom nav doesn't
+      // render.
+      className="fixed right-4 bottom-[5.5rem] lg:bottom-4 z-30 flex flex-col items-end gap-2"
+    >
       {open && (
         <div
           className="bg-white border border-slate-200 rounded-2xl shadow-xl w-72 overflow-hidden animate-in slide-in-from-bottom-2 duration-200"

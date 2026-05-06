@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   FileText, Send, Rocket, Calendar, Download, type LucideIcon,
 } from 'lucide-react';

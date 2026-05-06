@@ -1,6 +1,6 @@
-import React from 'react';
 import { useApp } from '../lib/store';
 import { SectionIndex } from '../components/global/CountryPage';
+import MarketplaceBanner from '../components/banners/MarketplaceBanner';
 
 const ECOSYSTEM = [
   { title: 'Payvera Payments Orchestration',  body: 'Booking deposits, multi-currency escrow holds, and provider payouts orchestrated through the Payvera payments rail.' },
@@ -16,20 +16,21 @@ export default function PartnersPage() {
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
-      <section className="border-b border-slate-200 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-6 py-20">
-          <SectionIndex id="GLRM.01" label="Partners &amp; ecosystem" />
-          <h1 className="font-serif text-5xl lg:text-6xl leading-[1.05] tracking-tight">
-            Ecosystem integrations
-          </h1>
-          <p className="mt-6 text-lg leading-relaxed text-slate-700 max-w-3xl">
-            FlyttGo Global Logistics &amp; Relocation Marketplace integrates with payment rails,
-            workforce coordination, insurance, storage networks, freight forwarders, and
-            accounting connectors so customers and providers operate from a single coordination
-            surface.
-          </p>
-        </div>
-      </section>
+      <MarketplaceBanner
+        eyebrow="Partners & ecosystem"
+        breadcrumb={{ id: 'GLRM.01', label: 'Partners & ecosystem' }}
+        headline="Ecosystem integrations"
+        lead="FlyttGo integrates with payment rails, workforce coordination, insurance, storage networks, freight forwarders, and accounting connectors so customers and providers operate from a single coordination surface."
+        compliancePills={[
+          { label: 'Multi-currency escrow' },
+          { label: 'Insurance carriers' },
+          { label: 'Storage networks' },
+          { label: 'ERP connectors' },
+        ]}
+        ctas={[
+          { label: 'Become a partner →', onClick: () => setPage('contact'), primary: true },
+        ]}
+      />
 
       <section className="border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-6 py-20">

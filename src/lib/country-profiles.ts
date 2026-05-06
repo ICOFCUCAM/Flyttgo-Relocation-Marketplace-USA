@@ -53,7 +53,7 @@ export interface CountryProfile {
   name:         string;
   flag:         string;
   /** Display currency code (matches pricing-engine.Currency). */
-  currency:     'USD' | 'CAD' | 'EUR' | 'GBP' | 'NOK' | 'NGN' | 'KES' | 'AED';
+  currency:     'USD' | 'CAD' | 'EUR' | 'GBP' | 'NOK' | 'NGN' | 'KES' | 'AED' | 'SEK' | 'DKK';
   symbol:       string;
   /** Approximate exchange rate vs 1 USD as of seed time. Used only
    *  for cross-market display ("Same move costs $X equivalent in
@@ -264,6 +264,65 @@ export const COUNTRY_PROFILES: CountryProfile[] = [
       "5% VAT included. Employer-sponsored relocation dominates — corporate " +
       "and packing services lead. Dubai + Abu Dhabi top the multiplier.",
   },
+
+  /* ── Wave-1 / Wave-2 expansion markets ────────────────────────
+   * Subscription pricing for these markets is set explicitly in
+   * SUBSCRIPTION_TIERS pricesByCountry per the global rollout
+   * spec. Booking/insurance/services data here is a sensible
+   * default — extend as each market goes live. */
+  { code: 'nl', name: 'Netherlands', flag: '🇳🇱', currency: 'EUR', symbol: '€', usdRate: 0.91,
+    taxMode: 'vat-included',  serviceModel: 'full-service-bundle',
+    availableServices: ['movers-truck','packing','storage','corporate'],
+    insuranceAvailability: [{ tier: 'basic', perHourMultiplier: 1.0 },{ tier: 'full', perHourMultiplier: 1.0 },{ tier: 'premium', perHourMultiplier: 1.0 }],
+    marketNote: 'Wave-1 expansion market.' },
+  { code: 'se', name: 'Sweden', flag: '🇸🇪', currency: 'SEK', symbol: 'kr', usdRate: 10.4,
+    taxMode: 'vat-included',  serviceModel: 'full-service-bundle',
+    availableServices: ['movers-truck','packing','storage','corporate'],
+    insuranceAvailability: [{ tier: 'basic', perHourMultiplier: 1.0 },{ tier: 'full', perHourMultiplier: 1.0 },{ tier: 'premium', perHourMultiplier: 1.0 }],
+    marketNote: 'Wave-1 expansion market — Yrkestrafiktillstånd carriers.' },
+  { code: 'dk', name: 'Denmark', flag: '🇩🇰', currency: 'DKK', symbol: 'kr', usdRate: 6.8,
+    taxMode: 'vat-included',  serviceModel: 'full-service-bundle',
+    availableServices: ['movers-truck','packing','storage','corporate'],
+    insuranceAvailability: [{ tier: 'basic', perHourMultiplier: 1.0 },{ tier: 'full', perHourMultiplier: 1.0 },{ tier: 'premium', perHourMultiplier: 1.0 }],
+    marketNote: 'Wave-2 expansion market.' },
+  { code: 'at', name: 'Austria', flag: '🇦🇹', currency: 'EUR', symbol: '€', usdRate: 0.91,
+    taxMode: 'vat-included',  serviceModel: 'full-service-bundle',
+    availableServices: ['movers-truck','packing','storage','corporate'],
+    insuranceAvailability: [{ tier: 'basic', perHourMultiplier: 1.0 },{ tier: 'full', perHourMultiplier: 1.0 },{ tier: 'premium', perHourMultiplier: 1.0 }],
+    marketNote: 'Wave-2 expansion market.' },
+  { code: 'be', name: 'Belgium', flag: '🇧🇪', currency: 'EUR', symbol: '€', usdRate: 0.91,
+    taxMode: 'vat-included',  serviceModel: 'full-service-bundle',
+    availableServices: ['movers-truck','packing','storage','corporate'],
+    insuranceAvailability: [{ tier: 'basic', perHourMultiplier: 1.0 },{ tier: 'full', perHourMultiplier: 1.0 },{ tier: 'premium', perHourMultiplier: 1.0 }],
+    marketNote: 'Wave-2 expansion market.' },
+  { code: 'es', name: 'Spain', flag: '🇪🇸', currency: 'EUR', symbol: '€', usdRate: 0.91,
+    taxMode: 'vat-included',  serviceModel: 'packing-heavy',
+    availableServices: ['movers-truck','packing','storage','corporate'],
+    insuranceAvailability: [{ tier: 'basic', perHourMultiplier: 1.0 },{ tier: 'full', perHourMultiplier: 1.0 },{ tier: 'premium', perHourMultiplier: 1.0 }],
+    marketNote: 'Wave-1 expansion market.' },
+  { code: 'it', name: 'Italy', flag: '🇮🇹', currency: 'EUR', symbol: '€', usdRate: 0.91,
+    taxMode: 'vat-included',  serviceModel: 'packing-heavy',
+    availableServices: ['movers-truck','packing','storage','corporate'],
+    insuranceAvailability: [{ tier: 'basic', perHourMultiplier: 1.0 },{ tier: 'full', perHourMultiplier: 1.0 },{ tier: 'premium', perHourMultiplier: 1.0 }],
+    marketNote: 'Wave-1 expansion market.' },
+  /* PL / CZ / CY use EUR per the global rollout spec — even though
+   * PLN and CZK are the local currencies, the marketplace prices in
+   * EUR for cross-border consistency at this stage. */
+  { code: 'pl', name: 'Poland', flag: '🇵🇱', currency: 'EUR', symbol: '€', usdRate: 0.91,
+    taxMode: 'vat-included',  serviceModel: 'crew-only-distance',
+    availableServices: ['movers-truck','packing','storage','corporate'],
+    insuranceAvailability: [{ tier: 'basic', perHourMultiplier: 1.0 },{ tier: 'full', perHourMultiplier: 1.0 },{ tier: 'premium', perHourMultiplier: 1.0 }],
+    marketNote: 'Wave-1 expansion market — priced in EUR per global spec.' },
+  { code: 'cz', name: 'Czech Republic', flag: '🇨🇿', currency: 'EUR', symbol: '€', usdRate: 0.91,
+    taxMode: 'vat-included',  serviceModel: 'crew-only-distance',
+    availableServices: ['movers-truck','packing','storage','corporate'],
+    insuranceAvailability: [{ tier: 'basic', perHourMultiplier: 1.0 },{ tier: 'full', perHourMultiplier: 1.0 },{ tier: 'premium', perHourMultiplier: 1.0 }],
+    marketNote: 'Wave-2 expansion market — priced in EUR per global spec.' },
+  { code: 'cy', name: 'Cyprus', flag: '🇨🇾', currency: 'EUR', symbol: '€', usdRate: 0.91,
+    taxMode: 'vat-included',  serviceModel: 'packing-heavy',
+    availableServices: ['movers-truck','packing','storage','corporate'],
+    insuranceAvailability: [{ tier: 'basic', perHourMultiplier: 1.0 },{ tier: 'full', perHourMultiplier: 1.0 },{ tier: 'premium', perHourMultiplier: 1.0 }],
+    marketNote: 'Wave-2 expansion market.' },
 ];
 
 export function findCountryProfile(code: PricingCountry): CountryProfile {
@@ -292,6 +351,8 @@ const LOCALE_BY_CURRENCY: Record<CountryProfile['currency'], string> = {
   NGN: 'en-NG',
   KES: 'en-KE',
   AED: 'en-AE',
+  SEK: 'sv-SE',
+  DKK: 'da-DK',
 };
 
 /**

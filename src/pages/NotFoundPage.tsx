@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Compass } from 'lucide-react';
 import { useApp, Page } from '../lib/store';
@@ -21,7 +21,7 @@ export default function NotFoundPage() {
   const { t } = useTranslation();
 
   useEffect(() => {
-    if (typeof document === 'undefined') return;
+    if (typeof document === 'undefined') return undefined;
     const existing = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
     const previous = existing?.content ?? null;
     if (existing) existing.content = 'noindex, nofollow';

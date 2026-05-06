@@ -1,10 +1,11 @@
-import React, {
+import {
   createContext,
   useContext,
   useState,
   useEffect,
   ReactNode
 } from "react";
+import type { User, AuthError } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
 
 /* ================= TYPES ================= */
@@ -17,10 +18,19 @@ interface UserProfile {
   role: "customer" | "driver" | "business" | "admin";
   phone?: string;
   avatar_url?: string;
+  /** Super-admin tier (install-admin-bookings-rbac.sql) — only true
+   *  for admins who can DELETE bookings + accounts. */
+  is_super_admin?: boolean;
 }
 
+/* Standard supabase-js auth result shape: every signIn/signUp helper
+ * returns either an error or null. We pass the AuthError back to the
+ * caller verbatim so AuthModal can branch on `error.code` and surface
+ * the right copy ("email_not_confirmed", "invalid_credentials", etc.). */
+type AuthResult = { error: AuthError | null };
+
 interface AuthContextType {
-  user: any;
+  user: User | null;
   profile: UserProfile | null;
   loading: boolean;
 
@@ -30,17 +40,17 @@ interface AuthContextType {
     firstName: string,
     lastName: string,
     role: string
-  ) => Promise<{ error: any }>;
+  ) => Promise<AuthResult>;
 
   signIn: (
     email: string,
     password: string
-  ) => Promise<{ error: any }>;
+  ) => Promise<AuthResult>;
 
-  signInWithGoogle: () => Promise<{ error: any }>;
-  signInWithApple: () => Promise<{ error: any }>;
-  resetPassword: (email: string) => Promise<{ error: any }>;
-  resendConfirmation: (email: string) => Promise<{ error: any }>;
+  signInWithGoogle:    () => Promise<AuthResult>;
+  signInWithApple:     () => Promise<AuthResult>;
+  resetPassword:       (email: string) => Promise<AuthResult>;
+  resendConfirmation:  (email: string) => Promise<AuthResult>;
 
   signOut: () => Promise<void>;
 
@@ -64,7 +74,7 @@ export function AuthProvider({
   children: ReactNode;
 }) {
   const [user, setUser] =
-    useState<any>(null);
+    useState<User | null>(null);
 
   const [profile, setProfile] =
     useState<UserProfile | null>(null);
@@ -206,7 +216,7 @@ export function AuthProvider({
     const emailRedirectTo =
       typeof window !== "undefined"
         ? `${window.location.origin}/auth/callback`
-        : "https://flyttgo.us/auth/callback";
+        : "https://flyttgo.com/auth/callback";
 
     const { error } = await supabase.auth.signUp({
       email,

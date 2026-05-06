@@ -178,7 +178,8 @@ export default function FleetMap({ onSuspendDriver, height = 'h-[600px]', classN
         .order('updated_at', { ascending: false });
 
       const latestByDriver: Record<string, { lat: number; lng: number }> = {};
-      for (const row of (locs ?? []) as any[]) {
+      type LocRow = { driver_id: string; lat: number | string; lng: number | string };
+      for (const row of (locs ?? []) as LocRow[]) {
         if (!latestByDriver[row.driver_id]) {
           const lat = Number(row.lat);
           const lng = Number(row.lng);
@@ -188,7 +189,16 @@ export default function FleetMap({ onSuspendDriver, height = 'h-[600px]', classN
         }
       }
 
-      const merged: DriverWithLocation[] = ((drv ?? []) as any[])
+      type DrvRow = {
+        id:        string;
+        user_id:   string;
+        full_name?: string;
+        phone?:     string;
+        status?:    string;
+        online?:    boolean | null;
+        driver_subscriptions?: { plan: string }[];
+      };
+      const merged: DriverWithLocation[] = ((drv ?? []) as DrvRow[])
         .map(d => {
           /* driver_locations.driver_id is keyed on auth.users.id
            * (the same key DriverPortal uses when upserting). */
@@ -217,14 +227,14 @@ export default function FleetMap({ onSuspendDriver, height = 'h-[600px]', classN
         .in('status', IN_FLIGHT_STATUSES);
 
       setBookings(
-        ((bks ?? []) as any[]).filter(
+        (bks ?? []).filter(
           b =>
             typeof b.pickup_lat === 'number' && typeof b.pickup_lng === 'number'
         )
       );
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[FleetMap] load failed', e);
-      setError(e?.message || 'Unable to load fleet data');
+      setError(e instanceof Error ? e.message : 'Unable to load fleet data');
     }
     setLoading(false);
   }
@@ -242,8 +252,8 @@ export default function FleetMap({ onSuspendDriver, height = 'h-[600px]', classN
         'postgres_changes',
         { event: '*', schema: 'public', table: 'driver_locations' },
         payload => {
-          const row: any = payload.new;
-          if (!row) return;
+          const row = payload.new as { driver_id?: string; lat?: number | string; lng?: number | string } | null;
+          if (!row?.driver_id) return;
           const lat = Number(row.lat);
           const lng = Number(row.lng);
           if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;

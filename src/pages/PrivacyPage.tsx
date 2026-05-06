@@ -1,23 +1,23 @@
-import React from 'react';
-import { useApp } from '../lib/store';
+import MarketplaceBanner from '../components/banners/MarketplaceBanner';
 
 const LAST_UPDATED = 'March 31, 2026';
 
 export default function PrivacyPage() {
-  const { setPage } = useApp();
-
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero */}
-      <div className="bg-gradient-to-br from-[#0B2E59] to-[#0B2E59]/90 py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <div className="inline-flex items-center gap-2 bg-white/10 text-white/80 text-xs font-medium px-3 py-1.5 rounded-full mb-4">
-            GDPR Compliant · the USA/EU
-          </div>
-          <h1 className="text-4xl font-extrabold text-white mb-3">Privacy Policy</h1>
-          <p className="text-white/60 text-sm">Last updated: {LAST_UPDATED}</p>
-        </div>
-      </div>
+      <MarketplaceBanner
+        variant="inverse"
+        eyebrow="Legal · GDPR"
+        breadcrumb={{ id: 'GLRM.LEG', label: 'Privacy Policy' }}
+        headline="Privacy Policy"
+        lead={`How FlyttGo collects, uses, stores, shares, and protects your personal data when you use the platform. Last updated: ${LAST_UPDATED}.`}
+        compliancePills={[
+          { label: 'GDPR compliant · EU' },
+          { label: 'CCPA compliant · USA' },
+          { label: 'Data subject rights' },
+          { label: 'Right to erasure' },
+        ]}
+      />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
         <div className="prose prose-sm max-w-none prose-headings:text-[#0B2E59] prose-headings:font-bold space-y-10">

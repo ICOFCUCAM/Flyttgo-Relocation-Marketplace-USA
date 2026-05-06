@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { useApp } from '../../lib/store';
 import { openQuickQuote } from '../../lib/quick-quote';

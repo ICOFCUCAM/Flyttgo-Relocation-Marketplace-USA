@@ -1,10 +1,9 @@
-import React from 'react';
 import {
   Rocket, Landmark, GraduationCap, Truck, Globe2, Sparkles,
   ArrowRight, type LucideIcon,
 } from 'lucide-react';
 import { useApp } from '../lib/store';
-import { Section, Eyebrow, Pill } from '../components/ds';
+import { Section, Pill } from '../components/ds';
 import { COMPLIANCE_DISCLOSURE } from '../lib/onboarding-rules';
 
 /* ─────────────────────────────────────────────────────────────────

@@ -3,12 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#0f172a" />
+    <!-- theme-color aligned with manifest.json (#0b1f3a). Light/dark
+         media queries supported by Chrome / Safari ≥ 15. -->
+    <meta name="theme-color" content="#0b1f3a" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0b1f3a" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#0b1f3a" />
 
     <title>FlyttGo · Move anywhere. Book a licensed mover in 60 seconds.</title>
     <meta name="description" content="FlyttGo Global Logistics & Relocation Marketplace — worldwide digital coordination infrastructure connecting customers with licensed relocation providers, logistics partners, workforce support, storage, and mobility services across multiple jurisdictions." />
     <meta name="keywords" content="global relocation marketplace, moving labor marketplace, licensed carrier matching platform, international relocation coordination, cross-border relocation support, FMCSA carrier verification, GVOL operator matching, GüKG Umzugsfirma, registre des transporteurs, yrkestransportløyve, marketplace coordination infrastructure" />
-    <link rel="canonical" href="https://flyttgo.us/" />
+    <link rel="canonical" href="https://flyttgo.com/" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
 
     <!-- Editorial type stack: IBM Plex Serif headlines, Inter body,
@@ -21,16 +25,16 @@
     />
 
     <!-- Icons -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
+    <link rel="icon" type="image/png" href="/logo-mark.png" />
+    <link rel="apple-touch-icon" href="/logo-mark.png" />
     <link rel="manifest" href="/manifest.json" />
 
     <!-- Apple / Android PWA install hints -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="FlyttGo Global" />
+    <meta name="apple-mobile-web-app-title" content="FlyttGo" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="application-name" content="FlyttGo Global" />
+    <meta name="application-name" content="FlyttGo" />
     <meta name="format-detection" content="telephone=no" />
     <meta name="msapplication-TileColor" content="#0b1f3a" />
     <meta name="color-scheme" content="light" />
@@ -47,10 +51,10 @@
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="FlyttGo Global Logistics &amp; Relocation Marketplace" />
     <meta property="og:locale" content="en_US" />
-    <meta property="og:url" content="https://flyttgo.us/" />
+    <meta property="og:url" content="https://flyttgo.com/" />
     <meta property="og:title" content="FlyttGo · Move anywhere. Book a licensed mover in 60 seconds." />
     <meta property="og:description" content="Worldwide digital coordination marketplace connecting customers with licensed relocation providers, logistics partners, workforce support, storage, and mobility services across multiple jurisdictions." />
-    <meta property="og:image" content="https://flyttgo.us/og.svg" />
+    <meta property="og:image" content="https://flyttgo.com/og.svg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="FlyttGo Global Logistics & Relocation Marketplace — country deployment nodes" />
@@ -59,7 +63,7 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="FlyttGo Global Logistics &amp; Relocation Marketplace" />
     <meta name="twitter:description" content="Worldwide digital coordination marketplace — United States, Canada, Germany, France, United Kingdom, Norway." />
-    <meta name="twitter:image" content="https://flyttgo.us/og.svg" />
+    <meta name="twitter:image" content="https://flyttgo.com/og.svg" />
     <meta name="twitter:image:alt" content="FlyttGo Global Logistics & Relocation Marketplace" />
 
     <!-- JSON-LD: Organization (global marketplace platform operator) -->
@@ -67,20 +71,30 @@
     {
       "@context": "https://schema.org",
       "@type": "Organization",
-      "@id": "https://flyttgo.us/#organization",
+      "@id": "https://flyttgo.com/#organization",
       "name": "FlyttGo Global Logistics & Relocation Marketplace",
       "alternateName": "FlyttGo Global",
       "description": "Worldwide digital coordination marketplace connecting customers with independent licensed relocation providers across multiple jurisdictions.",
-      "url": "https://flyttgo.us/",
-      "logo": "https://flyttgo.us/apple-touch-icon.svg",
-      "image": "https://flyttgo.us/og.svg",
+      "url": "https://flyttgo.com/",
+      "logo": "https://flyttgo.com/logo-mark.png",
+      "image": "https://flyttgo.com/og.svg",
       "areaServed": [
         { "@type": "Country", "name": "United States" },
         { "@type": "Country", "name": "Canada" },
+        { "@type": "Country", "name": "United Kingdom" },
         { "@type": "Country", "name": "Germany" },
         { "@type": "Country", "name": "France" },
-        { "@type": "Country", "name": "United Kingdom" },
-        { "@type": "Country", "name": "Norway" }
+        { "@type": "Country", "name": "Norway" },
+        { "@type": "Country", "name": "Netherlands" },
+        { "@type": "Country", "name": "Sweden" },
+        { "@type": "Country", "name": "Denmark" },
+        { "@type": "Country", "name": "Austria" },
+        { "@type": "Country", "name": "Belgium" },
+        { "@type": "Country", "name": "Spain" },
+        { "@type": "Country", "name": "Italy" },
+        { "@type": "Country", "name": "Poland" },
+        { "@type": "Country", "name": "Czech Republic" },
+        { "@type": "Country", "name": "Cyprus" }
       ],
       "subOrganization": [
         {
@@ -117,10 +131,10 @@
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
-      "@id": "https://flyttgo.us/#website",
-      "url": "https://flyttgo.us/",
+      "@id": "https://flyttgo.com/#website",
+      "url": "https://flyttgo.com/",
       "name": "FlyttGo Global Logistics & Relocation Marketplace",
-      "publisher": { "@id": "https://flyttgo.us/#organization" },
+      "publisher": { "@id": "https://flyttgo.com/#organization" },
       "inLanguage": ["en-US","en-GB","de-DE","fr-FR","nb-NO"]
     }
     </script>
@@ -131,14 +145,24 @@
       "@context": "https://schema.org",
       "@type": "Service",
       "serviceType": "Global relocation coordination marketplace",
-      "provider": { "@id": "https://flyttgo.us/#organization" },
+      "provider": { "@id": "https://flyttgo.com/#organization" },
       "areaServed": [
         { "@type": "Country", "name": "United States" },
         { "@type": "Country", "name": "Canada" },
+        { "@type": "Country", "name": "United Kingdom" },
         { "@type": "Country", "name": "Germany" },
         { "@type": "Country", "name": "France" },
-        { "@type": "Country", "name": "United Kingdom" },
-        { "@type": "Country", "name": "Norway" }
+        { "@type": "Country", "name": "Norway" },
+        { "@type": "Country", "name": "Netherlands" },
+        { "@type": "Country", "name": "Sweden" },
+        { "@type": "Country", "name": "Denmark" },
+        { "@type": "Country", "name": "Austria" },
+        { "@type": "Country", "name": "Belgium" },
+        { "@type": "Country", "name": "Spain" },
+        { "@type": "Country", "name": "Italy" },
+        { "@type": "Country", "name": "Poland" },
+        { "@type": "Country", "name": "Czech Republic" },
+        { "@type": "Country", "name": "Cyprus" }
       ],
       "hasOfferCatalog": {
         "@type": "OfferCatalog",
@@ -174,6 +198,18 @@
     </style>
   </head>
   <body>
+    <noscript>
+      <div style="font-family:system-ui,sans-serif;max-width:560px;margin:80px auto;padding:32px;border:1px solid #e2e8f0;border-radius:16px;text-align:center;color:#0f172a;">
+        <h1 style="font-size:1.25rem;font-weight:800;margin:0 0 8px;">FlyttGo needs JavaScript</h1>
+        <p style="font-size:.9rem;color:#475569;line-height:1.5;margin:0 0 16px;">
+          The marketplace runs as a single-page app. Enable JavaScript in your browser
+          settings, then reload this page.
+        </p>
+        <p style="font-size:.8rem;color:#94a3b8;margin:0;">
+          Need help today? Email <a href="mailto:hello@flyttgo.com" style="color:#b45309;">hello@flyttgo.com</a>.
+        </p>
+      </div>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
