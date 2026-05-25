@@ -15,6 +15,7 @@ import {
 } from "../lib/matching-engine-store";
 import { COUNTRY_PROFILES } from "../lib/country-profiles";
 import type { PricingCountry } from "../lib/pricing-engine";
+import { CITIES } from "../lib/constants";
 
 /* Lazy-loaded Leaflet map — ~150 KB bundle is only paid when the
  * admin actually opens the Fleet Map tab. */
@@ -22,6 +23,7 @@ const FleetMap = lazy(() => import("./FleetMap"));
 
 type AdminTab =
   | "overview"
+  | "valuation"
   | "fleet-map"
   | "drivers"
   | "bookings"
@@ -195,6 +197,7 @@ export default function AdminDashboard() {
   const REQUIRED_DOCS = ["driver_license", "insurance", "vehicle_registration", "profile_photo"];
   const tabs: AdminTab[] = [
     "overview",
+    "valuation",
     "fleet-map",
     "drivers",
     "bookings",
@@ -659,6 +662,87 @@ export default function AdminDashboard() {
     );
   }
 
+  /* ── Investor / acquirer diligence metrics ──────────────────────
+   * Everything a buyer or VC asks for, computed live from real data.
+   * GMV = gross marketplace volume (total value of completed moves).
+   * Net revenue = the take-rate slice FlyttGo actually keeps.
+   * Valuation bands apply standard marketplace multiples to the
+   * net-revenue and GMV run-rates. These are directional, not a
+   * formal 409A — they move the moment real bookings land. */
+  const valuation = useMemo(() => {
+    const completed = bookings.filter(b => b.status === "completed");
+    const value = (b: any) => safeNumber(b.price_estimate ?? b.final_price ?? b.adjusted_amount);
+
+    const now = new Date();
+    const within = (b: any, days: number) =>
+      now.getTime() - new Date(b.created_at || b.move_date || now).getTime() < days * 86400000;
+
+    const gmvAllTime  = completed.reduce((s, b) => s + value(b), 0);
+    const gmv30d      = completed.filter(b => within(b, 30)).reduce((s, b) => s + value(b), 0);
+    const gmv90d      = completed.filter(b => within(b, 90)).reduce((s, b) => s + value(b), 0);
+
+    // Annualized GMV run-rate: prefer the most recent 90d (×4) for stability,
+    // fall back to 30d (×12) when 90d is empty.
+    const gmvRunRate  = gmv90d > 0 ? gmv90d * 4 : gmv30d * 12;
+
+    // Take rate from real commission ledger vs GMV; default to 15% model
+    // assumption when there's no GMV yet so the projection isn't NaN.
+    const takeRate    = gmvAllTime > 0 ? revenueStats.totalCommission / gmvAllTime : 0.15;
+    const netRevRunRate = gmvRunRate * takeRate;
+
+    // Supply density = active providers per active city.
+    const activeCities = new Set(
+      bookings.map(b => (b.pickup_city || b.city || "").toString().trim().toLowerCase()).filter(Boolean)
+    ).size || CITIES.length;
+    const supplyDensity = activeDrivers > 0 ? activeDrivers / Math.max(1, activeCities) : 0;
+
+    // Repeat rate = share of customers with more than one booking.
+    const byCustomer = new Map<string, number>();
+    bookings.forEach(b => {
+      const id = b.customer_id || b.customer || "";
+      if (id) byCustomer.set(id, (byCustomer.get(id) || 0) + 1);
+    });
+    const repeatCustomers = Array.from(byCustomer.values()).filter(n => n > 1).length;
+    const repeatRate = byCustomer.size > 0 ? repeatCustomers / byCustomer.size : 0;
+
+    // Liquidity score (0–100): the single number that gates valuation.
+    // Weighted blend of demand (GMV run-rate), supply (density),
+    // stickiness (repeat rate) and geographic spread (active cities).
+    const demandScore = Math.min(1, gmvRunRate / 5_000_000);      // $5M ARR-of-GMV ⇒ full marks
+    const supplyScore = Math.min(1, supplyDensity / 50);          // 50 providers/city ⇒ full marks
+    const stickyScore = Math.min(1, repeatRate / 0.30);           // 30% repeat ⇒ full marks
+    const geoScore    = Math.min(1, activeCities / 25);           // 25 live cities ⇒ full marks
+    const liquidityScore = Math.round(
+      (demandScore * 0.4 + supplyScore * 0.25 + stickyScore * 0.2 + geoScore * 0.15) * 100
+    );
+
+    // Valuation bands. Net-revenue multiple is the primary lens for
+    // marketplaces (3×–10×); GMV multiple (0.5×–2×) is the sanity check.
+    // A liquidity score below ~15 means pre-traction: value reverts to
+    // an IP/asset floor rather than a revenue multiple.
+    const isPreTraction = liquidityScore < 15 || netRevRunRate < 50_000;
+    const revLow  = netRevRunRate * 3;
+    const revHigh = netRevRunRate * 10;
+    const gmvLow  = gmvRunRate * 0.5;
+    const gmvHigh = gmvRunRate * 2;
+
+    const estLow  = isPreTraction ? 50_000  : Math.round(Math.min(revLow, gmvLow));
+    const estHigh = isPreTraction ? 250_000 : Math.round(Math.max(revHigh, gmvHigh));
+
+    return {
+      gmvAllTime, gmv30d, gmv90d, gmvRunRate, takeRate, netRevRunRate,
+      activeCities, supplyDensity, repeatRate, repeatCustomers,
+      liquidityScore, isPreTraction, estLow, estHigh,
+      completedCount: completed.length, customerCount: byCustomer.size,
+    };
+  }, [bookings, activeDrivers, revenueStats.totalCommission, customerCount]);
+
+  const fmtUsd = (n: number) =>
+    n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(2)}M`
+    : n >= 1_000 ? `$${(n / 1_000).toFixed(1)}K`
+    : `$${Math.round(n)}`;
+  const fmtPct = (n: number) => `${(n * 100).toFixed(1)}%`;
+
   return (
     <div className="min-h-screen flex bg-gray-50">
       <aside className="w-64 bg-gray-900 text-white flex-shrink-0">
@@ -729,6 +813,96 @@ export default function AdminDashboard() {
                 <div key={item.id} className="border-b py-2 text-sm">{item.message}</div>
               ))}
             </div>
+          </div>
+        )}
+
+        {tab === "valuation" && (
+          <div>
+            <h1 className="text-2xl font-bold mb-1">Marketplace Value & Investor Metrics</h1>
+            <p className="text-gray-500 text-sm mb-6">
+              The numbers an acquirer or VC diligences. Computed live from real bookings — every
+              completed move moves these. Directional estimate, not a formal valuation.
+            </p>
+
+            {/* HEADLINE ESTIMATE */}
+            <div className="bg-gradient-to-br from-[#0B2E59] to-[#1a4a8a] text-white rounded-2xl p-8 mb-8">
+              <div className="text-emerald-300 text-xs font-bold uppercase tracking-wider mb-2">
+                {valuation.isPreTraction ? "Pre-traction · IP / asset value" : "Traction-based estimate"}
+              </div>
+              <div className="text-4xl font-extrabold mb-2">
+                {fmtUsd(valuation.estLow)} – {fmtUsd(valuation.estHigh)}
+              </div>
+              <p className="text-white/70 text-sm max-w-2xl">
+                {valuation.isPreTraction
+                  ? "No meaningful live GMV yet, so value reverts to the platform + brand + IP floor. This jumps to a revenue-multiple range the moment real bookings accumulate."
+                  : `Based on a ${fmtUsd(valuation.netRevRunRate)} net-revenue run-rate (3×–10×) cross-checked against a ${fmtUsd(valuation.gmvRunRate)} GMV run-rate (0.5×–2×).`}
+              </p>
+              <div className="mt-5 flex items-center gap-3">
+                <div className="flex-1 bg-white/20 rounded-full h-3 overflow-hidden">
+                  <div className="bg-emerald-400 h-full rounded-full transition-all" style={{ width: `${valuation.liquidityScore}%` }} />
+                </div>
+                <div className="text-sm font-bold whitespace-nowrap">Liquidity score: {valuation.liquidityScore}/100</div>
+              </div>
+              <p className="text-white/50 text-xs mt-2">Liquidity (demand × supply × stickiness × geographic spread) is the single metric that gates valuation.</p>
+            </div>
+
+            {/* GMV */}
+            <h2 className="font-bold text-gray-700">Gross Marketplace Volume (GMV)</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+              <Card title="GMV — last 30d" value={valuation.gmv30d} />
+              <Card title="GMV — last 90d" value={valuation.gmv90d} />
+              <Card title="GMV — all time" value={valuation.gmvAllTime} />
+              <Card title="GMV run-rate (annualized)" value={valuation.gmvRunRate} />
+            </div>
+
+            {/* REVENUE */}
+            <h2 className="mt-8 font-bold text-gray-700">Revenue & Take Rate</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+              <div className="bg-white p-4 rounded shadow">
+                <div className="text-sm text-gray-500">Take rate</div>
+                <div className="text-xl font-bold text-emerald-600">{fmtPct(valuation.takeRate)}</div>
+              </div>
+              <Card title="Net revenue run-rate" value={valuation.netRevRunRate} />
+              <Card title="Commission to date" value={revenueStats.totalCommission} />
+              <Card title="Completed moves" value={valuation.completedCount} isCurrency={false} />
+            </div>
+
+            {/* NETWORK HEALTH */}
+            <h2 className="mt-8 font-bold text-gray-700">Network Health (the moat)</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+              <Card title="Active cities" value={valuation.activeCities} isCurrency={false} />
+              <div className="bg-white p-4 rounded shadow">
+                <div className="text-sm text-gray-500">Supply density (providers/city)</div>
+                <div className="text-xl font-bold text-emerald-600">{valuation.supplyDensity.toFixed(1)}</div>
+              </div>
+              <div className="bg-white p-4 rounded shadow">
+                <div className="text-sm text-gray-500">Repeat customer rate</div>
+                <div className="text-xl font-bold text-emerald-600">{fmtPct(valuation.repeatRate)}</div>
+              </div>
+              <Card title="Repeat customers" value={valuation.repeatCustomers} isCurrency={false} />
+            </div>
+
+            {/* WHAT MOVES THE NUMBER */}
+            <h2 className="mt-8 font-bold text-gray-700">What raises valuation (in order of leverage)</h2>
+            <div className="bg-white rounded-xl p-5 mt-2 space-y-3 text-sm">
+              {[
+                ["GMV + take-rate", "The primary multiple. Get completed moves on the books with a healthy commission slice."],
+                ["Supply density", "Verified providers per city — the hardest-to-copy asset. Target 50+ active providers per live metro."],
+                ["Repeat rate", "Relocation is low-frequency; recurring enterprise & university contracts drive stickiness. Target 30%+."],
+                ["Geographic spread", "Each additional live, liquid market compounds the global TAM narrative."],
+                ["Compliance posture", "FMCSA/USDOT verification + clean legal entity (Wankong LLC) de-risks acquisition."],
+              ].map(([k, v]) => (
+                <div key={k} className="flex gap-3">
+                  <span className="text-emerald-600 font-bold flex-shrink-0">›</span>
+                  <span><strong className="text-gray-800">{k}:</strong> <span className="text-gray-600">{v}</span></span>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-gray-400 mt-4">
+              Method: net-revenue run-rate × (3–10) cross-checked against GMV run-rate × (0.5–2).
+              Below a liquidity score of 15 the platform is treated as pre-traction and valued at an
+              IP/asset floor. Figures recompute on every data refresh.
+            </p>
           </div>
         )}
 
