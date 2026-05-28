@@ -29,8 +29,8 @@
  * high-res phone photo of their licence don't get rejected.
  *
  * allowed_mime_types is intentionally permissive (nullable) — the
- * onboarding UI already restricts to image/* + application/pdf, and
- * locking it server-side breaks legacy mime types from older phones. */
+ * onboarding UI already restricts to image MIME types + application/pdf,
+ * and locking it server-side breaks legacy mime types from older phones. */
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
   'driver-documents',
